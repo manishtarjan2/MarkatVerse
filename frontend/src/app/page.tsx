@@ -84,43 +84,43 @@ export default function Home() {
         <section className="flex justify-between bg-slate-50 p-3 rounded-xl border border-slate-200 gap-2 overflow-x-auto">
           <Link href="/search?filter=deals" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-red-500 text-white">🔥</div>
-            <span className="text-[10px] text-slate-700">Top Deals</span>
+            <span className="text-xs font-bold text-slate-900">Top Deals</span>
           </Link>
           <Link href="/category/mobiles" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">📱</div>
-            <span className="text-[10px] text-slate-700">Mobiles</span>
+            <span className="text-xs font-bold text-slate-900">Mobiles</span>
           </Link>
           <Link href="/category/electronics" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">💻</div>
-            <span className="text-[10px] text-slate-700">Electronics</span>
+            <span className="text-xs font-bold text-slate-900">Electronics</span>
           </Link>
           <Link href="/category/fashion" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">👕</div>
-            <span className="text-[10px] text-slate-700">Fashion</span>
+            <span className="text-xs font-bold text-slate-900">Fashion</span>
           </Link>
           <Link href="/category/home" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">🏠</div>
-            <span className="text-[10px] text-slate-700">Home & Kitchen</span>
+            <span className="text-xs font-bold text-slate-900">Home & Kitchen</span>
           </Link>
           <Link href="/category/beauty" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">💄</div>
-            <span className="text-[10px] text-slate-700">Beauty</span>
+            <span className="text-xs font-bold text-slate-900">Beauty</span>
           </Link>
           <Link href="/category/automotive" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">🚗</div>
-            <span className="text-[10px] text-slate-700">Automotive</span>
+            <span className="text-xs font-bold text-slate-900">Automotive</span>
           </Link>
           <Link href="/category/sports" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">⚽</div>
-            <span className="text-[10px] text-slate-700">Sports</span>
+            <span className="text-xs font-bold text-slate-900">Sports</span>
           </Link>
           <Link href="/category/services" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">🛠️</div>
-            <span className="text-[10px] text-slate-700">Services</span>
+            <span className="text-xs font-bold text-slate-900">Services</span>
           </Link>
           <Link href="/category/all" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">⊞</div>
-            <span className="text-[10px] text-slate-700">View All</span>
+            <span className="text-xs font-bold text-slate-900">View All</span>
           </Link>
         </section>
 

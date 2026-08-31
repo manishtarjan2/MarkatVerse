@@ -40,11 +40,11 @@ export default function ProductGrid({ products: propProducts }: { products?: Pro
               </Link>
               <span className="text-[#10B981] text-[10px]" title="TrustSEAL Verified">🛡️</span>
             </div>
-            <div className="font-normal text-xs mb-2 mt-1 line-clamp-2 h-10 leading-tight">
+            <div className="font-medium text-sm text-slate-800 mb-2 mt-1 line-clamp-2 h-10 leading-tight">
               {product.name}
             </div>
             <div className="mt-auto">
-              <div className="font-medium text-sm flex items-center gap-2">
+              <div className="font-bold text-base text-slate-900 flex items-center gap-2">
                 ₹{product.price.toLocaleString('en-IN')}
                 {product.originalPrice > product.price && (
                   <span className="text-[#94A3B8] line-through text-[10px] font-normal">₹{product.originalPrice.toLocaleString('en-IN')}</span>

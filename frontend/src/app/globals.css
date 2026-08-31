@@ -3,9 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    font-size: 14px;
-  }
   body {
     @apply bg-white text-slate-900 font-sans overflow-x-hidden;
   }
