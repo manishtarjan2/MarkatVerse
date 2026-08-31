@@ -95,16 +95,41 @@ export default function ProductDetails() {
           </div>
 
           <div className="p-6 bg-slate-50 rounded-2xl mb-8 border border-slate-200 shadow-sm">
-            <div className="text-4xl font-bold text-slate-900">₹{product.price.toLocaleString('en-IN')}</div>
+            <div className="text-4xl font-bold text-slate-900">
+              ₹{product.price.toLocaleString('en-IN')}
+              {product.category === 'Transport' && <span className="text-lg text-slate-500 font-medium ml-1">/ km</span>}
+            </div>
             {product.originalPrice > product.price && (
               <>
-                <div className="text-slate-500 line-through mt-2 text-sm">M.R.P: ₹{product.originalPrice.toLocaleString('en-IN')}</div>
+                <div className="text-slate-500 line-through mt-2 text-sm">
+                  M.R.P: ₹{product.originalPrice.toLocaleString('en-IN')}
+                  {product.category === 'Transport' && ' / km'}
+                </div>
                 <div className="text-emerald-600 font-bold mt-1 text-sm">You Save: {product.discount}</div>
               </>
             )}
             
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              {product.category === 'Services' ? (
+              {product.category === 'Transport' ? (
+                <>
+                  <button 
+                    className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
+                    onClick={() => {
+                      alert(`Requesting route estimate for ${product.name}...`);
+                    }}
+                  >
+                    Get Route Estimate
+                  </button>
+                  <button 
+                    className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
+                    onClick={() => {
+                      alert(`Booking transport service: ${product.name}`);
+                    }}
+                  >
+                    Book Now
+                  </button>
+                </>
+              ) : product.category === 'Services' ? (
                 <button 
                   className="flex-1 px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-emerald-600/20 flex items-center justify-center gap-3"
                   onClick={() => {

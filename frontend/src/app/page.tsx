@@ -229,21 +229,23 @@ export default function Home() {
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
             {[
-              { name: 'City Auto Rentals', type: 'Auto Rickshaw Service', rating: '4.6', icon: '🛺' },
-              { name: 'Premium Car Hire', type: 'Car Rental & Taxi', rating: '4.8', icon: '🚕' },
-              { name: 'Interstate Bus Tours', type: 'Bus Travel & Charter', rating: '4.7', icon: '🚌' },
-              { name: 'Heavy Freight Movers', type: 'Trucking & Cargo', rating: '4.9', icon: '🚛' }
+              { name: 'City Auto Rentals', type: 'Auto Rickshaw Service', rating: '4.6', icon: '🛺', link: '/product/city-auto-rentals' },
+              { name: 'Heavy Freight Movers', type: 'Trucking & Cargo', rating: '4.9', icon: '🚛', link: '/product/heavy-freight-movers' },
+              { name: 'Premium Car Hire', type: 'Car Rental & Taxi', rating: '4.8', icon: '🚕', link: '#' },
+              { name: 'Interstate Bus Tours', type: 'Bus Travel & Charter', rating: '4.7', icon: '🚌', link: '#' }
             ].map((provider, i) => (
-              <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer">
-                <div className="w-[60px] h-[60px] bg-slate-50 rounded-xl flex items-center justify-center text-lg shrink-0">
-                  {provider.icon}
+              <Link key={i} href={provider.link} className="no-underline text-inherit">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">
+                  <div className="w-[60px] h-[60px] bg-blue-50 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-blue-100">
+                    {provider.icon}
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="text-[10px] text-blue-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
+                    <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
+                    <div className="text-amber-500 text-[10px] mt-1">★ {provider.rating}</div>
+                  </div>
                 </div>
-                <div className="overflow-hidden">
-                  <div className="text-[10px] text-blue-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
-                  <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
-                  <div className="text-amber-500 text-[10px] mt-1">★ {provider.rating}</div>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

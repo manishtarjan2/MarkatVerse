@@ -93,6 +93,74 @@ const defaultProducts: Product[] = [
     category: 'Services',
     badge: 'Verified Expert',
     badgeColor: 'badge-gold'
+  },
+  {
+    id: 'hair-cutting-styling',
+    name: 'Men & Women Hair Cutting & Styling',
+    price: 299,
+    originalPrice: 599,
+    discount: '50% OFF',
+    rating: '4.8',
+    reviews: '3.4K',
+    seller: 'Elite Salon & Spa',
+    location: 'Mumbai, Maharashtra',
+    category: 'Services',
+    badge: 'Trending',
+    badgeColor: 'badge-red'
+  },
+  {
+    id: 'premium-pedicure',
+    name: 'Premium Spa Pedicure & Manicure',
+    price: 899,
+    originalPrice: 1500,
+    discount: '40% OFF',
+    rating: '4.9',
+    reviews: '890',
+    seller: 'Elite Salon & Spa',
+    location: 'Mumbai, Maharashtra',
+    category: 'Services'
+  },
+  {
+    id: 'nail-art-extensions',
+    name: 'Nail Cutting, Art & Gel Extensions',
+    price: 1200,
+    originalPrice: 2000,
+    discount: '40% OFF',
+    rating: '4.7',
+    reviews: '450',
+    seller: 'Glamour Nails Studio',
+    location: 'Delhi, NCR',
+    category: 'Services',
+    badge: 'Highly Rated',
+    badgeColor: 'badge-gold'
+  },
+  {
+    id: 'city-auto-rentals',
+    name: 'City Auto Rentals & Local Transport',
+    price: 12,
+    originalPrice: 15,
+    discount: '20% OFF',
+    rating: '4.6',
+    reviews: '2.3K',
+    seller: 'QuickRide Autos',
+    location: 'Bangalore, Karnataka',
+    category: 'Transport',
+    badge: 'Trusted',
+    badgeColor: 'badge-blue'
+  },
+  {
+    id: 'heavy-freight-movers',
+    name: 'Heavy Freight Trucking & Cargo Movers',
+    price: 45,
+    originalPrice: 60,
+    discount: '25% OFF',
+    rating: '4.9',
+    reviews: '8.1K',
+    seller: 'National Logistics Co.',
+    location: 'Mumbai, Maharashtra',
+    category: 'Transport',
+    badge: 'Verified B2B',
+    badgeColor: 'badge-gold'
   }
 ];
 
