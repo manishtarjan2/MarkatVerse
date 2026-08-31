@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { Search, MapPin, Headphones, Store, MessageSquare, Bell, Heart, ShoppingCart, User, ChevronDown } from "lucide-react";
 
 export default function Navbar() {
   const { items } = useCart();
@@ -29,42 +30,46 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex items-center justify-between py-1 px-4 bg-white border-b border-slate-200 sticky top-0 z-[100]">
-      <div className="flex items-center gap-3">
-        <Link href="/" className="flex items-center no-underline text-inherit">
+    <nav className="flex items-center justify-between py-2 px-6 bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-sm">
+      <div className="flex items-center gap-6">
+        <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity">
           <img src="/logo.png" alt="MarkatVerse" className="h-10 object-contain" />
+          <span className="ml-2 text-xl font-bold text-slate-800 tracking-tight hidden sm:block">MarkatVerse</span>
         </Link>
       </div>
 
       {user?.role !== 'admin' && (
         <>
           <div
-            className="flex items-center gap-2 px-2 cursor-pointer relative"
+            className="hidden lg:flex items-center gap-2 px-3 py-1.5 cursor-pointer relative hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200 ml-4"
             onClick={() => setIsLocationPopupOpen(!isLocationPopupOpen)}
           >
-            <span className="text-base">📍</span>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-slate-500">Deliver to</span>
-              <span className="text-xs font-medium text-slate-800">{locationStr} {isLocationPopupOpen ? '⌃' : '⌄'}</span>
+            <MapPin className="w-5 h-5 text-slate-600" strokeWidth={1.5} />
+            <div className="flex flex-col gap-0">
+              <span className="text-[11px] text-slate-500 font-medium">Deliver to</span>
+              <span className="text-sm font-semibold text-slate-800 flex items-center gap-1">
+                {locationStr}
+                <ChevronDown className="w-3 h-3 text-slate-500" />
+              </span>
             </div>
 
             {isLocationPopupOpen && (
               <div
-                className="absolute top-full left-0 mt-2.5 bg-slate-800 p-5 rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.5)] w-[300px] z-[1000] border border-slate-700 cursor-default"
+                className="absolute top-full left-0 mt-3 bg-white p-5 rounded-xl shadow-xl w-[320px] z-[1000] border border-slate-200 cursor-default"
                 onClick={(e) => e.stopPropagation()}
               >
-                <h4 className="mb-2.5 text-xs">Choose your location</h4>
-                <p className="text-[10px] text-slate-400 mb-[15px]">Delivery options and delivery speeds may vary for different locations</p>
-                <div className="flex gap-2.5">
+                <h4 className="mb-2 text-sm font-bold text-slate-800">Choose your location</h4>
+                <p className="text-xs text-slate-500 mb-4 leading-relaxed">Delivery options and speeds may vary depending on your specific location</p>
+                <div className="flex gap-2">
                   <input
                     type="text"
                     placeholder="Enter Pincode or City"
                     value={locationInput}
                     onChange={(e) => setLocationInput(e.target.value)}
-                    className="flex-1 p-2 rounded border border-slate-700 bg-slate-900 text-white"
+                    className="flex-1 p-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                   />
                   <button
-                    className="bg-blue-600 hover:bg-blue-600-hover text-white px-4 py-2 rounded font-normal transition-colors"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors text-sm"
                     onClick={() => {
                       if (locationInput.trim()) {
                         setLocationStr(locationInput.trim());
@@ -79,57 +84,55 @@ export default function Navbar() {
             )}
           </div>
 
-          <form onSubmit={handleSearch} className="flex flex-1 max-w-[800px] bg-slate-100 rounded-lg overflow-hidden mx-6 border border-slate-300">
-            <div className="flex items-center bg-transparent pl-3 border-r border-slate-300">
-              <span>📍</span>
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[700px] bg-slate-50 rounded-xl overflow-hidden mx-8 border border-slate-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-inner">
+            <div className="flex items-center bg-transparent pl-3 border-r border-slate-300 group">
+              <MapPin className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
               <input
                 type="text"
                 list="city-options"
-                placeholder="City or Pincode"
+                placeholder="City/Pin"
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
-                className="w-[130px] border-none bg-transparent text-slate-800 py-1.5 px-2 outline-none placeholder:text-slate-400"
+                className="w-[100px] lg:w-[130px] border-none bg-transparent text-slate-800 py-2.5 px-2 outline-none placeholder:text-slate-400 text-sm font-medium"
               />
               <datalist id="city-options">
                 <option value="Mumbai" />
                 <option value="Delhi" />
                 <option value="Bangalore" />
                 <option value="Hyderabad" />
-                <option value="Ahmedabad" />
                 <option value="Chennai" />
-                <option value="Kolkata" />
                 <option value="Pune" />
-                <option value="Jaipur" />
-                <option value="Surat" />
               </datalist>
             </div>
+            
             <select
               value={searchCategory}
               onChange={(e) => setSearchCategory(e.target.value)}
-              className="bg-transparent text-slate-600 border-none p-1.5 px-3 border-r border-slate-300 outline-none"
+              className="bg-slate-100/50 text-slate-600 border-none py-2.5 px-3 border-r border-slate-300 outline-none text-sm font-medium hover:bg-slate-200/50 cursor-pointer transition-colors"
             >
               <option>All Categories</option>
               <option>Sellers / Businesses</option>
               <option>Services</option>
               <option>Products</option>
-              <option>Organizers</option>
               <option>Transport</option>
             </select>
+            
             <input
               type="text"
               placeholder={
                 searchCategory === 'Sellers / Businesses'
-                  ? `Search for sellers in ${searchLocation || 'your city'}...`
+                  ? `Search for sellers...`
                   : searchCategory === 'Services'
-                    ? `Find services in ${searchLocation || 'your city'}...`
+                    ? `Find services...`
                     : "Search for products, brands and more..."
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent text-slate-800 border-none p-1.5 px-3 outline-none placeholder:text-slate-400"
+              className="flex-1 bg-transparent text-slate-800 border-none py-2.5 px-4 outline-none placeholder:text-slate-400 text-sm"
             />
-            <button type="submit" className="cursor-pointer h-full px-5 bg-blue-600 text-white border-none flex items-center justify-center">
-              🔍
+            
+            <button type="submit" className="cursor-pointer px-6 bg-blue-600 hover:bg-blue-700 text-white border-none flex items-center justify-center transition-colors">
+              <Search className="w-5 h-5" strokeWidth={2.5} />
             </button>
           </form>
         </>
@@ -137,26 +140,25 @@ export default function Navbar() {
 
       {user?.role === 'admin' && (
         <div className="flex-1 flex justify-center">
-          <div className="bg-[rgba(245,158,11,0.1)] px-5 py-2.5 rounded-lg border border-amber-500">
-            <span className="text-amber-500 font-medium">🛡️ ADMIN MODE ACTIVE</span>
+          <div className="bg-amber-50 px-5 py-2 rounded-lg border border-amber-500/50 flex items-center gap-2 shadow-sm">
+            <span className="text-amber-500">🛡️</span>
+            <span className="text-amber-600 font-bold text-sm tracking-wide">ADMIN MODE</span>
           </div>
         </div>
       )}
 
-      <div className="flex items-center gap-6 text-[10px] text-slate-500">
+      <div className="flex items-center gap-5 text-slate-600">
         {user?.role !== 'admin' && (
           <>
-
-
-            <Link href="/help" className="flex flex-col items-center gap-1 cursor-pointer relative no-underline text-inherit">
-              <span className="text-base">🎧</span>
-              <span>Help</span>
+            <Link href="/help" className="hidden lg:flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group">
+              <Headphones className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+              <span className="text-[11px] font-medium">Help</span>
             </Link>
 
             {!user && (
-              <Link href="/seller/onboarding" className="flex flex-col items-center gap-1 cursor-pointer relative no-underline text-inherit">
-                <span className="text-base">🏪</span>
-                <span>Become a Seller</span>
+              <Link href="/seller/onboarding" className="hidden lg:flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
+                <Store className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                <span className="text-[11px] font-medium">Become a Seller</span>
               </Link>
             )}
           </>
@@ -165,16 +167,16 @@ export default function Navbar() {
         {user && (
           <>
             {user.role !== 'buyer' && (
-              <div className="flex flex-col items-center gap-1 cursor-pointer relative">
-                <div className="absolute -top-2 -right-2.5 bg-red-500 text-white text-[10px] py-[2px] px-1.5 rounded-full">12</div>
-                <span className="text-base">✉️</span>
-                <span>Messages</span>
+              <div className="hidden sm:flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group">
+                <div className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] py-[1px] px-1.5 rounded-full font-bold border border-white">12</div>
+                <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                <span className="text-[11px] font-medium">Messages</span>
               </div>
             )}
-            <div className="flex flex-col items-center gap-1 cursor-pointer relative">
-              <div className="absolute -top-2 -right-2.5 bg-red-500 text-white text-[10px] py-[2px] px-1.5 rounded-full">23</div>
-              <span className="text-base">🔔</span>
-              <span>Notifications</span>
+            <div className="hidden sm:flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group ml-2">
+              <div className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] py-[1px] px-1.5 rounded-full font-bold border border-white">23</div>
+              <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+              <span className="text-[11px] font-medium">Alerts</span>
             </div>
           </>
         )}
@@ -183,38 +185,40 @@ export default function Navbar() {
           <>
             {user && (
               <>
-                <Link href="/wishlist" className="flex flex-col items-center gap-1 cursor-pointer relative no-underline text-inherit">
-                  <span className="text-base">❤️</span>
-                  <span>Wishlist</span>
+                <Link href="/wishlist" className="hidden sm:flex flex-col items-center gap-1 cursor-pointer hover:text-red-500 transition-colors group ml-2">
+                  <Heart className="w-5 h-5 group-hover:scale-110 transition-transform group-hover:fill-red-50" strokeWidth={1.5} />
+                  <span className="text-[11px] font-medium">Wishlist</span>
                 </Link>
-                <Link href="/cart" className="flex flex-col items-center gap-1 cursor-pointer relative no-underline text-inherit">
+                <Link href="/cart" className="flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group ml-2">
                   {cartItemCount > 0 && (
-                    <div className="absolute -top-2 -right-2.5 bg-amber-500 text-black font-medium text-[10px] py-[2px] px-1.5 rounded-full">{cartItemCount}</div>
+                    <div className="absolute -top-1.5 -right-2 bg-amber-400 text-slate-900 font-bold text-[10px] py-[1px] px-1.5 rounded-full border border-white">{cartItemCount}</div>
                   )}
-                  <span className="text-base">🛒</span>
-                  <span>Cart</span>
+                  <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                  <span className="text-[11px] font-medium">Cart</span>
                 </Link>
               </>
             )}
           </>
         )}
 
-        {user ? (
-          <Link href="/profile/settings" className="flex flex-row items-center gap-2.5 ml-2.5 no-underline text-inherit cursor-pointer">
-            <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center">
-              {user.name.charAt(0)}
-            </div>
-            <div className="flex flex-col items-start gap-0.5">
-              <span className="font-normal text-slate-800">{user.name}</span>
-              <span>Settings ⌄</span>
-            </div>
-          </Link>
-        ) : (
-          <Link href="/login" className="flex flex-col items-center gap-1 cursor-pointer relative no-underline text-inherit ml-2.5">
-            <span className="text-base">👤</span>
-            <span className="font-medium">Sign In</span>
-          </Link>
-        )}
+        <div className="ml-2 pl-4 border-l border-slate-200">
+          {user ? (
+            <Link href="/profile/settings" className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-sm border-2 border-white ring-2 ring-slate-100">
+                {user.name.charAt(0)}
+              </div>
+              <div className="hidden lg:flex flex-col items-start gap-0">
+                <span className="font-semibold text-sm text-slate-800">{user.name}</span>
+                <span className="text-[11px] text-slate-500 font-medium">My Account <ChevronDown className="inline w-3 h-3" /></span>
+              </div>
+            </Link>
+          ) : (
+            <Link href="/login" className="flex items-center gap-2 cursor-pointer bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg transition-colors group">
+              <User className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors" strokeWidth={2} />
+              <span className="font-semibold text-sm text-slate-800 group-hover:text-blue-600 transition-colors">Sign In</span>
+            </Link>
+          )}
+        </div>
       </div>
     </nav>
   );
