@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
 
 export default function SellerDashboard() {
   const searchParams = useSearchParams();
   const isAdding = searchParams.get('action') === 'add';
-  const [activeTab, setActiveTab] = useState(isAdding ? 'add' : 'listings');
+  const [activeTab, setActiveTab] = useState(isAdding ? 'add' : 'overview');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { addProduct, deleteProduct, products } = useProducts();
@@ -57,118 +58,158 @@ export default function SellerDashboard() {
       setTimeout(() => {
         setShowSuccess(false);
         setActiveTab('listings');
-      }, 3000);
-    }, 1500);
+      }, 2500);
+    }, 1000);
   };
 
-  // Filter listings to show only the ones the seller just added (for realism, we show all mock ones + user's ones, or just user's)
-  // Let's just show all for the prototype, or we could filter by seller name.
   const myListings = products.filter(p => p.seller === sellerName || p.seller === 'Apple Authorized India');
 
   return (
-    <div style={{ padding: '40px', width: '100%', maxWidth: '100%', margin: '0 auto', display: 'flex', gap: '30px', boxSizing: 'border-box' }}>
+    <div className="min-h-screen w-full bg-slate-50 flex font-sans">
       
       {/* Sidebar */}
-      <aside style={{ width: '250px' }}>
-        <div style={{ backgroundColor: '#1E293B', padding: '20px', borderRadius: '12px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#334155', margin: '0 auto 10px' }}></div>
-            <h3>{sellerName}</h3>
-            <div style={{ color: '#10B981', fontSize: '12px' }}>Verified Seller ✓</div>
-          </div>
-          
-          <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <li 
-              onClick={() => setActiveTab('overview')} 
-              style={{ padding: '10px', backgroundColor: activeTab === 'overview' ? '#0F172A' : 'transparent', borderRadius: '8px', cursor: 'pointer' }}
-            >
-              📊 Overview
-            </li>
-            <li 
-              onClick={() => setActiveTab('listings')} 
-              style={{ padding: '10px', backgroundColor: activeTab === 'listings' ? '#0F172A' : 'transparent', borderRadius: '8px', cursor: 'pointer' }}
-            >
-              📋 My Listings
-            </li>
-            <li 
-              onClick={() => setActiveTab('add')} 
-              style={{ padding: '10px', backgroundColor: activeTab === 'add' ? '#0F172A' : 'transparent', borderRadius: '8px', cursor: 'pointer' }}
-            >
-              ➕ Add Product
-            </li>
-            <li 
-              onClick={() => setActiveTab('orders')} 
-              style={{ padding: '10px', backgroundColor: activeTab === 'orders' ? '#0F172A' : 'transparent', borderRadius: '8px', cursor: 'pointer' }}
-            >
-              📦 Orders
-            </li>
-          </ul>
+      <aside className="w-[280px] bg-white border-r border-slate-200 flex flex-col shrink-0">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <Link href="/" className="text-blue-600 flex items-center gap-2 hover:opacity-80 transition-opacity font-bold">
+            <ArrowLeft className="w-5 h-5" /> Marketplace
+          </Link>
         </div>
+        
+        <div className="p-6 text-center">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-4 shadow-md shadow-blue-600/20">
+            {sellerName.charAt(0)}
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">{sellerName}</h3>
+          <div className="flex items-center justify-center gap-1 text-emerald-600 text-sm font-medium mt-1">
+            <CheckCircle2 className="w-4 h-4" /> Verified Seller
+          </div>
+        </div>
+        
+        <nav className="flex-1 px-4 py-2 space-y-1">
+          <button 
+            onClick={() => setActiveTab('overview')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'overview' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+          >
+            <BarChart3 className="w-5 h-5" /> Overview
+          </button>
+          <button 
+            onClick={() => setActiveTab('listings')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'listings' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+          >
+            <Store className="w-5 h-5" /> My Listings
+          </button>
+          <button 
+            onClick={() => setActiveTab('add')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'add' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+          >
+            <PlusCircle className="w-5 h-5" /> Add Product
+          </button>
+          <button 
+            onClick={() => setActiveTab('orders')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'orders' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+          >
+            <Package className="w-5 h-5" /> Orders
+          </button>
+        </nav>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, backgroundColor: '#1E293B', padding: '30px', borderRadius: '12px' }}>
+      <main className="flex-1 overflow-y-auto p-10">
+        
         {activeTab === 'overview' && (
-          <div>
-            <h2 style={{ marginBottom: '20px' }}>Dashboard Overview</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-              <div style={{ backgroundColor: '#0F172A', padding: '20px', borderRadius: '8px' }}>
-                <div style={{ color: '#94A3B8', fontSize: '14px' }}>Total Sales</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10B981' }}>₹1,45,200</div>
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
+              <p className="text-slate-500 mt-2">Welcome back, {sellerName}. Here's what's happening today.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="text-slate-500 text-sm font-medium mb-2">Total Sales</div>
+                <div className="text-3xl font-bold text-slate-900">₹1,45,200</div>
+                <div className="text-emerald-600 text-sm font-medium mt-2 flex items-center gap-1">↑ 12% vs last month</div>
               </div>
-              <div style={{ backgroundColor: '#0F172A', padding: '20px', borderRadius: '8px' }}>
-                <div style={{ color: '#94A3B8', fontSize: '14px' }}>Active Listings</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{myListings.length}</div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="text-slate-500 text-sm font-medium mb-2">Active Listings</div>
+                <div className="text-3xl font-bold text-slate-900">{myListings.length}</div>
+                <div className="text-slate-400 text-sm font-medium mt-2">Live products</div>
               </div>
-              <div style={{ backgroundColor: '#0F172A', padding: '20px', borderRadius: '8px' }}>
-                <div style={{ color: '#94A3B8', fontSize: '14px' }}>Pending Orders</div>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#F59E0B' }}>3</div>
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="text-slate-500 text-sm font-medium mb-2">Pending Orders</div>
+                <div className="text-3xl font-bold text-amber-500">3</div>
+                <div className="text-slate-400 text-sm font-medium mt-2 cursor-pointer hover:text-blue-600 transition-colors">View details →</div>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'listings' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2>My Listings</h2>
-              <button className="btn-primary" onClick={() => setActiveTab('add')}>Add New Product</button>
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">My Listings</h1>
+                <p className="text-slate-500 mt-2">Manage your active products and services.</p>
+              </div>
+              <button 
+                onClick={() => setActiveTab('add')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-md shadow-blue-600/20 transition-colors flex items-center gap-2"
+              >
+                <PlusCircle className="w-5 h-5" /> Add New
+              </button>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {myListings.map(product => (
-                <div key={product.id} style={{ backgroundColor: '#0F172A', borderRadius: '12px', overflow: 'hidden', border: '1px solid #334155', position: 'relative' }}>
-                  <div style={{ height: '150px', backgroundColor: '#1E293B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div key={product.id} className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm flex flex-col group">
+                  <div className="h-48 bg-slate-100 flex items-center justify-center relative overflow-hidden">
                     {product.image ? (
-                      <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <span style={{ fontSize: '40px', opacity: 0.5 }}>📸</span>
+                      <Store className="w-12 h-12 text-slate-300" />
                     )}
-                  </div>
-                  <div style={{ padding: '15px' }}>
-                    <div style={{ color: '#10B981', fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', display: 'inline-block', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '4px' }}>
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-blue-700 text-xs font-bold px-2.5 py-1 rounded-md shadow-sm">
                       {product.category || 'Uncategorized'}
                     </div>
-                    <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '10px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                      <span style={{ fontSize: '18px', fontWeight: 'bold' }}>₹{product.price.toLocaleString('en-IN')}</span>
-                      <span style={{ fontSize: '12px', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{width:'8px', height:'8px', backgroundColor:'#10B981', borderRadius:'50%', display:'inline-block'}}></span> Active</span>
+                  </div>
+                  <div className="p-5 flex-1 flex flex-col">
+                    <div className="font-bold text-base text-slate-900 mb-2 line-clamp-2 leading-snug">{product.name}</div>
+                    <div className="flex justify-between items-end mb-5 mt-auto">
+                      <span className="text-xl font-bold text-slate-900">₹{product.price.toLocaleString('en-IN')}</span>
+                      <span className="text-xs text-emerald-600 font-medium flex items-center gap-1.5 bg-emerald-50 px-2 py-1 rounded-md">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active
+                      </span>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <button style={{ flex: 1, padding: '8px', backgroundColor: '#334155', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
-                      <button style={{ flex: 1, padding: '8px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#EF4444', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }} onClick={() => {
-                        if (confirm('Are you sure you want to delete this product?')) {
-                          deleteProduct(product.id);
-                        }
-                      }}>Delete</button>
+                    <div className="flex gap-3">
+                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-medium text-sm transition-colors">
+                        <Edit2 className="w-4 h-4" /> Edit
+                      </button>
+                      <button 
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg font-medium text-sm transition-colors"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this listing?')) {
+                            deleteProduct(product.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete
+                      </button>
                     </div>
                   </div>
                 </div>
               ))}
               {myListings.length === 0 && (
-                <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: '#94A3B8', backgroundColor: '#0F172A', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '10px' }}>📦</div>
-                  <div>No products found. Start by adding a new product!</div>
+                <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-slate-200 shadow-sm">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Package className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">No listings yet</h3>
+                  <p className="text-slate-500 mb-6">Start growing your business by adding your first product.</p>
+                  <button 
+                    onClick={() => setActiveTab('add')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold transition-colors"
+                  >
+                    Add Product
+                  </button>
                 </div>
               )}
             </div>
@@ -176,69 +217,134 @@ export default function SellerDashboard() {
         )}
 
         {activeTab === 'add' && (
-          <div>
-            <h2 style={{ marginBottom: '20px' }}>Add New Product</h2>
+          <div className="max-w-3xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900">Add New Product</h1>
+              <p className="text-slate-500 mt-2">Create a new listing to start selling.</p>
+            </div>
+            
             {showSuccess ? (
-              <div style={{ padding: '20px', backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10B981', borderRadius: '8px', textAlign: 'center' }}>
-                Product published successfully! Redirecting to listings...
+              <div className="bg-emerald-50 border border-emerald-200 p-8 rounded-2xl text-center">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-emerald-800 mb-2">Product Published Successfully!</h3>
+                <p className="text-emerald-600">Your product is now live on MarkatVerse. Redirecting to listings...</p>
               </div>
             ) : (
-              <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', gap: '20px' }}>
-                  <div style={{ flex: 2 }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8' }}>Product Title</label>
-                    <input required type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Enter product name" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white' }} />
+              <form onSubmit={handleAddProduct} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Product Title</label>
+                    <input 
+                      required 
+                      type="text" 
+                      value={name} 
+                      onChange={e => setName(e.target.value)} 
+                      placeholder="E.g., Wireless Noise-Cancelling Headphones" 
+                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900" 
+                    />
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8' }}>Category</label>
-                    <select required value={category} onChange={e => setCategory(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white' }}>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Category</label>
+                    <select 
+                      required 
+                      value={category} 
+                      onChange={e => setCategory(e.target.value)} 
+                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white text-slate-900"
+                    >
                       <option value="Electronics">Electronics</option>
                       <option value="Fashion">Fashion</option>
                       <option value="Home">Home & Garden</option>
                       <option value="Beauty">Beauty</option>
                       <option value="Automotive">Automotive</option>
                       <option value="B2B">B2B Wholesale</option>
+                      <option value="Services">Services</option>
+                      <option value="Transport">Transport</option>
+                      <option value="Organizers">Organizers & Contractors</option>
                     </select>
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '20px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8' }}>Selling Price (₹)</label>
-                    <input required type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white' }} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Selling Price (₹)</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
+                      <input 
+                        required 
+                        type="number" 
+                        value={price} 
+                        onChange={e => setPrice(e.target.value)} 
+                        placeholder="0.00" 
+                        className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900" 
+                      />
+                    </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8' }}>Original M.R.P (₹)</label>
-                    <input type="number" value={originalPrice} onChange={e => setOriginalPrice(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white' }} />
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Original M.R.P (₹) <span className="text-slate-400 font-normal">(Optional)</span></label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
+                      <input 
+                        type="number" 
+                        value={originalPrice} 
+                        onChange={e => setOriginalPrice(e.target.value)} 
+                        placeholder="0.00" 
+                        className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900" 
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '20px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8' }}>Seller Name</label>
-                    <input required type="text" value={sellerName} onChange={e => setSellerName(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white' }} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8' }}>Seller Location</label>
-                    <input required type="text" value={location} onChange={e => setLocation(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white' }} />
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Product Image URL <span className="text-slate-400 font-normal">(Optional)</span></label>
+                  <input 
+                    type="url" 
+                    value={imageUrl} 
+                    onChange={e => setImageUrl(e.target.value)} 
+                    placeholder="https://example.com/image.jpg" 
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900" 
+                  />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8' }}>Product Image URL</label>
-                  <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://example.com/image.jpg" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white' }} />
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Description</label>
+                  <textarea 
+                    rows={5} 
+                    value={description} 
+                    onChange={e => setDescription(e.target.value)} 
+                    placeholder="Describe your product's key features, specifications, and benefits..." 
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900 resize-none"
+                  ></textarea>
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8' }}>Description</label>
-                  <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} placeholder="Describe your product..." style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white', resize: 'none' }}></textarea>
+                <div className="pt-4 border-t border-slate-100 flex justify-end">
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold shadow-md shadow-blue-600/20 transition-all disabled:opacity-70 flex items-center gap-2"
+                  >
+                    {isSubmitting ? 'Publishing...' : 'Publish Product'}
+                  </button>
                 </div>
-
-                <button type="submit" className="btn-primary" disabled={isSubmitting}>
-                  {isSubmitting ? 'Publishing...' : 'Publish Product'}
-                </button>
               </form>
             )}
+          </div>
+        )}
+
+        {activeTab === 'orders' && (
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900">Recent Orders</h1>
+              <p className="text-slate-500 mt-2">Track and manage your customer orders.</p>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center">
+              <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">No active orders</h3>
+              <p className="text-slate-500">When customers place orders for your products, they will appear here.</p>
+            </div>
           </div>
         )}
 
