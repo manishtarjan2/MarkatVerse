@@ -78,8 +78,10 @@ export default function AdminDashboard() {
       <div className="w-[260px] bg-white border-r border-slate-200 flex flex-col shrink-0">
         {/* Logo Area */}
         <div className="p-5 border-b border-slate-200">
-          <img src="/logo.png" alt="MarkatVerse" className="h-8 object-contain" />
-          <div className="text-[10px] text-amber-600 font-bold tracking-widest mt-1">ADMIN PORTAL</div>
+          <Link href="/" className="block hover:opacity-80 transition-opacity">
+            <img src="/logo.png" alt="MarkatVerse" className="h-8 object-contain" />
+            <div className="text-[10px] text-amber-600 font-bold tracking-widest mt-1">ADMIN PORTAL</div>
+          </Link>
         </div>
 
         {/* Navigation */}
