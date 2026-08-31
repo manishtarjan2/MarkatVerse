@@ -30,9 +30,9 @@ function SearchContent() {
   }, [q, loc, cat, products]);
 
   return (
-    <div className="max-w-[1400px] mx-auto p-5 min-h-[calc(100vh-80px)] text-white">
-      <h1 className="text-3xl font-medium mb-2">Search Results</h1>
-      <p className="text-slate-400 mb-6">
+    <div className="max-w-[1400px] mx-auto p-5 min-h-[calc(100vh-80px)] bg-slate-50">
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Search Results</h1>
+      <p className="text-slate-500 mb-6 font-medium">
         {filteredProducts.length} results found
         {q && ` for "${q}"`}
         {loc && ` in ${loc}`}
@@ -46,7 +46,7 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="p-10 text-white text-center">Loading search results...</div>}>
+    <Suspense fallback={<div className="p-10 text-slate-500 text-center font-medium">Loading search results...</div>}>
       <SearchContent />
     </Suspense>
   );
