@@ -4,6 +4,7 @@ import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/context/ProductContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin } from 'lucide-react';
 
 export default function ProductDetails() {
   const params = useParams();
@@ -15,7 +16,16 @@ export default function ProductDetails() {
   const product = products.find(p => p.id === id);
 
   if (!product) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}><h1>Product Not Found</h1><Link href="/"><button className="btn-primary" style={{marginTop: '20px'}}>Go Back</button></Link></div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[500px] p-10 bg-slate-50">
+        <h1 className="text-2xl font-bold text-slate-800 mb-6">Product Not Found</h1>
+        <Link href="/">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+            Go Back
+          </button>
+        </Link>
+      </div>
+    );
   }
 
   // Get related products from the same seller (excluding current product)
@@ -23,59 +33,48 @@ export default function ProductDetails() {
   // If no related products from the same seller, just show some random ones
   const displayedRelated = relatedProducts.length > 0 ? relatedProducts : products.filter(p => p.id !== product.id).slice(0, 4);
 
-  // Mock multiple image variations using emoji/text placeholders
+  // Mock multiple image variations using lucide icons/text placeholders
   const mockImages = [
-    { icon: '📸', label: 'Front View', url: product.image },
-    { icon: '📐', label: 'Side View' },
-    { icon: '🔍', label: 'Close Up' },
-    { icon: '📦', label: 'In Box' }
+    { icon: <Camera className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Front View', url: product.image },
+    { icon: <Ruler className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Side View' },
+    { icon: <ZoomIn className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Close Up' },
+    { icon: <Package className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'In Box' }
   ];
 
   return (
-    <div style={{ padding: '40px', width: '100%', margin: '0 auto', maxWidth: '100%' }}>
+    <div className="max-w-[1400px] mx-auto p-6 lg:p-10 bg-white">
       
       {/* Top Section: Images and Details */}
-      <div style={{ display: 'flex', gap: '40px' }}>
+      <div className="flex flex-col lg:flex-row gap-10">
         
         {/* Left: Product Image Gallery */}
-        <div style={{ flex: 1 }}>
+        <div className="flex-1">
           {/* Main Image */}
-          <div style={{ width: '100%', height: '500px', backgroundColor: '#1E293B', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#64748B', border: '1px solid #334155', overflow: 'hidden' }}>
+          <div className="w-full h-[500px] bg-slate-50 rounded-2xl flex flex-col items-center justify-center text-slate-500 border border-slate-200 overflow-hidden shadow-sm">
             {mockImages[activeImage].url ? (
-              <img src={mockImages[activeImage].url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={mockImages[activeImage].url} alt={product.name} className="w-full h-full object-contain p-4" />
             ) : (
               <>
-                <span style={{ fontSize: '80px', opacity: 0.5, marginBottom: '20px' }}>{mockImages[activeImage].icon}</span>
-                <span style={{ fontSize: '18px' }}>{mockImages[activeImage].label}</span>
+                {mockImages[activeImage].icon}
+                <span className="text-lg font-medium">{mockImages[activeImage].label}</span>
               </>
             )}
           </div>
           
           {/* Thumbnails */}
-          <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+          <div className="flex gap-4 mt-4">
             {mockImages.map((img, index) => (
               <div 
                 key={index} 
                 onClick={() => setActiveImage(index)}
-                style={{ 
-                  width: '80px', 
-                  height: '80px', 
-                  backgroundColor: '#1E293B', 
-                  borderRadius: '8px', 
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '24px',
-                  border: activeImage === index ? '2px solid var(--accent-gold)' : '1px solid #334155',
-                  opacity: activeImage === index ? 1 : 0.6,
-                  overflow: 'hidden'
-                }}
+                className={`w-20 h-20 bg-slate-50 rounded-xl cursor-pointer flex flex-col items-center justify-center border-2 transition-all overflow-hidden shadow-sm
+                  ${activeImage === index ? 'border-blue-600 ring-2 ring-blue-100' : 'border-slate-200 hover:border-blue-300 opacity-70 hover:opacity-100'}
+                `}
               >
                 {img.url ? (
-                  <img src={img.url} alt="thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={img.url} alt="thumbnail" className="w-full h-full object-cover" />
                 ) : (
-                  img.icon
+                  <div className="scale-50 text-slate-400">{img.icon}</div>
                 )}
               </div>
             ))}
@@ -83,51 +82,51 @@ export default function ProductDetails() {
         </div>
 
         {/* Right: Product Info & Seller Card */}
-        <div style={{ flex: 1 }}>
-          <div style={{ color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>
+        <div className="flex-1">
+          <div className="text-blue-600 uppercase tracking-widest text-xs font-bold mb-3">
             {product.seller}
           </div>
-          <h1 style={{ fontSize: '32px', marginBottom: '10px' }}>{product.name}</h1>
+          <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 leading-tight">{product.name}</h1>
           
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-            <span style={{ color: '#F59E0B' }}>★ {product.rating} ({product.reviews} ratings)</span>
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <span className="text-amber-500 font-medium flex items-center gap-1">
+              <Star className="w-4 h-4 fill-amber-500" /> {product.rating} <span className="text-slate-500 font-normal">({product.reviews} ratings)</span>
+            </span>
           </div>
 
-          <div style={{ padding: '20px', backgroundColor: '#1E293B', borderRadius: '12px', marginBottom: '30px' }}>
-            <div style={{ fontSize: '36px', fontWeight: 'bold' }}>₹{product.price.toLocaleString('en-IN')}</div>
+          <div className="p-6 bg-slate-50 rounded-2xl mb-8 border border-slate-200 shadow-sm">
+            <div className="text-4xl font-bold text-slate-900">₹{product.price.toLocaleString('en-IN')}</div>
             {product.originalPrice > product.price && (
               <>
-                <div style={{ color: '#94A3B8', textDecoration: 'line-through', marginTop: '4px' }}>M.R.P: ₹{product.originalPrice.toLocaleString('en-IN')}</div>
-                <div style={{ color: '#EF4444', fontWeight: 'bold', marginTop: '4px' }}>You Save: {product.discount}</div>
+                <div className="text-slate-500 line-through mt-2 text-sm">M.R.P: ₹{product.originalPrice.toLocaleString('en-IN')}</div>
+                <div className="text-emerald-600 font-bold mt-1 text-sm">You Save: {product.discount}</div>
               </>
             )}
             
-            <div style={{ marginTop: '20px', display: 'flex', gap: '16px' }}>
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <button 
-                className="btn-primary" 
-                style={{ flex: 1, padding: '16px', fontSize: '18px' }}
+                className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
                 onClick={() => {
                   alert(`Quote request sent for ${product.name}!`);
                 }}
               >
-                Get Latest Price 📉
+                Get Latest Price
               </button>
               <button 
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg border-none cursor-pointer transition-colors" 
-                style={{ flex: 1, padding: '16px', fontSize: '18px' }}
+                className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
                 onClick={() => {
                   addToCart(product);
                   alert(`Added ${product.name} to cart!`);
                 }}
               >
-                Add to Cart 🛒
+                Add to Cart
               </button>
             </div>
           </div>
 
-          <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ marginBottom: '10px' }}>Important Details</h3>
-            <ul style={{ paddingLeft: '20px', color: '#CBD5E1', lineHeight: '1.8' }}>
+          <div className="mb-10">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Important Details</h3>
+            <ul className="pl-5 text-slate-600 leading-loose list-disc">
               <li>Premium build quality with durable materials</li>
               <li>1 Year International Warranty included</li>
               <li>7 Days Replacement Policy available</li>
@@ -137,35 +136,42 @@ export default function ProductDetails() {
           </div>
 
           {/* Sold By - Company Details Card */}
-          <div style={{ padding: '20px', backgroundColor: '#0F172A', borderRadius: '12px', border: '1px solid #334155' }}>
-            <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '10px' }}>Sold by Company</div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{ width: '50px', height: '50px', backgroundColor: '#1E293B', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-                  🏢
+          <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Sold by Company</div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0 border border-blue-100">
+                  <Building2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <Link href={`/seller/${encodeURIComponent(product.seller)}`} style={{ textDecoration: 'none' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '18px', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <Link href={`/seller/${encodeURIComponent(product.seller)}`} className="no-underline">
+                    <div className="font-bold text-lg text-slate-900 hover:text-blue-600 transition-colors flex items-center gap-2">
                       {product.seller}
-                      <span style={{ backgroundColor: '#10B981', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ fontSize: '12px' }}>🛡️</span> TrustSEAL Verified
+                      <span className="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-bold tracking-tight">
+                        <ShieldCheck className="w-3 h-3" /> TrustSEAL Verified
                       </span>
                     </div>
                   </Link>
-                  <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>📍 {product.location}</div>
+                  <div className="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5" /> {product.location}
+                  </div>
                 </div>
               </div>
-              <button className="btn-outline" style={{ padding: '8px 16px', fontSize: '14px' }}>+ Follow</button>
+              <button className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold text-sm transition-colors border border-slate-200 shrink-0">
+                + Follow
+              </button>
             </div>
-            <div style={{ display: 'flex', gap: '30px', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #334155' }}>
+            
+            <div className="flex gap-10 mt-6 pt-6 border-t border-slate-100">
               <div>
-                <div style={{ fontSize: '12px', color: '#94A3B8' }}>Seller Rating</div>
-                <div style={{ fontWeight: 'bold', color: '#F59E0B' }}>4.9/5 (10k+ Reviews)</div>
+                <div className="text-xs text-slate-500 font-medium mb-1">Seller Rating</div>
+                <div className="font-bold text-amber-500 flex items-center gap-1">
+                  4.9/5 <span className="text-slate-400 font-normal text-xs ml-1">(10k+ Reviews)</span>
+                </div>
               </div>
               <div>
-                <div style={{ fontSize: '12px', color: '#94A3B8' }}>Active Since</div>
-                <div style={{ fontWeight: 'bold' }}>2021</div>
+                <div className="text-xs text-slate-500 font-medium mb-1">Active Since</div>
+                <div className="font-bold text-slate-900">2021</div>
               </div>
             </div>
           </div>
@@ -174,25 +180,27 @@ export default function ProductDetails() {
       </div>
 
       {/* Bottom Section: Related Products */}
-      <div style={{ marginTop: '60px', paddingTop: '40px', borderTop: '1px solid #334155' }}>
-        <h2 style={{ marginBottom: '20px' }}>More from {product.seller}</h2>
+      <div className="mt-20 pt-10 border-t border-slate-200">
+        <h2 className="text-2xl font-bold text-slate-900 mb-8">More from {product.seller}</h2>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6">
           {displayedRelated.map(relatedItem => (
-            <Link key={relatedItem.id} href={`/product/${relatedItem.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="product-card" style={{ padding: '15px' }}>
-                <div className="product-image" style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1E293B', borderRadius: '8px', overflow: 'hidden' }}>
+            <Link key={relatedItem.id} href={`/product/${relatedItem.id}`} className="no-underline group">
+              <div className="p-4 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-colors shadow-sm group-hover:shadow-md">
+                <div className="h-48 bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden mb-4 border border-slate-100">
                   {relatedItem.image ? (
-                    <img src={relatedItem.image} alt={relatedItem.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={relatedItem.image} alt={relatedItem.name} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform" />
                   ) : (
-                    <span style={{ fontSize: '30px', opacity: 0.5 }}>📸</span>
+                    <Camera className="w-10 h-10 text-slate-300" strokeWidth={1.5} />
                   )}
                 </div>
-                <div style={{ fontSize: '10px', color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '10px', fontWeight: 'bold' }}>
+                <div className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1">
                   {relatedItem.seller}
                 </div>
-                <div className="product-title" style={{ fontSize: '14px', marginTop: '4px' }}>{relatedItem.name}</div>
-                <div className="product-price" style={{ fontSize: '16px' }}>
+                <div className="text-sm font-medium text-slate-800 mb-2 line-clamp-2 leading-tight">
+                  {relatedItem.name}
+                </div>
+                <div className="text-lg font-bold text-slate-900">
                   ₹{relatedItem.price.toLocaleString('en-IN')}
                 </div>
               </div>
