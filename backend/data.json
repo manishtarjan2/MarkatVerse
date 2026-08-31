@@ -1,0 +1,72 @@
+[
+  {
+    "id": "iphone-15-pro-max",
+    "name": "iPhone 15 Pro Max 256GB",
+    "price": 134900,
+    "originalPrice": 159900,
+    "discount": "15% OFF",
+    "rating": "4.8",
+    "reviews": "12.5K",
+    "seller": "Apple Authorized India",
+    "location": "Mumbai, Maharashtra",
+    "category": "Electronics",
+    "badge": "Bestseller",
+    "badgeColor": "badge-gold"
+  },
+  {
+    "id": "boat-airdopes-141",
+    "name": "boAt Airdopes 141 Bluetooth Earbuds",
+    "price": 1299,
+    "originalPrice": 2999,
+    "discount": "57% OFF",
+    "rating": "4.6",
+    "reviews": "8.4K",
+    "seller": "Appario Retail",
+    "location": "Bengaluru, Karnataka",
+    "category": "Electronics",
+    "badge": "Deal of the Day",
+    "badgeColor": "badge-red"
+  },
+  {
+    "id": "mens-casual-shirt",
+    "name": "Men's Casual Cotton Shirt",
+    "price": 699,
+    "originalPrice": 1499,
+    "discount": "53% OFF",
+    "rating": "4.3",
+    "reviews": "2.1K",
+    "seller": "Fashion Hub",
+    "location": "Surat, Gujarat",
+    "category": "Fashion",
+    "badge": "Trending",
+    "badgeColor": "badge-red"
+  },
+  {
+    "id": "kitchen-appliance-set",
+    "name": "Kitchen Appliance Set (5 Pieces)",
+    "price": 2499,
+    "originalPrice": 4999,
+    "discount": "50% OFF",
+    "rating": "4.7",
+    "reviews": "3.6K",
+    "seller": "Home Essentials Ltd",
+    "location": "New Delhi, Delhi",
+    "category": "Home",
+    "badge": "Top Rated",
+    "badgeColor": "badge-gold"
+  },
+  {
+    "id": "bulb",
+    "name": "Bulb",
+    "price": 90,
+    "originalPrice": 80,
+    "discount": "",
+    "rating": "New",
+    "reviews": "0",
+    "seller": "Amit Verma",
+    "location": "New Delhi, Delhi",
+    "category": "Electronics",
+    "badge": "New Arrival",
+    "badgeColor": "badge-gold"
+  }
+]

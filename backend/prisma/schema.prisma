@@ -1,0 +1,103 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("CONSUMER") // CONSUMER, SELLER, ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business?
+  products Product[]
+  orders   Order[]
+}
+
+model Business {
+  id           String       @id @default(uuid())
+  userId       String       @unique
+  name         String
+  logo         String?
+  description  String?
+  businessType String // MANUFACTURER, WHOLESALER, etc
+  address      String?
+  verified     Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  name      String
+  parentId  String?
+  parent    Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryToCategory")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  sellerId      String?
+  categoryId    String?
+  
+  // Frontend fields
+  name          String
+  description   String?
+  price         Float
+  originalPrice Float?
+  discount      String?
+  rating        String?  @default("0.0")
+  reviews       String?  @default("0")
+  sellerName    String?
+  location      String?
+  categoryName  String?
+  badge         String?
+  badgeColor    String?
+
+  stock         Int      @default(0)
+  sku           String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  seller   User?       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category Category?   @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  buyerId   String
+  total     Float
+  status    String      @default("PENDING") // PENDING, SHIPPED, etc
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  buyer User        @relation(fields: [buyerId], references: [id])
+  items OrderItem[]
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
