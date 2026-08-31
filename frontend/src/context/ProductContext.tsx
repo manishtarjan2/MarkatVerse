@@ -79,6 +79,20 @@ const defaultProducts: Product[] = [
     category: 'Home',
     badge: 'Top Rated',
     badgeColor: 'badge-gold'
+  },
+  {
+    id: 'ac-repair-service',
+    name: 'Professional AC Repair & Servicing',
+    price: 499,
+    originalPrice: 999,
+    discount: '50% OFF',
+    rating: '4.9',
+    reviews: '1.2K',
+    seller: 'Urban Cool Services',
+    location: 'Mumbai, Maharashtra',
+    category: 'Services',
+    badge: 'Verified Expert',
+    badgeColor: 'badge-gold'
   }
 ];
 

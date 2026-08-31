@@ -4,7 +4,7 @@ import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/context/ProductContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin } from 'lucide-react';
+import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin, PhoneCall } from 'lucide-react';
 
 export default function ProductDetails() {
   const params = useParams();
@@ -104,23 +104,36 @@ export default function ProductDetails() {
             )}
             
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <button 
-                className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
-                onClick={() => {
-                  alert(`Quote request sent for ${product.name}!`);
-                }}
-              >
-                Get Latest Price
-              </button>
-              <button 
-                className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
-                onClick={() => {
-                  addToCart(product);
-                  alert(`Added ${product.name} to cart!`);
-                }}
-              >
-                Add to Cart
-              </button>
+              {product.category === 'Services' ? (
+                <button 
+                  className="flex-1 px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-emerald-600/20 flex items-center justify-center gap-3"
+                  onClick={() => {
+                    alert(`Calling ${product.seller} at +91-9876543210 for a bargain!`);
+                  }}
+                >
+                  <PhoneCall className="w-6 h-6 animate-pulse" /> Call to Bargain / Enquire
+                </button>
+              ) : (
+                <>
+                  <button 
+                    className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
+                    onClick={() => {
+                      alert(`Quote request sent for ${product.name}!`);
+                    }}
+                  >
+                    Get Latest Price
+                  </button>
+                  <button 
+                    className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
+                    onClick={() => {
+                      addToCart(product);
+                      alert(`Added ${product.name} to cart!`);
+                    }}
+                  >
+                    Add to Cart
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
