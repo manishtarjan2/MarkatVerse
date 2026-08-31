@@ -161,6 +161,34 @@ const defaultProducts: Product[] = [
     category: 'Transport',
     badge: 'Verified B2B',
     badgeColor: 'badge-gold'
+  },
+  {
+    id: 'dream-events-weddings',
+    name: 'Dream Events & Weddings Planner',
+    price: 0,
+    originalPrice: 0,
+    discount: 'Custom',
+    rating: '4.9',
+    reviews: '340',
+    seller: 'Dream Events Co.',
+    location: 'Goa, India',
+    category: 'Organizers',
+    badge: 'Premium Provider',
+    badgeColor: 'badge-gold'
+  },
+  {
+    id: 'prime-construction',
+    name: 'Prime Construction & Building Contractors',
+    price: 0,
+    originalPrice: 0,
+    discount: 'Custom',
+    rating: '4.7',
+    reviews: '125',
+    seller: 'Prime Builders Ltd.',
+    location: 'Pune, Maharashtra',
+    category: 'Organizers',
+    badge: 'Certified',
+    badgeColor: 'badge-blue'
   }
 ];
 

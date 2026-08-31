@@ -201,21 +201,23 @@ export default function Home() {
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
             {[
-              { name: 'Dream Events & Weddings', type: 'Event Organizer', rating: '4.9', icon: '🎉' },
-              { name: 'Prime Construction & Builders', type: 'Construction Contractor', rating: '4.7', icon: '🏗️' },
-              { name: 'Luxury Party Planners', type: 'Event Organizer', rating: '4.8', icon: '🥂' },
-              { name: 'Grand Stage Decorators', type: 'Wedding Planner', rating: '4.9', icon: '💐' }
+              { name: 'Dream Events & Weddings', type: 'Event Organizer', rating: '4.9', icon: '🎉', link: '/product/dream-events-weddings' },
+              { name: 'Prime Construction & Builders', type: 'Construction Contractor', rating: '4.7', icon: '🏗️', link: '/product/prime-construction' },
+              { name: 'Luxury Party Planners', type: 'Event Organizer', rating: '4.8', icon: '🥂', link: '#' },
+              { name: 'Grand Stage Decorators', type: 'Wedding Planner', rating: '4.9', icon: '💐', link: '#' }
             ].map((provider, i) => (
-              <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer">
-                <div className="w-[60px] h-[60px] bg-slate-50 rounded-xl flex items-center justify-center text-lg shrink-0">
-                  {provider.icon}
+              <Link key={i} href={provider.link} className="no-underline text-inherit">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">
+                  <div className="w-[60px] h-[60px] bg-emerald-50 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-emerald-100">
+                    {provider.icon}
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="text-[10px] text-emerald-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
+                    <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
+                    <div className="text-amber-500 text-[10px] mt-1">★ {provider.rating}</div>
+                  </div>
                 </div>
-                <div className="overflow-hidden">
-                  <div className="text-[10px] text-emerald-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
-                  <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
-                  <div className="text-amber-500 text-[10px] mt-1">★ {provider.rating}</div>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

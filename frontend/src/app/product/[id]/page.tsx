@@ -96,10 +96,16 @@ export default function ProductDetails() {
 
           <div className="p-6 bg-slate-50 rounded-2xl mb-8 border border-slate-200 shadow-sm">
             <div className="text-4xl font-bold text-slate-900">
-              ₹{product.price.toLocaleString('en-IN')}
-              {product.category === 'Transport' && <span className="text-lg text-slate-500 font-medium ml-1">/ km</span>}
+              {product.category === 'Organizers' ? (
+                'Project Based'
+              ) : (
+                <>
+                  ₹{product.price.toLocaleString('en-IN')}
+                  {product.category === 'Transport' && <span className="text-lg text-slate-500 font-medium ml-1">/ km</span>}
+                </>
+              )}
             </div>
-            {product.originalPrice > product.price && (
+            {product.originalPrice > product.price && product.category !== 'Organizers' && (
               <>
                 <div className="text-slate-500 line-through mt-2 text-sm">
                   M.R.P: ₹{product.originalPrice.toLocaleString('en-IN')}
@@ -110,7 +116,26 @@ export default function ProductDetails() {
             )}
             
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              {product.category === 'Transport' ? (
+              {product.category === 'Organizers' ? (
+                <>
+                  <button 
+                    className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
+                    onClick={() => {
+                      alert(`Requesting portfolio and quote from ${product.seller}...`);
+                    }}
+                  >
+                    Request a Quote
+                  </button>
+                  <button 
+                    className="flex-1 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-indigo-600/20"
+                    onClick={() => {
+                      alert(`Connecting you directly with ${product.seller} to discuss your function.`);
+                    }}
+                  >
+                    Contact Company
+                  </button>
+                </>
+              ) : product.category === 'Transport' ? (
                 <>
                   <button 
                     className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
