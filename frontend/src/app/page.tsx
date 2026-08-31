@@ -162,6 +162,36 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Salon & Beauty Services Section */}
+        <section className="mt-[60px]">
+          <div className="flex justify-between items-end border-b border-slate-200 pb-2.5 mb-5">
+            <h2 className="text-lg font-medium text-slate-900">Salon, Spa & Beauty Services</h2>
+            <Link href="/services/beauty" className="text-blue-600 font-normal hover:underline text-sm">Explore Beauty Services ➤</Link>
+          </div>
+
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
+            {[
+              { name: 'Men & Women Hair Cutting', type: 'Unisex Salon', rating: '4.8', icon: '✂️', link: '/product/hair-cutting-styling' },
+              { name: 'Premium Spa Pedicure', type: 'Spa & Wellness', rating: '4.9', icon: '💆‍♀️', link: '/product/premium-pedicure' },
+              { name: 'Nail Art & Extensions', type: 'Nail Studio', rating: '4.7', icon: '💅', link: '/product/nail-art-extensions' },
+              { name: 'Bridal Makeup & Styling', type: 'Makeup Artist', rating: '4.9', icon: '💄', link: '#' }
+            ].map((provider, i) => (
+              <Link key={i} href={provider.link} className="no-underline text-inherit">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">
+                  <div className="w-[60px] h-[60px] bg-pink-50 text-pink-600 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-pink-100">
+                    {provider.icon}
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="text-[10px] text-pink-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
+                    <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
+                    <div className="text-amber-500 text-[10px] mt-1">★ {provider.rating}</div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {/* Organizers Section */}
         <section className="mt-[60px]">
           <div className="flex justify-between items-end border-b border-slate-200 pb-2.5 mb-5">
