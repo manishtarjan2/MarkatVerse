@@ -16,7 +16,6 @@ export default function Navbar() {
   const [locationInput, setLocationInput] = useState("");
 
   const [searchLocation, setSearchLocation] = useState("");
-  const [searchCategory, setSearchCategory] = useState("All Categories");
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
@@ -25,7 +24,6 @@ export default function Navbar() {
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
     if (searchLocation) params.set("loc", searchLocation);
-    if (searchCategory !== "All Categories") params.set("cat", searchCategory);
     router.push(`/search?${params.toString()}`);
   };
 
@@ -33,8 +31,7 @@ export default function Navbar() {
     <nav className="flex items-center justify-between py-2 px-6 bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-sm">
       <div className="flex items-center gap-6">
         <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity">
-          <img src="/logo.png" alt="MarkatVerse" className="h-10 object-contain" />
-          <span className="ml-2 text-xl font-bold text-slate-800 tracking-tight hidden sm:block">MarkatVerse</span>
+          <img src="/logo.png" alt="MarkatVerse" className="h-14 object-contain" />
         </Link>
       </div>
 
@@ -105,27 +102,9 @@ export default function Navbar() {
               </datalist>
             </div>
             
-            <select
-              value={searchCategory}
-              onChange={(e) => setSearchCategory(e.target.value)}
-              className="bg-slate-100/50 text-slate-600 border-none py-2.5 px-3 border-r border-slate-300 outline-none text-sm font-medium hover:bg-slate-200/50 cursor-pointer transition-colors"
-            >
-              <option>All Categories</option>
-              <option>Sellers / Businesses</option>
-              <option>Services</option>
-              <option>Products</option>
-              <option>Transport</option>
-            </select>
-            
             <input
               type="text"
-              placeholder={
-                searchCategory === 'Sellers / Businesses'
-                  ? `Search for sellers...`
-                  : searchCategory === 'Services'
-                    ? `Find services...`
-                    : "Search for products, brands and more..."
-              }
+              placeholder="Search for products, brands, services and more..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent text-slate-800 border-none py-2.5 px-4 outline-none placeholder:text-slate-400 text-sm"
