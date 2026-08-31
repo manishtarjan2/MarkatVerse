@@ -121,9 +121,9 @@ export default function SellerOnboarding() {
     { num: 3, label: 'Documents' },
   ];
 
-  const inputClasses = "w-full p-3.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all placeholder:text-slate-400 text-sm";
-  const selectClasses = "w-full p-3.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all text-sm";
-  const labelClasses = "block text-xs font-medium text-slate-700 mb-2";
+  const inputClasses = "w-full p-3.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all placeholder:text-slate-400 text-base";
+  const selectClasses = "w-full p-3.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all text-base";
+  const labelClasses = "block text-sm font-medium text-slate-700 mb-2";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 flex">
@@ -139,7 +139,7 @@ export default function SellerOnboarding() {
         {/* Logo */}
         <div className="relative z-10">
           <img src="/logo.png" alt="MarkatVerse" className="h-12 brightness-0 invert object-contain" />
-          <div className="mt-1 text-emerald-200 text-xs font-medium tracking-wider">SELLER PORTAL</div>
+          <div className="mt-1 text-emerald-200 text-sm font-medium tracking-wider">SELLER PORTAL</div>
         </div>
 
         {/* Center Content */}
@@ -148,7 +148,7 @@ export default function SellerOnboarding() {
             Grow your business<br />
             <span className="text-amber-400">with MarkatVerse</span>
           </h1>
-          <p className="text-emerald-100 text-sm leading-relaxed mb-8">
+          <p className="text-emerald-100 text-base leading-relaxed mb-8">
             Reach millions of customers across 200+ countries. List products, manage orders, and scale your business — all from one dashboard.
           </p>
 
@@ -163,8 +163,8 @@ export default function SellerOnboarding() {
               <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
                 <span className="text-xl">{b.icon}</span>
                 <div>
-                  <div className="text-white text-sm font-medium">{b.title}</div>
-                  <div className="text-emerald-200 text-xs">{b.desc}</div>
+                  <div className="text-white text-base font-medium">{b.title}</div>
+                  <div className="text-emerald-200 text-sm">{b.desc}</div>
                 </div>
               </div>
             ))}
@@ -172,7 +172,7 @@ export default function SellerOnboarding() {
         </div>
 
         {/* Trust */}
-        <div className="relative z-10 flex items-center gap-4 text-emerald-200 text-xs">
+        <div className="relative z-10 flex items-center gap-4 text-emerald-200 text-sm">
           <span>🛡️ TrustSEAL Verified</span>
           <span>🔒 Secure Platform</span>
         </div>
@@ -185,7 +185,7 @@ export default function SellerOnboarding() {
           {/* Mobile Logo */}
           <div className="lg:hidden mb-6 text-center">
             <img src="/logo.png" alt="MarkatVerse" className="h-10 mx-auto object-contain" />
-            <div className="text-emerald-600 text-xs font-medium mt-1">SELLER PORTAL</div>
+            <div className="text-emerald-600 text-sm font-medium mt-1">SELLER PORTAL</div>
           </div>
 
           {/* Step Progress */}
@@ -194,14 +194,14 @@ export default function SellerOnboarding() {
               {steps.map((s, i) => (
                 <React.Fragment key={s.num}>
                   <div className="flex flex-col items-center gap-1.5">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold transition-all ${
                       step > s.num ? 'bg-emerald-600 text-white' :
                       step === s.num ? 'bg-emerald-600 text-white ring-4 ring-emerald-100' :
                       'bg-slate-200 text-slate-400'
                     }`}>
                       {step > s.num ? '✓' : s.num}
                     </div>
-                    <span className={`text-[10px] font-medium ${step >= s.num ? 'text-emerald-700' : 'text-slate-400'}`}>
+                    <span className={`text-xs font-medium ${step >= s.num ? 'text-emerald-700' : 'text-slate-400'}`}>
                       {s.label}
                     </span>
                   </div>
@@ -222,12 +222,12 @@ export default function SellerOnboarding() {
                     <span className="text-2xl">📱</span>
                   </div>
                   <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Verify your mobile</h2>
-                  <p className="text-slate-500 text-sm text-center mb-8">We'll send a 6-digit OTP to verify your number</p>
+                  <p className="text-slate-500 text-base text-center mb-8">We'll send a 6-digit OTP to verify your number</p>
 
                   <form onSubmit={handleSendOtp} className="max-w-[360px] mx-auto">
                     <label className={labelClasses}>Mobile Number</label>
                     <div className="flex gap-3 mb-6">
-                      <div className="w-[72px] flex items-center justify-center bg-slate-100 border border-slate-300 rounded-lg text-slate-500 text-sm font-medium">
+                      <div className="w-[72px] flex items-center justify-center bg-slate-100 border border-slate-300 rounded-lg text-slate-500 text-base font-medium">
                         +91
                       </div>
                       <input 
@@ -236,7 +236,7 @@ export default function SellerOnboarding() {
                       />
                     </div>
                     <button type="submit" disabled={isSubmitting || phone.length < 10}
-                      className="w-full p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-sm">
+                      className="w-full p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
                       {isSubmitting ? (
                         <span className="flex items-center justify-center gap-2">
                           <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -246,7 +246,7 @@ export default function SellerOnboarding() {
                     </button>
                   </form>
 
-                  <p className="mt-6 text-center text-xs text-slate-400">
+                  <p className="mt-6 text-center text-sm text-slate-400">
                     Already a seller? <Link href="/login" className="text-emerald-600 hover:underline font-medium">Log in here</Link>
                   </p>
                 </>
@@ -256,8 +256,8 @@ export default function SellerOnboarding() {
                     <span className="text-2xl">✉️</span>
                   </div>
                   <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Enter OTP</h2>
-                  <p className="text-slate-500 text-sm text-center mb-1">6-digit code sent to <strong className="text-slate-800">+91 {phone}</strong></p>
-                  <button type="button" onClick={() => setIsOtpSent(false)} className="text-emerald-600 text-xs cursor-pointer bg-transparent border-none mx-auto block mb-6 hover:underline">
+                  <p className="text-slate-500 text-base text-center mb-1">6-digit code sent to <strong className="text-slate-800">+91 {phone}</strong></p>
+                  <button type="button" onClick={() => setIsOtpSent(false)} className="text-emerald-600 text-sm cursor-pointer bg-transparent border-none mx-auto block mb-6 hover:underline">
                     Change Number
                   </button>
 
@@ -271,12 +271,12 @@ export default function SellerOnboarding() {
                         />
                       ))}
                     </div>
-                    <div className="flex justify-between items-center mb-6 text-xs">
+                    <div className="flex justify-between items-center mb-6 text-sm">
                       <span className="text-slate-400">Didn&apos;t receive?</span>
                       <button type="button" className="text-emerald-600 cursor-pointer bg-transparent border-none hover:underline font-medium">Resend OTP</button>
                     </div>
                     <button type="submit" disabled={isSubmitting || otpString.length < 6}
-                      className="w-full p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-sm">
+                      className="w-full p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
                       {isSubmitting ? (
                         <span className="flex items-center justify-center gap-2">
                           <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -297,7 +297,7 @@ export default function SellerOnboarding() {
                 <span className="text-2xl">🏢</span>
               </div>
               <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Business Details</h2>
-              <p className="text-slate-500 text-sm text-center mb-8">Tell us about your business so we can set up your store</p>
+              <p className="text-slate-500 text-base text-center mb-8">Tell us about your business so we can set up your store</p>
 
               <form onSubmit={handleBusinessDetails} className="flex flex-col gap-5">
                 <div className="grid grid-cols-2 gap-4">
@@ -345,11 +345,11 @@ export default function SellerOnboarding() {
 
                 <div className="flex gap-3 mt-2">
                   <button type="button" onClick={() => setStep(1)}
-                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-lg font-medium text-sm cursor-pointer hover:bg-slate-50 transition-colors bg-white">
+                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-lg font-medium text-base cursor-pointer hover:bg-slate-50 transition-colors bg-white">
                     ← Back
                   </button>
                   <button type="submit" disabled={isSubmitting}
-                    className="flex-1 p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-sm">
+                    className="flex-1 p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -369,7 +369,7 @@ export default function SellerOnboarding() {
                 <span className="text-2xl">📄</span>
               </div>
               <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Upload Documents</h2>
-              <p className="text-slate-500 text-sm text-center mb-8">Required for verification — your data is encrypted and secure</p>
+              <p className="text-slate-500 text-base text-center mb-8">Required for verification — your data is encrypted and secure</p>
 
               <form onSubmit={handleDocumentUpload} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -381,27 +381,27 @@ export default function SellerOnboarding() {
                     <div key={i} className="bg-slate-50 p-5 rounded-xl border border-slate-200 border-dashed hover:border-emerald-400 transition-colors">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-xl">{doc.icon}</span>
-                        <div className="font-medium text-sm text-slate-900">{doc.title}</div>
+                        <div className="font-medium text-base text-slate-900">{doc.title}</div>
                       </div>
-                      <input type="file" required className="text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-emerald-50 file:text-emerald-700 file:cursor-pointer hover:file:bg-emerald-100" />
-                      <p className="text-[10px] text-slate-400 mt-2">{doc.desc}</p>
+                      <input type="file" required className="text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 file:cursor-pointer hover:file:bg-emerald-100" />
+                      <p className="text-xs text-slate-400 mt-2">{doc.desc}</p>
                     </div>
                   ))}
                 </div>
 
                 {/* Notice */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 flex items-start gap-2">
-                  <span className="text-sm mt-0.5">ℹ️</span>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700 flex items-start gap-2">
+                  <span className="text-base mt-0.5">ℹ️</span>
                   <span>By clicking complete, you agree to our <strong>Seller Verification Process</strong> and <strong>Terms of Service</strong>. Verification usually takes 24-48 hours.</span>
                 </div>
 
                 <div className="flex gap-3 mt-2">
                   <button type="button" onClick={() => setStep(2)}
-                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-lg font-medium text-sm cursor-pointer hover:bg-slate-50 transition-colors bg-white">
+                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-lg font-medium text-base cursor-pointer hover:bg-slate-50 transition-colors bg-white">
                     ← Back
                   </button>
                   <button type="submit" disabled={isSubmitting}
-                    className="flex-1 p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-sm">
+                    className="flex-1 p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -421,16 +421,16 @@ export default function SellerOnboarding() {
                 <span className="text-4xl">🎉</span>
               </div>
               <h2 className="text-2xl font-bold text-slate-900 mb-3">Registration Complete!</h2>
-              <p className="text-slate-500 text-sm mb-2">
+              <p className="text-slate-500 text-base mb-2">
                 Your seller account for <strong className="text-slate-800">{businessName}</strong> has been submitted successfully.
               </p>
-              <p className="text-slate-400 text-xs mb-8">
+              <p className="text-slate-400 text-sm mb-8">
                 Our team will review your documents within 24-48 hours. You&apos;ll receive a notification once approved.
               </p>
 
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 text-left max-w-sm mx-auto">
-                <h4 className="text-sm font-medium text-emerald-800 mb-3">What happens next?</h4>
-                <div className="flex flex-col gap-2.5 text-xs text-emerald-700">
+                <h4 className="text-base font-medium text-emerald-800 mb-3">What happens next?</h4>
+                <div className="flex flex-col gap-2.5 text-sm text-emerald-700">
                   <div className="flex items-center gap-2"><span>✅</span> Document verification (24-48 hrs)</div>
                   <div className="flex items-center gap-2"><span>📧</span> Approval email notification</div>
                   <div className="flex items-center gap-2"><span>🏪</span> Set up your storefront</div>
@@ -440,12 +440,12 @@ export default function SellerOnboarding() {
 
               <div className="flex gap-3 justify-center">
                 <Link href="/">
-                  <button className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors border-none cursor-pointer text-sm">
+                  <button className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors border-none cursor-pointer text-base">
                     Go to Homepage
                   </button>
                 </Link>
                 <Link href="/seller/dashboard">
-                  <button className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg font-medium text-sm cursor-pointer hover:bg-slate-50 transition-colors bg-white">
+                  <button className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg font-medium text-base cursor-pointer hover:bg-slate-50 transition-colors bg-white">
                     Seller Dashboard
                   </button>
                 </Link>
@@ -454,7 +454,7 @@ export default function SellerOnboarding() {
           )}
 
           {/* Footer */}
-          <div className="mt-8 text-center text-xs text-slate-400">
+          <div className="mt-8 text-center text-sm text-slate-400">
             Need help? <a href="#" className="text-emerald-600 hover:underline">Contact Seller Support</a>
           </div>
 

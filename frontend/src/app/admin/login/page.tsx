@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
         {/* Logo */}
         <div className="relative z-10">
           <img src="/logo.png" alt="MarkatVerse" className="h-12 brightness-0 invert object-contain" />
-          <div className="mt-1 text-amber-400 text-xs font-bold tracking-widest">ADMIN PORTAL</div>
+          <div className="mt-1 text-amber-400 text-sm font-bold tracking-widest">ADMIN PORTAL</div>
         </div>
 
         {/* Center Content */}
@@ -80,8 +80,8 @@ export default function AdminLoginPage() {
               <div key={i} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-lg p-3">
                 <span className="text-xl">{f.icon}</span>
                 <div>
-                  <div className="text-white text-sm font-medium">{f.title}</div>
-                  <div className="text-slate-400 text-xs">{f.desc}</div>
+                  <div className="text-white text-base font-medium">{f.title}</div>
+                  <div className="text-slate-400 text-sm">{f.desc}</div>
                 </div>
               </div>
             ))}
@@ -89,7 +89,7 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Trust badges */}
-        <div className="relative z-10 flex items-center gap-6 text-slate-400 text-xs">
+        <div className="relative z-10 flex items-center gap-6 text-slate-400 text-sm">
           <span className="flex items-center gap-1.5">🔒 End-to-End Encrypted</span>
           <span className="flex items-center gap-1.5">🛡️ 2FA Protected</span>
           <span className="flex items-center gap-1.5">📋 Audit Logged</span>
@@ -103,7 +103,7 @@ export default function AdminLoginPage() {
           {/* Mobile Logo */}
           <div className="lg:hidden mb-6 text-center">
             <img src="/logo.png" alt="MarkatVerse" className="h-10 mx-auto object-contain" />
-            <div className="text-amber-600 text-xs font-bold tracking-widest mt-1">ADMIN PORTAL</div>
+            <div className="text-amber-600 text-sm font-bold tracking-widest mt-1">ADMIN PORTAL</div>
           </div>
 
           {/* Admin Badge */}
@@ -113,14 +113,14 @@ export default function AdminLoginPage() {
               <span className="text-xl">🛡️</span>
             </div>
             <div>
-              <div className="text-slate-900 font-bold text-sm">Secure Admin Login</div>
-              <div className="text-slate-400 text-[10px]">Authorized Personnel Only</div>
+              <div className="text-slate-900 font-bold text-base">Secure Admin Login</div>
+              <div className="text-slate-400 text-xs">Authorized Personnel Only</div>
             </div>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 p-3.5 rounded-xl mb-6 text-xs text-center flex items-center justify-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-600 p-3.5 rounded-xl mb-6 text-sm text-center flex items-center justify-center gap-2">
               <span>⚠️</span> {error}
             </div>
           )}
@@ -128,29 +128,29 @@ export default function AdminLoginPage() {
           {/* Form */}
           <form onSubmit={handleAdminLogin} className="max-w-[360px] mx-auto">
             <div className="mb-5">
-              <label className="block text-xs font-medium text-slate-700 mb-2">Admin Email</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Admin Email</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">📧</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">📧</span>
                 <input 
                   required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@markatverse.com" 
-                  className="w-full p-3.5 pl-10 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all placeholder:text-slate-400 text-sm" 
+                  className="w-full p-3.5 pl-10 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all placeholder:text-slate-400 text-base" 
                 />
               </div>
             </div>
 
             <div className="mb-6">
-              <label className="block text-xs font-medium text-slate-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔒</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">🔒</span>
                 <input 
                   required type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" 
-                  className="w-full p-3.5 pl-10 pr-12 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all placeholder:text-slate-400 text-sm" 
+                  className="w-full p-3.5 pl-10 pr-12 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all placeholder:text-slate-400 text-base" 
                 />
                 <button 
                   type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer bg-transparent border-none text-sm hover:text-slate-600"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer bg-transparent border-none text-base hover:text-slate-600"
                 >
                   {showPassword ? '🙈' : '👁️'}
                 </button>
@@ -159,7 +159,7 @@ export default function AdminLoginPage() {
 
             <button 
               type="submit" disabled={isLoading}
-              className="w-full p-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed border-none shadow-lg shadow-amber-500/20"
+              className="w-full p-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-base cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed border-none shadow-lg shadow-amber-500/20"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -172,7 +172,7 @@ export default function AdminLoginPage() {
 
           {/* Demo Hint */}
           <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 max-w-[360px] mx-auto">
-            <div className="text-[11px] text-slate-500 text-center">
+            <div className="text-xs text-slate-500 text-center">
               <span className="font-semibold text-slate-600">Demo Credentials</span><br/>
               Email: <span className="font-mono text-slate-700">admin@markatverse.com</span><br/>
               Password: <span className="font-mono text-slate-700">admin123</span>
@@ -183,7 +183,7 @@ export default function AdminLoginPage() {
 
           {/* Footer Link */}
           <div className="mt-8 text-center">
-            <Link href="/login" className="text-slate-400 text-xs hover:text-slate-600 transition-colors">
+            <Link href="/login" className="text-slate-400 text-sm hover:text-slate-600 transition-colors">
               ← Return to Buyer Login
             </Link>
           </div>

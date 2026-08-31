@@ -81,21 +81,21 @@ export default function LoginPage() {
           <div className="flex gap-8">
             <div>
               <div className="text-2xl font-bold text-white">10M+</div>
-              <div className="text-xs text-blue-200 mt-1">Products</div>
+              <div className="text-sm text-blue-200 mt-1">Products</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-white">500K+</div>
-              <div className="text-xs text-blue-200 mt-1">Sellers</div>
+              <div className="text-sm text-blue-200 mt-1">Sellers</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-white">200+</div>
-              <div className="text-xs text-blue-200 mt-1">Countries</div>
+              <div className="text-sm text-blue-200 mt-1">Countries</div>
             </div>
           </div>
         </div>
 
         {/* Trust badges */}
-        <div className="relative z-10 flex items-center gap-6 text-blue-200 text-xs">
+        <div className="relative z-10 flex items-center gap-6 text-blue-200 text-sm">
           <span className="flex items-center gap-1.5">🛡️ Secure Platform</span>
           <span className="flex items-center gap-1.5">🔒 Encrypted Data</span>
           <span className="flex items-center gap-1.5">✓ Verified Sellers</span>
@@ -113,25 +113,25 @@ export default function LoginPage() {
 
           {/* Step Indicators */}
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>1</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>1</div>
             <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>2</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>2</div>
             <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>3</div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>3</div>
           </div>
 
           {/* STEP 1: Phone Number */}
           {step === 1 && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
               <h1 className="text-2xl font-bold text-slate-900 text-center mb-2">Welcome back</h1>
-              <p className="text-slate-500 text-sm text-center mb-8">
+              <p className="text-slate-500 text-base text-center mb-8">
                 Enter your mobile number to get started
               </p>
 
               <form onSubmit={handlePhoneSubmit} className="max-w-[360px] mx-auto">
-                <label className="block text-xs font-medium text-slate-700 mb-2">Mobile Number</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Mobile Number</label>
                 <div className="flex gap-3 mb-6">
-                  <div className="w-[72px] flex items-center justify-center bg-slate-100 border border-slate-300 rounded-lg text-slate-500 text-sm font-medium">
+                  <div className="w-[72px] flex items-center justify-center bg-slate-100 border border-slate-300 rounded-lg text-slate-500 text-base font-medium">
                     +91
                   </div>
                   <input 
@@ -146,7 +146,7 @@ export default function LoginPage() {
 
                 <button 
                   type="submit" 
-                  className="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-sm" 
+                  className="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base" 
                   disabled={isLoading || phone.length < 10}
                 >
                   {isLoading ? (
@@ -160,28 +160,28 @@ export default function LoginPage() {
                 {/* Divider */}
                 <div className="flex items-center gap-4 my-6">
                   <div className="flex-1 h-px bg-slate-200"></div>
-                  <span className="text-xs text-slate-400">or continue with</span>
+                  <span className="text-sm text-slate-400">or continue with</span>
                   <div className="flex-1 h-px bg-slate-200"></div>
                 </div>
 
                 {/* Social Logins */}
                 <div className="flex gap-3">
-                  <button type="button" className="flex-1 flex items-center justify-center gap-2 p-3 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors cursor-pointer text-sm text-slate-700">
+                  <button type="button" className="flex-1 flex items-center justify-center gap-2 p-3 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors cursor-pointer text-base text-slate-700">
                     <span>🇬</span> Google
                   </button>
-                  <button type="button" className="flex-1 flex items-center justify-center gap-2 p-3 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors cursor-pointer text-sm text-slate-700">
+                  <button type="button" className="flex-1 flex items-center justify-center gap-2 p-3 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors cursor-pointer text-base text-slate-700">
                     <span>📧</span> Email
                   </button>
                 </div>
 
-                <p className="mt-6 text-[11px] text-slate-400 text-center leading-relaxed">
+                <p className="mt-6 text-xs text-slate-400 text-center leading-relaxed">
                   By continuing, you agree to MarkatVerse&apos;s{' '}
                   <span className="text-blue-600 cursor-pointer hover:underline">Terms of Use</span> and{' '}
                   <span className="text-blue-600 cursor-pointer hover:underline">Privacy Policy</span>.
                 </p>
                 
                 <div className="mt-4 text-center">
-                  <Link href="/admin/login" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+                  <Link href="/admin/login" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
                     Admin Portal →
                   </Link>
                 </div>
@@ -196,20 +196,20 @@ export default function LoginPage() {
                 <span className="text-3xl">📱</span>
               </div>
               <h1 className="text-2xl font-bold text-slate-900 text-center mb-2">Verify OTP</h1>
-              <div className="text-slate-500 text-sm text-center mb-1">
+              <div className="text-slate-500 text-base text-center mb-1">
                 We sent a 4-digit code to
               </div>
               <div className="text-slate-900 font-semibold text-center mb-1">+91 {phone}</div>
               <button 
                 type="button"
-                className="text-blue-600 text-xs cursor-pointer bg-transparent border-none mx-auto block mb-6 hover:underline" 
+                className="text-blue-600 text-sm cursor-pointer bg-transparent border-none mx-auto block mb-6 hover:underline" 
                 onClick={() => setStep(1)}
               >
                 Change Number
               </button>
 
               <form onSubmit={handleOtpSubmit} className="max-w-[360px] mx-auto">
-                <label className="block text-xs font-medium text-slate-700 mb-2">Enter OTP</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Enter OTP</label>
                 <input 
                   required 
                   type="text" 
@@ -221,15 +221,15 @@ export default function LoginPage() {
                 />
                 
                 <div className="flex justify-between items-center mt-3 mb-6">
-                  <span className="text-xs text-slate-400">Didn&apos;t receive it?</span>
-                  <button type="button" className="text-xs text-blue-600 cursor-pointer bg-transparent border-none hover:underline font-medium">
+                  <span className="text-sm text-slate-400">Didn&apos;t receive it?</span>
+                  <button type="button" className="text-sm text-blue-600 cursor-pointer bg-transparent border-none hover:underline font-medium">
                     Resend OTP
                   </button>
                 </div>
 
                 <button 
                   type="submit" 
-                  className="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-sm" 
+                  className="w-full p-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base" 
                   disabled={isLoading || otp.length < 4}
                 >
                   {isLoading ? (
@@ -250,10 +250,10 @@ export default function LoginPage() {
                 <span className="text-3xl">✅</span>
               </div>
               <h1 className="text-2xl font-bold text-slate-900 text-center mb-2">Almost there!</h1>
-              <p className="text-emerald-600 text-xs text-center font-medium mb-1">
+              <p className="text-emerald-600 text-sm text-center font-medium mb-1">
                 ✓ Mobile verified successfully
               </p>
-              <p className="text-slate-500 text-sm text-center mb-8">
+              <p className="text-slate-500 text-base text-center mb-8">
                 Complete your profile to get started
               </p>
 
@@ -261,7 +261,7 @@ export default function LoginPage() {
                 <div className="flex flex-col gap-4">
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="block text-xs font-medium text-slate-700 mb-2">First Name</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
                       <input 
                         required 
                         type="text" 
@@ -272,7 +272,7 @@ export default function LoginPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-xs font-medium text-slate-700 mb-2">Last Name</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
                       <input 
                         required 
                         type="text" 
@@ -285,7 +285,7 @@ export default function LoginPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-2">Email Address <span className="text-slate-400">(Optional)</span></label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Email Address <span className="text-slate-400">(Optional)</span></label>
                     <input 
                       type="email" 
                       value={email} 
@@ -297,7 +297,7 @@ export default function LoginPage() {
 
                   <button 
                     type="submit" 
-                    className="w-full p-3.5 mt-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-sm" 
+                    className="w-full p-3.5 mt-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base" 
                     disabled={isLoading || !firstName || !lastName}
                   >
                     {isLoading ? (
