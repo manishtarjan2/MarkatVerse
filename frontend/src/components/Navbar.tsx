@@ -15,7 +15,6 @@ export default function Navbar() {
   const [locationStr, setLocationStr] = useState("Select Location");
   const [locationInput, setLocationInput] = useState("");
 
-  const [searchLocation, setSearchLocation] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
@@ -23,15 +22,14 @@ export default function Navbar() {
     e.preventDefault();
     const params = new URLSearchParams();
     if (searchQuery) params.set("q", searchQuery);
-    if (searchLocation) params.set("loc", searchLocation);
     router.push(`/search?${params.toString()}`);
   };
 
   return (
     <nav className="flex items-center justify-between py-2 px-6 bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-sm">
       <div className="flex items-center gap-6">
-        <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity">
-          <img src="/logo.png" alt="MarkatVerse" className="h-14 object-contain" />
+        <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity mr-16 lg:mr-28">
+          <img src="/logo.png" alt="MarkatVerse" className="h-10 lg:h-12 object-contain scale-[2.5] origin-left" />
         </Link>
       </div>
 
@@ -82,26 +80,6 @@ export default function Navbar() {
           </div>
 
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[700px] bg-slate-50 rounded-xl overflow-hidden mx-8 border border-slate-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-inner">
-            <div className="flex items-center bg-transparent pl-3 border-r border-slate-300 group">
-              <MapPin className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-              <input
-                type="text"
-                list="city-options"
-                placeholder="City/Pin"
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                className="w-[100px] lg:w-[130px] border-none bg-transparent text-slate-800 py-2.5 px-2 outline-none placeholder:text-slate-400 text-sm font-medium"
-              />
-              <datalist id="city-options">
-                <option value="Mumbai" />
-                <option value="Delhi" />
-                <option value="Bangalore" />
-                <option value="Hyderabad" />
-                <option value="Chennai" />
-                <option value="Pune" />
-              </datalist>
-            </div>
-            
             <input
               type="text"
               placeholder="Search for products, brands, services and more..."

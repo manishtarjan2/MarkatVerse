@@ -4,6 +4,7 @@ import { useProducts } from '@/context/ProductContext';
 import ProductGrid from '@/components/ProductGrid';
 import ServiceDirectoryList from '@/components/ServiceDirectoryList';
 import { useState, useEffect, Suspense, useMemo } from 'react';
+import { SlidersHorizontal, MapPin } from 'lucide-react';
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -16,6 +17,7 @@ function SearchContent() {
   // Local filter states
   const [q, setQ] = useState(initialQ);
   const [selectedCategory, setSelectedCategory] = useState(initialCat === 'All Categories' ? '' : initialCat);
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [priceRange, setPriceRange] = useState('all'); // all, under_500, 500_2000, over_2000
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('recommended');
@@ -48,6 +50,10 @@ function SearchContent() {
     // Category Filter
     if (selectedCategory) {
       result = result.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
+      // Subcategory Filter
+      if (selectedSubcategory) {
+        result = result.filter(p => p.subcategory && p.subcategory.toLowerCase() === selectedSubcategory.toLowerCase());
+      }
     }
     
     // Price Filter
@@ -81,160 +87,132 @@ function SearchContent() {
     }
     
     return result;
-  }, [q, locationFilter, selectedCategory, priceRange, minRating, verifiedOnly, b2bOnly, premiumOnly, sortBy, products]);
+  }, [q, locationFilter, selectedCategory, selectedSubcategory, priceRange, minRating, verifiedOnly, b2bOnly, premiumOnly, sortBy, products]);
 
   // Get unique categories from products
   const availableCategories = Array.from(new Set(products.map(p => p.category)));
+  
+  // Get unique subcategories for the selected category
+  const availableSubcategories = useMemo(() => {
+    if (!selectedCategory) return [];
+    const catProducts = products.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
+    return Array.from(new Set(catProducts.map(p => p.subcategory).filter(Boolean))) as string[];
+  }, [selectedCategory, products]);
 
   return (
-    <div className="max-w-[1400px] mx-auto p-5 min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col md:flex-row gap-8">
+    <div className="max-w-[1400px] mx-auto p-5 min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col gap-6">
       
-      {/* Sidebar Filters */}
-      <aside className="w-full md:w-[280px] shrink-0 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm self-start">
-        <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-          <span>⚙️</span> Filters
-        </h2>
+      {/* Horizontal Filters Bar */}
+      <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar py-3 px-1 border-b border-slate-200/50 bg-white shadow-sm rounded-2xl w-full">
+        <div className="pl-4 pr-2 flex items-center text-slate-400 shrink-0 border-r border-slate-200 mr-1">
+          <SlidersHorizontal className="w-5 h-5" />
+        </div>
+        
+        {/* Category Pill */}
+        <select 
+          value={selectedCategory} 
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setSelectedSubcategory('');
+          }}
+          className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-none text-sm rounded-full px-4 py-2 font-medium cursor-pointer outline-none whitespace-nowrap appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%2364748B%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.2rem_center] bg-[length:1.25rem_1.25rem] shrink-0 transition-colors"
+        >
+          <option value="">All Categories</option>
+          {availableCategories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
 
-        {/* Categories */}
-        <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Category</h3>
-          <div className="flex flex-col gap-2">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input 
-                type="radio" 
-                name="category"
-                checked={selectedCategory === ''} 
-                onChange={() => setSelectedCategory('')}
-                className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" 
-              />
-              <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">All Categories</span>
-            </label>
-            {availableCategories.map(cat => (
-              <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="radio" 
-                  name="category"
-                  checked={selectedCategory === cat} 
-                  onChange={() => setSelectedCategory(cat)}
-                  className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" 
-                />
-                <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{cat}</span>
-              </label>
+        {/* Subcategory Pill */}
+        {selectedCategory && availableSubcategories.length > 0 && (
+          <select 
+            value={selectedSubcategory} 
+            onChange={(e) => setSelectedSubcategory(e.target.value)}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-none text-sm rounded-full px-4 py-2 font-medium cursor-pointer outline-none whitespace-nowrap appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%2364748B%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.2rem_center] bg-[length:1.25rem_1.25rem] shrink-0 transition-colors"
+          >
+            <option value="">All in {selectedCategory}</option>
+            {availableSubcategories.map(subcat => (
+              <option key={subcat} value={subcat}>{subcat}</option>
             ))}
-          </div>
-        </div>
+          </select>
+        )}
 
-        {/* Price Range */}
-        <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Price</h3>
-          <div className="flex flex-col gap-2">
-            {[
-              { id: 'all', label: 'Any Price' },
-              { id: 'under_500', label: 'Under ₹500' },
-              { id: '500_2000', label: '₹500 - ₹2,000' },
-              { id: 'over_2000', label: 'Over ₹2,000' },
-            ].map(range => (
-              <label key={range.id} className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="radio" 
-                  name="price"
-                  checked={priceRange === range.id} 
-                  onChange={() => setPriceRange(range.id)}
-                  className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" 
-                />
-                <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{range.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Ratings */}
-        <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Customer Rating</h3>
-          <div className="flex flex-col gap-2">
-            {[
-              { val: 0, label: 'Any Rating' },
-              { val: 4.5, label: '4.5 & up ⭐' },
-              { val: 4.0, label: '4.0 & up ⭐' },
-              { val: 3.0, label: '3.0 & up ⭐' },
-            ].map(rating => (
-              <label key={rating.val} className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="radio" 
-                  name="rating"
-                  checked={minRating === rating.val} 
-                  onChange={() => setMinRating(rating.val)}
-                  className="w-4 h-4 text-amber-500 border-slate-300 focus:ring-amber-500" 
-                />
-                <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{rating.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Special Features */}
-        <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Features</h3>
-          <div className="flex flex-col gap-3">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input 
-                type="checkbox" 
-                checked={verifiedOnly} 
-                onChange={(e) => setVerifiedOnly(e.target.checked)}
-                className="w-4 h-4 text-emerald-500 border-slate-300 rounded focus:ring-emerald-500" 
-              />
-              <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">Verified Sellers Only</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input 
-                type="checkbox" 
-                checked={b2bOnly} 
-                onChange={(e) => setB2BOnly(e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500" 
-              />
-              <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">B2B Wholesale Only</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input 
-                type="checkbox" 
-                checked={premiumOnly} 
-                onChange={(e) => setPremiumOnly(e.target.checked)}
-                className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500" 
-              />
-              <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">Premium Services Only</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Location Filter */}
-        <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Location</h3>
+        {/* Location Pill */}
+        <div className="relative flex items-center bg-slate-100 rounded-full px-4 py-2 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 shrink-0 transition-all">
+          <MapPin className="w-4 h-4 text-slate-500 mr-2" />
           <input 
-            type="text"
-            placeholder="e.g. Mumbai, Delhi"
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-            className="w-full p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            type="text" 
+            placeholder="Near Me..." 
+            value={locationFilter} 
+            onChange={(e) => setLocationFilter(e.target.value)} 
+            className="bg-transparent border-none outline-none text-sm font-medium w-24 text-slate-700 placeholder-slate-400" 
           />
         </div>
 
-        {/* Clear Filters */}
-        <button 
-          onClick={() => {
-            setSelectedCategory('');
-            setPriceRange('all');
-            setMinRating(0);
-            setLocationFilter('');
-            setVerifiedOnly(false);
-            setB2BOnly(false);
-            setPremiumOnly(false);
-            setSortBy('recommended');
-          }}
-          className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-bold transition-colors"
+        {/* Price Pill */}
+        <select 
+          value={priceRange} 
+          onChange={(e) => setPriceRange(e.target.value)}
+          className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-none text-sm rounded-full px-4 py-2 font-medium cursor-pointer outline-none whitespace-nowrap appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%2364748B%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.2rem_center] bg-[length:1.25rem_1.25rem] shrink-0 transition-colors"
         >
-          Clear Filters
+          <option value="all">Any Price</option>
+          <option value="under_500">Under ₹500</option>
+          <option value="500_2000">₹500 - ₹2,000</option>
+          <option value="over_2000">Over ₹2,000</option>
+        </select>
+
+        {/* Rating Pill */}
+        <select 
+          value={minRating} 
+          onChange={(e) => setMinRating(Number(e.target.value))}
+          className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-none text-sm rounded-full px-4 py-2 font-medium cursor-pointer outline-none whitespace-nowrap appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%2364748B%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.2rem_center] bg-[length:1.25rem_1.25rem] shrink-0 transition-colors"
+        >
+          <option value={0}>Any Rating</option>
+          <option value={4.5}>4.5 & up ⭐</option>
+          <option value={4.0}>4.0 & up ⭐</option>
+          <option value={3.0}>3.0 & up ⭐</option>
+        </select>
+
+        {/* Feature Pills (Toggles) */}
+        <button 
+          onClick={() => setVerifiedOnly(!verifiedOnly)} 
+          className={`text-sm rounded-full px-4 py-2 font-medium whitespace-nowrap shrink-0 transition-colors border border-transparent ${verifiedOnly ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+        >
+          ✓ Verified
         </button>
-      </aside>
+        <button 
+          onClick={() => setB2BOnly(!b2bOnly)} 
+          className={`text-sm rounded-full px-4 py-2 font-medium whitespace-nowrap shrink-0 transition-colors border border-transparent ${b2bOnly ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+        >
+          🏢 B2B Only
+        </button>
+        <button 
+          onClick={() => setPremiumOnly(!premiumOnly)} 
+          className={`text-sm rounded-full px-4 py-2 font-medium whitespace-nowrap shrink-0 transition-colors border border-transparent ${premiumOnly ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+        >
+          ✨ Premium
+        </button>
+
+        {/* Clear Filters */}
+        {(selectedCategory || locationFilter || priceRange !== 'all' || minRating > 0 || verifiedOnly || b2bOnly || premiumOnly) && (
+          <button 
+            onClick={() => {
+              setSelectedCategory('');
+              setSelectedSubcategory('');
+              setPriceRange('all');
+              setMinRating(0);
+              setLocationFilter('');
+              setVerifiedOnly(false);
+              setB2BOnly(false);
+              setPremiumOnly(false);
+              setSortBy('recommended');
+            }}
+            className="text-sm text-red-500 hover:text-red-600 font-bold whitespace-nowrap ml-4 shrink-0 px-2"
+          >
+            Clear All
+          </button>
+        )}
+      </div>
 
       {/* Main Results Area */}
       <main className="flex-1">

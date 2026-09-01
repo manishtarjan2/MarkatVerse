@@ -12,6 +12,7 @@ export type Product = {
   seller: string;
   location: string;
   category: string;
+  subcategory?: string;
   image?: string;
   badge?: string;
   badgeColor?: string;
@@ -51,6 +52,7 @@ const defaultProducts: Product[] = [
     seller: 'Apple Authorized India',
     location: 'Mumbai, Maharashtra',
     category: 'Electronics',
+    subcategory: 'Mobiles',
     badge: 'Bestseller',
     badgeColor: 'badge-gold'
   },
@@ -65,6 +67,7 @@ const defaultProducts: Product[] = [
     seller: 'Appario Retail',
     location: 'Bengaluru, Karnataka',
     category: 'Electronics',
+    subcategory: 'Audio',
     badge: 'Deal of the Day',
     badgeColor: 'badge-red'
   },
@@ -79,6 +82,7 @@ const defaultProducts: Product[] = [
     seller: 'Fashion Hub',
     location: 'Surat, Gujarat',
     category: 'Fashion',
+    subcategory: 'Men',
     badge: 'Trending',
     badgeColor: 'badge-red'
   },
@@ -93,6 +97,7 @@ const defaultProducts: Product[] = [
     seller: 'Home Essentials Ltd',
     location: 'New Delhi, Delhi',
     category: 'Home',
+    subcategory: 'Kitchen',
     badge: 'Top Rated',
     badgeColor: 'badge-gold'
   },
@@ -107,6 +112,7 @@ const defaultProducts: Product[] = [
     seller: 'Urban Cool Services',
     location: 'Mumbai, Maharashtra',
     category: 'Home Services',
+    subcategory: 'Repair',
     badge: 'Verified Expert',
     badgeColor: 'badge-gold',
     isPremium: true
@@ -122,6 +128,7 @@ const defaultProducts: Product[] = [
     seller: 'Elite Salon & Spa',
     location: 'Mumbai, Maharashtra',
     category: 'Services',
+    subcategory: 'Salon',
     badge: 'Trending',
     badgeColor: 'badge-red',
     isPremium: true
@@ -136,7 +143,8 @@ const defaultProducts: Product[] = [
     reviews: '890',
     seller: 'Elite Salon & Spa',
     location: 'Mumbai, Maharashtra',
-    category: 'Services'
+    category: 'Services',
+    subcategory: 'Spa'
   },
   {
     id: 'nail-art-extensions',
@@ -361,6 +369,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             ...item,
             seller: item.sellerName, // Map DB's sellerName to Context's seller
             category: item.categoryName, // Map DB's categoryName to Context's category
+            subcategory: item.subcategory, // Map subcategory if exists
             image: item.image || item.sku || undefined, // Remove hardcoded fallback
             isPremium: false,
             isB2B: item.isB2B,

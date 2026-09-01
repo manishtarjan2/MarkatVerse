@@ -6,7 +6,7 @@ import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell,
 
 export default function ProfileSettings() {
   const [activeTab, setActiveTab] = useState('personal');
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   
   // Fallbacks if user is null
   const [firstName, lastName] = user?.name ? user.name.split(' ') : ['Amit', 'Verma'];
@@ -80,7 +80,12 @@ export default function ProfileSettings() {
             </nav>
 
             <div className="mt-8 pt-6 border-t border-slate-800">
-              <button className="w-full flex items-center gap-3 p-4 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors font-semibold text-sm">
+              <button 
+                onClick={() => {
+                  logout();
+                  window.location.href = '/login';
+                }}
+                className="w-full flex items-center gap-3 p-4 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors font-semibold text-sm">
                 <LogOut className="w-5 h-5" /> Sign Out
               </button>
             </div>
