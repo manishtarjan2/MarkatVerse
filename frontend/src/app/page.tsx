@@ -89,7 +89,7 @@ export default function Home() {
             {/* Background glowing effects & Image */}
             <div className="absolute inset-0 z-0 opacity-100 transition-opacity duration-700">
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 z-10"></div>
-              <div className="absolute inset-0 bg-gradient-to-b from-[#061224]/80 via-transparent to-[#061224]/90 z-10 pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-[#061224]/60 via-transparent to-transparent z-10 pointer-events-none"></div>
               <img src="/hero-right-graphic.jpg" alt="Global Delivery Network" className="w-full h-full object-cover object-bottom" />
             </div>
             
