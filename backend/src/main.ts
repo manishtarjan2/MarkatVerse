@@ -3,7 +3,12 @@ import { AppModule } from './app.module.js';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
 
+import { join } from 'path';
+
 const expressApp = express();
+// Serve the uploads folder statically
+expressApp.use('/public/uploads', express.static(join(process.cwd(), 'uploads')));
+
 let cachedServer: any;
 
 async function bootstrap() {

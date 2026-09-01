@@ -1,53 +1,57 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
+import { PrismaService } from '../prisma.service.js';
 
 @Injectable()
 export class ProductsService {
-  private dataFile = path.join(process.cwd(), 'data.json');
+  constructor(private prisma: PrismaService) {}
 
-  private getProducts(): any[] {
-    if (!fs.existsSync(this.dataFile)) {
-      return [];
-    }
-    return JSON.parse(fs.readFileSync(this.dataFile, 'utf8'));
+  async create(data: any) {
+    return this.prisma.product.create({
+      data: {
+        id: data.id,
+        name: data.name,
+        price: parseFloat(data.price),
+        originalPrice: data.originalPrice ? parseFloat(data.originalPrice) : null,
+        description: data.description,
+        categoryName: data.category,
+        sellerName: data.seller || 'MarkatVerse Seller',
+        location: data.location || 'India',
+        rating: data.rating || "0.0",
+        reviews: data.reviews || "0",
+        discount: data.discount,
+        badge: data.badge,
+        badgeColor: data.badgeColor,
+        image: data.image
+      }
+    });
   }
 
-  private saveProducts(products: any[]) {
-    fs.writeFileSync(this.dataFile, JSON.stringify(products, null, 2), 'utf8');
+  async findAll() {
+    const products = await this.prisma.product.findMany();
+    return products;
   }
 
-  create(data: any) {
-    const products = this.getProducts();
-    const newProduct = { ...data, id: data.id || Math.random().toString(36).substr(2, 9) };
-    products.push(newProduct);
-    this.saveProducts(products);
-    return newProduct;
+  async findOne(id: string) {
+    const p = await this.prisma.product.findUnique({ where: { id } });
+    return p;
   }
 
-  findAll() {
-    return this.getProducts();
+  async update(id: string, data: any) {
+    const p = await this.prisma.product.update({
+      where: { id },
+      data: {
+        name: data.name,
+        price: data.price ? parseFloat(data.price) : undefined,
+        description: data.description,
+        categoryName: data.category,
+        image: data.image
+      }
+    });
+    return p;
   }
 
-  findOne(id: string) {
-    return this.getProducts().find(p => p.id === id);
-  }
-
-  update(id: string, data: any) {
-    const products = this.getProducts();
-    const index = products.findIndex(p => p.id === id);
-    if (index > -1) {
-      products[index] = { ...products[index], ...data };
-      this.saveProducts(products);
-      return products[index];
-    }
-    return null;
-  }
-
-  remove(id: string) {
-    let products = this.getProducts();
-    products = products.filter(p => p.id !== id);
-    this.saveProducts(products);
+  async remove(id: string) {
+    await this.prisma.product.delete({ where: { id } });
     return { success: true };
   }
 }

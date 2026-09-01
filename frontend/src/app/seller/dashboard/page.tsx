@@ -13,6 +13,17 @@ export default function SellerDashboard() {
   const [showSuccess, setShowSuccess] = useState(false);
   const { addProduct, deleteProduct, products } = useProducts();
   const [isPremiumSeller, setIsPremiumSeller] = useState(false); // Mock state to demonstrate the paywall
+  
+  const [leads, setLeads] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    // Fetch leads for the current seller
+    // For now we use the demo-seller-id that we used in the POST request
+    fetch('http://localhost:3001/leads/seller/demo-seller-id')
+      .then(res => res.json())
+      .then(data => setLeads(data))
+      .catch(err => console.error(err));
+  }, []);
 
   // Mock Orders State
   const [orders, setOrders] = useState([
@@ -124,6 +135,12 @@ export default function SellerDashboard() {
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'orders' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
             <Package className="w-5 h-5" /> Orders
+          </button>
+          <button 
+            onClick={() => setActiveTab('leads')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'leads' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+          >
+            <span className="w-5 h-5 flex items-center justify-center text-lg">💬</span> Leads / RFQ
           </button>
           <button 
             onClick={() => setActiveTab('bookings')} 
@@ -407,6 +424,76 @@ export default function SellerDashboard() {
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'leads' && (
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900">B2B Leads & Inquiries</h1>
+              <p className="text-slate-500 mt-2">Manage Requests for Quotation (RFQs) and business inquiries.</p>
+            </div>
+            
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                    <th className="p-4 pl-6">Date</th>
+                    <th className="p-4">Product</th>
+                    <th className="p-4">Qty Req.</th>
+                    <th className="p-4">Message</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 pr-6 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {leads.map((lead) => (
+                    <tr key={lead.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-4 pl-6 text-sm text-slate-500">{new Date(lead.createdAt).toLocaleDateString()}</td>
+                      <td className="p-4 text-slate-900 font-medium">{lead.product?.name || 'Unknown'}</td>
+                      <td className="p-4 font-bold text-blue-600">{lead.quantityRequested} Units</td>
+                      <td className="p-4 text-slate-600 text-sm truncate max-w-[200px]" title={lead.message}>{lead.message}</td>
+                      <td className="p-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          lead.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                          lead.status === 'REPLIED' ? 'bg-blue-100 text-blue-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {lead.status}
+                        </span>
+                      </td>
+                      <td className="p-4 pr-6 text-right">
+                        {lead.status === 'PENDING' ? (
+                          <button 
+                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                            onClick={() => {
+                              fetch(`http://localhost:3001/leads/${lead.id}/status`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ status: 'REPLIED' })
+                              }).then(() => {
+                                setLeads(leads.map(l => l.id === lead.id ? {...l, status: 'REPLIED'} : l))
+                              });
+                            }}
+                          >
+                            Mark Replied
+                          </button>
+                        ) : (
+                          <button className="text-slate-400 hover:text-slate-600 font-medium text-sm">View</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {leads.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-slate-500">
+                        No leads found. When a buyer requests a quote, it will appear here.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

@@ -119,7 +119,7 @@ export default function Home() {
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">🛠️</div>
             <span className="text-xs font-bold text-slate-900">Services</span>
           </Link>
-          <Link href="/category/all" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
+          <Link href="/categories" className="flex flex-col items-center justify-center gap-1.5 min-w-[70px] p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer text-inherit no-underline">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-200 shadow-sm">⊞</div>
             <span className="text-xs font-bold text-slate-900">View All</span>
           </Link>
@@ -160,6 +160,40 @@ export default function Home() {
                   </div>
                   <div className="overflow-hidden">
                     <div className="text-[10px] text-blue-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
+                    <div className="font-bold text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
+                    <div className="text-amber-500 text-[10px] mt-1 font-medium">★ {provider.rating}</div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Construction & Raw Materials Hub */}
+        <section className="mt-[60px] bg-amber-50 p-8 rounded-2xl border border-amber-200 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/3"></div>
+          
+          <div className="flex justify-between items-end border-b border-amber-200 pb-2.5 mb-6 relative z-10">
+            <div>
+              <div className="text-[10px] font-bold text-amber-700 tracking-widest uppercase mb-1">Building & Infrastructure</div>
+              <h2 className="text-2xl font-bold text-slate-900">Construction & Raw Materials</h2>
+            </div>
+            <Link href="/search?cat=Raw%20Materials" className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors shadow-lg shadow-amber-600/20">View All Materials ➤</Link>
+          </div>
+
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5 relative z-10">
+            {[
+              { name: 'UltraTech Cement (50kg)', type: 'Building Material', rating: '4.8', icon: '🧱', link: '/product/portland-cement-50kg' },
+              { name: 'Tata Tiscon TMT Steel', type: 'Structural Steel', rating: '4.9', icon: '🏗️', link: '/product/tmt-steel-bars' },
+              { name: 'High Quality River Sand', type: 'Aggregates', rating: '4.6', icon: '⏳', link: '/product/river-sand-truck' }
+            ].map((provider, i) => (
+              <Link key={i} href={provider.link} className="no-underline text-inherit">
+                <div className="bg-white p-5 rounded-xl border border-amber-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full group">
+                  <div className="w-[60px] h-[60px] bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-amber-100 group-hover:bg-amber-600 group-hover:text-white transition-colors shadow-sm">
+                    {provider.icon}
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="text-[10px] text-amber-700 uppercase tracking-[1px] font-medium">{provider.type}</div>
                     <div className="font-bold text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
                     <div className="text-amber-500 text-[10px] mt-1 font-medium">★ {provider.rating}</div>
                   </div>
@@ -255,10 +289,10 @@ export default function Home() {
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
             {[
-              { name: 'Dream Events & Weddings', type: 'Event Organizer', rating: '4.9', icon: '🎉', link: '/product/dream-events-weddings' },
-              { name: 'Prime Construction & Builders', type: 'Construction Contractor', rating: '4.7', icon: '🏗️', link: '/product/prime-construction' },
-              { name: 'Luxury Party Planners', type: 'Event Organizer', rating: '4.8', icon: '🥂', link: '/search?q=Party' },
-              { name: 'Grand Stage Decorators', type: 'Wedding Planner', rating: '4.9', icon: '💐', link: '/search?q=Stage' }
+              { name: 'Dream Events & Weddings', type: 'Event Organizer', rating: '4.9', icon: '🎉', link: '/search?cat=Organizers&q=Events' },
+              { name: 'Prime Construction & Builders', type: 'Construction Contractor', rating: '4.7', icon: '🏗️', link: '/search?cat=Organizers&q=Construction' },
+              { name: 'Luxury Party Planners', type: 'Event Organizer', rating: '4.8', icon: '🥂', link: '/search?cat=Organizers&q=Party' },
+              { name: 'Grand Stage Decorators', type: 'Wedding Planner', rating: '4.9', icon: '💐', link: '/search?cat=Organizers&q=Stage' }
             ].map((provider, i) => (
               <Link key={i} href={provider.link} className="no-underline text-inherit">
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">

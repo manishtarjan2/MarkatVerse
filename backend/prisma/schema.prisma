@@ -9,7 +9,8 @@ generator client {
 
 model User {
   id        String   @id @default(uuid())
-  email     String   @unique
+  email     String?  @unique
+  phone     String?  @unique
   password  String
   name      String
   role      String   @default("CONSUMER") // CONSUMER, SELLER, ADMIN
@@ -19,6 +20,8 @@ model User {
   business Business?
   products Product[]
   orders   Order[]
+  buyerLeads  Lead[] @relation("BuyerLeads")
+  sellerLeads Lead[] @relation("SellerLeads")
 }
 
 model Business {
@@ -66,15 +69,36 @@ model Product {
   categoryName  String?
   badge         String?
   badgeColor    String?
+  image         String?
 
   stock         Int      @default(0)
   sku           String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  isB2B         Boolean  @default(false)
+  moq           Int?     @default(1)
+
   seller   User?       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   category Category?   @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
+  leads      Lead[]
+}
+
+model Lead {
+  id                String   @id @default(uuid())
+  buyerId           String
+  sellerId          String
+  productId         String
+  message           String
+  quantityRequested Int
+  status            String   @default("PENDING") // PENDING, REPLIED, CLOSED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  buyer    User    @relation("BuyerLeads", fields: [buyerId], references: [id])
+  seller   User    @relation("SellerLeads", fields: [sellerId], references: [id])
+  product  Product @relation(fields: [productId], references: [id])
 }
 
 model Order {

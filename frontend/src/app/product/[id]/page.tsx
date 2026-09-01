@@ -12,6 +12,10 @@ export default function ProductDetails() {
   const { addToCart } = useCart();
   const { products } = useProducts();
   const [activeImage, setActiveImage] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rfqQuantity, setRfqQuantity] = useState(1);
+  const [rfqMessage, setRfqMessage] = useState('');
+  const [isElite, setIsElite] = useState(false);
   
   const product = products.find(p => p.id === id);
 
@@ -41,8 +45,44 @@ export default function ProductDetails() {
     { icon: <Package className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'In Box' }
   ];
 
+  const submitRfq = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buyerId: 'demo-buyer-id', // Using a demo ID for now
+          sellerId: 'demo-seller-id', // Using a demo ID for now
+          productId: product.id,
+          message: rfqMessage || `I am interested in ${product.name}. Please provide a quote.`,
+          quantityRequested: rfqQuantity
+        })
+      });
+      if (res.ok) {
+        alert('Request for quotation sent successfully!');
+        setIsModalOpen(false);
+      } else {
+        alert('Failed to send request.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error sending RFQ.');
+    }
+  };
+
   return (
-    <div className="max-w-[1400px] mx-auto p-6 lg:p-10 bg-white">
+    <div className="max-w-[1400px] mx-auto p-6 lg:p-10 bg-white relative">
+      
+      {/* Mock Elite Toggle */}
+      <div className="absolute top-6 right-6 z-10 flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl shadow-sm border border-slate-200">
+        <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Elite Buyer Mode:</span>
+        <button 
+          onClick={() => setIsElite(!isElite)}
+          className={`w-12 h-6 rounded-full relative transition-colors shadow-inner ${isElite ? 'bg-amber-500' : 'bg-slate-300'}`}
+        >
+          <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${isElite ? 'left-[26px]' : 'left-0.5'}`} />
+        </button>
+      </div>
       
       {/* Top Section: Images and Details */}
       <div className="flex flex-col lg:flex-row gap-10">
@@ -95,14 +135,17 @@ export default function ProductDetails() {
           </div>
 
           <div className="p-6 bg-slate-50 rounded-2xl mb-8 border border-slate-200 shadow-sm">
-            <div className="text-4xl font-bold text-slate-900">
+            <div className="text-4xl font-bold text-slate-900 flex items-center gap-3">
               {product.category === 'Organizers' ? (
                 'Project Based'
               ) : (
                 <>
-                  ₹{product.price.toLocaleString('en-IN')}
+                  ₹{(isElite && !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B'].includes(product.category)) ? Math.round(product.price * 0.7).toLocaleString('en-IN') : product.price.toLocaleString('en-IN')}
                   {product.category === 'Transport' && <span className="text-lg text-slate-500 font-medium ml-1">/ km</span>}
                   {product.category === 'B2B' && <span className="text-lg text-slate-500 font-medium ml-1">/ unit</span>}
+                  {isElite && !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B'].includes(product.category) && (
+                    <span className="text-sm text-amber-700 bg-amber-100 border border-amber-200 px-2 py-1 rounded-md font-bold tracking-tight">Wholesale Rate</span>
+                  )}
                 </>
               )}
             </div>
@@ -402,7 +445,7 @@ export default function ProductDetails() {
                   </div>
                   <button 
                     className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-amber-500/20 mt-1 flex items-center justify-center gap-2"
-                    onClick={() => alert(`Sending bulk requirement to ${product.seller}...`)}
+                    onClick={() => setIsModalOpen(true)}
                   >
                     Request Bulk Quote
                   </button>
@@ -415,23 +458,54 @@ export default function ProductDetails() {
                 </div>
               ) : (
                 <>
-                  <button 
-                    className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
-                    onClick={() => {
-                      alert(`Quote request sent for ${product.name}!`);
-                    }}
-                  >
-                    Get Latest Price
-                  </button>
-                  <button 
-                    className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
-                    onClick={() => {
-                      addToCart(product);
-                      alert(`Added ${product.name} to cart!`);
-                    }}
-                  >
-                    Add to Cart
-                  </button>
+                  {isElite ? (
+                    <div className="flex flex-col gap-4 w-full">
+                      <div className="p-5 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl border border-amber-400 shadow-lg relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                        <div className="flex items-center justify-between mb-3 relative z-10">
+                          <span className="bg-white text-amber-900 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm shadow-sm">Elite Member Access</span>
+                        </div>
+                        <div className="text-white font-bold text-xl mb-1 relative z-10 flex items-center gap-2">
+                           <PhoneCall className="w-5 h-5" /> +91-9876543210
+                        </div>
+                        <div className="text-white/90 text-sm font-medium relative z-10 mb-4">Direct seller contact for wholesale (Min 10 units)</div>
+                        <div className="flex gap-3 relative z-10">
+                          <button 
+                            className="flex-1 px-4 py-3 bg-white hover:bg-slate-50 text-amber-900 rounded-lg font-bold text-sm transition-colors shadow-md flex items-center justify-center gap-2"
+                            onClick={() => alert(`Calling Seller for wholesale order...`)}
+                          >
+                            Call Supplier
+                          </button>
+                          <button 
+                            className="flex-1 px-4 py-3 bg-transparent border-2 border-white/40 hover:bg-white/10 text-white rounded-lg font-bold text-sm transition-colors"
+                            onClick={() => setIsModalOpen(true)}
+                          >
+                            Send Inquiry
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <button 
+                        className="flex-1 px-6 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-amber-500/20"
+                        onClick={() => {
+                          alert(`Redirecting to Flipkart-style checkout for ${product.name}!`);
+                        }}
+                      >
+                        Buy Now
+                      </button>
+                      <button 
+                        className="flex-1 px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-base transition-colors shadow-md"
+                        onClick={() => {
+                          addToCart(product);
+                          alert(`Added ${product.name} to cart!`);
+                        }}
+                      >
+                        Add to Cart
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -521,6 +595,51 @@ export default function ProductDetails() {
           ))}
         </div>
       </div>
+
+      {/* RFQ Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl relative">
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              ✕
+            </button>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Request Quote</h3>
+            <p className="text-sm text-slate-500 mb-6">Send an inquiry directly to {product.seller}</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Required Quantity</label>
+                <input 
+                  type="number" 
+                  value={rfqQuantity}
+                  onChange={(e) => setRfqQuantity(parseInt(e.target.value) || 1)}
+                  min={product.moq || 1}
+                  className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-blue-500" 
+                />
+                {product.moq && <p className="text-xs text-amber-600 mt-1">Minimum Order Quantity is {product.moq}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Message / Requirements</label>
+                <textarea 
+                  value={rfqMessage}
+                  onChange={(e) => setRfqMessage(e.target.value)}
+                  placeholder="Describe your requirements, customisation needs, etc."
+                  className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-blue-500 h-32 resize-none"
+                />
+              </div>
+              <button 
+                onClick={submitRfq}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md"
+              >
+                Send Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

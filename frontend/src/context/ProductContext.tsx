@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type Product = {
   id: string;
@@ -16,12 +16,27 @@ export type Product = {
   badge?: string;
   badgeColor?: string;
   isPremium?: boolean;
+  isB2B?: boolean;
+  moq?: number;
+};
+
+export type Category = {
+  id: string;
+  name: string;
+  theme: string;
+  icon: string;
 };
 
 type ProductContextType = {
   products: Product[];
   addProduct: (product: Product) => void;
+  editProduct: (id: string, updated: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
+  userLocation: string;
+  setUserLocation: (location: string) => void;
+  categories: Category[];
+  addCategory: (cat: Category) => void;
+  deleteCategory: (id: string) => void;
 };
 
 const defaultProducts: Product[] = [
@@ -194,6 +209,70 @@ const defaultProducts: Product[] = [
     badgeColor: 'badge-blue'
   },
   {
+    id: 'wholesale-clothing-bale',
+    name: 'Wholesale Mixed Clothing Bale (100kg)',
+    price: 15000,
+    originalPrice: 25000,
+    discount: '40% OFF',
+    rating: '4.7',
+    reviews: '89',
+    seller: 'Surat Textiles Hub',
+    location: 'Surat, Gujarat',
+    category: 'B2B',
+    badge: 'High Demand',
+    badgeColor: 'badge-red',
+    isB2B: true,
+    moq: 5
+  },
+  {
+    id: 'portland-cement-50kg',
+    name: 'UltraTech Premium Portland Cement (50kg Bag)',
+    price: 380,
+    originalPrice: 420,
+    discount: '10% OFF',
+    rating: '4.8',
+    reviews: '1.2K',
+    seller: 'City Builders Mart',
+    location: 'Mumbai, Maharashtra',
+    category: 'Raw Materials',
+    badge: 'Bestseller',
+    badgeColor: 'badge-gold',
+    isB2B: true,
+    moq: 100
+  },
+  {
+    id: 'tmt-steel-bars',
+    name: 'Tata Tiscon 550SD TMT Steel Bars (Per Ton)',
+    price: 65000,
+    originalPrice: 70000,
+    discount: '7% OFF',
+    rating: '4.9',
+    reviews: '850',
+    seller: 'National Steel Traders',
+    location: 'Pune, Maharashtra',
+    category: 'Raw Materials',
+    badge: 'Verified B2B',
+    badgeColor: 'badge-gold',
+    isB2B: true,
+    moq: 5
+  },
+  {
+    id: 'river-sand-truck',
+    name: 'High Quality River Sand (Per Truck Load)',
+    price: 18000,
+    originalPrice: 20000,
+    discount: '10% OFF',
+    rating: '4.6',
+    reviews: '420',
+    seller: 'ABC Aggregates & Sand',
+    location: 'Bangalore, Karnataka',
+    category: 'Raw Materials',
+    badge: 'Trusted',
+    badgeColor: 'badge-blue',
+    isB2B: true,
+    moq: 1
+  },
+  {
     id: 'wholesale-cotton-fabric',
     name: 'Premium Cotton Fabric Rolls (Wholesale)',
     price: 150,
@@ -253,23 +332,44 @@ const defaultProducts: Product[] = [
   }
 ];
 
+const defaultCategories: Category[] = [
+  { id: 'raw-materials', name: 'Raw Materials', theme: 'amber', icon: '🏗️' },
+  { id: 'b2b', name: 'B2B', theme: 'blue', icon: '🚢' },
+  { id: 'services', name: 'Services', theme: 'pink', icon: '💆‍♀️' },
+  { id: 'home-services', name: 'Home Services', theme: 'emerald', icon: '❄️' },
+  { id: 'organizers', name: 'Organizers', theme: 'purple', icon: '🎉' },
+  { id: 'transport', name: 'Transport', theme: 'indigo', icon: '🛺' },
+  { id: 'electronics', name: 'Electronics', theme: 'slate', icon: '📱' },
+  { id: 'fashion', name: 'Fashion', theme: 'pink', icon: '👕' },
+  { id: 'home', name: 'Home', theme: 'amber', icon: '🏠' }
+];
+
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(defaultProducts);
+  const [categories, setCategories] = useState<Category[]>(defaultCategories);
+  const [userLocation, setUserLocation] = useState<string>('Mumbai'); // Default mock location
 
-  React.useEffect(() => {
-    // Temporarily disabled backend fetch so we can use all the hardcoded mock products (like Services and Salons)
-    // fetch('http://localhost:3001/products')
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     if (data && data.length > 0) {
-    //       setProducts(data);
-    //     }
-    //   })
-    //   .catch(err => {
-    //     console.error("Failed to fetch products from API, using fallback", err);
-    //   });
+  useEffect(() => {
+    fetch('http://localhost:3001/products')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          // Map backend data format to frontend expected format
+          const mappedData = data.map(item => ({
+            ...item,
+            seller: item.sellerName, // Map DB's sellerName to Context's seller
+            category: item.categoryName, // Map DB's categoryName to Context's category
+            image: item.image || item.sku || undefined, // Remove hardcoded fallback
+            isPremium: false,
+            isB2B: item.isB2B,
+            moq: item.moq
+          }));
+          setProducts(mappedData);
+        }
+      })
+      .catch(err => console.error('Failed to load products from API:', err));
   }, []);
 
   const addProduct = (product: Product) => {
@@ -282,6 +382,16 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }).catch(console.error);
   };
 
+  const editProduct = (id: string, updated: Partial<Product>) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
+    // Simulated backend call
+    fetch(`http://localhost:3001/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated)
+    }).catch(console.error);
+  };
+
   const deleteProduct = (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
     // Send to backend
@@ -290,8 +400,16 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }).catch(console.error);
   };
 
+  const addCategory = (cat: Category) => {
+    setCategories(prev => [...prev, cat]);
+  };
+
+  const deleteCategory = (id: string) => {
+    setCategories(prev => prev.filter(c => c.id !== id));
+  };
+
   return (
-    <ProductContext.Provider value={{ products, addProduct, deleteProduct }}>
+    <ProductContext.Provider value={{ products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories, addCategory, deleteCategory }}>
       {children}
     </ProductContext.Provider>
   );

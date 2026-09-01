@@ -2,21 +2,31 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Product } from '@/context/ProductContext';
+import { Product, useProducts } from '@/context/ProductContext';
 
 export default function ServiceDirectoryList({ products }: { products: Product[] }) {
   const router = useRouter();
+  const { userLocation } = useProducts();
 
   if (products.length === 0) {
     return <div className="text-center p-10 text-slate-400">No service providers found.</div>;
   }
 
+  // Sort by nearest
+  const sortedProducts = [...products].sort((a, b) => {
+    const aMatch = (a.location || '').toLowerCase().includes(userLocation.toLowerCase());
+    const bMatch = (b.location || '').toLowerCase().includes(userLocation.toLowerCase());
+    if (aMatch && !bMatch) return -1;
+    if (!aMatch && bMatch) return 1;
+    return 0;
+  });
+
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
-      {products.map(product => (
+      {sortedProducts.map(product => (
         <div 
           key={product.id} 
-          onClick={() => router.push(`/product/${product.id}`)} 
+          onClick={() => router.push(`/service/${product.id}`)} 
           className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-indigo-300 transition-all cursor-pointer flex flex-col gap-4 relative overflow-hidden group h-full"
         >
           {/* Status Bar for Premium */}
@@ -48,7 +58,7 @@ export default function ServiceDirectoryList({ products }: { products: Product[]
             </h3>
             
             <div className="flex flex-col gap-1 text-sm text-slate-500">
-              <Link href={`/seller/${encodeURIComponent(product.seller)}`} onClick={(e) => e.stopPropagation()} className="hover:underline flex items-center gap-1 font-medium text-slate-700">
+              <Link href={`/shop/${encodeURIComponent(product.seller.toLowerCase().replace(/ /g, '-'))}`} onClick={(e) => e.stopPropagation()} className="hover:underline flex items-center gap-1 font-medium text-slate-700">
                 <span>{product.seller}</span>
                 <span className="text-[#10B981] text-[12px]" title="Verified Provider">🛡️</span>
               </Link>

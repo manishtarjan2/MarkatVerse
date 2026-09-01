@@ -1,28 +1,58 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProducts, Product } from '@/context/ProductContext';
+import { MapPin } from 'lucide-react';
 
-export default function ProductGrid({ products: propProducts }: { products?: Product[] }) {
-  const { products: contextProducts } = useProducts();
+export default function ProductGrid({ products: propProducts, limit, category }: { products?: Product[], limit?: number, category?: string }) {
+  const { products: contextProducts, userLocation } = useProducts();
   const router = useRouter();
+  const [showLocationToast, setShowLocationToast] = useState(false);
 
-  const productsToRender = propProducts || contextProducts.slice(0, 8);
+  useEffect(() => {
+    if (contextProducts.length > 0) setShowLocationToast(true);
+    const timer = setTimeout(() => setShowLocationToast(false), 3000);
+    return () => clearTimeout(timer);
+  }, [contextProducts]);
 
-  if (productsToRender.length === 0) {
+  const items = propProducts || contextProducts;
+  const productsToRender = [...(items || [])].filter(p => category ? p.category === category : true);
+
+  // Sort by nearest (matching location first)
+  productsToRender.sort((a, b) => {
+    const aMatch = (a.location || '').toLowerCase().includes(userLocation.toLowerCase());
+    const bMatch = (b.location || '').toLowerCase().includes(userLocation.toLowerCase());
+    if (aMatch && !bMatch) return -1;
+    if (!aMatch && bMatch) return 1;
+    return 0;
+  });
+
+  // Limit items if specified
+  const finalProducts = limit ? productsToRender.slice(0, limit) : productsToRender;
+
+  if (finalProducts.length === 0) {
     return <div className="text-center p-10 text-slate-400">No products found.</div>;
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
-      {productsToRender.map(product => (
-        <div key={product.id} onClick={() => router.push(`/product/${product.id}`)} className="cursor-pointer no-underline text-inherit group">
+    <div className="relative">
+      {showLocationToast && (
+        <div className="absolute -top-12 right-0 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm z-10 border border-blue-200">
+          <MapPin className="w-4 h-4 text-blue-600" />
+          Showing nearest results to {userLocation}
+        </div>
+      )}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+      {finalProducts.map(product => {
+        const isService = ['Services', 'Home Services', 'Transport', 'Rentals', 'Organizers'].includes(product.category);
+        const route = isService ? `/service/${product.id}` : `/product/${product.id}`;
+        return (
+        <div key={product.id} onClick={() => router.push(route)} className="cursor-pointer no-underline text-inherit group">
           <div className="bg-white rounded-xl p-4 text-black relative h-full flex flex-col group-hover:-translate-y-1 transition-transform shadow-sm">
             {product.badge && (
               <div
-                className={`absolute top-2.5 left-2.5 px-2 py-1 rounded text-[10px] font-medium uppercase z-10 ${product.badgeColor === 'badge-gold' ? 'bg-amber-500 text-black' : 'bg-red-500 text-white'
-                  }`}
+                className={`absolute top-2.5 left-2.5 px-2 py-1 rounded text-[10px] font-medium uppercase z-10 ${product.badgeColor === 'badge-gold' ? 'bg-amber-500 text-black' : 'bg-red-500 text-white'}`}
               >
                 {product.badge}
               </div>
@@ -35,7 +65,7 @@ export default function ProductGrid({ products: propProducts }: { products?: Pro
               )}
             </div>
             <div className="text-[11px] text-blue-600 uppercase tracking-[1px] font-medium flex items-center gap-1">
-              <Link href={`/seller/${encodeURIComponent(product.seller)}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
+              <Link href={`/shop/${encodeURIComponent(product.seller.toLowerCase().replace(/ /g, '-'))}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
                 <span>{product.seller}</span>
               </Link>
               <span className="text-[#10B981] text-[10px]" title="TrustSEAL Verified">🛡️</span>
@@ -60,7 +90,9 @@ export default function ProductGrid({ products: propProducts }: { products?: Pro
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
+    </div>
     </div>
   );
 }

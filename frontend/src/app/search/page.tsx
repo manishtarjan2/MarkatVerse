@@ -18,6 +18,11 @@ function SearchContent() {
   const [selectedCategory, setSelectedCategory] = useState(initialCat === 'All Categories' ? '' : initialCat);
   const [priceRange, setPriceRange] = useState('all'); // all, under_500, 500_2000, over_2000
   const [minRating, setMinRating] = useState(0);
+  const [sortBy, setSortBy] = useState('recommended');
+  const [locationFilter, setLocationFilter] = useState(initialLoc);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [b2bOnly, setB2BOnly] = useState(false);
+  const [premiumOnly, setPremiumOnly] = useState(false);
 
   // Sync with URL if it changes
   useEffect(() => {
@@ -35,9 +40,9 @@ function SearchContent() {
       result = result.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.seller.toLowerCase().includes(q.toLowerCase()));
     }
     
-    // Location
-    if (initialLoc) {
-      result = result.filter(p => p.location.toLowerCase().includes(initialLoc.toLowerCase()));
+    // Location Filter (from text input)
+    if (locationFilter) {
+      result = result.filter(p => (p.location || '').toLowerCase().includes(locationFilter.toLowerCase()));
     }
     
     // Category Filter
@@ -60,8 +65,23 @@ function SearchContent() {
       result = result.filter(p => parseFloat(p.rating) >= minRating);
     }
     
+    // Feature Toggles
+    if (verifiedOnly) result = result.filter(p => !!p.badge);
+    if (b2bOnly) result = result.filter(p => p.isB2B);
+    if (premiumOnly) result = result.filter(p => p.isPremium);
+
+    // Sorting
+    result = [...result];
+    if (sortBy === 'price_low') {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price_high') {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'rating') {
+      result.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+    }
+    
     return result;
-  }, [q, initialLoc, selectedCategory, priceRange, minRating, products]);
+  }, [q, locationFilter, selectedCategory, priceRange, minRating, verifiedOnly, b2bOnly, premiumOnly, sortBy, products]);
 
   // Get unique categories from products
   const availableCategories = Array.from(new Set(products.map(p => p.category)));
@@ -152,12 +172,63 @@ function SearchContent() {
           </div>
         </div>
 
+        {/* Special Features */}
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Features</h3>
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input 
+                type="checkbox" 
+                checked={verifiedOnly} 
+                onChange={(e) => setVerifiedOnly(e.target.checked)}
+                className="w-4 h-4 text-emerald-500 border-slate-300 rounded focus:ring-emerald-500" 
+              />
+              <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">Verified Sellers Only</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input 
+                type="checkbox" 
+                checked={b2bOnly} 
+                onChange={(e) => setB2BOnly(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500" 
+              />
+              <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">B2B Wholesale Only</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input 
+                type="checkbox" 
+                checked={premiumOnly} 
+                onChange={(e) => setPremiumOnly(e.target.checked)}
+                className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500" 
+              />
+              <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">Premium Services Only</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Location Filter */}
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-slate-900 mb-3 uppercase tracking-wide">Location</h3>
+          <input 
+            type="text"
+            placeholder="e.g. Mumbai, Delhi"
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+            className="w-full p-2.5 text-sm border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
         {/* Clear Filters */}
         <button 
           onClick={() => {
             setSelectedCategory('');
             setPriceRange('all');
             setMinRating(0);
+            setLocationFilter('');
+            setVerifiedOnly(false);
+            setB2BOnly(false);
+            setPremiumOnly(false);
+            setSortBy('recommended');
           }}
           className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-bold transition-colors"
         >
@@ -167,12 +238,28 @@ function SearchContent() {
 
       {/* Main Results Area */}
       <main className="flex-1">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Search Results</h1>
-        <p className="text-slate-500 mb-8 font-medium">
-          {filteredProducts.length} results found
-          {q && ` for "${q}"`}
-          {initialLoc && ` in ${initialLoc}`}
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Search Results</h1>
+            <p className="text-slate-500 font-medium">
+              {filteredProducts.length} results found
+              {q && ` for "${q}"`}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 bg-white p-2 border border-slate-200 rounded-lg shadow-sm w-fit">
+            <span className="text-sm text-slate-500 font-medium pl-2">Sort by:</span>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="text-sm border-none outline-none bg-transparent font-semibold text-slate-800 cursor-pointer pr-4"
+            >
+              <option value="recommended">Recommended</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+              <option value="rating">Highest Rated</option>
+            </select>
+          </div>
+        </div>
         
         {selectedCategory === 'Services' || selectedCategory === 'Home Services' ? (
           <ServiceDirectoryList products={filteredProducts} />
