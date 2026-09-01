@@ -10,36 +10,128 @@ export default function SellerOnboarding() {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [sellerRole, setSellerRole] = useState('Manufacturer');
-  const [businessSector, setBusinessSector] = useState('Construction');
-  const [businessCategory, setBusinessCategory] = useState('');
+  const [sellerRole, setSellerRole] = useState('Service Provider');
+  const [customerType, setCustomerType] = useState('B2C');
+  const [businessSector, setBusinessSector] = useState('Personal Care');
+  const [businessCategory, setBusinessCategory] = useState('Hair & Beauty');
+  const [businessService, setBusinessService] = useState('Haircut');
+  
   const [businessName, setBusinessName] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
 
   const [otpArray, setOtpArray] = useState(['', '', '', '', '', '']);
 
-  const sectors = ['Construction', 'Electronics', 'Fashion', 'Home & Kitchen', 'Logistics', 'Professional Services', 'Event Organizers'];
-  
-  const getCategories = () => {
-    switch (businessSector) {
-      case 'Construction':
-        return ['Plumbing', 'Civil / Building', 'Electrical Fittings', 'Hardware Tools', 'Raw Materials (Cement/Steel)'];
-      case 'Electronics':
-        return ['Mobiles', 'Computers', 'Home Appliances', 'Accessories'];
-      case 'Fashion':
-        return ['Men\'s Wear', 'Women\'s Wear', 'Kids', 'Footwear'];
-      case 'Logistics':
-        return ['Heavy Freight', 'Local Courier', 'Passenger Transport (Taxi/Auto)', 'Packers & Movers'];
-      case 'Professional Services':
-        return ['IT & Software', 'Marketing Agency', 'Home Repairs', 'Beauty & Spa', 'Legal Consulting'];
-      case 'Event Organizers':
-        return ['Weddings', 'Corporate Events', 'Parties & Catering', 'Stage Decorators'];
-      case 'Home & Kitchen':
-        return ['Furniture', 'Kitchenware', 'Decor', 'Bedding'];
-      default:
-        return ['Other'];
+  // Systematic 5-Tier Taxonomy: Who -> Sector -> Category -> Service
+  const taxonomy: Record<string, Record<string, Record<string, string[]>>> = {
+    'Service Provider': {
+      'Personal Care & Wellness': {
+        'Hair & Beauty': ['All', 'Haircut', 'Hair Dye', 'Facial', 'Manicure', 'Pedicure', 'Bridal Makeup', 'Threading'],
+        'Wellness': ['Spa', 'Massage Therapy', 'Yoga Instructor', 'Dietician & Nutrition', 'Physiotherapy']
+      },
+      'Home & Maintenance': {
+        'Repairs': ['AC Repair', 'Plumber', 'Electrician', 'Carpenter', 'RO Purifier Repair', 'Washing Machine Repair'],
+        'Cleaning': ['Deep Cleaning', 'Pest Control', 'Sofa Cleaning', 'Bathroom Cleaning', 'Car Wash']
+      },
+      'Professional Services': {
+        'IT & Tech': ['Web Development', 'App Development', 'SEO', 'Cyber Security', 'Cloud Hosting'],
+        'Legal & Finance': ['Tax Consulting', 'Business Registration', 'CA Services', 'Legal Advice'],
+        'Marketing': ['Social Media Marketing', 'Ad Campaigns', 'Content Writing', 'Graphic Design']
+      },
+      'Transport & Logistics': {
+        'Passenger Transport': ['Taxi Service', 'Auto Rickshaw', 'Mini Bus Booking', 'Luxury Car Rental'],
+        'Freight Transport': ['Trucking', 'Packers & Movers', 'Courier Service', 'Tempo Service']
+      },
+      'Education & Training': {
+        'Tuition': ['Math', 'Science', 'English', 'Language Coaching'],
+        'Skills Training': ['Coding', 'Music Lessons', 'Dance Classes', 'Art & Craft']
+      }
+    },
+    'Manufacturer': {
+      'Construction & Building': {
+        'Plumbing': ['Pipes', 'Fittings', 'Taps', 'Water Tanks', 'Pumps'],
+        'Raw Materials': ['Cement', 'Steel/TMT Bars', 'Bricks', 'Sand', 'Gravel'],
+        'Electrical': ['Wires', 'Cables', 'Switches', 'MCB/Distribution Boards']
+      },
+      'Electronics & Electrical': {
+        'Consumer Electronics': ['Mobiles', 'Laptops', 'TVs', 'Audio Devices'],
+        'Industrial Electronics': ['Sensors', 'Motors', 'Control Panels', 'Transformers'],
+        'Components': ['PCBs', 'Semiconductors', 'Connectors']
+      },
+      'Fashion & Textiles': {
+        'Apparel': ['Menswear', 'Womenswear', 'Kidswear', 'Uniforms'],
+        'Textiles': ['Cotton Fabric', 'Silk', 'Synthetic', 'Yarn'],
+        'Footwear': ['Leather Shoes', 'Sports Shoes', 'Sandals']
+      },
+      'FMCG & Groceries': {
+        'Food & Beverage': ['Packaged Snacks', 'Beverages', 'Spices', 'Dairy Products'],
+        'Personal Care': ['Soaps', 'Shampoos', 'Cosmetics', 'Skincare'],
+        'Cleaning Supplies': ['Detergents', 'Floor Cleaners', 'Sanitizers']
+      },
+      'Machinery & Equipment': {
+        'Industrial Machinery': ['CNC Machines', 'Packaging Machines', 'Generators'],
+        'Agricultural Machinery': ['Tractors', 'Harvesters', 'Irrigation Systems']
+      }
+    },
+    'Retailer': {
+      'Fashion & Accessories': {
+        'Clothing': ['Shirts', 'Trousers', 'Dresses', 'Ethnic Wear', 'Activewear'],
+        'Accessories': ['Watches', 'Jewelry', 'Bags & Purses', 'Sunglasses'],
+        'Footwear': ['Sneakers', 'Formal Shoes', 'Heels', 'Flats']
+      },
+      'Electronics & Appliances': {
+        'Gadgets': ['Smartphones', 'Accessories', 'Smartwatches', 'Headphones'],
+        'Home Appliances': ['Refrigerators', 'Washing Machines', 'Microwaves', 'ACs'],
+        'Computers': ['Laptops', 'Desktops', 'Printers', 'Monitors']
+      },
+      'Home, Kitchen & Furniture': {
+        'Furniture': ['Sofas', 'Beds', 'Dining Tables', 'Chairs'],
+        'Kitchenware': ['Cookware', 'Cutlery', 'Storage Containers'],
+        'Home Decor': ['Curtains', 'Rugs', 'Vases', 'Wall Art']
+      },
+      'Grocery & Pharmacy': {
+        'Groceries': ['Fresh Produce', 'Dairy', 'Snacks', 'Household Staples'],
+        'Pharmacy': ['Medicines', 'Vitamins', 'Health Supplements', 'First Aid']
+      },
+      'Automotive': {
+        'Vehicles': ['Two Wheelers', 'Cars'],
+        'Parts & Accessories': ['Tyres', 'Helmets', 'Car Care', 'Batteries']
+      }
+    },
+    'Wholesaler': {
+      'FMCG & Groceries': {
+        'Packaged Food': ['Snacks', 'Beverages', 'Staples', 'Confectionery'],
+        'Personal Care': ['Soaps', 'Shampoos', 'Cosmetics', 'Oral Care']
+      },
+      'Textiles & Apparel': {
+        'Fabrics': ['Cotton Rolls', 'Denim', 'Silk', 'Linen'],
+        'Garments': ['Wholesale Menswear', 'Wholesale Womenswear']
+      },
+      'Construction Materials': {
+        'Hardware': ['Nails', 'Screws', 'Tools', 'Fittings'],
+        'Heavy Materials': ['Cement Bags', 'Steel Bundles']
+      },
+      'Electronics': {
+        'Accessories': ['Mobile Covers', 'Cables', 'Chargers', 'Earphones'],
+        'Appliances': ['Bulk Fans', 'Bulk Lighting']
+      }
+    },
+    'Organizer': {
+      'Events & Parties': {
+        'Weddings': ['Wedding Planners', 'Catering', 'Stage Decorators', 'Florists'],
+        'Corporate Events': ['Conferences', 'Team Building', 'Seminars'],
+        'Private Parties': ['Birthday Planners', 'Anniversaries', 'Theme Parties']
+      },
+      'Tours & Travel': {
+        'Domestic Tours': ['Hill Stations', 'Beach Holidays', 'Pilgrimage'],
+        'International Tours': ['Europe Packages', 'Asia Packages', 'Visa Assistance'],
+        'Ticketing': ['Flight Booking', 'Train Booking', 'Bus Booking']
+      }
     }
   };
+
+  const getSectors = () => Object.keys(taxonomy[sellerRole] || {});
+  const getCategories = () => Object.keys(taxonomy[sellerRole]?.[businessSector] || {});
+  const getServices = () => taxonomy[sellerRole]?.[businessSector]?.[businessCategory] || [];
 
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,13 +172,22 @@ export default function SellerOnboarding() {
     }, 1000);
   };
 
-  const handleBusinessDetails = (e: React.FormEvent) => {
+  const handleIdentity = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
       setStep(3);
-    }, 1000);
+    }, 800);
+  };
+
+  const handleClassification = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setStep(4);
+    }, 800);
   };
 
   const handleDocumentUpload = async (e: React.FormEvent) => {
@@ -99,16 +200,18 @@ export default function SellerOnboarding() {
         body: JSON.stringify({
           name: businessName || 'Test Business',
           role: sellerRole,
+          customer: customerType,
           sector: businessSector,
           category: businessCategory || 'Unknown',
-          type: businessCategory || 'Unknown', // Backwards compatibility for UI
+          service: businessService || 'Unknown',
+          type: businessService || businessCategory || 'Unknown', // Backwards compatibility for UI
           location: businessLocation || 'Unknown',
           phone: phone,
         }),
       });
       if (response.ok) {
         setIsSubmitting(false);
-        setStep(4);
+        setStep(5);
       } else {
         setIsSubmitting(false);
         alert("Failed to register. Please try again.");
@@ -122,8 +225,9 @@ export default function SellerOnboarding() {
 
   const steps = [
     { num: 1, label: 'Verify Mobile' },
-    { num: 2, label: 'Business Info' },
-    { num: 3, label: 'Documents' },
+    { num: 2, label: 'Identity' },
+    { num: 3, label: 'Classification' },
+    { num: 4, label: 'Documents' },
   ];
 
   const inputClasses = "w-full p-3.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all placeholder:text-slate-400 text-base";
@@ -194,7 +298,7 @@ export default function SellerOnboarding() {
           </div>
 
           {/* Step Progress */}
-          {step <= 3 && (
+          {step <= 4 && (
             <div className="flex items-center justify-center gap-0 mb-10">
               {steps.map((s, i) => (
                 <React.Fragment key={s.num}>
@@ -295,46 +399,16 @@ export default function SellerOnboarding() {
             </div>
           )}
 
-          {/* ─── STEP 2: Business Details ─── */}
+          {/* ─── STEP 2: Business Identity ─── */}
           {step === 2 && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
               <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
                 <span className="text-2xl">🏢</span>
               </div>
-              <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Business Details</h2>
-              <p className="text-slate-500 text-base text-center mb-8">Tell us about your business so we can set up your store</p>
+              <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Business Identity</h2>
+              <p className="text-slate-500 text-base text-center mb-8">Basic details to verify your store</p>
 
-              <form onSubmit={handleBusinessDetails} className="flex flex-col gap-5">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelClasses}>Who are you?</label>
-                    <select value={sellerRole} onChange={e => setSellerRole(e.target.value)} className={selectClasses}>
-                      <option value="Manufacturer">Manufacturer</option>
-                      <option value="Wholesaler">Wholesaler / Distributor</option>
-                      <option value="Retailer">Retailer / Dealer</option>
-                      <option value="Service Provider">Service Provider</option>
-                      <option value="Organizer">Contractor / Organizer</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClasses}>Business Sector</label>
-                    <select value={businessSector} onChange={e => { setBusinessSector(e.target.value); setBusinessCategory(''); }} className={selectClasses}>
-                      {sectors.map(sec => (
-                        <option key={sec} value={sec}>{sec}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClasses}>Specialization Category</label>
-                    <select required value={businessCategory} onChange={e => setBusinessCategory(e.target.value)} className={selectClasses}>
-                      <option value="" disabled>Select category...</option>
-                      {getCategories().map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
+              <form onSubmit={handleIdentity} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className={labelClasses}>Legal Business Name</label>
@@ -363,6 +437,81 @@ export default function SellerOnboarding() {
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         Saving...
                       </span>
+                    ) : 'Next: Business Classification →'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* ─── STEP 3: Business Classification ─── */}
+          {step === 3 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <span className="text-2xl">🎯</span>
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Business Classification</h2>
+              <p className="text-slate-500 text-base text-center mb-8">How should we categorize your business?</p>
+
+              <form onSubmit={handleClassification} className="flex flex-col gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className={labelClasses}>Who are you?</label>
+                    <select value={sellerRole} onChange={e => { setSellerRole(e.target.value); setBusinessSector(''); setBusinessCategory(''); setBusinessService(''); }} className={selectClasses}>
+                      {Object.keys(taxonomy).map(role => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClasses}>Customer Type</label>
+                    <select value={customerType} onChange={e => setCustomerType(e.target.value)} className={selectClasses}>
+                      <option value="B2C">B2C (Consumers)</option>
+                      <option value="B2B">B2B (Businesses)</option>
+                      <option value="Both">Both B2B & B2C</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClasses}>Business Sector</label>
+                    <select value={businessSector} onChange={e => { setBusinessSector(e.target.value); setBusinessCategory(''); setBusinessService(''); }} className={selectClasses}>
+                      <option value="" disabled>Select sector...</option>
+                      {getSectors().map(sec => (
+                        <option key={sec} value={sec}>{sec}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClasses}>Specialization Category</label>
+                    <select value={businessCategory} onChange={e => { setBusinessCategory(e.target.value); setBusinessService(''); }} className={selectClasses} disabled={!businessSector}>
+                      <option value="" disabled>Select category...</option>
+                      {getCategories().map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="lg:col-span-2">
+                    <label className={labelClasses}>Specific Service / Product Focus</label>
+                    <select value={businessService} onChange={e => setBusinessService(e.target.value)} className={selectClasses} disabled={!businessCategory}>
+                      <option value="" disabled>Select exact service/product...</option>
+                      {getServices().map(srv => (
+                        <option key={srv} value={srv}>{srv}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-2">
+                  <button type="button" onClick={() => setStep(2)}
+                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-lg font-medium text-base cursor-pointer hover:bg-slate-50 transition-colors bg-white">
+                    ← Back
+                  </button>
+                  <button type="submit" disabled={isSubmitting}
+                    className="flex-1 p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        Saving...
+                      </span>
                     ) : 'Next: Upload Documents →'}
                   </button>
                 </div>
@@ -370,8 +519,8 @@ export default function SellerOnboarding() {
             </div>
           )}
 
-          {/* ─── STEP 3: Documents ─── */}
-          {step === 3 && (
+          {/* ─── STEP 4: Documents ─── */}
+          {step === 4 && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
               <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
                 <span className="text-2xl">📄</span>
@@ -404,7 +553,7 @@ export default function SellerOnboarding() {
                 </div>
 
                 <div className="flex gap-3 mt-2">
-                  <button type="button" onClick={() => setStep(2)}
+                  <button type="button" onClick={() => setStep(3)}
                     className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-lg font-medium text-base cursor-pointer hover:bg-slate-50 transition-colors bg-white">
                     ← Back
                   </button>
@@ -422,8 +571,8 @@ export default function SellerOnboarding() {
             </div>
           )}
 
-          {/* ─── STEP 4: Success ─── */}
-          {step === 4 && (
+          {/* ─── STEP 5: Success ─── */}
+          {step === 5 && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 text-center">
               <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-4xl">🎉</span>
