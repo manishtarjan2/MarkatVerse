@@ -10,32 +10,34 @@ export default function SellerOnboarding() {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [businessType, setBusinessType] = useState('Manufacturer');
+  const [sellerRole, setSellerRole] = useState('Manufacturer');
+  const [businessSector, setBusinessSector] = useState('Construction');
+  const [businessCategory, setBusinessCategory] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
 
   const [otpArray, setOtpArray] = useState(['', '', '', '', '', '']);
 
-  const getSubcategories = () => {
-    switch (businessType) {
-      case 'Transport & Logistics':
-        return ['Auto Rickshaw', 'Car / Taxi', 'Bus / Mini-bus', 'Truck / Freight', 'Two-Wheeler Delivery'];
-      case 'Event & Party Organizer':
-        return ['Wedding Planner', 'Birthday & Private Parties', 'Corporate Events', 'Stage & Decorators', 'Catering'];
-      case 'Construction & Real Estate':
-        return ['Building Contractor', 'Interior Designer', 'Architect', 'Real Estate Agent'];
-      case 'Construction Raw Material':
-        return ['Cement & Concrete', 'Bricks & Blocks', 'Sand & Gravel', 'Steel & TMT Bars', 'Wood & Timber'];
-      case 'Hardware & Tools':
-        return ['Hand Tools', 'Power Tools', 'Plumbing Supplies', 'Electrical Fittings', 'Paints & Finishes'];
-      case 'Sports & Fitness':
-        return ['Gym Equipment', 'Sports Gear (Cricket, Football, etc.)', 'Fitness Supplements', 'Sportswear'];
-      case 'B2C Service Provider':
-        return ['Home Repairs (AC, Fridge)', 'Cleaning Services', 'Beauty & Salon', 'Pest Control'];
-      case 'B2B Service Provider':
-        return ['Marketing & Advertising', 'IT & Software', 'Legal Consulting', 'Accounting'];
+  const sectors = ['Construction', 'Electronics', 'Fashion', 'Home & Kitchen', 'Logistics', 'Professional Services', 'Event Organizers'];
+  
+  const getCategories = () => {
+    switch (businessSector) {
+      case 'Construction':
+        return ['Plumbing', 'Civil / Building', 'Electrical Fittings', 'Hardware Tools', 'Raw Materials (Cement/Steel)'];
+      case 'Electronics':
+        return ['Mobiles', 'Computers', 'Home Appliances', 'Accessories'];
+      case 'Fashion':
+        return ['Men\'s Wear', 'Women\'s Wear', 'Kids', 'Footwear'];
+      case 'Logistics':
+        return ['Heavy Freight', 'Local Courier', 'Passenger Transport (Taxi/Auto)', 'Packers & Movers'];
+      case 'Professional Services':
+        return ['IT & Software', 'Marketing Agency', 'Home Repairs', 'Beauty & Spa', 'Legal Consulting'];
+      case 'Event Organizers':
+        return ['Weddings', 'Corporate Events', 'Parties & Catering', 'Stage Decorators'];
+      case 'Home & Kitchen':
+        return ['Furniture', 'Kitchenware', 'Decor', 'Bedding'];
       default:
-        return ['Electronics', 'Fashion & Apparel', 'Home & Kitchen', 'Automotive', 'Beauty & Health', 'Other'];
+        return ['Other'];
     }
   };
 
@@ -96,7 +98,10 @@ export default function SellerOnboarding() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: businessName || 'Test Business',
-          type: businessType,
+          role: sellerRole,
+          sector: businessSector,
+          category: businessCategory || 'Unknown',
+          type: businessCategory || 'Unknown', // Backwards compatibility for UI
           location: businessLocation || 'Unknown',
           phone: phone,
         }),
@@ -300,47 +305,50 @@ export default function SellerOnboarding() {
               <p className="text-slate-500 text-base text-center mb-8">Tell us about your business so we can set up your store</p>
 
               <form onSubmit={handleBusinessDetails} className="flex flex-col gap-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className={labelClasses}>Who are you?</label>
+                    <select value={sellerRole} onChange={e => setSellerRole(e.target.value)} className={selectClasses}>
+                      <option value="Manufacturer">Manufacturer</option>
+                      <option value="Wholesaler">Wholesaler / Distributor</option>
+                      <option value="Retailer">Retailer / Dealer</option>
+                      <option value="Service Provider">Service Provider</option>
+                      <option value="Organizer">Contractor / Organizer</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClasses}>Business Sector</label>
+                    <select value={businessSector} onChange={e => { setBusinessSector(e.target.value); setBusinessCategory(''); }} className={selectClasses}>
+                      {sectors.map(sec => (
+                        <option key={sec} value={sec}>{sec}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClasses}>Specialization Category</label>
+                    <select required value={businessCategory} onChange={e => setBusinessCategory(e.target.value)} className={selectClasses}>
+                      <option value="" disabled>Select category...</option>
+                      {getCategories().map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className={labelClasses}>Legal Business Name</label>
                     <input required type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="e.g. Global Exports LLC" className={inputClasses} />
                   </div>
                   <div>
-                    <label className={labelClasses}>Business Sector / Type</label>
-                    <select value={businessType} onChange={e => setBusinessType(e.target.value)} className={selectClasses}>
-                      <option>Manufacturer</option>
-                      <option>Wholesaler</option>
-                      <option>Retailer</option>
-                      <option>Sports & Fitness</option>
-                      <option>Hardware & Tools</option>
-                      <option>Construction Raw Material</option>
-                      <option>Construction & Real Estate</option>
-                      <option>Event & Party Organizer</option>
-                      <option>Transport & Logistics</option>
-                      <option>B2B Service Provider</option>
-                      <option>B2C Service Provider</option>
-                    </select>
+                    <label className={labelClasses}>Business Location</label>
+                    <input required type="text" value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Mumbai, Maharashtra" className={inputClasses} />
                   </div>
                 </div>
 
                 <div>
-                  <label className={labelClasses}>Specialization / Category</label>
-                  <select required className={selectClasses}>
-                    {getSubcategories().map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClasses}>GST / PAN Number</label>
-                    <input required type="text" placeholder="e.g. 22AAAAA0000A1Z5" className={inputClasses} />
-                  </div>
-                  <div>
-                    <label className={labelClasses}>Business Location</label>
-                    <input required type="text" value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Mumbai, Maharashtra" className={inputClasses} />
-                  </div>
+                  <label className={labelClasses}>GST / PAN Number</label>
+                  <input required type="text" placeholder="e.g. 22AAAAA0000A1Z5" className={inputClasses} />
                 </div>
 
                 <div className="flex gap-3 mt-2">
