@@ -134,30 +134,70 @@ export default function Home() {
           <ProductGrid />
         </section>
 
-        {/* Service Providers Section */}
+        {/* B2B Wholesale & Enterprise Hub */}
+        <section className="mt-[60px] bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+          
+          <div className="flex justify-between items-end border-b border-slate-200 pb-2.5 mb-6 relative z-10">
+            <div>
+              <div className="text-[10px] font-bold text-blue-600 tracking-widest uppercase mb-1">Business to Business</div>
+              <h2 className="text-2xl font-bold text-slate-900">B2B Wholesale & Enterprise Hub</h2>
+            </div>
+            <Link href="/search?filter=b2b" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Enter B2B Portal ➤</Link>
+          </div>
+
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5 relative z-10">
+            {[
+              { name: 'Global Logistics', type: 'Freight & Supply Chain', rating: '4.9', icon: '🚢', link: '/product/heavy-freight-movers' },
+              { name: 'TechInfra Solutions', type: 'Enterprise Hardware', rating: '4.9', icon: '🖥️', link: '/product/enterprise-server-rack' },
+              { name: 'Textile Mills Corp', type: 'Wholesale Materials', rating: '4.8', icon: '🏭', link: '/product/wholesale-cotton-fabric' },
+              { name: 'Elite Marketing Agency', type: 'Corporate Services', rating: '4.7', icon: '📈', link: '#' }
+            ].map((provider, i) => (
+              <Link key={i} href={provider.link} className="no-underline text-inherit">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full group">
+                  <div className="w-[60px] h-[60px] bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    {provider.icon}
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="text-[10px] text-blue-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
+                    <div className="font-bold text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
+                    <div className="text-amber-500 text-[10px] mt-1 font-medium">★ {provider.rating}</div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* B2C Consumer Hub */}
         <section className="mt-[60px]">
           <div className="flex justify-between items-end border-b border-slate-200 pb-2.5 mb-5">
-            <h2 className="text-lg font-medium text-slate-900">Featured Service Providers (B2C & B2B)</h2>
-            <Link href="/services" className="text-blue-600 font-normal hover:underline text-sm">Find Services ➤</Link>
+            <div>
+              <div className="text-[10px] font-bold text-emerald-600 tracking-widest uppercase mb-1">Direct to Consumer</div>
+              <h2 className="text-2xl font-bold text-slate-900">B2C Retail & Home Services</h2>
+            </div>
+            <Link href="/services" className="text-emerald-600 font-medium hover:underline text-sm">Explore Retail Services ➤</Link>
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
             {[
-              { name: 'Urban Home Services Co.', type: 'B2C Service Provider', rating: '4.8', icon: '🛠️' },
-              { name: 'Global Logistics', type: 'B2B Service Provider', rating: '4.9', icon: '🚢' },
-              { name: 'Elite Marketing Agency', type: 'B2B Service Provider', rating: '4.7', icon: '📈' },
-              { name: 'Home Appliances Repair', type: 'B2C Service Provider', rating: '4.6', icon: '🔌' }
+              { name: 'Urban Cool Services', type: 'AC Repair Service', rating: '4.9', icon: '❄️', link: '/product/ac-repair-service' },
+              { name: 'Home Appliances Repair', type: 'Appliance Fixing', rating: '4.6', icon: '🔌', link: '#' },
+              { name: 'Quick Plumbing Co.', type: 'Home Maintenance', rating: '4.7', icon: '🚰', link: '#' },
+              { name: 'Deep Clean Services', type: 'House Cleaning', rating: '4.8', icon: '🧹', link: '#' }
             ].map((provider, i) => (
-              <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer">
-                <div className="w-[60px] h-[60px] bg-slate-50 rounded-xl flex items-center justify-center text-lg shrink-0">
-                  {provider.icon}
+              <Link key={i} href={provider.link} className="no-underline text-inherit">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">
+                  <div className="w-[60px] h-[60px] bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-emerald-100">
+                    {provider.icon}
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="text-[10px] text-emerald-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
+                    <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
+                    <div className="text-amber-500 text-[10px] mt-1 font-medium">★ {provider.rating}</div>
+                  </div>
                 </div>
-                <div className="overflow-hidden">
-                  <div className="text-[10px] text-amber-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
-                  <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
-                  <div className="text-amber-500 text-[10px] mt-1">★ {provider.rating}</div>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

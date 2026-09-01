@@ -102,14 +102,21 @@ export default function ProductDetails() {
                 <>
                   ₹{product.price.toLocaleString('en-IN')}
                   {product.category === 'Transport' && <span className="text-lg text-slate-500 font-medium ml-1">/ km</span>}
+                  {product.category === 'B2B' && <span className="text-lg text-slate-500 font-medium ml-1">/ unit</span>}
                 </>
               )}
             </div>
+            {product.category === 'B2B' && (
+              <div className="text-blue-600 font-bold mt-2 text-sm bg-blue-50 inline-block px-3 py-1.5 rounded-md border border-blue-100">
+                Minimum Order Quantity (MOQ): 50 Units
+              </div>
+            )}
             {product.originalPrice > product.price && product.category !== 'Organizers' && (
               <>
                 <div className="text-slate-500 line-through mt-2 text-sm">
                   M.R.P: ₹{product.originalPrice.toLocaleString('en-IN')}
                   {product.category === 'Transport' && ' / km'}
+                  {product.category === 'B2B' && ' / unit'}
                 </div>
                 <div className="text-emerald-600 font-bold mt-1 text-sm">You Save: {product.discount}</div>
               </>
@@ -133,6 +140,25 @@ export default function ProductDetails() {
                     }}
                   >
                     Contact Company
+                  </button>
+                </>
+              ) : product.category === 'B2B' ? (
+                <>
+                  <button 
+                    className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
+                    onClick={() => {
+                      alert(`Contacting ${product.seller} for business inquiry...`);
+                    }}
+                  >
+                    Contact Supplier
+                  </button>
+                  <button 
+                    className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
+                    onClick={() => {
+                      alert(`Requesting bulk quote for ${product.name}...`);
+                    }}
+                  >
+                    Request Bulk Quote
                   </button>
                 </>
               ) : product.category === 'Transport' ? (

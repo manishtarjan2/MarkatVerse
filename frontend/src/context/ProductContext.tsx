@@ -189,6 +189,34 @@ const defaultProducts: Product[] = [
     category: 'Organizers',
     badge: 'Certified',
     badgeColor: 'badge-blue'
+  },
+  {
+    id: 'wholesale-cotton-fabric',
+    name: 'Premium Cotton Fabric Rolls (Wholesale)',
+    price: 150,
+    originalPrice: 200,
+    discount: '25% OFF',
+    rating: '4.8',
+    reviews: '56',
+    seller: 'Textile Mills Corp',
+    location: 'Surat, Gujarat',
+    category: 'B2B',
+    badge: 'Bulk Order Only',
+    badgeColor: 'badge-gold'
+  },
+  {
+    id: 'enterprise-server-rack',
+    name: '42U Enterprise Server Rack Cabinet',
+    price: 45000,
+    originalPrice: 60000,
+    discount: '25% OFF',
+    rating: '4.9',
+    reviews: '34',
+    seller: 'TechInfra Solutions',
+    location: 'Bangalore, Karnataka',
+    category: 'B2B',
+    badge: 'Verified B2B',
+    badgeColor: 'badge-blue'
   }
 ];
 
