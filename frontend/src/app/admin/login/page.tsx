@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
           name: 'System Administrator',
           phone: '0000000000',
           email: email,
-          role: 'admin'
+          role: 'super_admin'
         });
         setIsLoading(false);
         router.push('/admin');

@@ -33,7 +33,7 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {user?.role !== 'admin' && (
+      {user?.role !== 'super_admin' && (
         <>
           <div
             className="hidden lg:flex items-center gap-2 px-3 py-1.5 cursor-pointer relative hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200 ml-4"
@@ -95,7 +95,7 @@ export default function Navbar() {
         </>
       )}
 
-      {user?.role === 'admin' && (
+      {user?.role === 'super_admin' && (
         <div className="flex-1 flex justify-center">
           <div className="bg-amber-50 px-5 py-2 rounded-lg border border-amber-500/50 flex items-center gap-2 shadow-sm">
             <span className="text-amber-500">🛡️</span>
@@ -105,7 +105,7 @@ export default function Navbar() {
       )}
 
       <div className="flex items-center gap-5 text-slate-600">
-        {user?.role !== 'admin' && (
+        {user?.role !== 'super_admin' && (
           <>
             <Link href="/help" className="hidden lg:flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group">
               <Headphones className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
@@ -138,7 +138,7 @@ export default function Navbar() {
           </>
         )}
 
-        {user?.role !== 'admin' && (
+        {user?.role !== 'super_admin' && (
           <>
             {user && (
               <>

@@ -12,6 +12,7 @@ export type Product = {
   seller: string;
   location: string;
   category: string;
+  description?: string;
   subcategory?: string;
   image?: string;
   badge?: string;

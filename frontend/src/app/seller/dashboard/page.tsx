@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
 import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown } from 'lucide-react';
 
-export default function SellerDashboard() {
+import { Suspense } from 'react';
+
+function DashboardContent() {
   const searchParams = useSearchParams();
   const isAdding = searchParams.get('action') === 'add';
   const [activeTab, setActiveTab] = useState(isAdding ? 'add' : 'overview');
@@ -573,5 +575,13 @@ export default function SellerDashboard() {
 
       </main>
     </div>
+  );
+}
+
+export default function SellerDashboard() {
+  return (
+    <Suspense fallback={<div>Loading Dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
