@@ -68,5 +68,50 @@
     "category": "Electronics",
     "badge": "New Arrival",
     "badgeColor": "badge-gold"
+  },
+  {
+    "id": "premium-suv-rental",
+    "name": "Premium SUV Self-Drive Rental",
+    "category": "Rentals",
+    "price": 3500,
+    "originalPrice": 5000,
+    "discount": "30% OFF",
+    "rating": 4.8,
+    "reviews": "1.2K",
+    "location": "Mumbai, Maharashtra",
+    "seller": "ZoomDrive Rentals",
+    "badge": "Top Choice",
+    "badgeColor": "badge-gold",
+    "isPremium": true
+  },
+  {
+    "id": "hr-retainer-service",
+    "name": "Corporate HR & Payroll Retainer",
+    "category": "Subscriptions",
+    "price": 15000,
+    "originalPrice": 20000,
+    "discount": "25% OFF",
+    "rating": 4.9,
+    "reviews": "85",
+    "location": "Delhi, NCR",
+    "seller": "ProStaffing Solutions",
+    "badge": "Enterprise",
+    "badgeColor": "badge-blue",
+    "isPremium": true
+  },
+  {
+    "id": "heavy-freight-movers",
+    "name": "Heavy Freight Trucking & Cargo Movers",
+    "category": "Transport",
+    "price": 45,
+    "originalPrice": 60,
+    "discount": "25% OFF",
+    "rating": 4.9,
+    "reviews": "8.1K",
+    "location": "Mumbai, Maharashtra",
+    "seller": "National Logistics Co.",
+    "badge": "Verified B2B",
+    "badgeColor": "badge-gold",
+    "isPremium": true
   }
 ]

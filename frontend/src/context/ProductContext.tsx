@@ -15,6 +15,7 @@ export type Product = {
   image?: string;
   badge?: string;
   badgeColor?: string;
+  isPremium?: boolean;
 };
 
 type ProductContextType = {
@@ -90,9 +91,10 @@ const defaultProducts: Product[] = [
     reviews: '1.2K',
     seller: 'Urban Cool Services',
     location: 'Mumbai, Maharashtra',
-    category: 'Services',
+    category: 'Home Services',
     badge: 'Verified Expert',
-    badgeColor: 'badge-gold'
+    badgeColor: 'badge-gold',
+    isPremium: true
   },
   {
     id: 'hair-cutting-styling',
@@ -106,7 +108,8 @@ const defaultProducts: Product[] = [
     location: 'Mumbai, Maharashtra',
     category: 'Services',
     badge: 'Trending',
-    badgeColor: 'badge-red'
+    badgeColor: 'badge-red',
+    isPremium: true
   },
   {
     id: 'premium-pedicure',
@@ -217,6 +220,36 @@ const defaultProducts: Product[] = [
     category: 'B2B',
     badge: 'Verified B2B',
     badgeColor: 'badge-blue'
+  },
+  {
+    id: 'premium-suv-rental',
+    name: 'Premium SUV Self-Drive Rental',
+    price: 3500,
+    originalPrice: 5000,
+    discount: '30% OFF',
+    rating: '4.8',
+    reviews: '1.2K',
+    seller: 'ZoomDrive Rentals',
+    location: 'Mumbai, Maharashtra',
+    category: 'Rentals',
+    badge: 'Top Choice',
+    badgeColor: 'badge-gold',
+    isPremium: true
+  },
+  {
+    id: 'hr-retainer-service',
+    name: 'Corporate HR & Payroll Retainer',
+    price: 15000,
+    originalPrice: 20000,
+    discount: '25% OFF',
+    rating: '4.9',
+    reviews: '85',
+    seller: 'ProStaffing Solutions',
+    location: 'Delhi, NCR',
+    category: 'Subscriptions',
+    badge: 'Enterprise',
+    badgeColor: 'badge-blue',
+    isPremium: true
   }
 ];
 
@@ -226,17 +259,17 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(defaultProducts);
 
   React.useEffect(() => {
-    // Fetch products from API on load
-    fetch('http://localhost:3001/products')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.length > 0) {
-          setProducts(data);
-        }
-      })
-      .catch(err => {
-        console.error("Failed to fetch products from API, using fallback", err);
-      });
+    // Temporarily disabled backend fetch so we can use all the hardcoded mock products (like Services and Salons)
+    // fetch('http://localhost:3001/products')
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     if (data && data.length > 0) {
+    //       setProducts(data);
+    //     }
+    //   })
+    //   .catch(err => {
+    //     console.error("Failed to fetch products from API, using fallback", err);
+    //   });
   }, []);
 
   const addProduct = (product: Product) => {

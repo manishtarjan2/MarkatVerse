@@ -2,6 +2,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
 import ProductGrid from '@/components/ProductGrid';
+import ServiceDirectoryList from '@/components/ServiceDirectoryList';
 import { useState, useEffect, Suspense, useMemo } from 'react';
 
 function SearchContent() {
@@ -173,7 +174,11 @@ function SearchContent() {
           {initialLoc && ` in ${initialLoc}`}
         </p>
         
-        <ProductGrid products={filteredProducts} />
+        {selectedCategory === 'Services' || selectedCategory === 'Home Services' ? (
+          <ServiceDirectoryList products={filteredProducts} />
+        ) : (
+          <ProductGrid products={filteredProducts} />
+        )}
       </main>
 
     </div>

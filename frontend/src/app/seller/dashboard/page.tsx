@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
-import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown } from 'lucide-react';
 
 export default function SellerDashboard() {
   const searchParams = useSearchParams();
@@ -12,6 +12,20 @@ export default function SellerDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { addProduct, deleteProduct, products } = useProducts();
+  const [isPremiumSeller, setIsPremiumSeller] = useState(false); // Mock state to demonstrate the paywall
+
+  // Mock Orders State
+  const [orders, setOrders] = useState([
+    { id: 'ORD-8921', buyer: 'Rahul Sharma', item: 'iPhone 15 Pro Max 256GB', date: '2026-09-01', amount: '₹1,34,900', status: 'Pending' },
+    { id: 'ORD-8920', buyer: 'Priya Singh', item: 'boAt Airdopes 141', date: '2026-08-31', amount: '₹1,299', status: 'Shipped' },
+    { id: 'ORD-8854', buyer: 'Acme Corp (B2B)', item: 'Heavy Freight Transport', date: '2026-08-30', amount: '₹4,500', status: 'Completed' }
+  ]);
+
+  // Mock Bookings State
+  const [bookings, setBookings] = useState([
+    { id: 'BK-552', customer: 'Sneha Patel', service: 'Men & Women Hair Cutting', date: '2026-09-02 10:30 AM', status: 'Upcoming' },
+    { id: 'BK-551', customer: 'Amit Kumar', service: 'AC Repair Service', date: '2026-09-01 2:00 PM', status: 'In Progress' }
+  ]);
 
   // Form states
   const [name, setName] = useState('');
@@ -42,7 +56,8 @@ export default function SellerDashboard() {
         category: category,
         image: imageUrl || undefined,
         badge: 'New Arrival',
-        badgeColor: 'badge-gold'
+        badgeColor: 'badge-gold',
+        isPremium: isPremiumSeller
       });
 
       setIsSubmitting(false);
@@ -109,6 +124,15 @@ export default function SellerDashboard() {
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'orders' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
             <Package className="w-5 h-5" /> Orders
+          </button>
+          <button 
+            onClick={() => setActiveTab('bookings')} 
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'bookings' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+          >
+            <div className="flex items-center gap-3">
+              <CalendarClock className="w-5 h-5" /> Bookings
+            </div>
+            <Crown className="w-4 h-4 text-amber-500" />
           </button>
         </nav>
       </aside>
@@ -338,13 +362,125 @@ export default function SellerDashboard() {
               <h1 className="text-3xl font-bold text-slate-900">Recent Orders</h1>
               <p className="text-slate-500 mt-2">Track and manage your customer orders.</p>
             </div>
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center">
-              <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">No active orders</h3>
-              <p className="text-slate-500">When customers place orders for your products, they will appear here.</p>
+            
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                    <th className="p-4 pl-6">Order ID</th>
+                    <th className="p-4">Buyer</th>
+                    <th className="p-4">Item</th>
+                    <th className="p-4">Date</th>
+                    <th className="p-4">Amount</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 pr-6 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {orders.map((order) => (
+                    <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-4 pl-6 font-medium text-slate-900">{order.id}</td>
+                      <td className="p-4 text-slate-700">{order.buyer}</td>
+                      <td className="p-4 text-slate-600 truncate max-w-[200px]">{order.item}</td>
+                      <td className="p-4 text-slate-500 text-sm">{order.date}</td>
+                      <td className="p-4 font-bold text-slate-900">{order.amount}</td>
+                      <td className="p-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          order.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                          order.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
+                          'bg-emerald-100 text-emerald-700'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="p-4 pr-6 text-right">
+                        {order.status === 'Pending' ? (
+                          <button 
+                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                            onClick={() => setOrders(orders.map(o => o.id === order.id ? {...o, status: 'Shipped'} : o))}
+                          >
+                            Mark Shipped
+                          </button>
+                        ) : (
+                          <button className="text-slate-400 hover:text-slate-600 font-medium text-sm">View</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'bookings' && (
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900">Customer Bookings</h1>
+              <p className="text-slate-500 mt-2">Manage appointments and service requests.</p>
+            </div>
+            
+            {isPremiumSeller ? (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                      <th className="p-4 pl-6">Booking ID</th>
+                      <th className="p-4">Customer</th>
+                      <th className="p-4">Service</th>
+                      <th className="p-4">Scheduled Date</th>
+                      <th className="p-4">Status</th>
+                      <th className="p-4 pr-6 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {bookings.map((booking) => (
+                      <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4 pl-6 font-medium text-slate-900">{booking.id}</td>
+                        <td className="p-4 text-slate-700 font-medium">{booking.customer}</td>
+                        <td className="p-4 text-slate-600">{booking.service}</td>
+                        <td className="p-4 text-indigo-700 font-medium text-sm flex items-center gap-2">
+                          <CalendarClock className="w-4 h-4" /> {booking.date}
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            booking.status === 'Upcoming' ? 'bg-amber-100 text-amber-700' :
+                            'bg-blue-100 text-blue-700'
+                          }`}>
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td className="p-4 pr-6 text-right">
+                          <button 
+                            className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors mr-2"
+                            onClick={() => setBookings(bookings.map(b => b.id === booking.id ? {...b, status: 'Completed'} : b))}
+                          >
+                            Complete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200 shadow-sm p-10 md:p-16 text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30 relative z-10">
+                  <Crown className="w-10 h-10" />
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900 mb-4 relative z-10">Premium Feature</h2>
+                <p className="text-slate-600 text-lg max-w-xl mx-auto mb-8 relative z-10">
+                  Unlock the full potential of your service business. Let customers book slots directly on your product pages and manage them all in one place.
+                </p>
+                <button 
+                  onClick={() => setIsPremiumSeller(true)}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-amber-500/20 transition-all hover:-translate-y-1 relative z-10 cursor-pointer border-none"
+                >
+                  Upgrade to Premium
+                </button>
+              </div>
+            )}
           </div>
         )}
 

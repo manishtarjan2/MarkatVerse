@@ -14,6 +14,7 @@ export default function CategoryPage() {
   if (slug === 'electronics' || slug === 'mobiles') targetCategory = "Electronics";
   else if (slug === 'fashion') targetCategory = "Fashion";
   else if (slug === 'home') targetCategory = "Home";
+  else if (slug === 'services' || slug === 'salon') targetCategory = "Services";
   
   const filteredProducts = targetCategory === "All" || slug === 'all' 
     ? products 

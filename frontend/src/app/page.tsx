@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShieldCheck, Award, RefreshCw, Zap } from 'lucide-react';
 import ProductGrid from "@/components/ProductGrid";
 import UserWidget from "@/components/UserWidget";
 
@@ -150,8 +151,7 @@ export default function Home() {
             {[
               { name: 'Global Logistics', type: 'Freight & Supply Chain', rating: '4.9', icon: '🚢', link: '/product/heavy-freight-movers' },
               { name: 'TechInfra Solutions', type: 'Enterprise Hardware', rating: '4.9', icon: '🖥️', link: '/product/enterprise-server-rack' },
-              { name: 'Textile Mills Corp', type: 'Wholesale Materials', rating: '4.8', icon: '🏭', link: '/product/wholesale-cotton-fabric' },
-              { name: 'Elite Marketing Agency', type: 'Corporate Services', rating: '4.7', icon: '📈', link: '#' }
+              { name: 'Elite Marketing Agency', type: 'Corporate Services', rating: '4.7', icon: '📈', link: '/search?q=Elite' }
             ].map((provider, i) => (
               <Link key={i} href={provider.link} className="no-underline text-inherit">
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full group">
@@ -176,26 +176,33 @@ export default function Home() {
               <div className="text-[10px] font-bold text-emerald-600 tracking-widest uppercase mb-1">Direct to Consumer</div>
               <h2 className="text-2xl font-bold text-slate-900">B2C Retail & Home Services</h2>
             </div>
-            <Link href="/services" className="text-emerald-600 font-medium hover:underline text-sm">Explore Retail Services ➤</Link>
+            <Link href="/search?cat=Home Services" className="text-emerald-600 font-medium hover:underline text-sm">Explore Retail Services ➤</Link>
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
             {[
-              { name: 'Urban Cool Services', type: 'AC Repair Service', rating: '4.9', icon: '❄️', link: '/product/ac-repair-service' },
-              { name: 'Home Appliances Repair', type: 'Appliance Fixing', rating: '4.6', icon: '🔌', link: '#' },
-              { name: 'Quick Plumbing Co.', type: 'Home Maintenance', rating: '4.7', icon: '🚰', link: '#' },
-              { name: 'Deep Clean Services', type: 'House Cleaning', rating: '4.8', icon: '🧹', link: '#' }
+              { name: 'AC Repair Service', type: 'Cooling & HVAC', rating: '4.9', icon: '❄️', link: '/search?cat=Home%20Services&q=AC', hasHomeVisit: true },
+              { name: 'Appliance Fixing', type: 'Home Maintenance', rating: '4.6', icon: '🔌', link: '/search?cat=Home%20Services&q=Appliance', hasHomeVisit: true },
+              { name: 'Quick Plumbing Co.', type: 'Plumbing Services', rating: '4.7', icon: '🚰', link: '/search?cat=Home%20Services&q=Plumbing', hasHomeVisit: true },
+              { name: 'Deep Clean Services', type: 'House Cleaning', rating: '4.8', icon: '🧹', link: '/search?cat=Home%20Services&q=Cleaning', hasHomeVisit: true }
             ].map((provider, i) => (
               <Link key={i} href={provider.link} className="no-underline text-inherit">
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">
-                  <div className="w-[60px] h-[60px] bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-emerald-100">
-                    {provider.icon}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 hover:-translate-y-1 transition-transform cursor-pointer h-full relative">
+                  <div className="flex items-center gap-[15px]">
+                    <div className="w-[60px] h-[60px] bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-emerald-100">
+                      {provider.icon}
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="text-[10px] text-emerald-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
+                      <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
+                      <div className="text-amber-500 text-[10px] mt-1 font-medium">★ {provider.rating}</div>
+                    </div>
                   </div>
-                  <div className="overflow-hidden">
-                    <div className="text-[10px] text-emerald-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
-                    <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
-                    <div className="text-amber-500 text-[10px] mt-1 font-medium">★ {provider.rating}</div>
-                  </div>
+                  {provider.hasHomeVisit && (
+                    <div className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-200 py-1 px-2 rounded-md self-start flex items-center gap-1">
+                      🏠 Home Visit / Per Hr Fee
+                    </div>
+                  )}
                 </div>
               </Link>
             ))}
@@ -206,26 +213,33 @@ export default function Home() {
         <section className="mt-[60px]">
           <div className="flex justify-between items-end border-b border-slate-200 pb-2.5 mb-5">
             <h2 className="text-lg font-medium text-slate-900">Salon, Spa & Beauty Services</h2>
-            <Link href="/services/beauty" className="text-blue-600 font-normal hover:underline text-sm">Explore Beauty Services ➤</Link>
+            <Link href="/search?cat=Services" className="text-blue-600 font-normal hover:underline text-sm">Explore Beauty Services ➤</Link>
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
             {[
-              { name: 'Men & Women Hair Cutting', type: 'Unisex Salon', rating: '4.8', icon: '✂️', link: '/product/hair-cutting-styling' },
-              { name: 'Premium Spa Pedicure', type: 'Spa & Wellness', rating: '4.9', icon: '💆‍♀️', link: '/product/premium-pedicure' },
-              { name: 'Nail Art & Extensions', type: 'Nail Studio', rating: '4.7', icon: '💅', link: '/product/nail-art-extensions' },
-              { name: 'Bridal Makeup & Styling', type: 'Makeup Artist', rating: '4.9', icon: '💄', link: '#' }
+              { name: 'Unisex Salons & Hair', type: 'Hair Cutting', rating: '4.8', icon: '✂️', link: '/search?cat=Services&q=Hair', hasToken: true },
+              { name: 'Spa & Wellness Centers', type: 'Massage & Pedicure', rating: '4.9', icon: '💆‍♀️', link: '/search?cat=Services&q=Spa', hasToken: false },
+              { name: 'Nail Studios', type: 'Nail Art', rating: '4.7', icon: '💅', link: '/search?cat=Services&q=Nail', hasToken: false },
+              { name: 'Makeup Artists', type: 'Bridal Styling', rating: '4.9', icon: '💄', link: '/search?cat=Services&q=Makeup', hasToken: true }
             ].map((provider, i) => (
               <Link key={i} href={provider.link} className="no-underline text-inherit">
-                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">
-                  <div className="w-[60px] h-[60px] bg-pink-50 text-pink-600 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-pink-100">
-                    {provider.icon}
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3 hover:-translate-y-1 transition-transform cursor-pointer h-full relative">
+                  <div className="flex items-center gap-[15px]">
+                    <div className="w-[60px] h-[60px] bg-pink-50 text-pink-600 rounded-xl flex items-center justify-center text-2xl shrink-0 border border-pink-100">
+                      {provider.icon}
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="text-[10px] text-pink-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
+                      <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
+                      <div className="text-amber-500 text-[10px] mt-1">★ {provider.rating}</div>
+                    </div>
                   </div>
-                  <div className="overflow-hidden">
-                    <div className="text-[10px] text-pink-600 uppercase tracking-[1px] font-medium">{provider.type}</div>
-                    <div className="font-medium text-sm mt-1 whitespace-nowrap overflow-hidden text-ellipsis text-slate-900">{provider.name}</div>
-                    <div className="text-amber-500 text-[10px] mt-1">★ {provider.rating}</div>
-                  </div>
+                  {provider.hasToken && (
+                    <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 py-1 px-2 rounded-md self-start flex items-center gap-1">
+                      🎟️ Online Token Available
+                    </div>
+                  )}
                 </div>
               </Link>
             ))}
@@ -236,15 +250,15 @@ export default function Home() {
         <section className="mt-[60px]">
           <div className="flex justify-between items-end border-b border-slate-200 pb-2.5 mb-5">
             <h2 className="text-lg font-medium text-slate-900">Top Organizers & Contractors</h2>
-            <Link href="/organizers" className="text-blue-600 font-normal hover:underline text-sm">Explore Organizers ➤</Link>
+            <Link href="/search?cat=Organizers" className="text-blue-600 font-normal hover:underline text-sm">Explore Organizers ➤</Link>
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
             {[
               { name: 'Dream Events & Weddings', type: 'Event Organizer', rating: '4.9', icon: '🎉', link: '/product/dream-events-weddings' },
               { name: 'Prime Construction & Builders', type: 'Construction Contractor', rating: '4.7', icon: '🏗️', link: '/product/prime-construction' },
-              { name: 'Luxury Party Planners', type: 'Event Organizer', rating: '4.8', icon: '🥂', link: '#' },
-              { name: 'Grand Stage Decorators', type: 'Wedding Planner', rating: '4.9', icon: '💐', link: '#' }
+              { name: 'Luxury Party Planners', type: 'Event Organizer', rating: '4.8', icon: '🥂', link: '/search?q=Party' },
+              { name: 'Grand Stage Decorators', type: 'Wedding Planner', rating: '4.9', icon: '💐', link: '/search?q=Stage' }
             ].map((provider, i) => (
               <Link key={i} href={provider.link} className="no-underline text-inherit">
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">
@@ -266,15 +280,15 @@ export default function Home() {
         <section className="mt-[60px]">
           <div className="flex justify-between items-end border-b border-slate-200 pb-2.5 mb-5">
             <h2 className="text-lg font-medium text-slate-900">Transport & Vehicle Services</h2>
-            <Link href="/transport" className="text-blue-600 font-normal hover:underline text-sm">Find Transport ➤</Link>
+            <Link href="/search?cat=Transport" className="text-blue-600 font-normal hover:underline text-sm">Find Transport ➤</Link>
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-5">
             {[
-              { name: 'City Auto Rentals', type: 'Auto Rickshaw Service', rating: '4.6', icon: '🛺', link: '/product/city-auto-rentals' },
-              { name: 'Heavy Freight Movers', type: 'Trucking & Cargo', rating: '4.9', icon: '🚛', link: '/product/heavy-freight-movers' },
-              { name: 'Premium Car Hire', type: 'Car Rental & Taxi', rating: '4.8', icon: '🚕', link: '#' },
-              { name: 'Interstate Bus Tours', type: 'Bus Travel & Charter', rating: '4.7', icon: '🚌', link: '#' }
+              { name: 'City Auto Rentals', type: 'Auto Rickshaw Service', rating: '4.6', icon: '🛺', link: '/search?q=Auto%20Rickshaw' },
+              { name: 'Heavy Freight Movers', type: 'Trucking & Cargo', rating: '4.9', icon: '🚛', link: '/search?q=Freight%20Truck' },
+              { name: 'Premium Car Hire', type: 'Car Rental & Taxi', rating: '4.8', icon: '🚕', link: '/search?q=Car%20Rental' },
+              { name: 'Interstate Bus Tours', type: 'Bus Travel & Charter', rating: '4.7', icon: '🚌', link: '/search?q=Bus%20Tour' }
             ].map((provider, i) => (
               <Link key={i} href={provider.link} className="no-underline text-inherit">
                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-[15px] hover:-translate-y-1 transition-transform cursor-pointer h-full">
@@ -292,29 +306,51 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Trust Footer */}
-        <div className="flex justify-around bg-slate-50 p-5 rounded-xl border border-slate-200 mt-10 flex-wrap gap-5">
-          <div className="flex items-center gap-[15px] min-w-[250px]">
-            <div className="text-2xl bg-white w-[60px] h-[60px] rounded-full flex items-center justify-center border border-slate-200 shadow-sm">🛡️</div>
-            <div>
-              <div className="font-normal text-xs text-slate-900">Trusted & Secure</div>
-              <div className="text-[10px] text-slate-500 mt-1">100% secure payments and privacy protection</div>
+        {/* Premium Trust Footer - Compact */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 mb-6">
+          
+          <div className="group relative bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex items-center gap-4">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3 group-hover:bg-blue-500/20 transition-all"></div>
+            
+            <div className="relative z-10 w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 rounded-xl flex items-center justify-center shadow-inner border border-blue-100/50 shrink-0 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-sm font-bold text-slate-900 mb-0.5">Trusted & Secure</h3>
+              <p className="text-[11px] text-slate-500 font-medium leading-tight">
+                Bank-grade encryption for 100% secure payments.
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-[15px] min-w-[250px]">
-            <div className="text-2xl bg-white w-[60px] h-[60px] rounded-full flex items-center justify-center border border-slate-200 shadow-sm">⭐</div>
-            <div>
-              <div className="font-normal text-xs text-slate-900">Quality Assured</div>
-              <div className="text-[10px] text-slate-500 mt-1">Genuine products from verified sellers</div>
+
+          <div className="group relative bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex items-center gap-4">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3 group-hover:bg-amber-500/20 transition-all"></div>
+            
+            <div className="relative z-10 w-12 h-12 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-500 rounded-xl flex items-center justify-center shadow-inner border border-amber-100/50 shrink-0 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300">
+              <Award className="w-6 h-6" />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-sm font-bold text-slate-900 mb-0.5">Quality Assured</h3>
+              <p className="text-[11px] text-slate-500 font-medium leading-tight">
+                Genuine inventory from verified global sellers.
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-[15px] min-w-[250px]">
-            <div className="text-2xl bg-white w-[60px] h-[60px] rounded-full flex items-center justify-center border border-slate-200 shadow-sm">🔄</div>
-            <div>
-              <div className="font-normal text-xs text-slate-900">Easy Returns</div>
-              <div className="text-[10px] text-slate-500 mt-1">Hassle-free returns within 7 days</div>
+
+          <div className="group relative bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex items-center gap-4">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3 group-hover:bg-emerald-500/20 transition-all"></div>
+            
+            <div className="relative z-10 w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-500 rounded-xl flex items-center justify-center shadow-inner border border-emerald-100/50 shrink-0 group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-300">
+              <RefreshCw className="w-6 h-6" />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-sm font-bold text-slate-900 mb-0.5">Easy Returns</h3>
+              <p className="text-[11px] text-slate-500 font-medium leading-tight">
+                Hassle-free refunds within 7 business days.
+              </p>
             </div>
           </div>
+
         </div>
 
       </main>

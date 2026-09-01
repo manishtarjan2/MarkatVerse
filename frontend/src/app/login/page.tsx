@@ -140,7 +140,7 @@ export default function LoginPage() {
                     value={phone} 
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="98765 43210" 
-                    className="flex-1 p-3.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-slate-400" 
+                    className="flex-1 px-4 py-3 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-slate-400 leading-normal" 
                   />
                 </div>
 

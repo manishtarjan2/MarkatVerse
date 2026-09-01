@@ -1,1 +1,63 @@
-{"sellers":[]}
+{
+  "sellers": [
+    {
+      "name": "Sagar sports",
+      "type": "Construction Raw Material",
+      "location": "Bihar",
+      "phone": "0909090909",
+      "id": "S-8872",
+      "status": "Pending",
+      "date": "2026-08-31"
+    },
+    {
+      "name": "Sagar Sports",
+      "role": "Manufacturer",
+      "customer": "B2C",
+      "sector": "Construction & Building",
+      "category": "Raw Materials",
+      "service": "Cement",
+      "type": "Cement",
+      "location": "Bihar",
+      "phone": "9000000000",
+      "id": "S-8798",
+      "status": "Pending",
+      "date": "2026-09-01"
+    },
+    {
+      "name": "reg",
+      "role": "Service Provider",
+      "sector": "Construction",
+      "category": "Other",
+      "type": "Other",
+      "location": "rtg5",
+      "phone": "959696695066y906",
+      "id": "S-3425",
+      "status": "Pending",
+      "date": "2026-09-01"
+    },
+    {
+      "name": "Ssndeep",
+      "role": "Service Provider",
+      "sector": "Construction",
+      "category": "Other",
+      "type": "Other",
+      "location": "Bihar",
+      "phone": "9098090009",
+      "id": "S-6794",
+      "status": "Pending",
+      "date": "2026-09-01"
+    },
+    {
+      "name": "hy",
+      "role": "Service Provider",
+      "sector": "Fashion",
+      "category": "Other",
+      "type": "Other",
+      "location": "u",
+      "phone": "8898989999",
+      "id": "S-8599",
+      "status": "Pending",
+      "date": "2026-09-01"
+    }
+  ]
+}
