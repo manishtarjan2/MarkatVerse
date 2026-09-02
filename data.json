@@ -106,6 +106,18 @@
       "id": "S-4010",
       "status": "Pending",
       "date": "2026-09-01"
+    },
+    {
+      "name": "tyyt",
+      "role": "Retailer",
+      "sector": "Fashion",
+      "category": "Men's Wear",
+      "type": "Men's Wear",
+      "location": "hjhj",
+      "phone": "3434343434343",
+      "id": "S-4021",
+      "status": "Pending",
+      "date": "2026-09-01"
     }
   ]
 }

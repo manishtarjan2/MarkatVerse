@@ -13,22 +13,22 @@ export default function Home() {
         {/* Quick Shortcuts */}
         <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-5 flex items-center justify-between overflow-x-auto hide-scrollbar gap-4 lg:gap-8 w-full">
           {[
-            { name: "Top Deals", icon: "🔥", style: "bg-red-50 text-2xl" },
-            { name: "Mobiles", icon: "📱", style: "bg-white border border-slate-200 text-xl shadow-sm" },
-            { name: "Electronics", icon: "💻", style: "bg-white border border-slate-200 text-xl shadow-sm" },
-            { name: "Fashion", icon: "👕", style: "bg-white border border-slate-200 text-xl shadow-sm" },
-            { name: "Home", icon: "🏠", style: "bg-white border border-slate-200 text-xl shadow-sm" },
-            { name: "Beauty", icon: "💄", style: "bg-white border border-slate-200 text-xl shadow-sm" },
-            { name: "Auto", icon: "🚗", style: "bg-white border border-slate-200 text-xl shadow-sm" },
-            { name: "Sports", icon: "⚽", style: "bg-white border border-slate-200 text-xl shadow-sm" },
-            { name: "View All", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>, style: "bg-[#0f1928] text-white" }
+            { name: "Top Deals", icon: "🔥", style: "bg-red-50 text-2xl", link: "/search?filter=top_deals" },
+            { name: "Mobiles", icon: "📱", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Mobiles" },
+            { name: "Electronics", icon: "💻", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Electronics" },
+            { name: "Fashion", icon: "👕", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Fashion" },
+            { name: "Home", icon: "🏠", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Home" },
+            { name: "Beauty", icon: "💄", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Beauty" },
+            { name: "Auto", icon: "🚗", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Auto" },
+            { name: "Sports", icon: "⚽", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Sports" },
+            { name: "View All", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>, style: "bg-[#0f1928] text-white", link: "/categories" }
           ].map((cat, idx) => (
-            <div key={idx} className="flex flex-col items-center gap-3 min-w-[65px] cursor-pointer group">
+            <Link href={cat.link} key={idx} className="flex flex-col items-center gap-3 min-w-[65px] cursor-pointer group no-underline">
               <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${cat.style}`}>
                 {cat.icon}
               </div>
-              <span className="text-[11px] font-bold text-[#0f1928] whitespace-nowrap">{cat.name}</span>
-            </div>
+              <span className="text-[11px] font-bold text-[#0f1928] whitespace-nowrap group-hover:text-blue-600 transition-colors">{cat.name}</span>
+            </Link>
           ))}
         </section>
 
@@ -153,19 +153,19 @@ export default function Home() {
             
             <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar w-full md:w-auto pb-2">
               {[
-                { name: "Electronics", icon: "📱", bg: "bg-blue-50" },
-                { name: "Home & Living", icon: "🛋️", bg: "bg-slate-100" },
-                { name: "Industrial", icon: "👷", bg: "bg-amber-50" },
-                { name: "Beauty & Personal Care", icon: "🧴", bg: "bg-pink-50" },
-                { name: "Grocery", icon: "🛒", bg: "bg-emerald-50" },
-                { name: "More Categories", icon: "🔠", bg: "bg-slate-100" }
+                { name: "Electronics", icon: "📱", bg: "bg-blue-50", link: "/search?category=Electronics" },
+                { name: "Home & Living", icon: "🛋️", bg: "bg-slate-100", link: "/search?category=Home%20%26%20Living" },
+                { name: "Industrial", icon: "👷", bg: "bg-amber-50", link: "/search?category=Industrial" },
+                { name: "Beauty & Personal Care", icon: "🧴", bg: "bg-pink-50", link: "/search?category=Beauty" },
+                { name: "Grocery", icon: "🛒", bg: "bg-emerald-50", link: "/search?category=Grocery" },
+                { name: "More Categories", icon: "🔠", bg: "bg-slate-100", link: "/categories" }
               ].map((cat, idx) => (
-                <div key={idx} className="flex flex-col items-center gap-2 min-w-[75px] text-center cursor-pointer group">
+                <Link href={cat.link} key={idx} className="flex flex-col items-center gap-2 min-w-[75px] text-center cursor-pointer group no-underline">
                   <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-transform group-hover:scale-105 shadow-inner ${cat.bg}`}>
                     {cat.icon}
                   </div>
-                  <span className="text-[10px] font-bold text-[#0f1928] leading-tight max-w-[75px]">{cat.name}</span>
-                </div>
+                  <span className="text-[10px] font-bold text-[#0f1928] leading-tight max-w-[75px] group-hover:text-blue-600 transition-colors">{cat.name}</span>
+                </Link>
               ))}
             </div>
           </div>
