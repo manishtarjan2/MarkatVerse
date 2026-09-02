@@ -18,6 +18,7 @@ function SearchContent() {
   const [q, setQ] = useState(initialQ);
   const [selectedCategory, setSelectedCategory] = useState(initialCat === 'All Categories' ? '' : initialCat);
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [productType, setProductType] = useState('all'); // all, products, services
   const [priceRange, setPriceRange] = useState('all'); // all, under_500, 500_2000, over_2000
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('recommended');
@@ -47,6 +48,16 @@ function SearchContent() {
       result = result.filter(p => (p.location || '').toLowerCase().includes(locationFilter.toLowerCase()));
     }
     
+    // Type Filter
+    if (productType !== 'all') {
+      result = result.filter(p => {
+        const isService = p.category === 'Services' || p.category === 'Home Services' || p.category === 'Transport';
+        if (productType === 'services') return isService;
+        if (productType === 'products') return !isService;
+        return true;
+      });
+    }
+
     // Category Filter
     if (selectedCategory) {
       result = result.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
@@ -87,7 +98,7 @@ function SearchContent() {
     }
     
     return result;
-  }, [q, locationFilter, selectedCategory, selectedSubcategory, priceRange, minRating, verifiedOnly, b2bOnly, premiumOnly, sortBy, products]);
+  }, [q, locationFilter, productType, selectedCategory, selectedSubcategory, priceRange, minRating, verifiedOnly, b2bOnly, premiumOnly, sortBy, products]);
 
   // Get unique categories from products
   const availableCategories = Array.from(new Set(products.map(p => p.category)));
@@ -108,6 +119,17 @@ function SearchContent() {
           <SlidersHorizontal className="w-5 h-5" />
         </div>
         
+        {/* Type Pill */}
+        <select 
+          value={productType} 
+          onChange={(e) => setProductType(e.target.value)}
+          className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-none text-sm rounded-full px-4 py-2 font-medium cursor-pointer outline-none whitespace-nowrap appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%2364748B%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.2rem_center] bg-[length:1.25rem_1.25rem] shrink-0 transition-colors"
+        >
+          <option value="all">All Types</option>
+          <option value="products">Products Only</option>
+          <option value="services">Services Only</option>
+        </select>
+
         {/* Category Pill */}
         <select 
           value={selectedCategory} 
@@ -194,9 +216,10 @@ function SearchContent() {
         </button>
 
         {/* Clear Filters */}
-        {(selectedCategory || locationFilter || priceRange !== 'all' || minRating > 0 || verifiedOnly || b2bOnly || premiumOnly) && (
+        {(productType !== 'all' || selectedCategory || locationFilter || priceRange !== 'all' || minRating > 0 || verifiedOnly || b2bOnly || premiumOnly) && (
           <button 
             onClick={() => {
+              setProductType('all');
               setSelectedCategory('');
               setSelectedSubcategory('');
               setPriceRange('all');
