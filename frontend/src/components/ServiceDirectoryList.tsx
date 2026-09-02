@@ -3,6 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Product, useProducts } from '@/context/ProductContext';
+import { Heart, Share2 } from 'lucide-react';
 
 export default function ServiceDirectoryList({ products }: { products: Product[] }) {
   const router = useRouter();
@@ -34,8 +35,33 @@ export default function ServiceDirectoryList({ products }: { products: Product[]
             <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
           )}
 
+          {/* Quick Actions (Wishlist & Share) */}
+          <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                alert('Added to Wishlist!'); 
+              }} 
+              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors border border-slate-100"
+              title="Add to Wishlist"
+            >
+              <Heart className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                const url = encodeURIComponent(`Check out ${product.name} on MarkatVerse: ${window.location.origin}/service/${product.id}`);
+                window.open(`https://wa.me/?text=${url}`, '_blank');
+              }} 
+              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-slate-500 hover:text-emerald-500 hover:bg-emerald-50 transition-colors border border-slate-100"
+              title="Share on WhatsApp"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+          </div>
+
           {/* Icon/Avatar and Category */}
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between pr-10">
             <div className="w-[60px] h-[60px] bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl shrink-0 border border-indigo-100 group-hover:scale-105 transition-transform">
               {product.category === 'Services' ? '✂️' : product.category === 'Home Services' ? '🛠️' : '🏪'}
             </div>

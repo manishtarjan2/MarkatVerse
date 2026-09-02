@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MapPin, Star, Shield, Phone, Mail, Clock, CheckCircle } from 'lucide-react';
 
-export default function PublicShopPage({ params }: { params: { id: string } }) {
-  const shopName = decodeURIComponent(params.id).replace(/-/g, ' ');
+export default function PublicShopPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = React.use(params);
+  const shopName = decodeURIComponent(resolvedParams.id).replace(/-/g, ' ');
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

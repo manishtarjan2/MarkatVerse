@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProducts, Product } from '@/context/ProductContext';
-import { MapPin } from 'lucide-react';
+import { MapPin, Heart, Share2 } from 'lucide-react';
 
 export default function ProductGrid({ products: propProducts, limit, category }: { products?: Product[], limit?: number, category?: string }) {
   const { products: contextProducts, userLocation } = useProducts();
@@ -57,7 +57,33 @@ export default function ProductGrid({ products: propProducts, limit, category }:
                 {product.badge}
               </div>
             )}
-            <div className="w-full h-[180px] bg-[#f1f5f9] rounded-lg mb-3 flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-full h-[180px] bg-[#f1f5f9] rounded-lg mb-3 flex items-center justify-center overflow-hidden shrink-0 relative">
+              {/* Quick Actions (Wishlist & Share) */}
+              <div className="absolute top-2 right-2 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    // Add toast or state logic for wishlist here in the future
+                    alert('Added to Wishlist!'); 
+                  }} 
+                  className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  title="Add to Wishlist"
+                >
+                  <Heart className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    const url = encodeURIComponent(`Check out ${product.name} on MarkatVerse: ${window.location.origin}${route}`);
+                    window.open(`https://wa.me/?text=${url}`, '_blank');
+                  }} 
+                  className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-slate-500 hover:text-emerald-500 hover:bg-emerald-50 transition-colors"
+                  title="Share on WhatsApp"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+              </div>
+              
               {product.image ? (
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
               ) : (

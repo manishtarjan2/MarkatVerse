@@ -16,6 +16,8 @@ export default function ProductDetails() {
   const [rfqQuantity, setRfqQuantity] = useState(1);
   const [rfqMessage, setRfqMessage] = useState('');
   const [isElite, setIsElite] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('Black');
+  const [selectedSize, setSelectedSize] = useState('M');
   
   const product = products.find(p => p.id === id);
 
@@ -163,6 +165,48 @@ export default function ProductDetails() {
                 </div>
                 <div className="text-emerald-600 font-bold mt-1 text-sm">You Save: {product.discount}</div>
               </>
+            )}
+            
+            {/* Color & Size Selectors for Retail Products */}
+            {!['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B'].includes(product.category) && (
+              <div className="mt-8 space-y-6 pt-6 border-t border-slate-200">
+                {/* Color Selection */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-slate-800 text-sm uppercase tracking-wider">Color: <span className="text-blue-600 font-extrabold">{selectedColor}</span></span>
+                  </div>
+                  <div className="flex gap-3">
+                    {['Black', 'White', 'Blue', 'Red'].map(color => (
+                      <button 
+                        key={color} 
+                        onClick={() => setSelectedColor(color)}
+                        className={`w-10 h-10 rounded-full border-2 transition-all shadow-sm ${selectedColor === color ? 'border-blue-600 ring-2 ring-blue-100 scale-110' : 'border-slate-300 hover:scale-105'}`}
+                        style={{ backgroundColor: color.toLowerCase() === 'white' ? '#f8fafc' : color.toLowerCase() }}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Size/Variant Selection */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-slate-800 text-sm uppercase tracking-wider">Size / Variant: <span className="text-blue-600 font-extrabold">{selectedSize}</span></span>
+                    <button className="text-xs font-bold text-blue-600 hover:underline">Size Guide</button>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                      <button 
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all border-2 ${selectedSize === size ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20' : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'}`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
             
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
