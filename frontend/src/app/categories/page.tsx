@@ -9,7 +9,7 @@ export default function AllCategoriesPage() {
       title: 'Construction & Raw Materials',
       subtitle: 'Building & Infrastructure',
       theme: 'amber',
-      link: '/search?cat=Raw%20Materials',
+      link: '/search?category=Construction%20Materials',
       items: [
         { name: 'UltraTech Cement (50kg)', type: 'Building Material', rating: '4.8', icon: '🧱', link: '/product/portland-cement-50kg' },
         { name: 'Tata Tiscon TMT Steel', type: 'Structural Steel', rating: '4.9', icon: '🏗️', link: '/product/tmt-steel-bars' },

@@ -243,7 +243,7 @@ const defaultProducts: Product[] = [
     reviews: '1.2K',
     seller: 'City Builders Mart',
     location: 'Mumbai, Maharashtra',
-    category: 'Raw Materials',
+    category: 'Construction Materials',
     badge: 'Bestseller',
     badgeColor: 'badge-gold',
     isB2B: true,
@@ -259,7 +259,7 @@ const defaultProducts: Product[] = [
     reviews: '850',
     seller: 'National Steel Traders',
     location: 'Pune, Maharashtra',
-    category: 'Raw Materials',
+    category: 'Construction Materials',
     badge: 'Verified B2B',
     badgeColor: 'badge-gold',
     isB2B: true,
@@ -275,7 +275,7 @@ const defaultProducts: Product[] = [
     reviews: '420',
     seller: 'ABC Aggregates & Sand',
     location: 'Bangalore, Karnataka',
-    category: 'Raw Materials',
+    category: 'Construction Materials',
     badge: 'Trusted',
     badgeColor: 'badge-blue',
     isB2B: true,
@@ -342,7 +342,7 @@ const defaultProducts: Product[] = [
 ];
 
 const defaultCategories: Category[] = [
-  { id: 'raw-materials', name: 'Raw Materials', theme: 'amber', icon: '🏗️' },
+  { id: 'construction-materials', name: 'Construction Materials', theme: 'amber', icon: '🏗️' },
   { id: 'b2b', name: 'B2B', theme: 'blue', icon: '🚢' },
   { id: 'services', name: 'Services', theme: 'pink', icon: '💆‍♀️' },
   { id: 'home-services', name: 'Home Services', theme: 'emerald', icon: '❄️' },

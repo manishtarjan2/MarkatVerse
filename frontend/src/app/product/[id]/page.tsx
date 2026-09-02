@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/context/ProductContext';
 import Link from 'next/link';
@@ -20,6 +20,13 @@ export default function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState('M');
   
   const product = products.find(p => p.id === id);
+
+  // Initialize RFQ quantity based on category
+  useEffect(() => {
+    if (product?.category === 'B2B' || product?.category === 'Construction Materials') {
+      setRfqQuantity(12);
+    }
+  }, [product]);
 
   if (!product) {
     return (
@@ -142,20 +149,57 @@ export default function ProductDetails() {
                 'Project Based'
               ) : (
                 <>
-                  ₹{(isElite && !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B'].includes(product.category)) ? Math.round(product.price * 0.7).toLocaleString('en-IN') : product.price.toLocaleString('en-IN')}
+                  ₹{(() => {
+                    const printRate = product.originalPrice > product.price ? product.originalPrice : product.price;
+                    let finalPrice = product.price;
+                    if (isElite && !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product.category)) {
+                      finalPrice = Math.round(product.price * 0.7);
+                    } else if (product.category === 'B2B' || product.category === 'Construction Materials') {
+                      if (rfqQuantity >= 150) finalPrice = Math.round(printRate * 0.55); // 45% Margin
+                      else if (rfqQuantity >= 100) finalPrice = Math.round(printRate * 0.65); // 35% Margin
+                      else if (rfqQuantity >= 12) finalPrice = Math.round(printRate * 0.75); // 25% Margin
+                    }
+                    return finalPrice.toLocaleString('en-IN');
+                  })()}
                   {product.category === 'Transport' && <span className="text-lg text-slate-500 font-medium ml-1">/ km</span>}
-                  {product.category === 'B2B' && <span className="text-lg text-slate-500 font-medium ml-1">/ unit</span>}
-                  {isElite && !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B'].includes(product.category) && (
-                    <span className="text-sm text-amber-700 bg-amber-100 border border-amber-200 px-2 py-1 rounded-md font-bold tracking-tight">Wholesale Rate</span>
+                  {(product.category === 'B2B' || product.category === 'Construction Materials') && <span className="text-lg text-slate-500 font-medium ml-1">/ unit</span>}
+                  {isElite && !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product.category) && (
+                    <span className="text-sm text-amber-700 bg-amber-100 border border-amber-200 px-2 py-1 rounded-md font-bold tracking-tight">Elite Rate</span>
                   )}
                 </>
               )}
             </div>
-            {product.category === 'B2B' && (
-              <div className="text-blue-600 font-bold mt-2 text-sm bg-blue-50 inline-block px-3 py-1.5 rounded-md border border-blue-100">
-                Minimum Order Quantity (MOQ): 50 Units
-              </div>
-            )}
+            
+            {(product.category === 'B2B' || product.category === 'Construction Materials') && (() => {
+              const printRate = product.originalPrice > product.price ? product.originalPrice : product.price;
+              
+              return (
+                <div className="mt-5 border border-blue-200 rounded-xl overflow-hidden shadow-sm">
+                  <div className="bg-blue-50 px-4 py-3 text-sm font-bold text-blue-900 border-b border-blue-200 flex justify-between items-center">
+                    <span>Wholesale Tiered Pricing</span>
+                    <span className="text-xs bg-white text-blue-700 px-2 py-1 rounded border border-blue-200">MOQ: 12 Units</span>
+                  </div>
+                  <div className="grid grid-cols-3 text-center divide-x divide-slate-200 bg-white">
+                    <div className={`p-3 flex flex-col transition-colors ${rfqQuantity >= 12 && rfqQuantity < 100 ? 'bg-blue-50/50' : ''}`}>
+                      <span className="text-xs text-slate-500 font-bold mb-1">12 - 99 Units</span>
+                      <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.75).toLocaleString('en-IN')}</span>
+                      <span className="text-[10px] text-emerald-600 font-bold mt-1">25% Margin on MRP</span>
+                    </div>
+                    <div className={`p-3 flex flex-col transition-colors ${rfqQuantity >= 100 && rfqQuantity < 150 ? 'bg-blue-50/50' : ''}`}>
+                      <span className="text-xs text-slate-500 font-bold mb-1">100 - 149 Units</span>
+                      <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.65).toLocaleString('en-IN')}</span>
+                      <span className="text-[10px] text-emerald-600 font-bold mt-1">35% Margin on MRP</span>
+                    </div>
+                    <div className={`p-3 flex flex-col transition-colors ${rfqQuantity >= 150 ? 'bg-blue-50/50' : ''}`}>
+                      <span className="text-xs text-slate-500 font-bold mb-1">150+ Units</span>
+                      <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.55).toLocaleString('en-IN')}</span>
+                      <span className="text-[10px] text-emerald-600 font-bold mt-1">45% Margin on MRP</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            
             {product.originalPrice > product.price && product.category !== 'Organizers' && (
               <>
                 <div className="text-slate-500 line-through mt-2 text-sm">
@@ -229,25 +273,40 @@ export default function ProductDetails() {
                     Contact Company
                   </button>
                 </>
-              ) : product.category === 'B2B' ? (
-                <>
-                  <button 
-                    className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-blue-500 hover:bg-blue-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
-                    onClick={() => {
-                      alert(`Contacting ${product.seller} for business inquiry...`);
-                    }}
-                  >
-                    Contact Supplier
-                  </button>
-                  <button 
-                    className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
-                    onClick={() => {
-                      alert(`Requesting bulk quote for ${product.name}...`);
-                    }}
-                  >
-                    Request Bulk Quote
-                  </button>
-                </>
+              ) : (product.category === 'B2B' || product.category === 'Construction Materials') ? (
+                <div className="flex flex-col w-full gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center bg-white border border-slate-300 rounded-xl h-[56px] overflow-hidden shrink-0">
+                      <button className="px-4 text-xl font-medium text-slate-500 hover:bg-slate-50 h-full transition-colors" onClick={() => setRfqQuantity(q => Math.max(12, q - 1))}>-</button>
+                      <input 
+                        type="number"
+                        min="12"
+                        className="w-16 text-center font-bold text-slate-800 outline-none border-none h-full bg-transparent"
+                        value={rfqQuantity}
+                        onChange={(e) => setRfqQuantity(Math.max(12, parseInt(e.target.value) || 12))}
+                      />
+                      <button className="px-4 text-xl font-medium text-slate-500 hover:bg-slate-50 h-full transition-colors" onClick={() => setRfqQuantity(q => q + 1)}>+</button>
+                    </div>
+                    <div className="flex-1 flex gap-4">
+                      <button 
+                        className="flex-1 px-6 py-4 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 rounded-xl font-bold text-base transition-colors"
+                        onClick={() => {
+                          alert(`Contacting ${product.seller} for business inquiry...`);
+                        }}
+                      >
+                        Contact Supplier
+                      </button>
+                      <button 
+                        className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
+                        onClick={() => {
+                          alert(`Requesting bulk quote for ${rfqQuantity} units of ${product.name}...`);
+                        }}
+                      >
+                        Request Quote
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ) : product.category === 'Transport' ? (
                 <div className="flex flex-col gap-3 w-full p-4 bg-blue-50 rounded-2xl border border-blue-100">
                   <div className="text-blue-800 font-bold text-sm mb-1">Plan Your Trip / Route</div>

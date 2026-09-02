@@ -239,7 +239,7 @@ export default function Home() {
             </Link>
 
             {/* Construction Hub Card */}
-            <Link href="/search?cat=Raw%20Materials" className="group rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-xl transition-all block">
+            <Link href="/search?category=Construction%20Materials" className="group rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-sm hover:shadow-xl transition-all block">
               <div className="h-32 bg-gradient-to-br from-amber-500 to-orange-600 relative p-6 flex flex-col justify-end">
                 <div className="absolute top-4 right-4 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-2xl shadow-inner border border-white/30">🏗️</div>
                 <div className="text-white/80 text-[10px] uppercase tracking-widest font-bold mb-1">Building & Infrastructure</div>
