@@ -20,6 +20,8 @@ export type Product = {
   isPremium?: boolean;
   isB2B?: boolean;
   moq?: number;
+  wholesaleTiers?: { minQty: number, margin: number }[];
+  brand?: string;
 };
 
 export type Category = {
@@ -53,9 +55,10 @@ const defaultProducts: Product[] = [
     seller: 'Apple Authorized India',
     location: 'Mumbai, Maharashtra',
     category: 'Electronics',
-    subcategory: 'Mobiles',
-    badge: 'Bestseller',
-    badgeColor: 'badge-gold'
+    subcategory: 'Smartphones',
+    badge: 'Trending',
+    badgeColor: 'badge-purple',
+    brand: 'Apple'
   },
   {
     id: 'boat-airdopes-141',
@@ -228,10 +231,15 @@ const defaultProducts: Product[] = [
     seller: 'Surat Textiles Hub',
     location: 'Surat, Gujarat',
     category: 'B2B',
-    badge: 'High Demand',
-    badgeColor: 'badge-red',
+    badge: 'Global Verified',
+    badgeColor: 'badge-purple',
     isB2B: true,
-    moq: 5
+    moq: 12,
+    wholesaleTiers: [
+      { minQty: 12, margin: 20 },
+      { minQty: 100, margin: 30 },
+      { minQty: 150, margin: 40 }
+    ]
   },
   {
     id: 'portland-cement-50kg',
@@ -247,7 +255,12 @@ const defaultProducts: Product[] = [
     badge: 'Bestseller',
     badgeColor: 'badge-gold',
     isB2B: true,
-    moq: 100
+    moq: 12,
+    wholesaleTiers: [
+      { minQty: 12, margin: 20 },
+      { minQty: 100, margin: 30 },
+      { minQty: 150, margin: 40 }
+    ]
   },
   {
     id: 'tmt-steel-bars',
@@ -263,7 +276,12 @@ const defaultProducts: Product[] = [
     badge: 'Verified B2B',
     badgeColor: 'badge-gold',
     isB2B: true,
-    moq: 5
+    moq: 12,
+    wholesaleTiers: [
+      { minQty: 12, margin: 20 },
+      { minQty: 100, margin: 30 },
+      { minQty: 150, margin: 40 }
+    ]
   },
   {
     id: 'river-sand-truck',
@@ -279,7 +297,12 @@ const defaultProducts: Product[] = [
     badge: 'Trusted',
     badgeColor: 'badge-blue',
     isB2B: true,
-    moq: 1
+    moq: 12,
+    wholesaleTiers: [
+      { minQty: 12, margin: 20 },
+      { minQty: 100, margin: 30 },
+      { minQty: 150, margin: 40 }
+    ]
   },
   {
     id: 'wholesale-cotton-fabric',

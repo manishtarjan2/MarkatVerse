@@ -14,6 +14,7 @@ export default function ProductDetails() {
   const [activeImage, setActiveImage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rfqQuantity, setRfqQuantity] = useState(1);
+  const [bundleMultiplier, setBundleMultiplier] = useState(1);
   const [rfqMessage, setRfqMessage] = useState('');
   const [isElite, setIsElite] = useState(false);
   const [selectedColor, setSelectedColor] = useState('Black');
@@ -27,6 +28,34 @@ export default function ProductDetails() {
       setRfqQuantity(12);
     }
   }, [product]);
+
+  const printRate = product?.originalPrice > product?.price ? product.originalPrice : product?.price;
+  let currentActivePrice = product?.price || 0;
+  
+  const isRetail = !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product?.category || '');
+  const isWholesaleConfig = product?.category === 'B2B' || product?.category === 'Construction Materials' || (isRetail && isElite);
+  
+  if (product) {
+    if (isWholesaleConfig) {
+      if (product.wholesaleTiers && product.wholesaleTiers.length > 0) {
+        const sortedTiers = [...product.wholesaleTiers].sort((a, b) => b.minQty - a.minQty);
+        const activeTier = sortedTiers.find(tier => rfqQuantity >= tier.minQty);
+        if (activeTier) {
+          currentActivePrice = Math.round(printRate * (1 - activeTier.margin / 100));
+        } else {
+          currentActivePrice = isRetail && isElite ? Math.round(product.price * 0.7) : printRate;
+        }
+      } else {
+        // Fallback to defaults
+        if (rfqQuantity >= 150) currentActivePrice = Math.round(printRate * 0.60); // 40% Margin
+        else if (rfqQuantity >= 100) currentActivePrice = Math.round(printRate * 0.70); // 30% Margin
+        else if (rfqQuantity >= 12) currentActivePrice = Math.round(printRate * 0.80); // 20% Margin
+        else {
+          currentActivePrice = isRetail && isElite ? Math.round(product.price * 0.7) : printRate;
+        }
+      }
+    }
+  }
 
   if (!product) {
     return (
@@ -132,8 +161,14 @@ export default function ProductDetails() {
 
         {/* Right: Product Info & Seller Card */}
         <div className="flex-1">
-          <div className="text-blue-600 uppercase tracking-widest text-xs font-bold mb-3">
-            {product.seller}
+          <div className="flex items-center gap-2 mb-3 text-xs font-bold uppercase tracking-widest">
+            {product.brand && (
+              <>
+                <span className="text-slate-800">{product.brand}</span>
+                <span className="text-slate-300">•</span>
+              </>
+            )}
+            <span className="text-blue-600">{product.seller}</span>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 leading-tight">{product.name}</h1>
           
@@ -149,52 +184,91 @@ export default function ProductDetails() {
                 'Project Based'
               ) : (
                 <>
-                  ₹{(() => {
-                    const printRate = product.originalPrice > product.price ? product.originalPrice : product.price;
-                    let finalPrice = product.price;
-                    if (isElite && !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product.category)) {
-                      finalPrice = Math.round(product.price * 0.7);
-                    } else if (product.category === 'B2B' || product.category === 'Construction Materials') {
-                      if (rfqQuantity >= 150) finalPrice = Math.round(printRate * 0.55); // 45% Margin
-                      else if (rfqQuantity >= 100) finalPrice = Math.round(printRate * 0.65); // 35% Margin
-                      else if (rfqQuantity >= 12) finalPrice = Math.round(printRate * 0.75); // 25% Margin
-                    }
-                    return finalPrice.toLocaleString('en-IN');
-                  })()}
+                  ₹{currentActivePrice.toLocaleString('en-IN')}
                   {product.category === 'Transport' && <span className="text-lg text-slate-500 font-medium ml-1">/ km</span>}
-                  {(product.category === 'B2B' || product.category === 'Construction Materials') && <span className="text-lg text-slate-500 font-medium ml-1">/ unit</span>}
-                  {isElite && !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product.category) && (
+                  {isWholesaleConfig && <span className="text-lg text-slate-500 font-medium ml-1">/ unit</span>}
+                  {isElite && isRetail && (
                     <span className="text-sm text-amber-700 bg-amber-100 border border-amber-200 px-2 py-1 rounded-md font-bold tracking-tight">Elite Rate</span>
                   )}
                 </>
               )}
             </div>
             
-            {(product.category === 'B2B' || product.category === 'Construction Materials') && (() => {
+            {isWholesaleConfig && (() => {
               const printRate = product.originalPrice > product.price ? product.originalPrice : product.price;
               
               return (
                 <div className="mt-5 border border-blue-200 rounded-xl overflow-hidden shadow-sm">
                   <div className="bg-blue-50 px-4 py-3 text-sm font-bold text-blue-900 border-b border-blue-200 flex justify-between items-center">
-                    <span>Wholesale Tiered Pricing</span>
+                    <span>{isRetail ? 'Elite Wholesale Tiered Pricing' : 'Wholesale Tiered Pricing'}</span>
                     <span className="text-xs bg-white text-blue-700 px-2 py-1 rounded border border-blue-200">MOQ: 12 Units</span>
                   </div>
-                  <div className="grid grid-cols-3 text-center divide-x divide-slate-200 bg-white">
-                    <div className={`p-3 flex flex-col transition-colors ${rfqQuantity >= 12 && rfqQuantity < 100 ? 'bg-blue-50/50' : ''}`}>
-                      <span className="text-xs text-slate-500 font-bold mb-1">12 - 99 Units</span>
-                      <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.75).toLocaleString('en-IN')}</span>
-                      <span className="text-[10px] text-emerald-600 font-bold mt-1">25% Margin on MRP</span>
-                    </div>
-                    <div className={`p-3 flex flex-col transition-colors ${rfqQuantity >= 100 && rfqQuantity < 150 ? 'bg-blue-50/50' : ''}`}>
-                      <span className="text-xs text-slate-500 font-bold mb-1">100 - 149 Units</span>
-                      <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.65).toLocaleString('en-IN')}</span>
-                      <span className="text-[10px] text-emerald-600 font-bold mt-1">35% Margin on MRP</span>
-                    </div>
-                    <div className={`p-3 flex flex-col transition-colors ${rfqQuantity >= 150 ? 'bg-blue-50/50' : ''}`}>
-                      <span className="text-xs text-slate-500 font-bold mb-1">150+ Units</span>
-                      <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.55).toLocaleString('en-IN')}</span>
-                      <span className="text-[10px] text-emerald-600 font-bold mt-1">45% Margin on MRP</span>
-                    </div>
+                  <div 
+                    className="grid text-center divide-x divide-slate-200 bg-white" 
+                    style={{ gridTemplateColumns: `repeat(${product.wholesaleTiers ? product.wholesaleTiers.length : 3}, minmax(0, 1fr))` }}
+                  >
+                    {product.wholesaleTiers && product.wholesaleTiers.length > 0 ? (
+                      product.wholesaleTiers.map((tier, index) => {
+                        const nextTier = product.wholesaleTiers![index + 1];
+                        const isActive = rfqQuantity >= tier.minQty && (!nextTier || rfqQuantity < nextTier.minQty);
+                        return (
+                          <div 
+                            key={index} 
+                            onClick={() => {
+                              setRfqQuantity(tier.minQty);
+                              setBundleMultiplier(1);
+                            }}
+                            className={`p-3 flex flex-col transition-colors cursor-pointer hover:bg-blue-50 ${isActive ? 'bg-blue-50/50 ring-2 ring-blue-500 ring-inset' : ''}`}
+                          >
+                            <span className="text-xs text-slate-500 font-bold mb-1">
+                              {tier.minQty}-Pack Bundle
+                            </span>
+                            <span className="font-bold text-slate-800">
+                              ₹{Math.round(printRate * (1 - tier.margin / 100)).toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-bold mt-1">
+                              {tier.margin}% Margin on MRP
+                            </span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <>
+                        <div 
+                          onClick={() => {
+                            setRfqQuantity(12);
+                            setBundleMultiplier(1);
+                          }}
+                          className={`p-3 flex flex-col transition-colors cursor-pointer hover:bg-blue-50 ${rfqQuantity === 12 ? 'bg-blue-50/50 ring-2 ring-blue-500 ring-inset' : ''}`}
+                        >
+                          <span className="text-xs text-slate-500 font-bold mb-1">12-Pack Bundle</span>
+                          <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.80).toLocaleString('en-IN')}</span>
+                          <span className="text-[10px] text-emerald-600 font-bold mt-1">20% Margin on MRP</span>
+                        </div>
+                        <div 
+                          onClick={() => {
+                            setRfqQuantity(100);
+                            setBundleMultiplier(1);
+                          }}
+                          className={`p-3 flex flex-col transition-colors cursor-pointer hover:bg-blue-50 ${rfqQuantity === 100 ? 'bg-blue-50/50 ring-2 ring-blue-500 ring-inset' : ''}`}
+                        >
+                          <span className="text-xs text-slate-500 font-bold mb-1">100-Pack Bundle</span>
+                          <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.70).toLocaleString('en-IN')}</span>
+                          <span className="text-[10px] text-emerald-600 font-bold mt-1">30% Margin on MRP</span>
+                        </div>
+                        <div 
+                          onClick={() => {
+                            setRfqQuantity(150);
+                            setBundleMultiplier(1);
+                          }}
+                          className={`p-3 flex flex-col transition-colors cursor-pointer hover:bg-blue-50 ${rfqQuantity === 150 ? 'bg-blue-50/50 ring-2 ring-blue-500 ring-inset' : ''}`}
+                        >
+                          <span className="text-xs text-slate-500 font-bold mb-1">150-Pack Bundle</span>
+                          <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.60).toLocaleString('en-IN')}</span>
+                          <span className="text-[10px] text-emerald-600 font-bold mt-1">40% Margin on MRP</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -209,6 +283,25 @@ export default function ProductDetails() {
                 </div>
                 <div className="text-emerald-600 font-bold mt-1 text-sm">You Save: {product.discount}</div>
               </>
+            )}
+
+            {!['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product.category) && (
+              <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 shadow-sm flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="font-bold text-amber-900 text-sm flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" /> MarkatVerse Elite
+                  </span>
+                  <span className="text-xs text-amber-700 mt-1">
+                    {isElite ? 'You are currently getting the Elite member discount!' : 'Subscribe to Elite to get an extra 30% off this item.'}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setIsElite(!isElite)}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors shadow-sm shrink-0 ${isElite ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-white text-amber-700 hover:bg-amber-50 border border-amber-300'}`}
+                >
+                  {isElite ? 'Subscribed' : 'Join Elite'}
+                </button>
+              </div>
             )}
             
             {/* Color & Size Selectors for Retail Products */}
@@ -273,37 +366,89 @@ export default function ProductDetails() {
                     Contact Company
                   </button>
                 </>
-              ) : (product.category === 'B2B' || product.category === 'Construction Materials') ? (
-                <div className="flex flex-col w-full gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center bg-white border border-slate-300 rounded-xl h-[56px] overflow-hidden shrink-0">
-                      <button className="px-4 text-xl font-medium text-slate-500 hover:bg-slate-50 h-full transition-colors" onClick={() => setRfqQuantity(q => Math.max(12, q - 1))}>-</button>
-                      <input 
-                        type="number"
-                        min="12"
-                        className="w-16 text-center font-bold text-slate-800 outline-none border-none h-full bg-transparent"
+              ) : isWholesaleConfig ? (
+                <div className="flex flex-col w-full gap-5">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="w-full sm:w-auto flex items-center shrink-0">
+                      <span className="text-sm font-bold text-slate-600 mr-3">Bundle:</span>
+                      <select 
+                        className="h-[48px] px-4 font-bold text-slate-800 bg-white border border-slate-300 rounded-xl outline-none focus:border-blue-500 cursor-pointer shadow-sm w-full sm:w-auto"
                         value={rfqQuantity}
-                        onChange={(e) => setRfqQuantity(Math.max(12, parseInt(e.target.value) || 12))}
-                      />
-                      <button className="px-4 text-xl font-medium text-slate-500 hover:bg-slate-50 h-full transition-colors" onClick={() => setRfqQuantity(q => q + 1)}>+</button>
+                        onChange={(e) => {
+                          setRfqQuantity(parseInt(e.target.value));
+                          setBundleMultiplier(1);
+                        }}
+                      >
+                        {isRetail && isElite && (
+                          <option value={1}>1 Unit (Retail)</option>
+                        )}
+                        {product.wholesaleTiers && product.wholesaleTiers.length > 0 ? (
+                          product.wholesaleTiers.map((tier, idx) => (
+                            <option key={idx} value={tier.minQty}>{tier.minQty}-Pack Bundle</option>
+                          ))
+                        ) : (
+                          <>
+                            <option value={12}>12-Pack Bundle</option>
+                            <option value={100}>100-Pack Bundle</option>
+                            <option value={150}>150-Pack Bundle</option>
+                          </>
+                        )}
+                      </select>
                     </div>
-                    <div className="flex-1 flex gap-4">
+                    
+                    <div className="w-full sm:w-auto flex items-center sm:ml-4 shrink-0">
+                      <span className="text-sm font-bold text-slate-600 mr-3">Qty:</span>
+                      <div className="flex items-center bg-white border border-slate-300 rounded-xl h-[48px] overflow-hidden shadow-sm">
+                        <button className="px-4 text-xl font-medium text-slate-500 hover:bg-slate-50 h-full transition-colors border-r border-slate-200" onClick={() => setBundleMultiplier(q => Math.max(1, q - 1))}>-</button>
+                        <input 
+                          type="number"
+                          min="1"
+                          className="w-16 text-center font-bold text-slate-800 outline-none border-none h-full bg-transparent p-0 m-0"
+                          value={bundleMultiplier}
+                          onChange={(e) => setBundleMultiplier(Math.max(1, parseInt(e.target.value) || 1))}
+                        />
+                        <button className="px-4 text-xl font-medium text-slate-500 hover:bg-slate-50 h-full transition-colors border-l border-slate-200" onClick={() => setBundleMultiplier(q => q + 1)}>+</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                      {isRetail && isElite ? (
+                        <button 
+                          className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-amber-500 hover:bg-amber-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
+                          onClick={() => {
+                            addToCart(product);
+                            alert(`Added ${rfqQuantity} of ${product.name} to cart!`);
+                          }}
+                        >
+                          Add to Cart
+                        </button>
+                      ) : (
+                        <button 
+                          className="flex-1 px-6 py-4 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 rounded-xl font-bold text-base transition-colors"
+                          onClick={() => {
+                            alert(`Contacting ${product.seller} for business inquiry...`);
+                          }}
+                        >
+                          Contact Supplier
+                        </button>
+                      )}
+                    <div className="flex-1 flex flex-col gap-2">
                       <button 
-                        className="flex-1 px-6 py-4 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 rounded-xl font-bold text-base transition-colors"
+                        className={`w-full px-6 py-4 text-white rounded-xl font-bold text-base transition-colors shadow-md ${isRetail && isElite ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'}`}
                         onClick={() => {
-                          alert(`Contacting ${product.seller} for business inquiry...`);
+                          if (isRetail && isElite) {
+                            alert(`Proceeding to checkout for ${rfqQuantity * bundleMultiplier} units...`);
+                          } else {
+                            alert(`Requesting bulk quote for ${rfqQuantity * bundleMultiplier} units of ${product.name}...`);
+                          }
                         }}
                       >
-                        Contact Supplier
+                        {isRetail && isElite ? 'Buy Wholesale Now' : 'Request Quote'}
                       </button>
-                      <button 
-                        className="flex-1 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-blue-600/20"
-                        onClick={() => {
-                          alert(`Requesting bulk quote for ${rfqQuantity} units of ${product.name}...`);
-                        }}
-                      >
-                        Request Quote
-                      </button>
+                      <div className="text-sm font-bold text-slate-700 text-center bg-slate-100 rounded-lg py-3 mt-1 border border-slate-200">
+                        Total Estimate: <span className={isRetail && isElite ? "text-amber-600 ml-1 text-lg" : "text-blue-700 ml-1 text-lg"}>₹{(currentActivePrice * rfqQuantity * bundleMultiplier).toLocaleString('en-IN')}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
