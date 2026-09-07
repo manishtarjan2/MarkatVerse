@@ -26,7 +26,7 @@ export default function BottomNav() {
         <span className="text-[10px] font-medium">Categories</span>
       </Link>
 
-      <Link href={user?.role === 'seller' ? "/seller/dashboard" : "/seller/login"} className={`flex flex-col items-center gap-1 p-2 ${pathname?.startsWith('/seller') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>
+      <Link href={user?.role === 'SELLER' || user?.role === 'business' ? "/seller/dashboard" : "/seller/login"} className={`flex flex-col items-center gap-1 p-2 ${pathname?.startsWith('/seller') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>
         <Store className="w-5 h-5" strokeWidth={pathname?.startsWith('/seller') ? 2 : 1.5} />
         <span className="text-[10px] font-medium">Seller</span>
       </Link>
