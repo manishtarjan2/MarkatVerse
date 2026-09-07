@@ -26,10 +26,10 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex items-center justify-between py-2 px-6 bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-sm">
-      <div className="flex items-center gap-6">
-        <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity mr-16 lg:mr-28">
-          <img src="/logo.png" alt="MarkatVerse" className="h-10 lg:h-12 object-contain scale-[2.5] origin-left" />
+    <nav className="flex items-center justify-between py-2 px-3 sm:px-6 bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-sm">
+      <div className="flex items-center gap-2 sm:gap-6">
+        <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity mr-8 sm:mr-16 lg:mr-28">
+          <img src="/logo.png" alt="MarkatVerse" className="h-8 sm:h-10 lg:h-12 object-contain scale-[1.5] sm:scale-[2] lg:scale-[2.5] origin-left pl-2 sm:pl-0" />
         </Link>
       </div>
 
@@ -104,7 +104,11 @@ export default function Navbar() {
         </div>
       )}
 
-      <div className="flex items-center gap-5 text-slate-600">
+      <div className="flex items-center gap-3 sm:gap-5 text-slate-600">
+        <Link href="/search" className="flex md:hidden flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group">
+          <Search className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+        </Link>
+
         {user?.role !== 'super_admin' && (
           <>
             <Link href="/help" className="hidden lg:flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group">

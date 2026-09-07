@@ -33,20 +33,20 @@ export default function Home() {
         </section>
 
         {/* Dual Hero Section */}
-        <section className="grid grid-cols-1 md:grid-cols-10 gap-3 lg:gap-4 w-full h-[440px]">
+        <section className="grid grid-cols-1 md:grid-cols-10 gap-3 lg:gap-4 w-full h-auto md:h-[440px]">
           
           {/* Left Banner - Light Theme */}
-          <div className="md:col-span-7 bg-white rounded-3xl p-6 lg:p-10 flex flex-col items-start justify-center border border-slate-200 shadow-sm relative overflow-hidden group">
+          <div className="md:col-span-7 bg-white rounded-3xl p-5 sm:p-6 lg:p-10 flex flex-col items-start justify-center border border-slate-200 shadow-sm relative overflow-hidden group min-h-[350px] md:min-h-0">
             
             {/* Background Image seamlessly blended */}
             <div className="absolute top-0 right-0 w-full sm:w-[55%] h-full z-0">
               <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-transparent z-10 sm:block hidden"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10 sm:hidden block"></div>
-              <img src="/hero-left-graphic.jpg" alt="Online Store Cart and Phone" className="w-full h-full object-cover object-center sm:object-right" />
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10 sm:hidden block"></div>
+              <img src="/hero-left-graphic.jpg" alt="Online Store Cart and Phone" className="w-full h-full object-cover object-center sm:object-right opacity-40 sm:opacity-100" />
             </div>
 
             <div className="flex flex-col z-10 w-full sm:w-[60%] relative h-full justify-center">
-              <h1 className="text-3xl lg:text-4xl xl:text-[2.8rem] font-black text-[#0f1928] leading-[1.1] mb-3 tracking-tight relative z-20">
+              <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-[2.8rem] font-black text-[#0f1928] leading-[1.1] mb-2 sm:mb-3 tracking-tight relative z-20">
                 One Platform.<br />Endless Possibilities.
               </h1>
               <p className="text-slate-600 font-medium mb-6 text-base relative z-20">
@@ -84,18 +84,18 @@ export default function Home() {
           </div>
 
           {/* Right Banner - Dark Theme */}
-          <div className="md:col-span-3 bg-[#061224] rounded-3xl p-6 lg:p-8 flex flex-col shadow-xl relative overflow-hidden group border border-slate-800">
+          <div className="md:col-span-3 bg-[#061224] rounded-3xl p-5 sm:p-6 lg:p-8 flex flex-col shadow-xl relative overflow-hidden group border border-slate-800 min-h-[250px] md:min-h-0">
             
             {/* Background glowing effects & Image */}
             <div className="absolute inset-0 z-0 opacity-100 transition-opacity duration-700">
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 z-10"></div>
-              <div className="absolute inset-0 bg-gradient-to-b from-[#061224]/60 via-transparent to-transparent z-10 pointer-events-none"></div>
-              <img src="/hero-right-graphic.jpg" alt="Global Delivery Network" className="w-full h-full object-cover object-bottom" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#061224]/60 via-[#061224]/20 to-transparent z-10 pointer-events-none"></div>
+              <img src="/hero-right-graphic.jpg" alt="Global Delivery Network" className="w-full h-full object-cover object-bottom opacity-60 sm:opacity-100" />
             </div>
             
             <div className="flex flex-col z-10 w-full mb-4 relative h-full">
               <div className="flex flex-col relative z-20">
-                <h2 className="text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-[1.15] mb-2 tracking-tight drop-shadow-md">
+                <h2 className="text-2xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-[1.15] mb-2 tracking-tight drop-shadow-md">
                   Empowering<br/>Businesses.<br/>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-teal-300 to-emerald-400">Enriching Lives.</span>
                 </h2>

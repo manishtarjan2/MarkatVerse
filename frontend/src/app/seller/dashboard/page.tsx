@@ -15,7 +15,7 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState(isAdding ? 'add' : 'overview');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const { addProduct, deleteProduct, products, categories } = useProducts();
+  const { addProduct, editProduct, deleteProduct, products, categories } = useProducts();
   const [isPremiumSeller, setIsPremiumSeller] = useState(false); // Mock state to demonstrate the paywall
   
   const { user } = useAuth();
@@ -44,6 +44,7 @@ function DashboardContent() {
   ]);
 
   // Form states
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
@@ -124,9 +125,7 @@ function DashboardContent() {
     setIsSubmitting(true);
     
     setTimeout(() => {
-      // Add to global context
-      addProduct({
-        id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      const productData = {
         name: name,
         price: parseFloat(price),
         originalPrice: parseFloat(originalPrice) || parseFloat(price),
@@ -148,12 +147,22 @@ function DashboardContent() {
             .filter(([_, v]) => v.trim() !== '')
             .map(([k, v]) => [k, v.split(',').map(s => s.trim()).filter(Boolean)])
         ) : undefined
-      });
+      };
+
+      if (editingProductId) {
+        editProduct(editingProductId, productData);
+      } else {
+        addProduct({
+          ...productData,
+          id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+        });
+      }
 
       setIsSubmitting(false);
       setShowSuccess(true);
       
       // Reset form
+      setEditingProductId(null);
       setName('');
       setPrice('');
       setOriginalPrice('');
@@ -209,7 +218,16 @@ function DashboardContent() {
             <Store className="w-5 h-5" /> My Listings
           </button>
           <button 
-            onClick={() => setActiveTab('add')} 
+            onClick={() => {
+              setEditingProductId(null);
+              setName('');
+              setPrice('');
+              setOriginalPrice('');
+              setDescription('');
+              setImageUrl('');
+              setUploadedImages([]);
+              setActiveTab('add');
+            }} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'add' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
             <PlusCircle className="w-5 h-5" /> Add Product
@@ -305,7 +323,32 @@ function DashboardContent() {
                       </span>
                     </div>
                     <div className="flex gap-3">
-                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-medium text-sm transition-colors">
+                      <button 
+                        onClick={() => {
+                          setEditingProductId(product.id);
+                          setName(product.name);
+                          setPrice(product.price.toString());
+                          setOriginalPrice(product.originalPrice ? product.originalPrice.toString() : product.price.toString());
+                          setDescription(product.description || '');
+                          setCategory(product.category || 'Electronics');
+                          setSellerName(product.seller || '');
+                          setLocation(product.location || '');
+                          setImageUrl(product.image || '');
+                          setUploadedImages(product.images || []);
+                          setEnableWholesale(product.isB2B || false);
+                          if (product.wholesaleTiers) setWholesaleTiers(product.wholesaleTiers);
+                          
+                          if (product.parameters) {
+                            const newParams: Record<string, string> = {};
+                            Object.keys(product.parameters).forEach(k => {
+                              newParams[k] = product.parameters![k].join(', ');
+                            });
+                            setParameters(newParams);
+                          }
+                          setActiveTab('add');
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-medium text-sm transition-colors"
+                      >
                         <Edit2 className="w-4 h-4" /> Edit
                       </button>
                       <button 
@@ -344,8 +387,8 @@ function DashboardContent() {
         {activeTab === 'add' && (
           <div className="max-w-3xl mx-auto animate-in fade-in duration-300">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-slate-900">Add New Product</h1>
-              <p className="text-slate-500 mt-2">Create a new listing to start selling.</p>
+              <h1 className="text-3xl font-bold text-slate-900">{editingProductId ? 'Edit Product' : 'Add New Product'}</h1>
+              <p className="text-slate-500 mt-2">{editingProductId ? 'Update the details for your listing.' : 'Create a new listing to start selling.'}</p>
             </div>
             
             {showSuccess ? (
@@ -617,9 +660,13 @@ function DashboardContent() {
                   <button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold shadow-md shadow-blue-600/20 transition-all disabled:opacity-70 flex items-center gap-2"
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-70 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex justify-center items-center gap-2 text-lg"
                   >
-                    {isSubmitting ? 'Publishing...' : 'Publish Product'}
+                    {isSubmitting ? (
+                      <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Saving...</>
+                    ) : (
+                      editingProductId ? 'Update Product' : 'Publish Product'
+                    )}
                   </button>
                 </div>
               </form>
