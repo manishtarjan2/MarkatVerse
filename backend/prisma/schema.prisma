@@ -1,6 +1,6 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -8,7 +8,7 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   email     String?  @unique
   phone     String?  @unique
   password  String
@@ -17,33 +17,33 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  business Business?
-  products Product[]
-  orders   Order[]
-  buyerLeads  Lead[] @relation("BuyerLeads")
-  sellerLeads Lead[] @relation("SellerLeads")
+  business    Business?
+  products    Product[]
+  orders      Order[]
+  buyerLeads  Lead[]    @relation("BuyerLeads")
+  sellerLeads Lead[]    @relation("SellerLeads")
 }
 
 model Business {
-  id           String       @id @default(uuid())
-  userId       String       @unique
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String  @unique @db.ObjectId
   name         String
   logo         String?
   description  String?
   businessType String // MANUFACTURER, WHOLESALER, etc
   address      String?
-  verified     Boolean      @default(false)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  verified     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Category {
-  id        String     @id @default(uuid())
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
   name      String
-  parentId  String?
-  parent    Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  parentId  String?    @db.ObjectId
+  parent    Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children  Category[] @relation("CategoryToCategory")
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -52,10 +52,10 @@ model Category {
 }
 
 model Product {
-  id            String   @id @default(uuid())
-  sellerId      String?
-  categoryId    String?
-  
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  sellerId      String?  @db.ObjectId
+  categoryId    String?  @db.ObjectId
+
   // Frontend fields
   name          String
   description   String?
@@ -70,6 +70,7 @@ model Product {
   badge         String?
   badgeColor    String?
   image         String?
+  images        String[] @default([])
 
   stock         Int      @default(0)
   sku           String?
@@ -79,31 +80,31 @@ model Product {
   isB2B         Boolean  @default(false)
   moq           Int?     @default(1)
 
-  seller   User?       @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  category Category?   @relation(fields: [categoryId], references: [id])
+  seller     User?       @relation(fields: [sellerId], references: [id])
+  category   Category?   @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
   leads      Lead[]
 }
 
 model Lead {
-  id                String   @id @default(uuid())
-  buyerId           String
-  sellerId          String
-  productId         String
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId           String   @db.ObjectId
+  sellerId          String   @db.ObjectId
+  productId         String   @db.ObjectId
   message           String
   quantityRequested Int
   status            String   @default("PENDING") // PENDING, REPLIED, CLOSED
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  buyer    User    @relation("BuyerLeads", fields: [buyerId], references: [id])
-  seller   User    @relation("SellerLeads", fields: [sellerId], references: [id])
-  product  Product @relation(fields: [productId], references: [id])
+  buyer   User    @relation("BuyerLeads", fields: [buyerId], references: [id])
+  seller  User    @relation("SellerLeads", fields: [sellerId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 }
 
 model Order {
-  id        String      @id @default(uuid())
-  buyerId   String
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId   String      @db.ObjectId
   total     Float
   status    String      @default("PENDING") // PENDING, SHIPPED, etc
   createdAt DateTime    @default(now())
@@ -114,14 +115,43 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  orderId   String
-  productId String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String   @db.ObjectId
+  productId String   @db.ObjectId
   quantity  Int
   price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order   Order   @relation(fields: [orderId], references: [id])
   product Product @relation(fields: [productId], references: [id])
+}
+
+model SalonQueue {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  shopName     String
+  currentToken Int          @default(0)
+  lastToken    Int          @default(0)
+  avgMinutes   Int          @default(20)
+  pricePerHour Float        @default(0)
+  isOpen       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  tokens SalonToken[]
+}
+
+model SalonToken {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  queueId      String    @db.ObjectId
+  tokenNumber  Int
+  customerName String
+  phone        String?
+  service      String    @default("Haircut")
+  status       String    @default("WAITING") // WAITING, SERVING, DONE, NO_SHOW
+  joinedAt     DateTime  @default(now())
+  servedAt     DateTime?
+  doneAt       DateTime?
+
+  queue SalonQueue @relation(fields: [queueId], references: [id])
 }

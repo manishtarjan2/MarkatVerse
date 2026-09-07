@@ -118,6 +118,30 @@
       "id": "S-4021",
       "status": "Pending",
       "date": "2026-09-01"
+    },
+    {
+      "name": "ghj",
+      "role": "Wholesaler",
+      "sector": "Electronics",
+      "category": "Accessories",
+      "type": "Accessories",
+      "location": "hjb",
+      "phone": "8989899898",
+      "id": "S-9935",
+      "status": "Pending",
+      "date": "2026-09-02"
+    },
+    {
+      "name": "sdcsfdr",
+      "role": "Manufacturer",
+      "sector": "Construction",
+      "category": "Plumbing",
+      "type": "Plumbing",
+      "location": "sdsas",
+      "phone": "898989989898",
+      "id": "S-5380",
+      "status": "Pending",
+      "date": "2026-09-02"
     }
   ]
 }

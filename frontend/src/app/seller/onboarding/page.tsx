@@ -2,21 +2,44 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function SellerOnboarding() {
   const router = useRouter();
+  const { user, login } = useAuth();
   const [step, setStep] = useState(1);
-  const [phone, setPhone] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  // Auto-skip step 1 if already logged in as a consumer
+  React.useEffect(() => {
+    if (user && step === 1) {
+      setOwnerName(user.name);
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+      setStep(2);
+    }
+  }, [user, step]);
+
+  // Step 1: Account credentials
+  const [ownerName, setOwnerName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [registeredToken, setRegisteredToken] = useState('');
 
   const [sellerRole, setSellerRole] = useState('Manufacturer');
   const [businessSector, setBusinessSector] = useState('Construction');
   const [businessCategory, setBusinessCategory] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
+  const [gstNumber, setGstNumber] = useState('');
 
-  const [otpArray, setOtpArray] = useState(['', '', '', '', '', '']);
+  const [otpArray, setOtpArray] = useState(['', '', '', '']);
 
   const taxonomy: Record<string, Record<string, string[]>> = {
     'Manufacturer': {
@@ -53,13 +76,41 @@ export default function SellerOnboarding() {
   const currentSectors = Object.keys(taxonomy[sellerRole] || {});
   const currentCategories = taxonomy[sellerRole]?.[businessSector] || ['Other'];
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  // Step 1: Create seller account
+  const handleAccountSetup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    if (password !== confirmPassword) { setError('Passwords do not match'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (!email && !phone) { setError('Email or phone is required'); return; }
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      // Register as SELLER role
+      const res = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: ownerName,
+          email: email || undefined,
+          phone: phone || undefined,
+          password,
+          role: 'SELLER',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(Array.isArray(data.message) ? data.message[0] : data.message || 'Registration failed');
+      setRegisteredToken(data.access_token);
+      // Also log them in
+      login(
+        { id: data.user.id, name: data.user.name, email: data.user.email, role: 'business', phone: data.user.phone || '' },
+        data.access_token
+      );
+      setStep(2);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
       setIsSubmitting(false);
-      setIsOtpSent(true);
-    }, 1000);
+    }
   };
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -68,7 +119,7 @@ export default function SellerOnboarding() {
     const newOtpArray = [...otpArray];
     newOtpArray[index] = value.substring(value.length - 1);
     setOtpArray(newOtpArray);
-    if (value && index < 5) {
+    if (value && index < otpArray.length - 1) {
       const nextSibling = document.getElementById(`otp-${index + 1}`);
       if (nextSibling) (nextSibling as HTMLInputElement).focus();
     }
@@ -98,49 +149,55 @@ export default function SellerOnboarding() {
     setTimeout(() => {
       setIsSubmitting(false);
       setStep(3);
-    }, 1000);
+    }, 500);
   };
 
   const handleDocumentUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
     try {
-      const response = await fetch('http://localhost:3001/sellers', {
+      const res = await fetch(`${API_URL}/sellers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(registeredToken || (typeof window !== 'undefined' && localStorage.getItem('token')) ? { Authorization: `Bearer ${registeredToken || localStorage.getItem('token')}` } : {}),
+        },
         body: JSON.stringify({
-          name: businessName || 'Test Business',
-          role: sellerRole,
+          ownerName,
+          businessName: businessName || 'My Business',
+          businessType: sellerRole,
           sector: businessSector,
-          category: businessCategory || 'Unknown',
-          type: businessCategory || 'Unknown', // Backwards compatibility for UI
-          location: businessLocation || 'Unknown',
-          phone: phone,
+          category: businessCategory || 'Other',
+          address: businessLocation,
+          email,
+          phone,
+          gstNumber,
         }),
       });
-      if (response.ok) {
+      if (res.ok) {
         setIsSubmitting(false);
         setStep(4);
       } else {
-        setIsSubmitting(false);
-        alert("Failed to register. Please try again.");
+        const data = await res.json();
+        throw new Error(data.message || 'Failed to register. Please try again.');
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      setError(err.message);
       setIsSubmitting(false);
-      alert("Error connecting to server.");
     }
   };
 
   const steps = [
-    { num: 1, label: 'Verify Mobile' },
+    { num: 1, label: 'Account Setup' },
     { num: 2, label: 'Business Info' },
     { num: 3, label: 'Documents' },
   ];
 
-  const inputClasses = "w-full p-3.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all placeholder:text-slate-400 text-base";
-  const selectClasses = "w-full p-3.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all text-base";
-  const labelClasses = "block text-sm font-medium text-slate-700 mb-2";
+  const inputClasses = "w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:bg-white transition-all placeholder:text-slate-400 text-sm";
+  const selectClasses = "w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:bg-white transition-all text-sm";
+  const labelClasses = "block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide";
+  const btnPrimary = "flex-1 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 flex">
@@ -230,80 +287,88 @@ export default function SellerOnboarding() {
             </div>
           )}
 
-          {/* ─── STEP 1: Mobile Verification ─── */}
+          {/* ─── STEP 1: Account Setup ─── */}
           {step === 1 && (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-              {!isOtpSent ? (
-                <>
-                  <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                    <span className="text-2xl">📱</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Verify your mobile</h2>
-                  <p className="text-slate-500 text-base text-center mb-8">We'll send a 6-digit OTP to verify your number</p>
+              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                <span className="text-2xl">👤</span>
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 text-center mb-1">Create Seller Account</h2>
+              <p className="text-slate-500 text-sm text-center mb-7">Set up your login credentials to get started</p>
 
-                  <form onSubmit={handleSendOtp} className="max-w-[360px] mx-auto">
-                    <label className={labelClasses}>Mobile Number</label>
-                    <div className="flex gap-3 mb-6">
-                      <div className="w-[72px] flex items-center justify-center bg-slate-100 border border-slate-300 rounded-lg text-slate-500 text-base font-medium">
-                        +91
-                      </div>
-                      <input 
-                        required type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                        placeholder="98765 43210" className={`flex-1 ${inputClasses}`}
-                      />
-                    </div>
-                    <button type="submit" disabled={isSubmitting || phone.length < 10}
-                      className="w-full p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
-                      {isSubmitting ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                          Sending OTP...
-                        </span>
-                      ) : 'Send OTP'}
-                    </button>
-                  </form>
+              {/* Tabs */}
+              <div className="flex bg-slate-100 rounded-xl p-1 mb-8">
+                <Link href="/seller/login" className="flex-1 py-2.5 text-sm font-semibold text-center text-slate-500 hover:text-slate-700 transition-all">
+                  Sign In
+                </Link>
+                <div className="flex-1 py-2.5 text-sm font-semibold text-center rounded-lg bg-white text-emerald-600 shadow-sm transition-all">
+                  Register
+                </div>
+              </div>
 
-                  <p className="mt-6 text-center text-sm text-slate-400">
-                    Already a seller? <Link href="/login" className="text-emerald-600 hover:underline font-medium">Log in here</Link>
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                    <span className="text-2xl">✉️</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Enter OTP</h2>
-                  <p className="text-slate-500 text-base text-center mb-1">6-digit code sent to <strong className="text-slate-800">+91 {phone}</strong></p>
-                  <button type="button" onClick={() => setIsOtpSent(false)} className="text-emerald-600 text-sm cursor-pointer bg-transparent border-none mx-auto block mb-6 hover:underline">
-                    Change Number
-                  </button>
-
-                  <form onSubmit={handleVerifyOtp} className="max-w-[360px] mx-auto">
-                    <div className="flex gap-2.5 justify-center mb-6">
-                      {otpArray.map((data, index) => (
-                        <input 
-                          key={index} id={`otp-${index}`} type="text" maxLength={1} value={data}
-                          onChange={e => handleOtpChange(e, index)} onKeyDown={e => handleOtpKeyDown(e, index)}
-                          className="w-12 h-14 rounded-lg border border-slate-300 bg-white text-slate-900 text-xl text-center font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
-                        />
-                      ))}
-                    </div>
-                    <div className="flex justify-between items-center mb-6 text-sm">
-                      <span className="text-slate-400">Didn&apos;t receive?</span>
-                      <button type="button" className="text-emerald-600 cursor-pointer bg-transparent border-none hover:underline font-medium">Resend OTP</button>
-                    </div>
-                    <button type="submit" disabled={isSubmitting || otpString.length < 6}
-                      className="w-full p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
-                      {isSubmitting ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                          Verifying...
-                        </span>
-                      ) : 'Verify & Continue'}
-                    </button>
-                  </form>
-                </>
+              {error && (
+                <div className="mb-5 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 flex items-start gap-2">
+                  <span className="mt-0.5">⚠️</span> {error}
+                </div>
               )}
+
+              <form onSubmit={handleAccountSetup} className="flex flex-col gap-4">
+                <div>
+                  <label className={labelClasses}>Full Name (Owner)</label>
+                  <input required type="text" value={ownerName} onChange={e => setOwnerName(e.target.value)}
+                    placeholder="John Doe" className={inputClasses} />
+                </div>
+
+                <div>
+                  <label className={labelClasses}>Email Address</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    placeholder="seller@example.com" className={inputClasses} />
+                </div>
+
+                <div>
+                  <label className={labelClasses}>Phone Number <span className="normal-case font-normal text-slate-400">(optional if email given)</span></label>
+                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                    placeholder="9876543210" className={inputClasses} />
+                </div>
+
+                <div>
+                  <label className={labelClasses}>Password</label>
+                  <div className="relative">
+                    <input required type={showPassword ? 'text' : 'password'} value={password}
+                      onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters"
+                      className={`${inputClasses} pr-11`} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
+                      {showPassword ? '🙈' : '👁️'}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className={labelClasses}>Confirm Password</label>
+                  <input required type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password" className={inputClasses} />
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-xs text-red-500 mt-1">Passwords don't match</p>
+                  )}
+                  {confirmPassword && password === confirmPassword && password.length >= 6 && (
+                    <p className="text-xs text-emerald-500 mt-1">✅ Passwords match</p>
+                  )}
+                </div>
+
+                <button type="submit" disabled={isSubmitting || !ownerName || (!email && !phone)}
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm mt-2">
+                  {isSubmitting
+                    ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating account...</>
+                    : 'Create Account & Continue →'
+                  }
+                </button>
+              </form>
+
+              <p className="mt-6 text-center text-sm text-slate-400">
+                Already a seller?{' '}
+                <Link href="/seller/login" className="text-emerald-600 hover:underline font-semibold">Sign In</Link>
+              </p>
             </div>
           )}
 
@@ -360,16 +425,16 @@ export default function SellerOnboarding() {
 
                 <div>
                   <label className={labelClasses}>GST / PAN Number</label>
-                  <input required type="text" placeholder="e.g. 22AAAAA0000A1Z5" className={inputClasses} />
+                  <input required type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value)} placeholder="e.g. 22AAAAA0000A1Z5" className={inputClasses} />
                 </div>
 
                 <div className="flex gap-3 mt-2">
                   <button type="button" onClick={() => setStep(1)}
-                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-lg font-medium text-base cursor-pointer hover:bg-slate-50 transition-colors bg-white">
+                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-xl font-medium text-sm cursor-pointer hover:bg-slate-50 transition-colors bg-white">
                     ← Back
                   </button>
                   <button type="submit" disabled={isSubmitting}
-                    className="flex-1 p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
+                    className={btnPrimary}>
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -391,6 +456,12 @@ export default function SellerOnboarding() {
               <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Upload Documents</h2>
               <p className="text-slate-500 text-base text-center mb-8">Required for verification — your data is encrypted and secure</p>
 
+              {error && (
+                <div className="mb-5 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 flex items-start gap-2">
+                  <span className="mt-0.5">⚠️</span> {error}
+                </div>
+              )}
+
               <form onSubmit={handleDocumentUpload} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
@@ -401,9 +472,9 @@ export default function SellerOnboarding() {
                     <div key={i} className="bg-slate-50 p-5 rounded-xl border border-slate-200 border-dashed hover:border-emerald-400 transition-colors">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-xl">{doc.icon}</span>
-                        <div className="font-medium text-base text-slate-900">{doc.title}</div>
+                        <div className="font-medium text-sm text-slate-900">{doc.title}</div>
                       </div>
-                      <input type="file" required className="text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 file:cursor-pointer hover:file:bg-emerald-100" />
+                      <input type="file" className="text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 file:cursor-pointer hover:file:bg-emerald-100" />
                       <p className="text-xs text-slate-400 mt-2">{doc.desc}</p>
                     </div>
                   ))}
@@ -417,11 +488,11 @@ export default function SellerOnboarding() {
 
                 <div className="flex gap-3 mt-2">
                   <button type="button" onClick={() => setStep(2)}
-                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-lg font-medium text-base cursor-pointer hover:bg-slate-50 transition-colors bg-white">
+                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-xl font-medium text-sm cursor-pointer hover:bg-slate-50 transition-colors bg-white">
                     ← Back
                   </button>
                   <button type="submit" disabled={isSubmitting}
-                    className="flex-1 p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-none cursor-pointer text-base">
+                    className={btnPrimary}>
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>

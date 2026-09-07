@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Package, Heart, FileText, Settings, LogOut, ChevronRight, MapPin, CreditCard, Bell, Shield, Camera } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -15,6 +17,17 @@ export default function ProfilePage() {
       router.push('/login');
     }
   }, [user, router]);
+
+  const [leads, setLeads] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetch(`${API_URL}/leads/buyer/${user.id}`)
+        .then(res => res.json())
+        .then(data => setLeads(Array.isArray(data) ? data : []))
+        .catch(err => console.error(err));
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -98,7 +111,7 @@ export default function ProfilePage() {
               <nav className="flex flex-col gap-1">
                 <NavItem icon={<Package />} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
                 <NavItem icon={<Package />} label="My Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} badge="3" />
-                <NavItem icon={<FileText />} label="B2B Quotes (RFQs)" active={activeTab === 'quotes'} onClick={() => setActiveTab('quotes')} badge="1" />
+                <NavItem icon={<FileText />} label="B2B Quotes (RFQs)" active={activeTab === 'quotes'} onClick={() => setActiveTab('quotes')} badge={leads.length.toString()} />
                 <NavItem icon={<Heart />} label="Wishlist" active={activeTab === 'wishlist'} onClick={() => router.push('/wishlist')} />
                 
                 <div className="h-px bg-slate-100 my-4 mx-2"></div>
@@ -154,37 +167,53 @@ export default function ProfilePage() {
             {activeTab === 'quotes' && (
               <div className="animate-in fade-in duration-300">
                 <h2 className="text-2xl font-bold text-slate-900 mb-6">B2B Quotes & RFQs</h2>
-                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-lg">Heavy Freight Transport Services</h3>
-                      <p className="text-sm text-slate-500">RFQ-88921 • Sent to Logistics Pro</p>
-                    </div>
-                    <span className="px-3 py-1 bg-amber-100 text-amber-700 font-bold text-xs rounded-full">PENDING REPLY</span>
+                {leads.length === 0 ? (
+                  <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 text-center">
+                    <p className="text-slate-500">You haven't sent any quotes yet.</p>
                   </div>
-                  <div className="p-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Quantity Req.</div>
-                        <div className="font-bold text-slate-900">50 Units</div>
+                ) : (
+                  <div className="space-y-4">
+                    {leads.map(lead => (
+                      <div key={lead.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                          <div>
+                            <h3 className="font-bold text-slate-900 text-lg">{lead.product?.name || 'Product'}</h3>
+                            <p className="text-sm text-slate-500">RFQ-{lead.id.substring(18)} • Sent to {lead.seller?.name || 'Seller'}</p>
+                          </div>
+                          <span className={`px-3 py-1 font-bold text-xs rounded-full ${
+                            lead.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                            lead.status === 'REPLIED' ? 'bg-blue-100 text-blue-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {lead.status}
+                          </span>
+                        </div>
+                        <div className="p-6">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+                            <div>
+                              <div className="text-xs text-slate-500 font-medium mb-1">Quantity Req.</div>
+                              <div className="font-bold text-slate-900">{lead.quantityRequested} Units</div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-slate-500 font-medium mb-1">Date Sent</div>
+                              <div className="font-bold text-slate-900">{new Date(lead.createdAt).toLocaleDateString()}</div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-slate-500 font-medium mb-1">Target Price</div>
+                              <div className="font-bold text-slate-900">N/A</div>
+                            </div>
+                          </div>
+                          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <div className="text-xs text-slate-500 font-medium mb-2">Message to Seller</div>
+                            <p className="text-slate-700 text-sm leading-relaxed">
+                              "{lead.message}"
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Date Sent</div>
-                        <div className="font-bold text-slate-900">Sep 1, 2026</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500 font-medium mb-1">Target Price</div>
-                        <div className="font-bold text-slate-900">₹45,000 / unit</div>
-                      </div>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                      <div className="text-xs text-slate-500 font-medium mb-2">Message to Seller</div>
-                      <p className="text-slate-700 text-sm leading-relaxed">
-                        "We are looking for long term partnership for freight delivery across North India. Please provide your best quote for 50 units per month."
-                      </p>
-                    </div>
+                    ))}
                   </div>
-                </div>
+                )}
               </div>
             )}
 

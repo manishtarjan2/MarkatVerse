@@ -28,58 +28,7 @@ export default function AllCategoriesPage() {
         { name: 'Wholesale Clothing Bales', type: 'Textiles', rating: '4.7', icon: '👕', link: '/product/wholesale-clothing-bale' }
       ]
     },
-    {
-      id: 'services',
-      title: 'Salon, Spa & Beauty Services',
-      subtitle: 'Personal Care',
-      theme: 'pink',
-      link: '/search?cat=Services',
-      items: [
-        { name: 'Unisex Salons & Hair', type: 'Hair Cutting', rating: '4.8', icon: '✂️', link: '/search?cat=Services&q=Hair' },
-        { name: 'Spa & Wellness Centers', type: 'Massage & Pedicure', rating: '4.9', icon: '💆‍♀️', link: '/search?cat=Services&q=Spa' },
-        { name: 'Nail Studios', type: 'Nail Art', rating: '4.7', icon: '💅', link: '/search?cat=Services&q=Nail' },
-        { name: 'Makeup Artists', type: 'Bridal Styling', rating: '4.9', icon: '💄', link: '/search?cat=Services&q=Makeup' }
-      ]
-    },
-    {
-      id: 'home-services',
-      title: 'B2C Retail & Home Services',
-      subtitle: 'Direct to Consumer',
-      theme: 'emerald',
-      link: '/search?cat=Home%20Services',
-      items: [
-        { name: 'AC Repair Service', type: 'Cooling & HVAC', rating: '4.9', icon: '❄️', link: '/search?cat=Home%20Services&q=AC' },
-        { name: 'Appliance Fixing', type: 'Home Maintenance', rating: '4.6', icon: '🔌', link: '/search?cat=Home%20Services&q=Appliance' },
-        { name: 'Quick Plumbing Co.', type: 'Plumbing Services', rating: '4.7', icon: '🚰', link: '/search?cat=Home%20Services&q=Plumbing' },
-        { name: 'Deep Clean Services', type: 'House Cleaning', rating: '4.8', icon: '🧹', link: '/search?cat=Home%20Services&q=Cleaning' }
-      ]
-    },
-    {
-      id: 'organizers',
-      title: 'Top Organizers & Contractors',
-      subtitle: 'Events & Projects',
-      theme: 'purple',
-      link: '/search?cat=Organizers',
-      items: [
-        { name: 'Dream Events & Weddings', type: 'Event Organizer', rating: '4.9', icon: '🎉', link: '/search?cat=Organizers&q=Events' },
-        { name: 'Prime Construction', type: 'Contractor', rating: '4.7', icon: '🏗️', link: '/search?cat=Organizers&q=Construction' },
-        { name: 'Luxury Party Planners', type: 'Party Organizer', rating: '4.8', icon: '🥂', link: '/search?cat=Organizers&q=Party' },
-        { name: 'Grand Stage Decorators', type: 'Wedding Planner', rating: '4.9', icon: '💐', link: '/search?cat=Organizers&q=Stage' }
-      ]
-    },
-    {
-      id: 'transport',
-      title: 'Transport & Vehicle Services',
-      subtitle: 'Logistics & Travel',
-      theme: 'indigo',
-      link: '/search?cat=Transport',
-      items: [
-        { name: 'City Auto Rentals', type: 'Auto Rickshaw', rating: '4.6', icon: '🛺', link: '/search?q=Auto%20Rickshaw' },
-        { name: 'Heavy Freight Movers', type: 'Trucking & Cargo', rating: '4.9', icon: '🚛', link: '/search?q=Freight%20Truck' },
-        { name: 'Premium Car Hire', type: 'Car Rental & Taxi', rating: '4.8', icon: '🚕', link: '/search?q=Car%20Rental' },
-        { name: 'Interstate Bus Tours', type: 'Bus Travel', rating: '4.7', icon: '🚌', link: '/search?q=Bus%20Tour' }
-      ]
-    },
+
     {
       id: 'electronics',
       title: 'Electronics & Gadgets',

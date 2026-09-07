@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
 import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown } from 'lucide-react';
-
+import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -13,19 +15,20 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState(isAdding ? 'add' : 'overview');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const { addProduct, deleteProduct, products } = useProducts();
+  const { addProduct, deleteProduct, products, categories } = useProducts();
   const [isPremiumSeller, setIsPremiumSeller] = useState(false); // Mock state to demonstrate the paywall
   
+  const { user } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
 
   React.useEffect(() => {
-    // Fetch leads for the current seller
-    // For now we use the demo-seller-id that we used in the POST request
-    fetch('http://localhost:3001/leads/seller/demo-seller-id')
-      .then(res => res.json())
-      .then(data => setLeads(data))
-      .catch(err => console.error(err));
-  }, []);
+    if (user?.id) {
+      fetch(`${API_URL}/leads/seller/${user.id}`)
+        .then(res => res.json())
+        .then(data => setLeads(data))
+        .catch(err => console.error(err));
+    }
+  }, [user]);
 
   // Mock Orders State
   const [orders, setOrders] = useState([
@@ -49,6 +52,72 @@ function DashboardContent() {
   const [sellerName, setSellerName] = useState('Amit Verma');
   const [location, setLocation] = useState('New Delhi, Delhi');
   const [imageUrl, setImageUrl] = useState('');
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [parameters, setParameters] = useState<Record<string, string>>({});
+  const [newParamName, setNewParamName] = useState('');
+  const [enableWholesale, setEnableWholesale] = useState(false);
+  const [wholesaleTiers, setWholesaleTiers] = useState([{ minQty: 12, margin: 20 }, { minQty: 100, margin: 30 }, { minQty: 150, margin: 50 }]);
+
+  React.useEffect(() => {
+    // Reset parameters when category changes, pulling dynamic configurations from the admin context
+    const catData = categories.find(c => c.name === category);
+    if (catData && catData.parameters && catData.parameters.length > 0) {
+      const newParams: Record<string, string> = {};
+      catData.parameters.forEach(p => {
+        newParams[p.name] = '';
+      });
+      setParameters(newParams);
+    } else {
+      setParameters({});
+    }
+  }, [category, categories]);
+
+  const getPlaceholderForParam = (key: string) => {
+    // Check if admin defined a placeholder for this specific variant
+    const catData = categories.find(c => c.name === category);
+    if (catData && catData.parameters) {
+      const p = catData.parameters.find(p => p.name === key);
+      if (p && p.placeholder) return p.placeholder;
+    }
+    
+    // Fallback smart placeholders for custom variants
+    const k = key.toLowerCase();
+    if (k.includes('color')) return 'Red, Blue, Green, Active Black';
+    if (k.includes('shoe size')) return '6, 7, 8, 9, 10';
+    if (k.includes('size')) return 'S, M, L, XL';
+    if (k.includes('fabric')) return 'Cotton, Polyester, Wool, Silk';
+    if (k.includes('material')) return 'Metal, PVC, Plastic, Aluminium, Iron';
+    if (k.includes('dimension') || k.includes('measurement')) return 'Inches, cm, feet';
+    return 'e.g. Option 1, Option 2';
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setIsUploadingFiles(true);
+    const formData = new FormData();
+    Array.from(files).forEach(file => formData.append('files', file));
+    
+    try {
+      const res = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.urls) {
+          setUploadedImages(prev => [...prev, ...data.urls]);
+          if (!imageUrl && data.urls.length > 0) setImageUrl(data.urls[0]);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUploadingFiles(false);
+    }
+  };
 
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,10 +136,18 @@ function DashboardContent() {
         seller: sellerName,
         location: location,
         category: category,
-        image: imageUrl || undefined,
+        image: imageUrl || (uploadedImages.length > 0 ? uploadedImages[0] : undefined),
+        images: uploadedImages.length > 0 ? uploadedImages : (imageUrl ? [imageUrl] : undefined),
         badge: 'New Arrival',
         badgeColor: 'badge-gold',
-        isPremium: isPremiumSeller
+        isPremium: isPremiumSeller,
+        isB2B: enableWholesale || category === 'B2B' || category === 'Construction Materials',
+        wholesaleTiers: enableWholesale || category === 'B2B' || category === 'Construction Materials' ? wholesaleTiers : undefined,
+        parameters: Object.keys(parameters).length > 0 ? Object.fromEntries(
+          Object.entries(parameters)
+            .filter(([_, v]) => v.trim() !== '')
+            .map(([k, v]) => [k, v.split(',').map(s => s.trim()).filter(Boolean)])
+        ) : undefined
       });
 
       setIsSubmitting(false);
@@ -82,6 +159,7 @@ function DashboardContent() {
       setOriginalPrice('');
       setDescription('');
       setImageUrl('');
+      setUploadedImages([]);
 
       setTimeout(() => {
         setShowSuccess(false);
@@ -343,15 +421,185 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Product Image URL <span className="text-slate-400 font-normal">(Optional)</span></label>
-                  <input 
-                    type="url" 
-                    value={imageUrl} 
-                    onChange={e => setImageUrl(e.target.value)} 
-                    placeholder="https://example.com/image.jpg" 
-                    className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900" 
-                  />
+                {Object.keys(parameters).length > 0 && (
+                  <div className="space-y-4 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+                    <div className="font-bold text-slate-800 border-b border-slate-200 pb-2">Category Configurations (Variants)</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.keys(parameters).map(key => (
+                        <div key={key} className="space-y-2">
+                          <label className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                            <span>{key} Options <span className="text-slate-400 font-normal">(Comma separated)</span></span>
+                            <button type="button" onClick={() => {
+                              const newParams = {...parameters};
+                              delete newParams[key];
+                              setParameters(newParams);
+                            }} className="text-red-500 hover:text-red-700 font-medium">Remove</button>
+                          </label>
+                          <input 
+                            type="text" 
+                            value={parameters[key]} 
+                            onChange={e => setParameters(prev => ({ ...prev, [key]: e.target.value }))} 
+                            placeholder={getPlaceholderForParam(key)}
+                            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900 text-sm" 
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="flex gap-2 items-end pt-2">
+                      <div className="flex-1 space-y-2">
+                        <label className="text-xs font-semibold text-slate-700">Add Custom Variant (e.g. Length, Warranty, Finish)</label>
+                        <input 
+                          type="text"
+                          value={newParamName}
+                          onChange={e => setNewParamName(e.target.value)}
+                          placeholder="Variant Name"
+                          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900 text-sm"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newParamName.trim() && !parameters[newParamName.trim()]) {
+                            setParameters(prev => ({ ...prev, [newParamName.trim()]: '' }));
+                            setNewParamName('');
+                          }
+                        }}
+                        className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg font-bold text-sm transition-colors border border-slate-300 shrink-0"
+                      >
+                        Add Variant
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4 p-5 bg-blue-50 border border-blue-200 rounded-2xl">
+                  <div className="flex items-center justify-between border-b border-blue-200 pb-2">
+                    <div className="font-bold text-blue-900">Wholesale & B2B Pricing</div>
+                    <label className="flex items-center cursor-pointer gap-2">
+                      <span className="text-sm font-semibold text-blue-700">Enable Wholesale</span>
+                      <input 
+                        type="checkbox" 
+                        checked={enableWholesale}
+                        onChange={(e) => setEnableWholesale(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded border-blue-300 focus:ring-blue-500"
+                      />
+                    </label>
+                  </div>
+                  
+                  {(enableWholesale || category === 'B2B' || category === 'Construction Materials') && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-blue-700 font-medium">Define your wholesale bundle tiers (e.g. 12 units get 20% off)</p>
+                      {wholesaleTiers.map((tier, index) => (
+                        <div key={index} className="flex gap-4 items-center">
+                          <div className="flex-1">
+                            <label className="text-xs font-semibold text-slate-700">Min Quantity (Units)</label>
+                            <input 
+                              type="number" 
+                              value={tier.minQty} 
+                              onChange={(e) => {
+                                const newTiers = [...wholesaleTiers];
+                                newTiers[index].minQty = parseInt(e.target.value) || 0;
+                                setWholesaleTiers(newTiers);
+                              }}
+                              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 outline-none mt-1" 
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-xs font-semibold text-slate-700">Discount / Margin (%)</label>
+                            <div className="relative mt-1">
+                              <input 
+                                type="number" 
+                                value={tier.margin} 
+                                onChange={(e) => {
+                                  const newTiers = [...wholesaleTiers];
+                                  newTiers[index].margin = parseInt(e.target.value) || 0;
+                                  setWholesaleTiers(newTiers);
+                                }}
+                                className="w-full pl-4 pr-8 py-2 rounded-lg border border-slate-300 focus:border-blue-500 outline-none" 
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">%</span>
+                            </div>
+                          </div>
+                          <div className="pt-5">
+                            <button 
+                              type="button" 
+                              onClick={() => setWholesaleTiers(wholesaleTiers.filter((_, i) => i !== index))}
+                              className="w-9 h-9 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      <button 
+                        type="button" 
+                        onClick={() => setWholesaleTiers([...wholesaleTiers, { minQty: 0, margin: 0 }])}
+                        className="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        <PlusCircle className="w-4 h-4" /> Add Pricing Tier
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <label className="text-sm font-semibold text-slate-700">Product Images</label>
+                  
+                  {/* File Upload Zone */}
+                  <div className="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center transition-colors bg-slate-50">
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      onChange={handleFileUpload} 
+                      className="hidden" 
+                      id="product-images-upload" 
+                      disabled={isUploadingFiles}
+                    />
+                    <label htmlFor="product-images-upload" className="cursor-pointer flex flex-col items-center">
+                      <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                      </div>
+                      <span className="text-blue-600 font-bold text-lg">{isUploadingFiles ? 'Uploading...' : 'Click to Upload Images'}</span>
+                      <span className="text-slate-500 text-sm mt-2">Upload up to 5 images (Drag and drop supported)</span>
+                    </label>
+                  </div>
+
+                  {/* Thumbnail Previews */}
+                  {uploadedImages.length > 0 && (
+                    <div className="flex gap-4 overflow-x-auto py-2">
+                      {uploadedImages.map((img, idx) => (
+                        <div key={idx} className="relative w-24 h-24 rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0 group">
+                          <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button 
+                            type="button"
+                            onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 bg-white/90 text-red-500 rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-4">
+                    <div className="h-px bg-slate-200 flex-1"></div>
+                    <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider">OR</span>
+                    <div className="h-px bg-slate-200 flex-1"></div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-slate-700">Image URL <span className="text-slate-400 font-normal">(Fallback)</span></label>
+                    <input 
+                      type="url" 
+                      value={imageUrl} 
+                      onChange={e => setImageUrl(e.target.value)} 
+                      placeholder="https://example.com/image.jpg" 
+                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900 mt-2" 
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -476,7 +724,7 @@ function DashboardContent() {
                           <button 
                             className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
                             onClick={() => {
-                              fetch(`http://localhost:3001/leads/${lead.id}/status`, {
+                              fetch(`${API_URL}/leads/${lead.id}/status`, {
                                 method: 'PATCH',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ status: 'REPLIED' })

@@ -9,9 +9,10 @@ import { PrismaModule } from './prisma.module.js';
 import { LeadsModule } from './leads/leads.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { UploadModule } from './upload/upload.module.js';
+import { SalonModule } from './salon/salon.module.js';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule],
+  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, SalonModule],
   controllers: [AppController],
   providers: [AppService],
 })

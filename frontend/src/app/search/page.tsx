@@ -12,7 +12,7 @@ function SearchContent() {
   const initialLoc = searchParams.get('loc') || '';
   const initialCat = searchParams.get('cat') || '';
   
-  const { products } = useProducts();
+  const { products, categories } = useProducts();
   
   // Local filter states
   const [q, setQ] = useState(initialQ);
@@ -22,6 +22,7 @@ function SearchContent() {
   const [priceRange, setPriceRange] = useState('all'); // all, under_500, 500_2000, over_2000
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState('recommended');
+  const [dynamicFilters, setDynamicFilters] = useState<Record<string, string>>({});
   const [locationFilter, setLocationFilter] = useState(initialLoc);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [b2bOnly, setB2BOnly] = useState(false);
@@ -65,6 +66,13 @@ function SearchContent() {
       if (selectedSubcategory) {
         result = result.filter(p => p.subcategory && p.subcategory.toLowerCase() === selectedSubcategory.toLowerCase());
       }
+      
+      // Dynamic Filters
+      Object.entries(dynamicFilters).forEach(([key, value]) => {
+        if (value) {
+          result = result.filter(p => p.parameters && p.parameters[key] && p.parameters[key].includes(value));
+        }
+      });
     }
     
     // Price Filter
@@ -98,7 +106,7 @@ function SearchContent() {
     }
     
     return result;
-  }, [q, locationFilter, productType, selectedCategory, selectedSubcategory, priceRange, minRating, verifiedOnly, b2bOnly, premiumOnly, sortBy, products]);
+  }, [q, locationFilter, productType, selectedCategory, selectedSubcategory, dynamicFilters, priceRange, minRating, verifiedOnly, b2bOnly, premiumOnly, sortBy, products]);
 
   // Get unique categories from products
   const availableCategories = Array.from(new Set(products.map(p => p.category)));
@@ -109,6 +117,44 @@ function SearchContent() {
     const catProducts = products.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
     return Array.from(new Set(catProducts.map(p => p.subcategory).filter(Boolean))) as string[];
   }, [selectedCategory, products]);
+  
+  // Get available dynamic filters based on the selected category's parameters
+  const availableDynamicFilters = useMemo(() => {
+    if (!selectedCategory) return [];
+    const categoryConfig = categories?.find(c => c.name === selectedCategory);
+    
+    // Fallback logic to extract keys from products directly if no global category config exists
+    if (!categoryConfig || !categoryConfig.parameters) {
+       const catProducts = products.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
+       const filterKeys = new Set<string>();
+       catProducts.forEach(p => {
+         if (p.parameters) {
+           Object.keys(p.parameters).forEach(k => filterKeys.add(k));
+         }
+       });
+       
+       return Array.from(filterKeys).map(key => {
+         const values = new Set<string>();
+         catProducts.forEach(p => {
+           if (p.parameters && p.parameters[key]) {
+             p.parameters[key].forEach(v => values.add(v));
+           }
+         });
+         return { name: key, values: Array.from(values) };
+       });
+    }
+    
+    return categoryConfig.parameters.map(param => {
+      // Extract unique values from products for this parameter
+      const values = new Set<string>();
+      products.filter(p => p.category === selectedCategory).forEach(p => {
+        if (p.parameters && p.parameters[param.name]) {
+          p.parameters[param.name].forEach(v => values.add(v));
+        }
+      });
+      return { name: param.name, values: Array.from(values) };
+    }).filter(f => f.values.length > 0);
+  }, [selectedCategory, products, categories]);
 
   return (
     <div className="max-w-[1400px] mx-auto p-5 min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col gap-6">
@@ -136,6 +182,7 @@ function SearchContent() {
           onChange={(e) => {
             setSelectedCategory(e.target.value);
             setSelectedSubcategory('');
+            setDynamicFilters({});
           }}
           className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-none text-sm rounded-full px-4 py-2 font-medium cursor-pointer outline-none whitespace-nowrap appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%2364748B%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.2rem_center] bg-[length:1.25rem_1.25rem] shrink-0 transition-colors"
         >
@@ -158,6 +205,21 @@ function SearchContent() {
             ))}
           </select>
         )}
+        
+        {/* Dynamic Filters */}
+        {selectedCategory && availableDynamicFilters.map(filter => (
+          <select 
+            key={filter.name}
+            value={dynamicFilters[filter.name] || ''} 
+            onChange={(e) => setDynamicFilters(prev => ({ ...prev, [filter.name]: e.target.value }))}
+            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-none text-sm rounded-full px-4 py-2 font-bold cursor-pointer outline-none whitespace-nowrap appearance-none pr-8 bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%23047857%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.2rem_center] bg-[length:1.25rem_1.25rem] shrink-0 transition-colors"
+          >
+            <option value="">Any {filter.name}</option>
+            {filter.values.map(val => (
+              <option key={val} value={val}>{val}</option>
+            ))}
+          </select>
+        ))}
 
         {/* Location Pill */}
         <div className="relative flex items-center bg-slate-100 rounded-full px-4 py-2 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500 shrink-0 transition-all">

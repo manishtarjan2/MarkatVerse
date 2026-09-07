@@ -40,7 +40,9 @@ export default function ProfileSettings() {
             <div className="text-center mb-10 relative">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 p-1 mx-auto mb-4 relative shadow-lg shadow-blue-500/20 group cursor-pointer">
                 <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center relative overflow-hidden">
-                  <span className="text-3xl font-bold text-white tracking-widest">{firstName[0]}{lastName[0]}</span>
+                  <span className="text-3xl font-bold text-white tracking-widest">
+                    {(firstName?.[0] || '') + (lastName?.[0] || '')}
+                  </span>
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Camera className="w-8 h-8 text-white" />

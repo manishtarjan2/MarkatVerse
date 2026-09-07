@@ -1,53 +1,96 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DB_PATH = path.join(__dirname, '..', '..', '..', 'data.json');
+import { PrismaService } from '../prisma.service.js';
 
 @Injectable()
 export class SellersService {
-  private readDB() {
-    if (!fs.existsSync(DB_PATH)) {
-      fs.writeFileSync(DB_PATH, JSON.stringify({ sellers: [] }));
+  constructor(private prisma: PrismaService) {}
+
+  async create(seller: any) {
+    // Find user by email or phone to link business to user
+    let user = null;
+    if (seller.email || seller.phone) {
+      user = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            seller.email ? { email: seller.email } : undefined,
+            seller.phone ? { phone: seller.phone } : undefined,
+          ].filter(Boolean) as any,
+        },
+      });
     }
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(data);
-  }
 
-  private writeDB(data: any) {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-  }
+    // If no user found, create one
+    if (!user) {
+      const bcrypt = await import('bcryptjs');
+      user = await this.prisma.user.create({
+        data: {
+          name: seller.ownerName || seller.name || 'Seller',
+          email: seller.email || null,
+          phone: seller.phone || null,
+          password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
+          role: 'SELLER',
+        },
+      });
+    } else {
+      // Update role to SELLER
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { role: 'SELLER' },
+      });
+    }
 
-  create(seller: any) {
-    const db = this.readDB();
-    if (!db.sellers) db.sellers = [];
-    const newSeller = { 
-      ...seller, 
-      id: `S-${Math.floor(1000 + Math.random() * 9000)}`, 
-      status: 'Pending', 
-      date: new Date().toISOString().split('T')[0] 
+    // Check if business already exists for this user
+    const existingBusiness = await this.prisma.business.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (existingBusiness) {
+      return { ...existingBusiness, status: 'Pending' };
+    }
+
+    const business = await this.prisma.business.create({
+      data: {
+        userId: user.id,
+        name: seller.businessName || seller.name || 'My Business',
+        description: seller.description || null,
+        businessType: seller.businessType || 'WHOLESALER',
+        address: seller.address || null,
+        verified: false,
+      },
+    });
+
+    return {
+      ...business,
+      ownerName: user.name,
+      email: user.email,
+      phone: user.phone,
+      status: 'Pending',
     };
-    db.sellers.push(newSeller);
-    this.writeDB(db);
-    return newSeller;
   }
 
-  findAll() {
-    const db = this.readDB();
-    return db.sellers || [];
+  async findAll() {
+    const businesses = await this.prisma.business.findMany({
+      include: { user: { select: { name: true, email: true, phone: true, role: true } } },
+    });
+
+    return businesses.map(b => ({
+      id: b.id,
+      businessName: b.name,
+      ownerName: b.user.name,
+      email: b.user.email,
+      phone: b.user.phone,
+      businessType: b.businessType,
+      address: b.address,
+      status: b.verified ? 'Approved' : 'Pending',
+      date: b.createdAt.toISOString().split('T')[0],
+    }));
   }
 
-  updateStatus(id: string, status: string) {
-    const db = this.readDB();
-    if (!db.sellers) return null;
-    const seller = db.sellers.find((s: any) => s.id === id);
-    if (seller) {
-      seller.status = status;
-      this.writeDB(db);
-    }
-    return seller;
+  async updateStatus(id: string, status: string) {
+    const business = await this.prisma.business.update({
+      where: { id },
+      data: { verified: status === 'Approved' },
+    });
+    return { ...business, status };
   }
 }

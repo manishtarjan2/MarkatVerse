@@ -8,7 +8,7 @@ import { extname } from 'path';
   imports: [
     MulterModule.register({
       storage: diskStorage({
-        destination: './uploads',
+        destination: process.env.VERCEL ? '/tmp' : './uploads',
         filename: (req, file, cb) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);

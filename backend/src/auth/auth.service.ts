@@ -11,7 +11,6 @@ export class AuthService {
   ) {}
 
   async signup(data: any) {
-    // Check if email or phone is provided
     if (!data.email && !data.phone) {
       throw new BadRequestException('Email or Phone is required');
     }
@@ -26,6 +25,22 @@ export class AuthService {
     });
 
     if (existing) {
+      if (data.role === 'SELLER' && existing.role !== 'SELLER') {
+        const isMatch = await bcrypt.compare(data.password, existing.password);
+        if (!isMatch) {
+          throw new BadRequestException('Account already exists with this email/phone. Incorrect password.');
+        }
+        const updated = await this.prisma.user.update({
+          where: { id: existing.id },
+          data: { role: 'SELLER' }
+        });
+        return this.generateToken(updated);
+      }
+      
+      if (existing.role === 'SELLER') {
+        throw new BadRequestException('Account is already registered as a Seller. Please login.');
+      }
+
       throw new BadRequestException('User with this email or phone already exists');
     }
 
@@ -75,23 +90,79 @@ export class AuthService {
       throw new BadRequestException('Phone is required');
     }
 
-    let user = await this.prisma.user.findUnique({
-      where: { phone }
-    });
+    let user = await this.prisma.user.findUnique({ where: { phone } });
 
     if (!user) {
-      // Create new user for phone if doesn't exist
       user = await this.prisma.user.create({
         data: {
           name: 'New User',
           phone: phone,
-          password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10), // Random password
+          email: `${phone}@temporary.markatverse.com`,
+          password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
           role: 'CONSUMER',
         },
       });
     }
 
     return this.generateToken(user);
+  }
+
+  async getMe(token: string) {
+    try {
+      const payload = this.jwtService.verify(token);
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, name: true, email: true, phone: true, role: true }
+      });
+      if (!user) throw new UnauthorizedException('User not found');
+      return user;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+
+  async forgotPassword(identifier: string) {
+    // Find user by email or phone
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: identifier }, { phone: identifier }]
+      }
+    });
+
+    if (!user) {
+      throw new BadRequestException('No account found with this email or phone');
+    }
+
+    // In production, send OTP/email. For now, return a reset token.
+    const resetToken = this.jwtService.sign(
+      { sub: user.id, purpose: 'password_reset' },
+      { expiresIn: '15m' }
+    );
+
+    return {
+      message: 'OTP sent successfully',
+      reset_token: resetToken, // In production, send this via email/SMS
+      user_name: user.name,
+    };
+  }
+
+  async resetPassword(resetToken: string, newPassword: string) {
+    try {
+      const payload = this.jwtService.verify(resetToken);
+      if (payload.purpose !== 'password_reset') {
+        throw new UnauthorizedException('Invalid reset token');
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await this.prisma.user.update({
+        where: { id: payload.sub },
+        data: { password: hashedPassword },
+      });
+
+      return { message: 'Password updated successfully' };
+    } catch {
+      throw new UnauthorizedException('Reset link is invalid or has expired');
+    }
   }
 
   private generateToken(user: any) {
@@ -102,6 +173,7 @@ export class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role
       }
     };

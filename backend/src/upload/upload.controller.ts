@@ -1,26 +1,25 @@
-import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Post, UseInterceptors, UploadedFiles, BadRequestException } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('upload')
 export class UploadController {
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
+  @UseInterceptors(FilesInterceptor('files', 10))
+  uploadFiles(@UploadedFiles() files: Array<Express.Multer.File>) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No files uploaded');
     }
 
     // Define the base URL. In a real app this might come from env variables.
     const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
     
     // We will serve the uploads directory statically under /public/uploads
-    const fileUrl = `${baseUrl}/public/uploads/${file.filename}`;
+    const urls = files.map(file => `${baseUrl}/public/uploads/${file.filename}`);
 
     return {
-      message: 'File uploaded successfully',
-      url: fileUrl,
-      filename: file.filename,
-      size: file.size,
+      message: 'Files uploaded successfully',
+      urls: urls,
+      files: files.map(f => ({ filename: f.filename, size: f.size })),
     };
   }
 }

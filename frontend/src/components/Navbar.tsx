@@ -113,7 +113,7 @@ export default function Navbar() {
             </Link>
 
             {!user && (
-              <Link href="/seller/onboarding" className="hidden lg:flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
+              <Link href="/seller/login" className="hidden lg:flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
                 <Store className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
                 <span className="text-[11px] font-medium">Become a Seller</span>
               </Link>
@@ -124,17 +124,17 @@ export default function Navbar() {
         {user && (
           <>
             {user.role !== 'buyer' && (
-              <div className="hidden sm:flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group">
+              <Link href="/seller/dashboard" className="hidden sm:flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group">
                 <div className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] py-[1px] px-1.5 rounded-full font-bold border border-white">12</div>
                 <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
                 <span className="text-[11px] font-medium">Messages</span>
-              </div>
+              </Link>
             )}
-            <div className="hidden sm:flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group ml-2">
+            <Link href="/profile" className="hidden sm:flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group ml-2">
               <div className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] py-[1px] px-1.5 rounded-full font-bold border border-white">23</div>
               <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
               <span className="text-[11px] font-medium">Alerts</span>
-            </div>
+            </Link>
           </>
         )}
 

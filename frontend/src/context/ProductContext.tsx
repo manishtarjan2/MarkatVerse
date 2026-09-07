@@ -1,6 +1,8 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export type Product = {
   id: string;
   name: string;
@@ -10,11 +12,13 @@ export type Product = {
   rating: string;
   reviews: string;
   seller: string;
+  sellerId?: string;
   location: string;
   category: string;
   description?: string;
   subcategory?: string;
   image?: string;
+  images?: string[];
   badge?: string;
   badgeColor?: string;
   isPremium?: boolean;
@@ -22,6 +26,7 @@ export type Product = {
   moq?: number;
   wholesaleTiers?: { minQty: number, margin: number }[];
   brand?: string;
+  parameters?: Record<string, string[]>;
 };
 
 export type Category = {
@@ -29,6 +34,7 @@ export type Category = {
   name: string;
   theme: string;
   icon: string;
+  parameters?: { name: string; placeholder: string }[];
 };
 
 type ProductContextType = {
@@ -40,6 +46,7 @@ type ProductContextType = {
   setUserLocation: (location: string) => void;
   categories: Category[];
   addCategory: (cat: Category) => void;
+  updateCategory: (id: string, updated: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
 };
 
@@ -58,7 +65,11 @@ const defaultProducts: Product[] = [
     subcategory: 'Smartphones',
     badge: 'Trending',
     badgeColor: 'badge-purple',
-    brand: 'Apple'
+    brand: 'Apple',
+    parameters: {
+      'Color': ['Natural Titanium', 'Blue Titanium', 'White Titanium', 'Black Titanium'],
+      'Storage': ['256GB', '512GB', '1TB']
+    }
   },
   {
     id: 'boat-airdopes-141',
@@ -73,7 +84,10 @@ const defaultProducts: Product[] = [
     category: 'Electronics',
     subcategory: 'Audio',
     badge: 'Deal of the Day',
-    badgeColor: 'badge-red'
+    badgeColor: 'badge-red',
+    parameters: {
+      'Color': ['Active Black', 'Cyan Cider']
+    }
   },
   {
     id: 'mens-casual-shirt',
@@ -88,7 +102,12 @@ const defaultProducts: Product[] = [
     category: 'Fashion',
     subcategory: 'Men',
     badge: 'Trending',
-    badgeColor: 'badge-red'
+    badgeColor: 'badge-red',
+    parameters: {
+      'Color': ['White', 'Navy Blue', 'Olive Green', 'Maroon'],
+      'Size': ['S', 'M', 'L', 'XL', 'XXL'],
+      'Fabric': ['Cotton', 'Linen Blend']
+    }
   },
   {
     id: 'kitchen-appliance-set',
@@ -103,7 +122,10 @@ const defaultProducts: Product[] = [
     category: 'Home',
     subcategory: 'Kitchen',
     badge: 'Top Rated',
-    badgeColor: 'badge-gold'
+    badgeColor: 'badge-gold',
+    parameters: {
+      'Color': ['Silver', 'Black']
+    }
   },
   {
     id: 'ac-repair-service',
@@ -365,15 +387,72 @@ const defaultProducts: Product[] = [
 ];
 
 const defaultCategories: Category[] = [
-  { id: 'construction-materials', name: 'Construction Materials', theme: 'amber', icon: '🏗️' },
-  { id: 'b2b', name: 'B2B', theme: 'blue', icon: '🚢' },
+  { 
+    id: 'construction-materials', 
+    name: 'Construction Materials', 
+    theme: 'amber', 
+    icon: '🏗️',
+    parameters: [
+      { name: 'Material', placeholder: 'Metal, PVC, Plastic, Aluminium, Iron' },
+      { name: 'Measurement', placeholder: 'Inches, cm, feet' }
+    ]
+  },
+  { 
+    id: 'b2b', 
+    name: 'B2B', 
+    theme: 'blue', 
+    icon: '🚢',
+    parameters: [
+      { name: 'Material', placeholder: 'Metal, PVC, Plastic, Aluminium, Iron' },
+      { name: 'Measurement', placeholder: 'Inches, cm, feet' }
+    ]
+  },
   { id: 'services', name: 'Services', theme: 'pink', icon: '💆‍♀️' },
   { id: 'home-services', name: 'Home Services', theme: 'emerald', icon: '❄️' },
   { id: 'organizers', name: 'Organizers', theme: 'purple', icon: '🎉' },
   { id: 'transport', name: 'Transport', theme: 'indigo', icon: '🛺' },
-  { id: 'electronics', name: 'Electronics', theme: 'slate', icon: '📱' },
-  { id: 'fashion', name: 'Fashion', theme: 'pink', icon: '👕' },
-  { id: 'home', name: 'Home', theme: 'amber', icon: '🏠' }
+  { 
+    id: 'electronics', 
+    name: 'Electronics', 
+    theme: 'slate', 
+    icon: '📱',
+    parameters: [
+      { name: 'Color', placeholder: 'Space Gray, Silver, Midnight' },
+      { name: 'Storage', placeholder: '128GB, 256GB, 512GB' }
+    ]
+  },
+  { 
+    id: 'fashion', 
+    name: 'Fashion', 
+    theme: 'pink', 
+    icon: '👕',
+    parameters: [
+      { name: 'Color', placeholder: 'Red, Blue, Green, Active Black' },
+      { name: 'Size', placeholder: 'S, M, L, XL' },
+      { name: 'Fabric', placeholder: 'Cotton, Polyester, Wool, Silk' }
+    ]
+  },
+  { id: 'home', name: 'Home', theme: 'amber', icon: '🏠' },
+  { 
+    id: 'sports', 
+    name: 'Sports', 
+    theme: 'blue', 
+    icon: '⚽',
+    parameters: [
+      { name: 'Color', placeholder: 'Red, Blue, Green' },
+      { name: 'Shoe Size', placeholder: '6, 7, 8, 9, 10' }
+    ]
+  },
+  { 
+    id: 'footwear', 
+    name: 'Footwear', 
+    theme: 'slate', 
+    icon: '👟',
+    parameters: [
+      { name: 'Color', placeholder: 'Red, Blue, Green' },
+      { name: 'Shoe Size', placeholder: '6, 7, 8, 9, 10' }
+    ]
+  }
 ];
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -384,7 +463,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [userLocation, setUserLocation] = useState<string>('Mumbai'); // Default mock location
 
   useEffect(() => {
-    fetch('http://localhost:3001/products')
+    console.log('Fetching products from:', `${API_URL}/products`);
+    fetch(`${API_URL}/products`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
@@ -395,6 +475,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             category: item.categoryName, // Map DB's categoryName to Context's category
             subcategory: item.subcategory, // Map subcategory if exists
             image: item.image || item.sku || undefined, // Remove hardcoded fallback
+            images: item.images || (item.image ? [item.image] : []),
             isPremium: false,
             isB2B: item.isB2B,
             moq: item.moq
@@ -408,7 +489,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const addProduct = (product: Product) => {
     setProducts(prev => [product, ...prev]);
     // Send to backend
-    fetch('http://localhost:3001/products', {
+    fetch(`${API_URL}/products`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(product)
@@ -418,8 +499,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const editProduct = (id: string, updated: Partial<Product>) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
     // Simulated backend call
-    fetch(`http://localhost:3001/products/${id}`, {
-      method: 'PUT',
+    fetch(`${API_URL}/products/${id}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updated)
     }).catch(console.error);
@@ -428,7 +509,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const deleteProduct = (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
     // Send to backend
-    fetch(`http://localhost:3001/products/${id}`, {
+    fetch(`${API_URL}/products/${id}`, {
       method: 'DELETE'
     }).catch(console.error);
   };
@@ -437,12 +518,16 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     setCategories(prev => [...prev, cat]);
   };
 
+  const updateCategory = (id: string, updated: Partial<Category>) => {
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c));
+  };
+
   const deleteCategory = (id: string) => {
     setCategories(prev => prev.filter(c => c.id !== id));
   };
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories, addCategory, deleteCategory }}>
+    <ProductContext.Provider value={{ products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories, addCategory, updateCategory, deleteCategory }}>
       {children}
     </ProductContext.Provider>
   );

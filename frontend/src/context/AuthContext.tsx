@@ -1,18 +1,21 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 type User = {
   id?: string;
   name: string;
   phone: string;
   email?: string;
-  role: 'buyer' | 'business' | 'elite' | 'super_admin' | 'catalog_admin' | 'onboarding_admin' | 'support_admin';
+  role: 'buyer' | 'business' | 'elite' | 'super_admin' | 'catalog_admin' | 'onboarding_admin' | 'support_admin' | 'CONSUMER' | 'SELLER' | 'ADMIN';
   status?: 'active' | 'suspended';
 };
 
 type AuthContextType = {
   user: User | null;
-  login: (user: User) => void;
+  isLoading: boolean;
+  login: (user: User, token?: string) => void;
   logout: () => void;
   allUsers: User[];
   updateUserRole: (id: string, role: User['role']) => void;
@@ -22,28 +25,52 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const mockUsers: User[] = [
-  { id: 'u1', name: 'John Doe', phone: '9876543210', email: 'john@example.com', role: 'buyer', status: 'active' },
-  { id: 'u2', name: 'Jane Smith', phone: '9123456789', email: 'jane@example.com', role: 'business', status: 'active' },
-  { id: 'u3', name: 'Admin Super', phone: '9999999999', email: 'admin@markatverse.com', role: 'super_admin', status: 'active' },
-  { id: 'u4', name: 'Elite Buyer', phone: '8888888888', email: 'elite@example.com', role: 'elite', status: 'active' },
-];
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Start with no user to simulate a fresh session where they need to login
   const [user, setUser] = useState<User | null>(null);
-  const [allUsers, setAllUsers] = useState<User[]>(mockUsers);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // true until token is verified
 
-  // In a real app, we might check localStorage or a token cookie here on mount
+  // On mount: try to restore session from localStorage token
   useEffect(() => {
-    // For this MVP, we just leave them logged out initially.
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    fetch(`${API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Token invalid');
+        return res.json();
+      })
+      .then(data => {
+        setUser({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone || '',
+          role: data.role?.toLowerCase() as User['role'],
+          status: 'active',
+        });
+      })
+      .catch(() => {
+        // Token expired or invalid — clear it
+        localStorage.removeItem('token');
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const login = (userData: User) => {
+  const login = (userData: User, token?: string) => {
+    if (token) {
+      localStorage.setItem('token', token);
+    }
     setUser(userData);
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
   };
 
@@ -57,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const deleteUser = (id: string) => {
     setAllUsers(prev => prev.filter(u => u.id !== id));
     if (user?.id === id) {
-      setUser(null);
+      logout();
     }
   };
 
@@ -66,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, allUsers, updateUserRole, deleteUser, addUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, allUsers, updateUserRole, deleteUser, addUser }}>
       {children}
     </AuthContext.Provider>
   );

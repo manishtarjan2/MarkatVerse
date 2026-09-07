@@ -10,7 +10,7 @@ export default function AdminDashboard() {
   const [currentAdminRole, setCurrentAdminRole] = useState<'super_admin' | 'catalog_admin' | 'onboarding_admin' | 'support_admin'>('super_admin');
   
   // Contexts
-  const { products, deleteProduct, addProduct, categories, addCategory, deleteCategory } = useProducts();
+  const { products, deleteProduct, addProduct, categories, addCategory, updateCategory, deleteCategory } = useProducts();
   const { allUsers, updateUserRole, deleteUser, addUser } = useAuth();
   
   // Mock data for sellers needing approval
@@ -30,17 +30,29 @@ export default function AdminDashboard() {
   };
 
   // Forms states
-  const [newCategory, setNewCategory] = useState<Partial<Category>>({ id: '', name: '', theme: 'slate', icon: '' });
+  const [newCategory, setNewCategory] = useState<Partial<Category>>({ id: '', name: '', theme: 'slate', icon: '', parameters: [] });
   const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
 
   const handleAddCategory = () => {
     if (newCategory.id && newCategory.name && newCategory.theme && newCategory.icon) {
-      addCategory(newCategory as Category);
+      if (editingCategoryId) {
+        updateCategory(editingCategoryId, newCategory);
+        setEditingCategoryId(null);
+      } else {
+        addCategory(newCategory as Category);
+      }
       setIsAddingCategory(false);
-      setNewCategory({ id: '', name: '', theme: 'slate', icon: '' });
+      setNewCategory({ id: '', name: '', theme: 'slate', icon: '', parameters: [] });
     } else {
-      alert("Please fill all category fields");
+      alert("Please fill all required category fields");
     }
+  };
+
+  const handleEditCategoryClick = (cat: Category) => {
+    setNewCategory({ ...cat, parameters: cat.parameters || [] });
+    setEditingCategoryId(cat.id);
+    setIsAddingCategory(true);
   };
 
   const [newUser, setNewUser] = useState({ name: '', email: '', phone: '', role: 'support_admin' });
@@ -137,6 +149,15 @@ export default function AdminDashboard() {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'overview' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
             >
               <Activity className="w-5 h-5" /> Platform Health
+            </button>
+          )}
+
+          {canSeeTab('logs') && (
+            <button 
+              onClick={() => setActiveTab('logs')} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'logs' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+            >
+              <Activity className="w-5 h-5" /> System Logs
             </button>
           )}
           
@@ -251,6 +272,52 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-white">System Logs</h1>
+              <p className="text-slate-400 mt-2">Audit trail and system events.</p>
+            </div>
+            
+            <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-900/50 border-b border-slate-700">
+                  <tr>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Timestamp</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Level</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Message</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">User / IP</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/50">
+                  {[
+                    { time: '2026-09-02 12:45:12', level: 'INFO', msg: 'Super Admin logged in successfully', user: 'admin@markatverse.com' },
+                    { time: '2026-09-02 12:40:05', level: 'WARN', msg: 'Failed login attempt - invalid credentials', user: '192.168.1.45' },
+                    { time: '2026-09-02 12:15:30', level: 'INFO', msg: 'New product added: Nike Air Max', user: 'Seller: Nike Official' },
+                    { time: '2026-09-02 11:30:22', level: 'ERROR', msg: 'Payment gateway timeout on order ORD-8921', user: 'System' },
+                    { time: '2026-09-02 10:05:01', level: 'INFO', msg: 'Database backup completed', user: 'System Task' }
+                  ].map((log, i) => (
+                    <tr key={i} className="hover:bg-slate-700/30 transition-colors">
+                      <td className="px-6 py-4 text-sm text-slate-400 font-mono">{log.time}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${
+                          log.level === 'INFO' ? 'bg-blue-900/30 text-blue-400' :
+                          log.level === 'WARN' ? 'bg-amber-900/30 text-amber-400' :
+                          'bg-rose-900/30 text-rose-400'
+                        }`}>
+                          {log.level}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-200">{log.msg}</td>
+                      <td className="px-6 py-4 text-sm text-slate-400">{log.user}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
@@ -526,7 +593,11 @@ export default function AdminDashboard() {
                 <p className="text-slate-400 mt-2">Manage top-level categories and themes.</p>
               </div>
               <button 
-                onClick={() => setIsAddingCategory(!isAddingCategory)}
+                onClick={() => {
+                  setIsAddingCategory(!isAddingCategory);
+                  setEditingCategoryId(null);
+                  if (!isAddingCategory) setNewCategory({ id: '', name: '', theme: 'slate', icon: '', parameters: [] });
+                }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 {isAddingCategory ? 'Cancel' : <><Plus className="w-5 h-5" /> Add Category</>}
@@ -534,8 +605,9 @@ export default function AdminDashboard() {
             </div>
 
             {isAddingCategory && (
-              <div className="bg-slate-800 p-6 rounded-2xl border border-blue-500/30 shadow-sm mb-6 flex gap-4 items-end">
-                <div className="flex-1">
+              <div className="bg-slate-800 p-6 rounded-2xl border border-blue-500/30 shadow-sm mb-6 flex flex-col gap-4">
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">ID (Slug)</label>
                   <input 
                     value={newCategory.id}
@@ -581,12 +653,77 @@ export default function AdminDashboard() {
                     <option value="indigo">Indigo</option>
                   </select>
                 </div>
-                <button 
-                  onClick={handleAddCategory}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold transition-colors h-[42px]"
-                >
-                  Save
-                </button>
+                </div>
+                
+                <div className="w-full mt-4 bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="block text-sm font-bold text-slate-300 uppercase">Category Variants (Dynamic Config)</label>
+                    <button 
+                      onClick={() => setNewCategory({...newCategory, parameters: [...(newCategory.parameters || []), { name: '', placeholder: '' }]})}
+                      className="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" /> Add Variant
+                    </button>
+                  </div>
+                  
+                  {(!newCategory.parameters || newCategory.parameters.length === 0) ? (
+                    <div className="text-sm text-slate-500 italic">No variants configured. Sellers won't see any custom fields.</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {newCategory.parameters.map((param, idx) => (
+                        <div key={idx} className="flex gap-3 items-end">
+                          <div className="flex-1">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Variant Name</label>
+                            <input 
+                              value={param.name}
+                              onChange={(e) => {
+                                const newParams = [...(newCategory.parameters || [])];
+                                newParams[idx].name = e.target.value;
+                                setNewCategory({...newCategory, parameters: newParams});
+                              }}
+                              type="text" 
+                              placeholder="e.g. Color, Size, Material" 
+                              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-sm" 
+                            />
+                          </div>
+                          <div className="flex-[2]">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Placeholder / Hint (Comma separated examples)</label>
+                            <input 
+                              value={param.placeholder}
+                              onChange={(e) => {
+                                const newParams = [...(newCategory.parameters || [])];
+                                newParams[idx].placeholder = e.target.value;
+                                setNewCategory({...newCategory, parameters: newParams});
+                              }}
+                              type="text" 
+                              placeholder="e.g. Red, Blue, Green" 
+                              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500 text-sm" 
+                            />
+                          </div>
+                          <button 
+                            onClick={() => {
+                              const newParams = [...(newCategory.parameters || [])];
+                              newParams.splice(idx, 1);
+                              setNewCategory({...newCategory, parameters: newParams});
+                            }}
+                            className="bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 p-2.5 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-full mt-4 flex justify-end">
+                  <button 
+                    onClick={handleAddCategory}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-lg shadow-emerald-900/20"
+                  >
+                    {editingCategoryId ? 'Save Changes' : 'Create Category'}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -609,6 +746,13 @@ export default function AdminDashboard() {
                       </td>
                       <td className="p-4 font-bold text-white">
                         {c.name}
+                        {c.parameters && c.parameters.length > 0 && (
+                          <div className="text-[10px] text-blue-400 font-normal mt-1 flex gap-1 flex-wrap">
+                            {c.parameters.map(p => (
+                              <span key={p.name} className="bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-800/50">{p.name}</span>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4 text-slate-400 font-mono text-sm">
                         {c.id}
@@ -618,11 +762,20 @@ export default function AdminDashboard() {
                           {c.theme}
                         </span>
                       </td>
-                      <td className="p-4 pr-6 text-right">
+                      <td className="p-4 pr-6 text-right space-x-2">
                         <button 
-                          onClick={() => deleteCategory(c.id)}
-                          className="text-slate-400 hover:text-rose-400 p-2 transition-colors"
-                          title="Delete Category"
+                          onClick={() => handleEditCategoryClick(c)}
+                          className="p-2 bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 rounded-lg transition-colors inline-block"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if(confirm('Are you sure you want to delete this category?')) {
+                              deleteCategory(c.id);
+                            }
+                          }}
+                          className="p-2 bg-rose-900/20 text-rose-400 hover:bg-rose-900/40 rounded-lg transition-colors inline-block"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

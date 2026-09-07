@@ -15,6 +15,11 @@ export class LeadsController {
     return this.leadsService.findAllForSeller(id);
   }
 
+  @Get('buyer/:id')
+  findAllForBuyer(@Param('id') id: string) {
+    return this.leadsService.findAllForBuyer(id);
+  }
+
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.leadsService.updateStatus(id, status);

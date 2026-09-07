@@ -29,6 +29,17 @@ export class LeadsService {
     });
   }
 
+  findAllForBuyer(buyerId: string) {
+    return this.prisma.lead.findMany({
+      where: { buyerId },
+      include: {
+        seller: { select: { id: true, name: true, email: true } },
+        product: { select: { id: true, name: true, image: true, price: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
   updateStatus(id: string, status: string) {
     return this.prisma.lead.update({
       where: { id },
