@@ -39,9 +39,9 @@ export type Category = {
 
 type ProductContextType = {
   products: Product[];
-  addProduct: (product: Product) => void;
-  editProduct: (id: string, updated: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  editProduct: (id: string, updated: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   userLocation: string;
   setUserLocation: (location: string) => void;
   categories: Category[];
@@ -486,32 +486,54 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       .catch(err => console.error('Failed to load products from API:', err));
   }, []);
 
-  const addProduct = (product: Product) => {
-    setProducts(prev => [product, ...prev]);
-    // Send to backend
-    fetch(`${API_URL}/products`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(product)
-    }).catch(console.error);
+  const addProduct = async (product: Omit<Product, 'id'>) => {
+    try {
+      const res = await fetch(`${API_URL}/products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(product)
+      });
+      if (!res.ok) throw new Error('Failed to add product');
+      const newProduct = await res.json();
+      
+      // Map returned db entity format back to context format if needed, 
+      // though the backend mapProduct seems to handle it nicely
+      setProducts(prev => [newProduct, ...prev]);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   };
 
-  const editProduct = (id: string, updated: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
-    // Simulated backend call
-    fetch(`${API_URL}/products/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated)
-    }).catch(console.error);
+  const editProduct = async (id: string, updated: Partial<Product>) => {
+    try {
+      const res = await fetch(`${API_URL}/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+      if (!res.ok) throw new Error('Failed to edit product');
+      const updatedProduct = await res.json();
+      
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedProduct } : p));
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
-    // Send to backend
-    fetch(`${API_URL}/products/${id}`, {
-      method: 'DELETE'
-    }).catch(console.error);
+  const deleteProduct = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/products/${id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete product');
+      
+      setProducts(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   };
 
   const addCategory = (cat: Category) => {

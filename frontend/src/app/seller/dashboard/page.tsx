@@ -120,11 +120,11 @@ function DashboardContent() {
     }
   };
 
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    setTimeout(() => {
+    try {
       const productData = {
         name: name,
         price: parseFloat(price),
@@ -150,15 +150,11 @@ function DashboardContent() {
       };
 
       if (editingProductId) {
-        editProduct(editingProductId, productData);
+        await editProduct(editingProductId, productData);
       } else {
-        addProduct({
-          ...productData,
-          id: name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-        });
+        await addProduct(productData);
       }
 
-      setIsSubmitting(false);
       setShowSuccess(true);
       
       // Reset form
@@ -174,7 +170,12 @@ function DashboardContent() {
         setShowSuccess(false);
         setActiveTab('listings');
       }, 2500);
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save product. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const myListings = products.filter(p => p.seller === sellerName || p.seller === 'Apple Authorized India');
