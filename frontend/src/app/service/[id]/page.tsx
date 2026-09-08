@@ -43,35 +43,47 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    if (sellerId) {
-      fetch(`${API}/salon/seller/${sellerId}`)
-        .then(async r => {
+    const fetchQ = async () => {
+      try {
+        let list: QueueSummary[] = [];
+        if (sellerId) {
+          const r = await fetch(`${API}/salon/seller/${sellerId}`);
           const text = await r.text();
-          return text ? JSON.parse(text) : null;
-        })
-        .then(d => {
-          if (d && d.id) {
-            setQueues([d]);
-            setSelected(d);
-          } else {
-            setQueues([]);
+          const d = text ? JSON.parse(text) : null;
+          if (d && d.id) list = [d];
+        } else {
+          const r = await fetch(`${API}/salon/queues`);
+          const text = await r.text();
+          const d = text ? JSON.parse(text) : [];
+          list = Array.isArray(d) ? d : [];
+        }
+
+        // If no queue found, create one automatically for demo purposes
+        if (list.length === 0) {
+          const createRes = await fetch(`${API}/salon/queue`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              shopName: serviceName || 'Demo Salon',
+              sellerId: sellerId || `demo-${Date.now()}`
+            })
+          });
+          const newQueue = await createRes.json();
+          if (newQueue && newQueue.id) {
+            list = [newQueue];
           }
-          setLoadingQ(false);
-        }).catch(() => setLoadingQ(false));
-    } else {
-      fetch(`${API}/salon/queues`)
-        .then(async r => {
-          const text = await r.text();
-          return text ? JSON.parse(text) : [];
-        })
-        .then(d => {
-          const list = Array.isArray(d) ? d : [];
-          setQueues(list);
-          if (list.length > 0) setSelected(list[0]);
+        }
+
+        setQueues(list);
+        if (list.length > 0) setSelected(list[0]);
+      } catch (e) {
+        console.error(e);
+      } finally {
         setLoadingQ(false);
-      }).catch(() => setLoadingQ(false));
-    }
-  }, [sellerId]);
+      }
+    };
+    fetchQ();
+  }, [sellerId, serviceName]);
 
   const fetchStatus = useCallback(async (showRefresh = false) => {
     if (!selected) return;
