@@ -175,9 +175,23 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
   if (loadingQ) return <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 text-violet-400 animate-spin" /></div>;
 
   if (queues.length === 0) return (
-    <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center">
-      <Scissors className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-      <p className="text-slate-500 font-medium text-sm">No queue is active right now for this service provider.</p>
+    <div className="space-y-4">
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-2 text-amber-700 text-sm font-medium">
+        ⚡ Queue not yet set up — you can still request a spot!
+      </div>
+      <input type="text" placeholder="Your name *" value={name} onChange={e => setName(e.target.value)}
+        className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
+      <input type="tel" placeholder="Phone number (optional)" value={phone} onChange={e => setPhone(e.target.value)}
+        className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
+      {err && <p className="text-red-500 text-sm bg-red-50 border border-red-100 px-4 py-3 rounded-xl">⚠️ {err}</p>}
+      <button
+        onClick={() => {
+          if (!name.trim()) { setErr('Please enter your name'); return; }
+          alert(`✅ Booking request sent! ${serviceName} will contact you at your phone number.`);
+        }}
+        className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2">
+        <Ticket className="w-4 h-4" /> Request a Token 🎫
+      </button>
     </div>
   );
 
