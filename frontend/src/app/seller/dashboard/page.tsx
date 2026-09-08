@@ -21,8 +21,11 @@ function DashboardContent() {
   const { user } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
 
-  // Queue Management State
-  const isServiceProvider = user?.business?.businessType === 'Service Provider';
+  // Consider service providers: either business type OR if any listing is a service category
+  const SERVICE_CATEGORIES = ['Services', 'Home Services', 'salon', 'Salon', 'Spa', 'Organizers', 'Medical', 'Doctor', 'Clinic'];
+  const isServiceProvider = user?.business?.businessType === 'Service Provider' ||
+    products.some(p => (p.seller === sellerName || p.sellerId === user?.id) &&
+      SERVICE_CATEGORIES.some(c => p.category?.toLowerCase().includes(c.toLowerCase())));
   const [queueData, setQueueData] = useState<any>(null);
   const [isQueueLoading, setIsQueueLoading] = useState(false);
 
@@ -229,7 +232,12 @@ function DashboardContent() {
     }
   };
 
-  const myListings = products.filter(p => p.seller === sellerName);
+  // Match by sellerId (from backend) OR sellerName (from local data)
+  const myListings = products.filter(p =>
+    p.sellerId === user?.id ||
+    p.seller === sellerName ||
+    p.seller === user?.name
+  );
 
   return (
     <div className="min-h-screen w-full bg-slate-50 flex font-sans">
@@ -336,13 +344,40 @@ function DashboardContent() {
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="text-slate-500 text-sm font-medium mb-2">{isServiceProvider ? 'Active Services' : 'Active Listings'}</div>
                 <div className="text-3xl font-bold text-slate-900">{myListings.length}</div>
-                <div className="text-slate-400 text-sm font-medium mt-2">{isServiceProvider ? 'Live services' : 'Live products'}</div>
+                <button onClick={() => setActiveTab('listings')} className="text-blue-600 text-sm font-medium mt-2 hover:underline">
+                  {isServiceProvider ? 'View services →' : 'View listings →'}
+                </button>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-slate-500 text-sm font-medium mb-2">Pending Orders</div>
-                <div className="text-3xl font-bold text-amber-500">3</div>
-                <div className="text-slate-400 text-sm font-medium mt-2 cursor-pointer hover:text-blue-600 transition-colors">View details →</div>
+                <div className="text-slate-500 text-sm font-medium mb-2">
+                  {isServiceProvider ? 'Queue / Tokens' : 'Pending Orders'}
+                </div>
+                <div className="text-3xl font-bold text-amber-500">
+                  {isServiceProvider
+                    ? (queueData ? `${queueData.waitingCount ?? 0} waiting` : 'No queue')
+                    : '3'}
+                </div>
+                <button onClick={() => setActiveTab(isServiceProvider ? 'queue' : 'orders')}
+                  className="text-slate-400 text-sm font-medium mt-2 cursor-pointer hover:text-blue-600 transition-colors">
+                  View details →
+                </button>
               </div>
+            </div>
+
+            {/* Quick Links */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+              {[
+                { label: 'My Listings', icon: '🛍️', tab: 'listings' },
+                { label: isServiceProvider ? 'Queue & Tokens' : 'Orders', icon: isServiceProvider ? '🎟️' : '📦', tab: isServiceProvider ? 'queue' : 'orders' },
+                { label: 'Leads / RFQ', icon: '💬', tab: 'leads' },
+                { label: 'Bookings', icon: '📅', tab: 'bookings' },
+              ].map(item => (
+                <button key={item.tab} onClick={() => setActiveTab(item.tab as any)}
+                  className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3 hover:border-blue-300 hover:shadow-md transition-all group">
+                  <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                  <span className="text-sm font-bold text-slate-700">{item.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -383,45 +418,51 @@ function DashboardContent() {
                         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active
                       </span>
                     </div>
-                    <div className="flex gap-3">
-                      <button 
-                        onClick={() => {
-                          setEditingProductId(product.id);
-                          setName(product.name);
-                          setPrice(product.price.toString());
-                          setOriginalPrice(product.originalPrice ? product.originalPrice.toString() : product.price.toString());
-                          setDescription(product.description || '');
-                          setCategory(product.category || 'Electronics');
-                          setSellerName(product.seller || '');
-                          setLocation(product.location || '');
-                          setImageUrl(product.image || '');
-                          setUploadedImages(product.images || []);
-                          setEnableWholesale(product.isB2B || false);
-                          if (product.wholesaleTiers) setWholesaleTiers(product.wholesaleTiers);
-                          
-                          if (product.parameters) {
-                            const newParams: Record<string, string> = {};
-                            Object.keys(product.parameters).forEach(k => {
-                              newParams[k] = product.parameters![k].join(', ');
-                            });
-                            setParameters(newParams);
-                          }
-                          setActiveTab('add');
-                        }}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-medium text-sm transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" /> Edit
-                      </button>
-                      <button 
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg font-medium text-sm transition-colors"
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this listing?')) {
-                            deleteProduct(product.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" /> Delete
-                      </button>
+                    <div className="flex gap-2 flex-col">
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => {
+                            setEditingProductId(product.id);
+                            setName(product.name);
+                            setPrice(product.price.toString());
+                            setOriginalPrice(product.originalPrice ? product.originalPrice.toString() : product.price.toString());
+                            setDescription(product.description || '');
+                            setCategory(product.category || 'Electronics');
+                            setSellerName(product.seller || '');
+                            setLocation(product.location || '');
+                            setImageUrl(product.image || '');
+                            setUploadedImages(product.images || []);
+                            setEnableWholesale(product.isB2B || false);
+                            if (product.wholesaleTiers) setWholesaleTiers(product.wholesaleTiers);
+                            if (product.parameters) {
+                              const newParams: Record<string, string> = {};
+                              Object.keys(product.parameters).forEach(k => {
+                                newParams[k] = product.parameters![k].join(', ');
+                              });
+                              setParameters(newParams);
+                            }
+                            setActiveTab('add');
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-medium text-sm transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" /> Edit
+                        </button>
+                        <button 
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg font-medium text-sm transition-colors"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this listing?')) {
+                              deleteProduct(product.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete
+                        </button>
+                      </div>
+                      {/* Link to live public page */}
+                      <Link href={`/service/${product.id}`}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100 rounded-lg font-medium text-sm transition-colors">
+                        🌐 View Live Page
+                      </Link>
                     </div>
                   </div>
                 </div>
