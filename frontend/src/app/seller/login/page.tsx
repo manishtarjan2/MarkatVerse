@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -21,7 +21,14 @@ const BENEFITS = [
 
 export default function SellerLoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+
+  // If already logged in as a seller, redirect straight to dashboard
+  useEffect(() => {
+    if (user && (user.role === 'SELLER' || user.role === 'business')) {
+      router.replace('/seller/dashboard');
+    }
+  }, [user, router]);
 
   const [view, setView] = useState<View>('signin');
   const [showPassword, setShowPassword] = useState(false);

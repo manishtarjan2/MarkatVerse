@@ -116,7 +116,17 @@ export default function Navbar() {
               <span className="text-[11px] font-medium">Help</span>
             </Link>
 
-            {!user && (
+            {user ? (
+              // Already logged-in seller: show dashboard shortcut
+              (user.role === 'SELLER' || user.role === 'business') && (
+                <Link href="/seller/dashboard" className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
+                  <Store className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                  <span className="hidden lg:block text-[11px] font-medium">My Dashboard</span>
+                  <span className="lg:hidden text-[10px] font-medium">Dashboard</span>
+                </Link>
+              )
+            ) : (
+              // Not logged in: show Become a Seller
               <Link href="/seller/login" className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
                 <Store className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
                 <span className="hidden lg:block text-[11px] font-medium">Become a Seller</span>
