@@ -65,7 +65,7 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               shopName: serviceName || 'Demo Salon',
-              sellerId: sellerId || `demo-${Date.now()}`
+              sellerId: sellerId || [...Array(24)].map(() => Math.floor(Math.random() * 16).toString(16)).join('')
             })
           });
           const newQueue = await createRes.json();
