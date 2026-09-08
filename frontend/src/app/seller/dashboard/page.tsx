@@ -183,6 +183,7 @@ function DashboardContent() {
         rating: 'New',
         reviews: '0',
         seller: sellerName,
+        sellerId: user?.id,
         location: location,
         category: category,
         image: imageUrl || (uploadedImages.length > 0 ? uploadedImages[0] : undefined),

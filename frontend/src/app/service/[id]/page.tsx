@@ -44,20 +44,30 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
 
   useEffect(() => {
     if (sellerId) {
-      fetch(`${API}/salon/seller/${sellerId}`).then(r => r.json()).then(d => {
-        if (d && d.id) {
-          setQueues([d]);
-          setSelected(d);
-        } else {
-          setQueues([]);
-        }
-        setLoadingQ(false);
-      }).catch(() => setLoadingQ(false));
+      fetch(`${API}/salon/seller/${sellerId}`)
+        .then(async r => {
+          const text = await r.text();
+          return text ? JSON.parse(text) : null;
+        })
+        .then(d => {
+          if (d && d.id) {
+            setQueues([d]);
+            setSelected(d);
+          } else {
+            setQueues([]);
+          }
+          setLoadingQ(false);
+        }).catch(() => setLoadingQ(false));
     } else {
-      fetch(`${API}/salon/queues`).then(r => r.json()).then(d => {
-        const list = Array.isArray(d) ? d : [];
-        setQueues(list);
-        if (list.length > 0) setSelected(list[0]);
+      fetch(`${API}/salon/queues`)
+        .then(async r => {
+          const text = await r.text();
+          return text ? JSON.parse(text) : [];
+        })
+        .then(d => {
+          const list = Array.isArray(d) ? d : [];
+          setQueues(list);
+          if (list.length > 0) setSelected(list[0]);
         setLoadingQ(false);
       }).catch(() => setLoadingQ(false));
     }
