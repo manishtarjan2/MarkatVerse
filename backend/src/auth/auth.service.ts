@@ -112,7 +112,7 @@ export class AuthService {
       const payload = this.jwtService.verify(token);
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
-        select: { id: true, name: true, email: true, phone: true, role: true }
+        select: { id: true, name: true, email: true, phone: true, role: true, business: true }
       });
       if (!user) throw new UnauthorizedException('User not found');
       return user;

@@ -559,7 +559,7 @@ export default function ProductDetails() {
                         <button 
                           className="flex-1 px-6 py-4 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 rounded-xl font-bold text-base transition-colors"
                           onClick={() => {
-                            alert(`Contacting ${product.seller} for business inquiry...`);
+                            setIsModalOpen(true);
                           }}
                         >
                           Contact Supplier
@@ -572,7 +572,7 @@ export default function ProductDetails() {
                           if (isRetail && isElite) {
                             alert(`Proceeding to checkout for ${rfqQuantity * bundleMultiplier} units...`);
                           } else {
-                            alert(`Requesting bulk quote for ${rfqQuantity * bundleMultiplier} units of ${product.name}...`);
+                            setIsModalOpen(true);
                           }
                         }}
                       >

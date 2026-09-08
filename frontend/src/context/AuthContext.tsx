@@ -10,6 +10,7 @@ type User = {
   email?: string;
   role: 'buyer' | 'business' | 'elite' | 'super_admin' | 'catalog_admin' | 'onboarding_admin' | 'support_admin' | 'CONSUMER' | 'SELLER' | 'ADMIN';
   status?: 'active' | 'suspended';
+  business?: any;
 };
 
 type AuthContextType = {
@@ -53,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           phone: data.phone || '',
           role: data.role?.toLowerCase() as User['role'],
           status: 'active',
+          business: data.business,
         });
       })
       .catch(() => {

@@ -12,6 +12,7 @@ export class SalonService {
     shopName: string;
     avgMinutes?: number;
     pricePerHour?: number;
+    sellerId?: string;
   }) {
     return this.prisma.salonQueue.create({
       data: {
@@ -21,7 +22,15 @@ export class SalonService {
         currentToken: 0,
         lastToken: 0,
         isOpen: true,
+        sellerId: data.sellerId,
       },
+    });
+  }
+
+  /** Get queue by seller */
+  async getQueueBySeller(sellerId: string) {
+    return this.prisma.salonQueue.findUnique({
+      where: { sellerId },
     });
   }
 

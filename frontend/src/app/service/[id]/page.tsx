@@ -29,7 +29,7 @@ interface JoinResult {
 }
 
 // ─── Queue Widget ─────────────────────────────────────────────────────────────
-function SmartQueueWidget({ serviceName }: { serviceName: string }) {
+function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sellerId?: string }) {
   const [queues, setQueues] = useState<QueueSummary[]>([]);
   const [selected, setSelected] = useState<QueueSummary | null>(null);
   const [status, setStatus] = useState<QueueStatus | null>(null);
@@ -43,13 +43,25 @@ function SmartQueueWidget({ serviceName }: { serviceName: string }) {
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    fetch(`${API}/salon/queues`).then(r => r.json()).then(d => {
-      const list = Array.isArray(d) ? d : [];
-      setQueues(list);
-      if (list.length > 0) setSelected(list[0]);
-      setLoadingQ(false);
-    }).catch(() => setLoadingQ(false));
-  }, []);
+    if (sellerId) {
+      fetch(`${API}/salon/seller/${sellerId}`).then(r => r.json()).then(d => {
+        if (d && d.id) {
+          setQueues([d]);
+          setSelected(d);
+        } else {
+          setQueues([]);
+        }
+        setLoadingQ(false);
+      }).catch(() => setLoadingQ(false));
+    } else {
+      fetch(`${API}/salon/queues`).then(r => r.json()).then(d => {
+        const list = Array.isArray(d) ? d : [];
+        setQueues(list);
+        if (list.length > 0) setSelected(list[0]);
+        setLoadingQ(false);
+      }).catch(() => setLoadingQ(false));
+    }
+  }, [sellerId]);
 
   const fetchStatus = useCallback(async (showRefresh = false) => {
     if (!selected) return;
@@ -143,8 +155,7 @@ function SmartQueueWidget({ serviceName }: { serviceName: string }) {
   if (queues.length === 0) return (
     <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center">
       <Scissors className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-      <p className="text-slate-500 font-medium text-sm">No queue is active right now</p>
-      <Link href="/salon/manage" className="text-violet-600 text-xs font-bold mt-2 inline-block hover:underline">Salon owner? Set up your queue →</Link>
+      <p className="text-slate-500 font-medium text-sm">No queue is active right now for this service provider.</p>
     </div>
   );
 
@@ -524,7 +535,7 @@ export default function ServiceDetails() {
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                     <h3 className="font-black text-slate-900">Live Queue Status</h3>
                   </div>
-                  <SmartQueueWidget serviceName={service.name} />
+                  <SmartQueueWidget serviceName={service.name} sellerId={service.sellerId} />
                 </>
               ) : service.category === 'Transport' ? (
                 <>

@@ -22,6 +22,7 @@ model User {
   orders      Order[]
   buyerLeads  Lead[]    @relation("BuyerLeads")
   sellerLeads Lead[]    @relation("SellerLeads")
+  salonQueue  SalonQueue?
 }
 
 model Business {
@@ -130,6 +131,7 @@ model OrderItem {
 model SalonQueue {
   id           String       @id @default(auto()) @map("_id") @db.ObjectId
   shopName     String
+  sellerId     String?      @unique @db.ObjectId
   currentToken Int          @default(0)
   lastToken    Int          @default(0)
   avgMinutes   Int          @default(20)
@@ -139,6 +141,7 @@ model SalonQueue {
   updatedAt    DateTime     @updatedAt
 
   tokens SalonToken[]
+  seller User?        @relation(fields: [sellerId], references: [id])
 }
 
 model SalonToken {

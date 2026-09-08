@@ -23,9 +23,16 @@ export class SalonController {
       shopName: string;
       avgMinutes?: number;
       pricePerHour?: number;
+      sellerId?: string;
     },
   ) {
     return this.salonService.createQueue(body);
+  }
+
+  /** Get queue for a specific seller */
+  @Get('seller/:sellerId')
+  getQueueBySeller(@Param('sellerId') sellerId: string) {
+    return this.salonService.getQueueBySeller(sellerId);
   }
 
   /** List all open queues */
