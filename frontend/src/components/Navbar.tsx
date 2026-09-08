@@ -118,7 +118,7 @@ export default function Navbar() {
 
             {user ? (
               // Already logged-in seller: show dashboard shortcut
-              (user.role === 'SELLER' || user.role === 'business') && (
+              (['seller', 'SELLER', 'business'].includes(user.role)) && (
                 <Link href="/seller/dashboard" className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
                   <Store className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
                   <span className="hidden lg:block text-[11px] font-medium">My Dashboard</span>

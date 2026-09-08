@@ -25,7 +25,7 @@ export default function SellerLoginPage() {
 
   // If already logged in as a seller, redirect straight to dashboard
   useEffect(() => {
-    if (user && (user.role === 'SELLER' || user.role === 'business')) {
+    if (user && ['seller', 'SELLER', 'business'].includes(user.role)) {
       router.replace('/seller/dashboard');
     }
   }, [user, router]);

@@ -39,7 +39,7 @@ interface JoinResult {
 // ─── Queue Widget ─────────────────────────────────────────────────────────────
 function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sellerId?: string }) {
   const { user } = useAuth();
-  const isSeller = user && (user.role === 'SELLER' || user.role === 'business');
+  const isSeller = user && ['seller', 'SELLER', 'business'].includes(user.role);
   const [queues, setQueues] = useState<QueueSummary[]>([]);
   const [selected, setSelected] = useState<QueueSummary | null>(null);
   const [status, setStatus] = useState<QueueStatus | null>(null);
