@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShieldCheck, Award, RefreshCw, Zap } from 'lucide-react';
 import ProductGrid from "@/components/ProductGrid";
 import UserWidget from "@/components/UserWidget";
+import JoinSellerButton from "@/components/JoinSellerButton";
 
 export default function Home() {
   return (
@@ -74,11 +75,7 @@ export default function Home() {
                     Shop Now <span className="font-normal">→</span>
                   </button>
                 </Link>
-                <Link href="/seller/onboarding">
-                  <button className="bg-white/50 backdrop-blur hover:bg-white text-[#0f1928] border-2 border-[#0f1928] px-6 py-3 rounded-xl font-bold transition-all">
-                    Join as Seller
-                  </button>
-                </Link>
+                <JoinSellerButton />
               </div>
             </div>
           </div>

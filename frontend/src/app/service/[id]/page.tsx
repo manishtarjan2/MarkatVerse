@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-const WALK_IN_CATEGORIES = ['salon', 'saloon', 'beauty', 'haircut', 'barber', 'spa', 'nail'];
+const WALK_IN_CATEGORIES = ['salon', 'saloon', 'beauty', 'haircut', 'barber', 'spa', 'nail', 'doctor', 'clinic', 'medical', 'hospital', 'dentist'];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface QueueSummary {
@@ -276,6 +276,10 @@ export default function ServiceDetails() {
 
   const timeSlots = ["09:00 AM", "10:30 AM", "12:00 PM", "02:30 PM", "04:00 PM", "06:00 PM"];
   const isWalkIn = WALK_IN_CATEGORIES.some(c =>
+    service.category?.toLowerCase().includes(c) || service.name?.toLowerCase().includes(c)
+  );
+
+  const isEventOrPlanning = ['event', 'wedding', 'planner', 'planning', 'function', 'party', 'construction', 'building'].some(c =>
     service.category?.toLowerCase().includes(c) || service.name?.toLowerCase().includes(c)
   );
 
@@ -546,6 +550,26 @@ export default function ServiceDetails() {
                     <h3 className="font-black text-slate-900">Live Queue Status</h3>
                   </div>
                   <SmartQueueWidget serviceName={service.name} sellerId={service.sellerId} />
+                </>
+              ) : isEventOrPlanning ? (
+                <>
+                  <h3 className="font-black text-slate-900 mb-4 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-violet-600" /> Schedule Consultation
+                  </h3>
+                  <p className="text-slate-500 text-sm mb-4">Set up a meeting to discuss your requirements and get a custom quote.</p>
+                  <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
+                    className="w-full p-4 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-700 font-semibold mb-4 bg-slate-50 transition-colors" />
+                  <div className="mb-4">
+                    <input type="text" placeholder="Briefly describe your requirements..." className="w-full p-4 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-700 bg-slate-50 transition-colors mb-3" />
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (!selectedDate) { alert('Please select a date'); return; }
+                      alert(`Meeting scheduled with ${service.seller} on ${selectedDate}`);
+                    }}
+                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-base transition-all shadow-xl shadow-slate-200 mb-3">
+                    Schedule Meeting
+                  </button>
                 </>
               ) : service.category === 'Transport' ? (
                 <>
