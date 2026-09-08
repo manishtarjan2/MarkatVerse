@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProducts } from '@/context/ProductContext';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -8,6 +9,13 @@ import {
   Info, Camera, Users, Ticket, ChevronRight, Loader2, RefreshCw,
   Scissors, ArrowLeft, Share2, Heart, Zap, TrendingUp
 } from 'lucide-react';
+
+// ─── Salon Service Menu ───────────────────────────────────────────────────────
+const SALON_SERVICES = [
+  { label: 'Hair Cutting', price: 50, emoji: '✂️' },
+  { label: 'Beard Trim',   price: 50, emoji: '🪒' },
+  { label: 'DIY Style',    price: 50, emoji: '💈' },
+];
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const WALK_IN_CATEGORIES = ['salon', 'saloon', 'beauty', 'hair', 'barber', 'spa', 'nail', 'massage', 'pedicure', 'doctor', 'clinic', 'medical', 'hospital', 'dentist'];
@@ -30,6 +38,8 @@ interface JoinResult {
 
 // ─── Queue Widget ─────────────────────────────────────────────────────────────
 function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sellerId?: string }) {
+  const { user } = useAuth();
+  const isSeller = user && (user.role === 'SELLER' || user.role === 'business');
   const [queues, setQueues] = useState<QueueSummary[]>([]);
   const [selected, setSelected] = useState<QueueSummary | null>(null);
   const [status, setStatus] = useState<QueueStatus | null>(null);
@@ -38,6 +48,7 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
   const [step, setStep] = useState<'view' | 'join' | 'done'>('view');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [selectedService, setSelectedService] = useState(SALON_SERVICES[0]);
   const [joining, setJoining] = useState(false);
   const [result, setResult] = useState<JoinResult | null>(null);
   const [err, setErr] = useState('');
@@ -107,7 +118,11 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
     try {
       const r = await fetch(`${API}/salon/${selected.id}/join`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerName: name.trim(), phone: phone.trim() || undefined, service: serviceName }),
+        body: JSON.stringify({
+          customerName: name.trim(),
+          phone: phone.trim() || undefined,
+          service: selectedService.label,
+        }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.message ?? 'Failed');
@@ -148,9 +163,33 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
         <h4 className="font-black text-slate-900 flex items-center gap-2"><Ticket className="w-4 h-4 text-violet-600" /> Get Your Token</h4>
         <button onClick={() => setStep('view')} className="text-slate-400 hover:text-slate-700 text-xs font-semibold">← Back</button>
       </div>
+
+      {/* Service Selector */}
+      <div>
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Service</p>
+        <div className="grid grid-cols-3 gap-2">
+          {SALON_SERVICES.map(svc => (
+            <button key={svc.label} onClick={() => setSelectedService(svc)}
+              className={`flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-bold text-sm transition-all ${
+                selectedService.label === svc.label
+                  ? 'border-violet-500 bg-violet-50 text-violet-700'
+                  : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-violet-200'
+              }`}>
+              <span className="text-xl">{svc.emoji}</span>
+              <span className="text-xs leading-tight text-center">{svc.label}</span>
+              <span className="text-violet-600 font-black text-xs">₹{svc.price}</span>
+            </button>
+          ))}
+        </div>
+        <div className="mt-2 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2 text-xs text-violet-700 font-semibold flex justify-between">
+          <span>Selected: <span className="font-black">{selectedService.emoji} {selectedService.label}</span></span>
+          <span>₹{selectedService.price}</span>
+        </div>
+      </div>
+
       {selected && (
-        <div className="bg-violet-50 border border-violet-100 rounded-2xl px-4 py-3">
-          <div className="text-violet-700 font-bold text-sm">{selected.shopName}</div>
+        <div className="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3">
+          <div className="text-slate-700 font-bold text-sm">{selected.shopName}</div>
           <div className="text-slate-400 text-xs mt-0.5 flex items-center gap-3">
             <span>Now serving #{selected.currentToken}</span>
             <span>·</span>
@@ -158,6 +197,7 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
           </div>
         </div>
       )}
+
       <input type="text" placeholder="Your name *" value={name} onChange={e => setName(e.target.value)}
         className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
       <input type="tel" placeholder="Phone number (optional)" value={phone} onChange={e => setPhone(e.target.value)}
@@ -166,7 +206,7 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
       <button onClick={join} disabled={joining}
         className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-60 text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2">
         {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ticket className="w-4 h-4" />}
-        {joining ? 'Getting your token…' : 'Confirm & Get Token 🎫'}
+        {joining ? 'Getting your token…' : `Pay ₹${selectedService.price} & Get Token 🎫`}
       </button>
     </div>
   );
@@ -278,10 +318,15 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
         <Link href="/salon/queue" className="flex items-center justify-center gap-1.5 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-all">
           <Users className="w-3.5 h-3.5" /> Live Board
         </Link>
-        <Link href="/salon/manage" className="flex items-center justify-center gap-1.5 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-all">
-          <ChevronRight className="w-3.5 h-3.5" /> Manage
-        </Link>
+        {isSeller && (
+          <Link href="/salon/manage" className="flex items-center justify-center gap-1.5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-violet-200">
+            <ChevronRight className="w-3.5 h-3.5" /> Manage Shop
+          </Link>
+        )}
       </div>
+      {!isSeller && (
+        <p className="text-center text-slate-400 text-xs">Shop management is only available to the service owner.</p>
+      )}
     </div>
   );
 }
