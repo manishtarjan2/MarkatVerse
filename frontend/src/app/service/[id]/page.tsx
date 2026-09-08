@@ -48,7 +48,8 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
   const [step, setStep] = useState<'view' | 'join' | 'done'>('view');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [selectedService, setSelectedService] = useState(SALON_SERVICES[0]);
+  const [selectedServices, setSelectedServices] = useState<typeof SALON_SERVICES>([SALON_SERVICES[0]]);
+  const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
   const [joining, setJoining] = useState(false);
   const [result, setResult] = useState<JoinResult | null>(null);
   const [err, setErr] = useState('');
@@ -113,6 +114,7 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
 
   const join = async () => {
     if (!name.trim()) { setErr('Please enter your name'); return; }
+    if (selectedServices.length === 0) { setErr('Please select at least one service'); return; }
     if (!selected) return;
     setErr(''); setJoining(true);
     try {
@@ -121,7 +123,7 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
         body: JSON.stringify({
           customerName: name.trim(),
           phone: phone.trim() || undefined,
-          service: selectedService.label,
+          service: selectedServices.map(s => s.label).join(', '),
         }),
       });
       const d = await r.json();
@@ -164,27 +166,57 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
         <button onClick={() => setStep('view')} className="text-slate-400 hover:text-slate-700 text-xs font-semibold">← Back</button>
       </div>
 
-      {/* Service Selector */}
+      {/* Multi-Service Selector */}
       <div>
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Service</p>
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Services <span className="normal-case font-medium text-slate-400">(pick one or more)</span></p>
         <div className="grid grid-cols-3 gap-2">
-          {SALON_SERVICES.map(svc => (
-            <button key={svc.label} onClick={() => setSelectedService(svc)}
-              className={`flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-bold text-sm transition-all ${
-                selectedService.label === svc.label
-                  ? 'border-violet-500 bg-violet-50 text-violet-700'
-                  : 'border-slate-100 bg-slate-50 text-slate-600 hover:border-violet-200'
-              }`}>
-              <span className="text-xl">{svc.emoji}</span>
-              <span className="text-xs leading-tight text-center">{svc.label}</span>
-              <span className="text-violet-600 font-black text-xs">₹{svc.price}</span>
-            </button>
-          ))}
+          {SALON_SERVICES.map(svc => {
+            const isChosen = selectedServices.some(s => s.label === svc.label);
+            return (
+              <button key={svc.label}
+                onClick={() => {
+                  setSelectedServices(prev =>
+                    isChosen
+                      ? prev.filter(s => s.label !== svc.label)
+                      : [...prev, svc]
+                  );
+                }}
+                className={`relative flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 font-bold text-sm transition-all ${
+                  isChosen
+                    ? 'border-violet-500 bg-violet-50 text-violet-700 shadow-md shadow-violet-100'
+                    : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-violet-200 hover:bg-violet-50/50'
+                }`}>
+                {isChosen && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-violet-600 rounded-full flex items-center justify-center text-white text-[9px] font-black">✓</span>
+                )}
+                <span className="text-xl">{svc.emoji}</span>
+                <span className="text-xs leading-tight text-center">{svc.label}</span>
+                <span className={`font-black text-xs ${isChosen ? 'text-violet-600' : 'text-slate-400'}`}>₹{svc.price}</span>
+              </button>
+            );
+          })}
         </div>
-        <div className="mt-2 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2 text-xs text-violet-700 font-semibold flex justify-between">
-          <span>Selected: <span className="font-black">{selectedService.emoji} {selectedService.label}</span></span>
-          <span>₹{selectedService.price}</span>
-        </div>
+
+        {/* Order Summary */}
+        {selectedServices.length > 0 ? (
+          <div className="mt-3 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl px-4 py-3 space-y-1">
+            <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Your Order</p>
+            {selectedServices.map(s => (
+              <div key={s.label} className="flex justify-between text-sm">
+                <span className="text-slate-700 font-medium">{s.emoji} {s.label}</span>
+                <span className="text-violet-700 font-bold">₹{s.price}</span>
+              </div>
+            ))}
+            <div className="pt-2 mt-1 border-t border-violet-200 flex justify-between">
+              <span className="font-black text-slate-800 text-sm">Total</span>
+              <span className="font-black text-violet-700 text-base">₹{totalPrice}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 bg-red-50 border border-red-100 rounded-xl px-3 py-2 text-xs text-red-500 font-semibold text-center">
+            ⚠️ Please select at least one service
+          </div>
+        )}
       </div>
 
       {selected && (
@@ -203,10 +235,10 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
       <input type="tel" placeholder="Phone number (optional)" value={phone} onChange={e => setPhone(e.target.value)}
         className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
       {err && <p className="text-red-500 text-sm bg-red-50 border border-red-100 px-4 py-3 rounded-xl">⚠️ {err}</p>}
-      <button onClick={join} disabled={joining}
-        className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-60 text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2">
+      <button onClick={join} disabled={joining || selectedServices.length === 0}
+        className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2">
         {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ticket className="w-4 h-4" />}
-        {joining ? 'Getting your token…' : `Pay ₹${selectedService.price} & Get Token 🎫`}
+        {joining ? 'Getting your token…' : `Pay ₹${totalPrice} & Get Token 🎫`}
       </button>
     </div>
   );
