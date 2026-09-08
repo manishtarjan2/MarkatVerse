@@ -525,7 +525,7 @@ export default function SellerOnboarding() {
                   <div className="flex items-center gap-2"><span>✅</span> Document verification (24-48 hrs)</div>
                   <div className="flex items-center gap-2"><span>📧</span> Approval email notification</div>
                   <div className="flex items-center gap-2"><span>🏪</span> Set up your storefront</div>
-                  <div className="flex items-center gap-2"><span>🚀</span> Start listing products!</div>
+                  <div className="flex items-center gap-2"><span>🚀</span> Start listing {['Service Provider', 'Organizer'].includes(sellerRole) ? 'services' : 'products'}!</div>
                 </div>
               </div>
 

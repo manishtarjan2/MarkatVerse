@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-const WALK_IN_CATEGORIES = ['salon', 'saloon', 'beauty', 'haircut', 'barber', 'spa', 'nail', 'doctor', 'clinic', 'medical', 'hospital', 'dentist'];
+const WALK_IN_CATEGORIES = ['salon', 'saloon', 'beauty', 'hair', 'barber', 'spa', 'nail', 'massage', 'pedicure', 'doctor', 'clinic', 'medical', 'hospital', 'dentist'];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface QueueSummary {
@@ -185,35 +185,40 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
         </select>
       )}
 
-      {/* Live status card */}
-      <div className={`rounded-2xl border-2 p-4 ${isOpen ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-red-400'}`} />
-            <span className={`text-xs font-black uppercase tracking-widest ${isOpen ? 'text-emerald-700' : 'text-red-600'}`}>
-              {isOpen ? 'Queue Live' : 'Queue Closed'}
+      {/* Premium Live status card */}
+      <div className={`relative overflow-hidden rounded-3xl p-6 ${isOpen ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 shadow-inner' : 'bg-gradient-to-br from-red-50 to-rose-50 border border-red-100 shadow-inner'}`}>
+        {isOpen && <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400 rounded-full blur-3xl opacity-10"></div>}
+        
+        <div className="flex items-center justify-between mb-6 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-3 w-3">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOpen ? 'bg-emerald-400' : 'hidden'}`}></span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${isOpen ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+            </div>
+            <span className={`text-xs font-black uppercase tracking-widest ${isOpen ? 'text-emerald-700' : 'text-red-700'}`}>
+              {isOpen ? 'Live Queue Active' : 'Queue Closed'}
             </span>
           </div>
-          <button onClick={() => fetchStatus(true)} className="text-slate-300 hover:text-slate-600 transition-colors p-1">
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          <button onClick={() => fetchStatus(true)} className="text-slate-400 hover:text-slate-700 transition-colors p-1 bg-white/50 rounded-full backdrop-blur">
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center">
-            <div className="text-slate-900 font-black text-2xl leading-none">{serving ? `#${serving.tokenNumber}` : '—'}</div>
-            <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1">Serving</div>
+        
+        <div className="grid grid-cols-3 gap-2 relative z-10">
+          <div className="text-center bg-white/60 backdrop-blur rounded-2xl py-3 border border-white">
+            <div className="text-slate-900 font-black text-2xl leading-none tracking-tight">{serving ? `#${serving.tokenNumber}` : '—'}</div>
+            <div className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Serving</div>
           </div>
-          <div className="text-center border-x border-slate-200">
-            <div className="text-slate-900 font-black text-2xl leading-none">{waiting}</div>
-            <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1">Waiting</div>
+          <div className="text-center bg-white/60 backdrop-blur rounded-2xl py-3 border border-white">
+            <div className="text-slate-900 font-black text-2xl leading-none tracking-tight">{waiting}</div>
+            <div className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Waiting</div>
           </div>
-          <div className="text-center">
-            <div className="text-slate-900 font-black text-2xl leading-none">{etaIfJoinNow}m</div>
-            <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1">Est. wait</div>
+          <div className="text-center bg-white/60 backdrop-blur rounded-2xl py-3 border border-white">
+            <div className="text-slate-900 font-black text-2xl leading-none tracking-tight">{etaIfJoinNow}m</div>
+            <div className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Est Wait</div>
           </div>
         </div>
       </div>
-
       {/* Up next list */}
       {status && status.waiting.slice(0, 3).length > 0 && (
         <div className="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 space-y-2">
@@ -234,8 +239,10 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
       {/* Action buttons */}
       {isOpen ? (
         <button onClick={() => setStep('join')}
-          className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2">
-          <Ticket className="w-5 h-5" /> Walk In &amp; Get Token 🎫
+          className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-lg rounded-2xl transition-all shadow-xl shadow-emerald-200 flex items-center justify-center gap-3 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+          <Ticket className="w-6 h-6 relative z-10" />
+          <span className="relative z-10 tracking-wide">Get Token Now</span>
         </button>
       ) : (
         <div className="w-full py-4 bg-slate-100 text-slate-400 font-bold text-base rounded-2xl text-center">Queue is Closed</div>
@@ -292,98 +299,106 @@ export default function ServiceDetails() {
   return (
     <div className="min-h-screen bg-[#f8f9fc] font-sans">
 
-      {/* ── Hero Banner ─────────────────────────────────────────────────── */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 opacity-30" style={{backgroundImage: 'radial-gradient(circle at 20% 50%, #6d28d9 0%, transparent 50%), radial-gradient(circle at 80% 20%, #0ea5e9 0%, transparent 50%)' }} />
-        <div className="absolute inset-0 opacity-5" style={{backgroundImage: 'linear-gradient(45deg, #fff 1px, transparent 1px), linear-gradient(-45deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+      {/* ── Premium Hero Banner ─────────────────────────────────────────────────── */}
+      <div className="relative bg-[#061224] overflow-hidden">
+        {/* Dynamic mesh gradient background */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[120%] bg-violet-600 rounded-full blur-[120px] mix-blend-screen opacity-50 animate-pulse"></div>
+          <div className="absolute top-[20%] right-[-10%] w-[60%] h-[120%] bg-indigo-500 rounded-full blur-[140px] mix-blend-screen opacity-40"></div>
+        </div>
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
 
-        <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+        <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16 lg:pt-10 lg:pb-24">
           {/* Back + actions */}
-          <div className="flex items-center justify-between mb-8">
-            <Link href="/" className="flex items-center gap-2 text-white/60 hover:text-white font-semibold text-sm transition-colors group">
+          <div className="flex items-center justify-between mb-10">
+            <Link href="/" className="flex items-center gap-2 text-white/70 hover:text-white font-bold text-sm transition-colors group bg-white/5 px-4 py-2 rounded-full border border-white/10 backdrop-blur-md">
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
             </Link>
             <div className="flex items-center gap-2">
-              <button onClick={() => setLiked(l => !l)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${liked ? 'bg-rose-500 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'}`}>
+              <button onClick={() => setLiked(l => !l)} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all border backdrop-blur-md ${liked ? 'bg-rose-500 border-rose-400 text-white shadow-lg shadow-rose-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/20 hover:text-white hover:border-white/30'}`}>
                 <Heart className={`w-4 h-4 ${liked ? 'fill-white' : ''}`} />
               </button>
-              <button className="w-9 h-9 bg-white/10 hover:bg-white/20 text-white/60 hover:text-white rounded-xl flex items-center justify-center transition-all">
+              <button className="w-10 h-10 bg-white/5 border border-white/10 hover:bg-white/20 hover:border-white/30 text-white/70 hover:text-white rounded-full flex items-center justify-center transition-all backdrop-blur-md">
                 <Share2 className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
-            {/* Service Image */}
-            <div className="w-full lg:w-64 aspect-square lg:aspect-auto lg:h-56 bg-white/10 backdrop-blur rounded-3xl overflow-hidden border border-white/10 flex items-center justify-center shrink-0 relative">
+          <div className="flex flex-col lg:flex-row gap-10 items-center lg:items-stretch">
+            {/* Service Image Premium Card */}
+            <div className="w-full sm:w-[80%] lg:w-[320px] aspect-[4/3] lg:aspect-[3/4] bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/20 flex items-center justify-center shrink-0 relative shadow-2xl shadow-indigo-900/50 group">
               {service.image ? (
-                <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
+                <img src={service.image} alt={service.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               ) : (
                 <div className="flex flex-col items-center gap-3">
-                  <span className="text-7xl">✂️</span>
+                  <span className="text-8xl drop-shadow-2xl">✂️</span>
                 </div>
               )}
               {/* Category badge */}
-              <div className="absolute top-3 left-3 bg-violet-600/90 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
+              <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md border border-white/20 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg">
                 {service.category}
               </div>
               {isWalkIn && (
-                <div className="absolute bottom-3 left-3 right-3 bg-emerald-500/90 backdrop-blur text-white px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 justify-center">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" /> Walk-in Queue Active
+                <div className="absolute bottom-4 left-4 right-4 bg-emerald-500/90 backdrop-blur-md border border-emerald-400/50 text-white px-4 py-3 rounded-2xl text-xs font-black flex items-center gap-2 justify-center shadow-xl shadow-emerald-900/50">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" /> Live Token Queue Active
                 </div>
               )}
             </div>
 
-            {/* Info */}
-            <div className="flex-1">
+            {/* Info Section */}
+            <div className="flex-1 flex flex-col justify-center w-full">
               {/* Tags row */}
-              <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-5">
                 {isWalkIn && (
-                  <span className="bg-violet-500/20 border border-violet-400/30 text-violet-200 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                    <Ticket className="w-3 h-3" /> Smart Queue Enabled
+                  <span className="bg-violet-500/20 border border-violet-400/30 text-violet-200 text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5">
+                    <Ticket className="w-3.5 h-3.5" /> Smart Queue
                   </span>
                 )}
-                <span className="bg-amber-500/20 border border-amber-400/30 text-amber-200 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                  <Zap className="w-3 h-3" /> Instant Booking
+                <span className="bg-amber-500/20 border border-amber-400/30 text-amber-200 text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5" /> Instant Booking
                 </span>
-                <span className="bg-white/10 border border-white/20 text-white/70 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                  <TrendingUp className="w-3 h-3" /> Top Rated
+                <span className="bg-white/10 border border-white/20 text-white/80 text-xs font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5" /> Top Rated
                 </span>
               </div>
 
-              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-black text-white leading-tight mb-4">
+              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black text-white leading-[1.1] tracking-tight mb-6 drop-shadow-md">
                 {service.name}
               </h1>
 
               {/* Rating + Location */}
-              <div className="flex flex-wrap items-center gap-4 mb-6">
-                <div className="flex items-center gap-2 bg-amber-400/20 border border-amber-400/30 px-4 py-2 rounded-xl">
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  <span className="text-amber-300 font-black text-sm">{service.rating}</span>
-                  <span className="text-amber-400/70 text-xs">({service.reviews} reviews)</span>
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                <div className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-amber-500/10 border border-amber-400/30 px-5 py-2.5 rounded-2xl backdrop-blur-md">
+                  <Star className="w-5 h-5 fill-amber-400 text-amber-400 drop-shadow-md" />
+                  <span className="text-amber-300 font-black text-base drop-shadow-md">{service.rating}</span>
+                  <span className="text-amber-400/80 text-sm font-medium">({service.reviews} reviews)</span>
                 </div>
-                <div className="flex items-center gap-2 text-white/60 font-medium text-sm">
-                  <MapPin className="w-4 h-4" /> {service.location}
+                <div className="flex items-center gap-2 text-white/70 font-medium text-base bg-white/5 border border-white/10 px-5 py-2.5 rounded-2xl backdrop-blur-md">
+                  <MapPin className="w-4 h-4 text-violet-300" /> {service.location}
                 </div>
               </div>
 
               {/* Provider card */}
-              <div className="bg-white/10 backdrop-blur border border-white/15 rounded-2xl px-5 py-4 flex items-center justify-between">
-                <div>
-                  <div className="text-white/50 text-[10px] font-black uppercase tracking-widest mb-1">Service Provider</div>
-                  <Link href={`/shop/${encodeURIComponent(service.seller.toLowerCase().replace(/ /g, '-'))}`}
-                    className="text-white font-black text-lg hover:text-violet-300 transition-colors">
-                    {service.seller}
-                  </Link>
+              <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 max-w-2xl shadow-xl">
+                <div className="flex items-center gap-4 pl-4 py-2">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-inner border border-white/20">
+                    {service.seller.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="text-white/50 text-[10px] font-black uppercase tracking-widest mb-0.5">Service Provider</div>
+                    <Link href={`/shop/${encodeURIComponent(service.seller.toLowerCase().replace(/ /g, '-'))}`}
+                      className="text-white font-black text-xl hover:text-violet-300 transition-colors drop-shadow-md">
+                      {service.seller}
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span className="bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5 font-black">
-                    <ShieldCheck className="w-3 h-3" /> Verified Pro
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 pr-4 py-2 sm:py-0 border-t border-white/10 sm:border-t-0 pt-4 sm:pt-0">
+                  <span className="bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-black shadow-inner">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Verified Pro
                   </span>
-                  <button className="text-white/40 hover:text-white/80 text-xs font-semibold flex items-center gap-1 transition-colors"
+                  <button className="text-white/60 hover:text-white text-sm font-semibold flex items-center gap-1.5 transition-colors"
                     onClick={() => alert(`Calling ${service.seller}...`)}>
-                    <PhoneCall className="w-3 h-3" /> Call now
+                    <PhoneCall className="w-3.5 h-3.5" /> Call now
                   </button>
                 </div>
               </div>
@@ -398,14 +413,14 @@ export default function ServiceDetails() {
         {/* ── Left: Detail Tabs ─────────────────────────────────────────── */}
         <div className="flex-1 min-w-0">
 
-          {/* Tab Nav */}
-          <div className="flex bg-white border border-slate-200 rounded-2xl p-1.5 gap-1 mb-6 shadow-sm">
+          {/* Premium Tab Nav */}
+          <div className="flex bg-white/60 backdrop-blur-md border border-slate-200/60 rounded-2xl p-1.5 gap-1.5 mb-8 shadow-sm">
             {TABS.map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
                   activeTab === tab.key
-                    ? 'bg-slate-900 text-white shadow-lg'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-200 scale-[1.02]'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-white'
                 }`}>
                 {tab.icon} {tab.label}
               </button>
@@ -552,25 +567,39 @@ export default function ServiceDetails() {
                   <SmartQueueWidget serviceName={service.name} sellerId={service.sellerId} />
                 </>
               ) : isEventOrPlanning ? (
-                <>
-                  <h3 className="font-black text-slate-900 mb-4 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-violet-600" /> Schedule Consultation
+                <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 rounded-3xl p-6 shadow-inner relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-violet-400 rounded-full blur-3xl opacity-10"></div>
+                  <h3 className="font-black text-slate-900 mb-2 flex items-center gap-2 relative z-10">
+                    <Calendar className="w-5 h-5 text-violet-600" /> Schedule Consultation
                   </h3>
-                  <p className="text-slate-500 text-sm mb-4">Set up a meeting to discuss your requirements and get a custom quote.</p>
-                  <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
-                    className="w-full p-4 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-700 font-semibold mb-4 bg-slate-50 transition-colors" />
-                  <div className="mb-4">
-                    <input type="text" placeholder="Briefly describe your requirements..." className="w-full p-4 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-700 bg-slate-50 transition-colors mb-3" />
+                  <p className="text-slate-600 text-sm mb-5 relative z-10 font-medium">Get a custom quote & discuss your vision.</p>
+                  
+                  <div className="space-y-4 relative z-10">
+                    <div className="bg-white/80 backdrop-blur border border-white focus-within:border-violet-300 rounded-2xl flex items-center px-4 py-1 shadow-sm transition-all">
+                      <span className="text-violet-400">📅</span>
+                      <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
+                        className="w-full p-3 outline-none bg-transparent text-slate-800 font-semibold cursor-pointer" />
+                    </div>
+                    
+                    <div className="bg-white/80 backdrop-blur border border-white focus-within:border-violet-300 rounded-2xl p-4 shadow-sm transition-all">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Project Details</label>
+                      <textarea 
+                        rows={3} 
+                        placeholder="Briefly describe your requirements, guest count, or scope..." 
+                        className="w-full outline-none bg-transparent text-slate-800 resize-none font-medium text-sm placeholder:text-slate-300" 
+                      />
+                    </div>
                   </div>
+
                   <button
                     onClick={() => {
                       if (!selectedDate) { alert('Please select a date'); return; }
                       alert(`Meeting scheduled with ${service.seller} on ${selectedDate}`);
                     }}
-                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-base transition-all shadow-xl shadow-slate-200 mb-3">
-                    Schedule Meeting
+                    className="w-full mt-6 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-2xl font-black text-base transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2 relative z-10 group">
+                    Request Meeting <span className="group-hover:translate-x-1 transition-transform">→</span>
                   </button>
-                </>
+                </div>
               ) : service.category === 'Transport' ? (
                 <>
                   <h3 className="font-black text-slate-900 mb-4 flex items-center gap-2">🚚 Plan Your Route</h3>
