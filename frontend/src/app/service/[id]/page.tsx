@@ -37,7 +37,7 @@ interface JoinResult {
 }
 
 // ─── Queue Widget ─────────────────────────────────────────────────────────────
-function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sellerId?: string }) {
+function SmartQueueWidget({ serviceName, sellerId, serviceId }: { serviceName: string, sellerId?: string, serviceId: string }) {
   const { user } = useAuth();
   const isSeller = user && ['seller', 'SELLER', 'business'].includes(user.role);
   const [queues, setQueues] = useState<QueueSummary[]>([]);
@@ -58,32 +58,39 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
     const fetchQ = async () => {
       try {
         let list: QueueSummary[] = [];
+
+        // Always try by sellerId first if provided
         if (sellerId) {
           const r = await fetch(`${API}/salon/seller/${sellerId}`);
           const text = await r.text();
           const d = text ? JSON.parse(text) : null;
           if (d && d.id) list = [d];
-        } else {
-          const r = await fetch(`${API}/salon/queues`);
-          const text = await r.text();
-          const d = text ? JSON.parse(text) : [];
-          list = Array.isArray(d) ? d : [];
         }
 
-        // If no queue found, create one automatically for demo purposes
+        // If still no queue, search all queues filtered by shopName matching this service
+        if (list.length === 0) {
+          const r = await fetch(`${API}/salon/queues`);
+          const text = await r.text();
+          const all: QueueSummary[] = text ? JSON.parse(text) : [];
+          // Match queues scoped to this specific service by shopName
+          const scoped = Array.isArray(all)
+            ? all.filter(q => q.shopName === serviceName || q.shopName === serviceId)
+            : [];
+          if (scoped.length > 0) list = scoped;
+        }
+
+        // If still no queue, create one scoped exclusively to this service
         if (list.length === 0) {
           const createRes = await fetch(`${API}/salon/queue`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              shopName: serviceName || 'Demo Salon',
-              sellerId: sellerId || [...Array(24)].map(() => Math.floor(Math.random() * 16).toString(16)).join('')
+              shopName: serviceName,   // use real service name so it matches next time
+              sellerId: sellerId || null,
             })
           });
           const newQueue = await createRes.json();
-          if (newQueue && newQueue.id) {
-            list = [newQueue];
-          }
+          if (newQueue && newQueue.id) list = [newQueue];
         }
 
         setQueues(list);
@@ -95,7 +102,7 @@ function SmartQueueWidget({ serviceName, sellerId }: { serviceName: string, sell
       }
     };
     fetchQ();
-  }, [sellerId, serviceName]);
+  }, [sellerId, serviceName, serviceId]);
 
   const fetchStatus = useCallback(async (showRefresh = false) => {
     if (!selected) return;
@@ -667,7 +674,7 @@ export default function ServiceDetails() {
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                     <h3 className="font-black text-slate-900">Live Queue Status</h3>
                   </div>
-                  <SmartQueueWidget serviceName={service.name} sellerId={service.sellerId} />
+                  <SmartQueueWidget key={service.id} serviceName={service.name} sellerId={service.sellerId} serviceId={service.id} />
                 </>
               ) : isEventOrPlanning ? (
                 <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 rounded-3xl p-6 shadow-inner relative overflow-hidden">
