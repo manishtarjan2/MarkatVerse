@@ -26,7 +26,7 @@ export type Product = {
   isPremium?: boolean;
   isB2B?: boolean;
   moq?: number;
-  wholesaleTiers?: { minQty: number, price: number }[]; // Changing margin to price since user requested explicit prices
+  wholesaleTiers?: { minQty: number, margin: number }[];
   brand?: string;
   parameters?: Record<string, string | string[]>;
 };

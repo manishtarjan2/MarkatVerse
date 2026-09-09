@@ -137,7 +137,8 @@ function SearchContent() {
          const values = new Set<string>();
          catProducts.forEach(p => {
            if (p.parameters && p.parameters[key]) {
-             p.parameters[key].forEach(v => values.add(v));
+             const pVal = p.parameters[key];
+             (Array.isArray(pVal) ? pVal : [pVal]).forEach(v => values.add(v));
            }
          });
          return { name: key, values: Array.from(values) };
@@ -149,7 +150,8 @@ function SearchContent() {
       const values = new Set<string>();
       products.filter(p => p.category === selectedCategory).forEach(p => {
         if (p.parameters && p.parameters[param.name]) {
-          p.parameters[param.name].forEach(v => values.add(v));
+          const pVal = p.parameters[param.name];
+          (Array.isArray(pVal) ? pVal : [pVal]).forEach(v => values.add(v));
         }
       });
       return { name: param.name, values: Array.from(values) };

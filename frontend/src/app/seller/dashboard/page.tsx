@@ -503,7 +503,8 @@ function DashboardContent() {
                             if (product.parameters) {
                               const newParams: Record<string, string> = {};
                               Object.keys(product.parameters).forEach(k => {
-                                newParams[k] = product.parameters![k].join(', ');
+                                const pVal = product.parameters![k];
+                                newParams[k] = Array.isArray(pVal) ? pVal.join(', ') : pVal;
                               });
                               setParameters(newParams);
                             }

@@ -441,7 +441,7 @@ export default function ProductDetails() {
                     </div>
                     
                     <div className={paramName.toLowerCase() === 'color' ? "flex gap-3" : "flex flex-wrap gap-3"}>
-                      {options.map(option => {
+                      {(Array.isArray(options) ? options : [options]).map(option => {
                         const isSelected = selectedVariants[paramName] === option;
                         
                         // Special rendering for 'Color' variants
