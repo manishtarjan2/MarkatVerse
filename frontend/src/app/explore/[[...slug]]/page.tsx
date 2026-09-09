@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { useProducts } from '@/context/ProductContext';
 import { ChevronRight, Filter, Search } from 'lucide-react';
 
-export default function DynamicExplorePage({ params }: { params: { slug?: string[] } }) {
+export default function DynamicExplorePage({ params }: { params: Promise<{ slug?: string[] }> }) {
   const { products, categories } = useProducts();
-  const slug = params.slug || [];
+  const resolvedParams = React.use(params);
+  const slug = resolvedParams.slug || [];
   
   // Levels: 
   // slug[0] = mainType (e.g. b2b, b2c, services)
