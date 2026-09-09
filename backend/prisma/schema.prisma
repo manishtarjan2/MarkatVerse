@@ -23,6 +23,9 @@ model User {
   buyerLeads  Lead[]    @relation("BuyerLeads")
   sellerLeads Lead[]    @relation("SellerLeads")
   salonQueue  SalonQueue?
+
+  // V2 Relations
+  listings    Listing[] @relation("UserListings")
 }
 
 model Business {
@@ -50,6 +53,11 @@ model Category {
   updatedAt DateTime   @updatedAt
 
   products Product[]
+  
+  // V2 Relations
+  sectorId String?   @db.ObjectId
+  sector   Sector?   @relation("SectorToCategory", fields: [sectorId], references: [id])
+  listings Listing[] @relation("CategoryToListing")
 }
 
 model Product {
@@ -68,6 +76,8 @@ model Product {
   sellerName    String?
   location      String?
   categoryName  String?
+  subcategory   String?
+  parameters    Json?
   badge         String?
   badgeColor    String?
   image         String?
@@ -157,4 +167,101 @@ model SalonToken {
   doneAt       DateTime?
 
   queue SalonQueue @relation(fields: [queueId], references: [id])
+}
+
+// ---------------------------------------------------------
+// V2 CONFIGURATION-DRIVEN ARCHITECTURE MODELS
+// ---------------------------------------------------------
+
+enum MainType {
+  B2B
+  B2C
+  BOTH
+  SERVICE
+}
+
+model BusinessType {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  mainType    MainType
+  name        String    // e.g. Manufacturer, Wholesaler, Shop, Professional
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sectors     Sector[]
+  listings    Listing[]
+}
+
+model Sector {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  businessTypeId String       @db.ObjectId
+  name           String       // e.g. Electronics, Salon, Healthcare
+  description    String?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  businessType   BusinessType @relation(fields: [businessTypeId], references: [id])
+  categories     Category[]   @relation("SectorToCategory")
+  listings       Listing[]
+}
+
+// Update to existing Category to support new Sector mapping
+// We will add sectorId to Category without breaking existing relations.
+// Wait, Prisma doesn't allow extending an existing model from another block.
+// I will just add the fields directly to Category above using multi_replace_file_content later if needed.
+// Actually, let's create a new V2Category for clean separation or just modify Category above.
+// Since I'm appending here, I will just append the new models first.
+
+model Configuration {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  type      String   // e.g. PRICING, AVAILABILITY, WORKFLOW
+  data      Json     // The flexible config payload
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Workflow {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   // e.g. B2B_RFQ, SALON_BOOKING
+  description String?
+  version     Int      @default(1)
+  steps       Json     // Array of workflow steps and rules
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Interface {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   // e.g. Salon Profile, Doctor Profile
+  components  Json     // UI layout definitions and enabled features
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Listing {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  sellerId       String   @db.ObjectId
+  businessTypeId String   @db.ObjectId
+  sectorId       String   @db.ObjectId
+  categoryId     String?  @db.ObjectId
+
+  title          String
+  description    String?
+  status         String   @default("ACTIVE") // ACTIVE, PAUSED, DRAFT
+
+  attributes     Json?    // Flexible attributes instead of hardcoded columns
+  pricingConfig  Json?    // B2B tiers, B2C prices, Service prices
+  availability   Json?    // Stock for products, schedule for services
+  media          String[] @default([])
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  seller         User         @relation("UserListings", fields: [sellerId], references: [id])
+  businessType   BusinessType @relation(fields: [businessTypeId], references: [id])
+  sector         Sector       @relation(fields: [sectorId], references: [id])
+  category       Category?    @relation("CategoryToListing", fields: [categoryId], references: [id])
 }

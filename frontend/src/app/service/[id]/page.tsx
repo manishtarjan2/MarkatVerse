@@ -10,12 +10,7 @@ import {
   Scissors, ArrowLeft, Share2, Heart, Zap, TrendingUp
 } from 'lucide-react';
 
-// ─── Salon Service Menu ───────────────────────────────────────────────────────
-const SALON_SERVICES = [
-  { label: 'Hair Cutting', price: 50, emoji: '✂️' },
-  { label: 'Beard Trim',   price: 50, emoji: '🪒' },
-  { label: 'DIY Style',    price: 50, emoji: '💈' },
-];
+// ─── Dynamic Walk-in Services ───────────────────────────────────────────────────
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 const WALK_IN_CATEGORIES = ['salon', 'saloon', 'beauty', 'hair', 'barber', 'spa', 'nail', 'massage', 'pedicure', 'doctor', 'clinic', 'medical', 'hospital', 'dentist'];
@@ -37,7 +32,7 @@ interface JoinResult {
 }
 
 // ─── Queue Widget ─────────────────────────────────────────────────────────────
-function SmartQueueWidget({ serviceName, sellerId, serviceId }: { serviceName: string, sellerId?: string, serviceId: string }) {
+function SmartQueueWidget({ service }: { service: any }) {
   const { user } = useAuth();
   const isSeller = user && ['seller', 'SELLER', 'business'].includes(user.role);
   const [queues, setQueues] = useState<QueueSummary[]>([]);
@@ -48,7 +43,11 @@ function SmartQueueWidget({ serviceName, sellerId, serviceId }: { serviceName: s
   const [step, setStep] = useState<'view' | 'join' | 'done'>('view');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [selectedServices, setSelectedServices] = useState<typeof SALON_SERVICES>([SALON_SERVICES[0]]);
+  
+  const emoji = service.category?.toLowerCase().includes('doctor') || service.category?.toLowerCase().includes('clinic') ? '🩺' : 
+                service.category?.toLowerCase().includes('spa') ? '💆' : '✂️';
+  const availableServices = [{ label: service.name, price: service.price, emoji }];
+  const [selectedServices, setSelectedServices] = useState<typeof availableServices>(availableServices);
   const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
   const [joining, setJoining] = useState(false);
   const [result, setResult] = useState<JoinResult | null>(null);
@@ -60,33 +59,33 @@ function SmartQueueWidget({ serviceName, sellerId, serviceId }: { serviceName: s
         let list: QueueSummary[] = [];
 
         // Always try by sellerId first if provided
-        if (sellerId) {
-          const r = await fetch(`${API}/salon/seller/${sellerId}`);
+        if (service.sellerId) {
+          const r = await fetch(`${API}/salon/seller/${service.sellerId}`);
           const text = await r.text();
           const d = text ? JSON.parse(text) : null;
           if (d && d.id) list = [d];
         }
 
-        // If still no queue, search all queues filtered by shopName matching this service
+        // If still no queue, search all queues filtered by shopName matching this seller
         if (list.length === 0) {
           const r = await fetch(`${API}/salon/queues`);
           const text = await r.text();
           const all: QueueSummary[] = text ? JSON.parse(text) : [];
-          // Match queues scoped to this specific service by shopName
+          const targetShopName = service.seller || service.name || 'Walk-in Service';
           const scoped = Array.isArray(all)
-            ? all.filter(q => q.shopName === serviceName || q.shopName === serviceId)
+            ? all.filter(q => q.shopName === targetShopName)
             : [];
           if (scoped.length > 0) list = scoped;
         }
 
-        // If still no queue, create one scoped exclusively to this service
+        // If still no queue, create one scoped exclusively to this seller
         if (list.length === 0) {
           const createRes = await fetch(`${API}/salon/queue`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              shopName: serviceName,   // use real service name so it matches next time
-              sellerId: sellerId || null,
+              shopName: service.seller || service.name || 'Walk-in Service', // Add strong fallbacks
+              sellerId: service.sellerId || null,
             })
           });
           const newQueue = await createRes.json();
@@ -102,7 +101,7 @@ function SmartQueueWidget({ serviceName, sellerId, serviceId }: { serviceName: s
       }
     };
     fetchQ();
-  }, [sellerId, serviceName, serviceId]);
+  }, [service.sellerId, service.seller]);
 
   const fetchStatus = useCallback(async (showRefresh = false) => {
     if (!selected) return;
@@ -176,12 +175,13 @@ function SmartQueueWidget({ serviceName, sellerId, serviceId }: { serviceName: s
       {/* Multi-Service Selector */}
       <div>
         <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Services <span className="normal-case font-medium text-slate-400">(pick one or more)</span></p>
-        <div className="grid grid-cols-3 gap-2">
-          {SALON_SERVICES.map(svc => {
+        <div className="grid grid-cols-1 gap-2">
+          {availableServices.map(svc => {
             const isChosen = selectedServices.some(s => s.label === svc.label);
             return (
               <button key={svc.label}
                 onClick={() => {
+                  if (isChosen && selectedServices.length === 1) return; // Prevent deselecting the only selected service
                   setSelectedServices(prev =>
                     isChosen
                       ? prev.filter(s => s.label !== svc.label)
@@ -264,9 +264,53 @@ function SmartQueueWidget({ serviceName, sellerId, serviceId }: { serviceName: s
         className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
       {err && <p className="text-red-500 text-sm bg-red-50 border border-red-100 px-4 py-3 rounded-xl">⚠️ {err}</p>}
       <button
-        onClick={() => {
+        onClick={async () => {
           if (!name.trim()) { setErr('Please enter your name'); return; }
-          alert(`✅ Booking request sent! ${serviceName} will contact you at your phone number.`);
+          try {
+            // First attempt to fetch the queue by sellerId or shopName
+            let queueId = null;
+            if (service.sellerId) {
+              const r = await fetch(`${API}/salon/seller/${service.sellerId}`);
+              const d = await r.json().catch(() => null);
+              if (d && d.id) queueId = d.id;
+            }
+            if (!queueId) {
+              const targetShopName = service.seller || service.name || 'Walk-in Service';
+              const r = await fetch(`${API}/salon/queues`);
+              const all = await r.json().catch(() => []);
+              const matched = Array.isArray(all) ? all.find((q: any) => q.shopName === targetShopName) : null;
+              if (matched) queueId = matched.id;
+            }
+
+            // If still no queue, try to create it
+            if (!queueId) {
+              const createRes = await fetch(`${API}/salon/queue`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  shopName: service.seller || service.name || 'Walk-in Service',
+                  sellerId: service.sellerId || null,
+                })
+              });
+              const newQueue = await createRes.json();
+              queueId = newQueue.id;
+            }
+            
+            if (!queueId) throw new Error("Could not find or create a queue for this service.");
+            
+            // Join the queue
+            const joinRes = await fetch(`${API}/salon/${queueId}/join`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ customerName: name.trim(), phone: phone.trim() || undefined, service: service.name }),
+            });
+            const d = await joinRes.json();
+            if (!joinRes.ok) throw new Error(d.message);
+            
+            setResult(d); 
+            setStep('done');
+          } catch (e: unknown) {
+             setErr(e instanceof Error ? e.message : 'Error joining queue'); 
+          }
         }}
         className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2">
         <Ticket className="w-4 h-4" /> Request a Token 🎫
@@ -674,7 +718,7 @@ export default function ServiceDetails() {
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                     <h3 className="font-black text-slate-900">Live Queue Status</h3>
                   </div>
-                  <SmartQueueWidget key={service.id} serviceName={service.name} sellerId={service.sellerId} serviceId={service.id} />
+                  <SmartQueueWidget key={service.id} service={service} />
                 </>
               ) : isEventOrPlanning ? (
                 <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 rounded-3xl p-6 shadow-inner relative overflow-hidden">

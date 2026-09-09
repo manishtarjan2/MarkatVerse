@@ -14,6 +14,9 @@ export class SalonService {
     pricePerHour?: number;
     sellerId?: string;
   }) {
+    // Generate a dummy valid ObjectID if sellerId is missing to bypass null unique constraints
+    const safeSellerId = data.sellerId || Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    
     return this.prisma.salonQueue.create({
       data: {
         shopName: data.shopName,
@@ -22,7 +25,7 @@ export class SalonService {
         currentToken: 0,
         lastToken: 0,
         isOpen: true,
-        sellerId: data.sellerId,
+        sellerId: safeSellerId,
       },
     });
   }

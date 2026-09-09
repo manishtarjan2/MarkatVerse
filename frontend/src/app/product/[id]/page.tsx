@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
-import { useProducts } from '@/context/ProductContext';
+import { useProducts, useCategoryRules } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -24,6 +24,19 @@ export default function ProductDetails() {
   
   const product = products.find(p => p.id === id);
 
+  // ── Category Rules — from Admin Relationship Manager ──
+  const rules = useCategoryRules(product?.category);
+  const noRulesDefined = rules.allowedFeatures.length === 0;
+  const hasProductStock    = rules.allows('Product Stock');
+  const hasB2B             = rules.allows('B2B');
+  const hasBulkPricing     = rules.allows('Bulk Pricing') || rules.allows('MOQ');
+  const hasToken           = rules.allows('Token');
+  const hasAppointment     = rules.allows('Appointment');
+  const hasRFQ             = rules.allows('RFQ') || rules.allows('Quote');
+  const hasMeeting         = rules.allows('Meeting') || rules.isOptional('Meeting');
+  const hasVehicleTestDrive = rules.allows('Vehicle Test Drive');
+  const hasService         = rules.allows('Service');
+
   // Initialize RFQ quantity and variants
   useEffect(() => {
     if (product?.category === 'B2B' || product?.category === 'Construction Materials') {
@@ -45,8 +58,12 @@ export default function ProductDetails() {
   let currentActivePrice = product?.price || 0;
   
   const isElite = user?.role === 'elite';
-  const isRetail = !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product?.category || '');
-  const isWholesaleConfig = product?.category === 'B2B' || product?.category === 'Construction Materials' || (isRetail && isElite);
+  const isRetail = noRulesDefined
+    ? !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product?.category || '')
+    : hasProductStock;
+  const isWholesaleConfig = noRulesDefined
+    ? (product?.category === 'B2B' || product?.category === 'Construction Materials' || (isRetail && isElite))
+    : ((hasB2B && hasBulkPricing) || (isRetail && isElite));
   
   if (product) {
     if (isWholesaleConfig) {
@@ -383,7 +400,7 @@ export default function ProductDetails() {
               </>
             )}
 
-            {!['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product.category) && (
+            {(noRulesDefined ? !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product.category) : hasProductStock) && (
               <div className="mt-6 p-5 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 border border-amber-400 shadow-lg shadow-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
                 <div className="flex flex-col relative z-10">
@@ -478,42 +495,115 @@ export default function ProductDetails() {
               </div>
             )}
             
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              {product.category === 'Organizers' ? (
-                <>
-                  <button 
-                    className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
+            {/* ── Workflow Badge ── */}
+            {!noRulesDefined && rules.workflow && (
+              <div className="mt-6 flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Workflow</span>
+                <span className="text-xs bg-violet-50 text-violet-700 border border-violet-200 px-2.5 py-1 rounded-full font-semibold">{rules.workflow}</span>
+                {rules.optionalFeatures.length > 0 && (
+                  <>
+                    <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest ml-3">Optional:</span>
+                    {rules.optionalFeatures.map(f => (
+                      <span key={f} className="text-xs bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full font-semibold">{f}</span>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="mt-4 flex flex-col gap-4">
+
+              {/* ── TOKEN BOOKING ── */}
+              {hasToken && (
+                <div className="flex flex-col gap-3 w-full p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                  <div className="text-emerald-800 font-bold text-sm mb-1">Pre-Book Your Token Online</div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input type="date" className="flex-1 p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-slate-700 bg-white shadow-sm" />
+                    <input type="time" className="flex-1 p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-slate-700 bg-white shadow-sm" />
+                    <select className="flex-[0.5] p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 bg-white text-slate-700 shadow-sm">
+                      <option value="1">1 Person</option>
+                      <option value="2">2 People</option>
+                      <option value="3">3 People</option>
+                    </select>
+                  </div>
+                  <button
+                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-emerald-600/20 flex items-center justify-center gap-3 mt-1"
                     onClick={() => {
-                      alert(`Requesting portfolio and quote from ${product.seller}...`);
+                      const tokenNo = Math.floor(Math.random() * 50) + 10;
+                      alert(`Success! Your pre-booking Token #${tokenNo} has been generated for ${product.seller}. Show this upon arrival.`);
                     }}
                   >
-                    Request a Quote
+                    <CalendarClock className="w-6 h-6" /> Generate Pre-Booking Token
                   </button>
-                  <button 
-                    className="flex-1 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-indigo-600/20"
-                    onClick={() => {
-                      alert(`Connecting you directly with ${product.seller} to discuss your function.`);
-                    }}
+                  <button
+                    className="w-full py-2 bg-transparent text-emerald-700 hover:underline font-semibold text-sm transition-colors flex items-center justify-center gap-2 mt-1"
+                    onClick={() => alert(`Calling ${product.seller} at +91-9876543210`)}
                   >
-                    Contact Company
+                    <PhoneCall className="w-4 h-4" /> Prefer to Call? (+91-9876543210)
                   </button>
-                </>
-              ) : isWholesaleConfig ? (
+                </div>
+              )}
+
+              {/* ── APPOINTMENT BOOKING ── */}
+              {hasAppointment && !hasToken && (
+                <div className="flex flex-col gap-3 w-full p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                  <div className="text-blue-800 font-bold text-sm mb-1">Schedule an Appointment</div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input type="date" className="flex-1 p-3 border border-blue-200 rounded-xl outline-none focus:border-blue-500 text-slate-700 bg-white shadow-sm" />
+                    <input type="time" className="flex-1 p-3 border border-blue-200 rounded-xl outline-none focus:border-blue-500 text-slate-700 bg-white shadow-sm" />
+                  </div>
+                  <button
+                    className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-blue-600/20 flex items-center justify-center gap-3"
+                    onClick={() => alert(`Appointment request sent to ${product.seller}! You will receive a confirmation shortly.`)}
+                  >
+                    <CalendarClock className="w-6 h-6" /> Book Appointment
+                  </button>
+                  <button
+                    className="w-full py-2 bg-transparent text-blue-700 hover:underline font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+                    onClick={() => alert(`Calling ${product.seller} at +91-9876543210`)}
+                  >
+                    <PhoneCall className="w-4 h-4" /> Prefer to Call? (+91-9876543210)
+                  </button>
+                </div>
+              )}
+
+              {/* ── VEHICLE TEST DRIVE / ENQUIRY ── */}
+              {hasVehicleTestDrive && (
+                <div className="flex flex-col gap-3 w-full p-4 bg-red-50 rounded-2xl border border-red-100">
+                  <div className="text-red-800 font-bold text-sm mb-1">Schedule a Test Drive / Enquiry</div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input type="date" className="flex-1 p-3 border border-red-200 rounded-xl outline-none focus:border-red-500 text-slate-700 bg-white shadow-sm" />
+                    <input type="text" placeholder="Your Phone Number" className="flex-1 p-3 border border-red-200 rounded-xl outline-none focus:border-red-500 text-slate-700 bg-white shadow-sm" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      className="flex-1 px-4 py-3 bg-white border-2 border-red-200 hover:border-red-500 hover:bg-red-50 text-red-700 rounded-xl font-bold text-sm transition-colors"
+                      onClick={() => setIsModalOpen(true)}
+                    >
+                      Get Price Quote
+                    </button>
+                    <button
+                      className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-colors shadow-md shadow-red-600/20"
+                      onClick={() => alert(`Test drive request sent to ${product.seller}! They will contact you to confirm.`)}
+                    >
+                      Schedule Test Drive
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── WHOLESALE / B2B (tiers shown in price card above) ── */}
+              {isWholesaleConfig && !hasToken && !hasAppointment && !hasVehicleTestDrive && (
                 <div className="flex flex-col w-full gap-5">
                   <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <div className="w-full sm:w-auto flex items-center shrink-0">
                       <span className="text-sm font-bold text-slate-600 mr-3">Bundle:</span>
-                      <select 
+                      <select
                         className="h-[48px] px-4 font-bold text-slate-800 bg-white border border-slate-300 rounded-xl outline-none focus:border-blue-500 cursor-pointer shadow-sm w-full sm:w-auto"
                         value={rfqQuantity}
-                        onChange={(e) => {
-                          setRfqQuantity(parseInt(e.target.value));
-                          setBundleMultiplier(1);
-                        }}
+                        onChange={(e) => { setRfqQuantity(parseInt(e.target.value)); setBundleMultiplier(1); }}
                       >
-                        {isRetail && isElite && (
-                          <option value={1}>1 Unit (Retail)</option>
-                        )}
+                        {isRetail && isElite && <option value={1}>1 Unit (Retail)</option>}
                         {product.wholesaleTiers && product.wholesaleTiers.length > 0 ? (
                           product.wholesaleTiers.map((tier, idx) => (
                             <option key={idx} value={tier.minQty}>{tier.minQty}-Pack Bundle</option>
@@ -527,336 +617,121 @@ export default function ProductDetails() {
                         )}
                       </select>
                     </div>
-                    
                     <div className="w-full sm:w-auto flex items-center sm:ml-4 shrink-0">
                       <span className="text-sm font-bold text-slate-600 mr-3">Qty:</span>
                       <div className="flex items-center bg-white border border-slate-300 rounded-xl h-[48px] overflow-hidden shadow-sm">
                         <button className="px-4 text-xl font-medium text-slate-500 hover:bg-slate-50 h-full transition-colors border-r border-slate-200" onClick={() => setBundleMultiplier(q => Math.max(1, q - 1))}>-</button>
-                        <input 
-                          type="number"
-                          min="1"
-                          className="w-16 text-center font-bold text-slate-800 outline-none border-none h-full bg-transparent p-0 m-0"
-                          value={bundleMultiplier}
-                          onChange={(e) => setBundleMultiplier(Math.max(1, parseInt(e.target.value) || 1))}
-                        />
+                        <input type="number" min="1" className="w-16 text-center font-bold text-slate-800 outline-none border-none h-full bg-transparent p-0 m-0" value={bundleMultiplier} onChange={(e) => setBundleMultiplier(Math.max(1, parseInt(e.target.value) || 1))} />
                         <button className="px-4 text-xl font-medium text-slate-500 hover:bg-slate-50 h-full transition-colors border-l border-slate-200" onClick={() => setBundleMultiplier(q => q + 1)}>+</button>
                       </div>
                     </div>
                   </div>
-
                   <div className="flex flex-col sm:flex-row gap-4">
-                      {isRetail && isElite ? (
-                        <button 
-                          className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-amber-500 hover:bg-amber-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
-                          onClick={() => {
-                            addToCart(product);
-                            alert(`Added ${rfqQuantity} of ${product.name} to cart!`);
-                          }}
-                        >
-                          Add to Cart
-                        </button>
-                      ) : (
-                        <button 
-                          className="flex-1 px-6 py-4 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 rounded-xl font-bold text-base transition-colors"
-                          onClick={() => {
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          Contact Supplier
-                        </button>
-                      )}
+                    {isRetail && isElite ? (
+                      <button
+                        className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-amber-500 hover:bg-amber-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
+                        onClick={() => { addToCart(product); alert(`Added ${rfqQuantity} of ${product.name} to cart!`); }}
+                      >
+                        Add to Cart
+                      </button>
+                    ) : (
+                      <button
+                        className="flex-1 px-6 py-4 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 rounded-xl font-bold text-base transition-colors"
+                        onClick={() => setIsModalOpen(true)}
+                      >
+                        Contact Supplier
+                      </button>
+                    )}
                     <div className="flex-1 flex flex-col gap-2">
-                      <button 
+                      <button
                         className={`w-full px-6 py-4 text-white rounded-xl font-bold text-base transition-colors shadow-md ${isRetail && isElite ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'}`}
-                        onClick={() => {
-                          if (isRetail && isElite) {
-                            alert(`Proceeding to checkout for ${rfqQuantity * bundleMultiplier} units...`);
-                          } else {
-                            setIsModalOpen(true);
-                          }
-                        }}
+                        onClick={() => { if (isRetail && isElite) { alert(`Proceeding to checkout for ${rfqQuantity * bundleMultiplier} units...`); } else { setIsModalOpen(true); } }}
                       >
                         {isRetail && isElite ? 'Buy Wholesale Now' : 'Request Quote'}
                       </button>
                       <div className="text-sm font-bold text-slate-700 text-center bg-slate-100 rounded-lg py-3 mt-1 border border-slate-200">
-                        Total Estimate: <span className={isRetail && isElite ? "text-amber-600 ml-1 text-lg" : "text-blue-700 ml-1 text-lg"}>₹{(currentActivePrice * rfqQuantity * bundleMultiplier).toLocaleString('en-IN')}</span>
+                        Total Estimate: <span className={isRetail && isElite ? 'text-amber-600 ml-1 text-lg' : 'text-blue-700 ml-1 text-lg'}>&#8377;{(currentActivePrice * rfqQuantity * bundleMultiplier).toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              ) : product.category === 'Transport' ? (
-                <div className="flex flex-col gap-3 w-full p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                  <div className="text-blue-800 font-bold text-sm mb-1">Plan Your Trip / Route</div>
-                  <div className="flex flex-col gap-2">
-                    <select className="w-full p-3 border border-blue-200 rounded-xl outline-none focus:border-blue-500 bg-white text-slate-700 shadow-sm font-medium">
-                      <option value="">-- Select Preferred Vehicle --</option>
-                      {product.id === 'heavy-freight-movers' ? (
-                        <>
-                          <option value="minitruck">Mini Truck (1 Ton)</option>
-                          <option value="mediumtruck">Medium Truck (3-5 Tons)</option>
-                          <option value="heavytruck">Heavy Freight Truck (10+ Tons)</option>
-                          <option value="trailer">Trailer (20+ Tons)</option>
-                        </>
-                      ) : product.id === 'premium-suv-rental' ? (
-                        <>
-                          <option value="sedan">Premium Sedan (4 Seater)</option>
-                          <option value="suv">Premium SUV (6 Seater)</option>
-                          <option value="luxurysuv">Luxury SUV (7 Seater)</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="standard">Standard Vehicle</option>
-                          <option value="premium">Premium Vehicle</option>
-                        </>
-                      )}
-                    </select>
-                    <div className="flex gap-2">
-                      <div className="flex-1 bg-white border border-blue-200 rounded-xl flex items-center px-3 shadow-sm focus-within:border-blue-500">
-                        <span className="text-slate-400">📍</span>
-                        <input type="text" placeholder="Pickup Location" className="w-full p-3 outline-none text-slate-700 bg-transparent" />
-                      </div>
-                      <div className="flex-1 bg-white border border-blue-200 rounded-xl flex items-center px-3 shadow-sm focus-within:border-blue-500">
-                        <span className="text-slate-400">🚩</span>
-                        <input type="text" placeholder="Drop Location" className="w-full p-3 outline-none text-slate-700 bg-transparent" />
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <input type="date" className="flex-1 p-3 border border-blue-200 rounded-xl outline-none focus:border-blue-500 text-slate-700 bg-white shadow-sm" />
-                      <input type="time" className="flex-1 p-3 border border-blue-200 rounded-xl outline-none focus:border-blue-500 text-slate-700 bg-white shadow-sm" />
-                    </div>
-                  </div>
-                  <div className="flex gap-3 mt-2">
-                    <button 
-                      className="flex-1 px-4 py-3 bg-white border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50 text-blue-700 rounded-xl font-bold text-sm transition-colors"
-                      onClick={() => alert(`Requesting route estimate for ${product.name}...`)}
-                    >
-                      Get Estimate
-                    </button>
-                    <button 
-                      className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors shadow-md shadow-blue-600/20"
-                      onClick={() => alert(`Booking transport service: ${product.name}`)}
-                    >
-                      Book Now
-                    </button>
-                  </div>
-                </div>
-              ) : product.category === 'Rentals' ? (
-                <div className="flex flex-col gap-3 w-full p-4 bg-purple-50 rounded-2xl border border-purple-100">
-                  <div className="text-purple-800 font-bold text-sm mb-1">Schedule Your Rental</div>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <label className="text-xs text-purple-600 font-semibold ml-1">Start Date</label>
-                        <input type="date" className="w-full p-3 border border-purple-200 rounded-xl outline-none focus:border-purple-500 text-slate-700 bg-white shadow-sm mt-1" />
-                      </div>
-                      <div className="flex-1">
-                        <label className="text-xs text-purple-600 font-semibold ml-1">End Date</label>
-                        <input type="date" className="w-full p-3 border border-purple-200 rounded-xl outline-none focus:border-purple-500 text-slate-700 bg-white shadow-sm mt-1" />
-                      </div>
-                    </div>
-                    <select className="w-full p-3 border border-purple-200 rounded-xl outline-none focus:border-purple-500 bg-white text-slate-700 shadow-sm">
-                      <option value="daily">Daily Rental Rate</option>
-                      <option value="weekly">Weekly Rental Rate (-10%)</option>
-                      <option value="monthly">Monthly Rental Rate (-20%)</option>
-                    </select>
-                  </div>
-                  <button 
-                    className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-purple-600/20 flex items-center justify-center gap-3 mt-1"
-                    onClick={() => alert(`Calculating rent for ${product.name} and redirecting to booking...`)}
-                  >
-                    Calculate & Book Rental
-                  </button>
-                </div>
-              ) : product.category === 'Subscriptions' ? (
-                <div className="flex flex-col gap-3 w-full p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                  <div className="text-indigo-800 font-bold text-sm mb-1">Select Billing Cycle</div>
-                  <div className="flex flex-col gap-2">
-                    <label className="flex items-center justify-between p-3 bg-white border-2 border-indigo-500 rounded-xl cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <input type="radio" name="billing" defaultChecked className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
-                        <span className="font-semibold text-slate-700">Monthly Retainer</span>
-                      </div>
-                      <span className="font-bold text-indigo-700">₹{product.price}/mo</span>
-                    </label>
-                    <label className="flex items-center justify-between p-3 bg-white border-2 border-transparent hover:border-indigo-200 rounded-xl cursor-pointer transition-colors">
-                      <div className="flex items-center gap-3">
-                        <input type="radio" name="billing" className="w-4 h-4 text-indigo-600 focus:ring-indigo-500" />
-                        <div>
-                          <span className="font-semibold text-slate-700 block">Annual Plan</span>
-                          <span className="text-xs text-emerald-600 font-bold">Save 20%</span>
-                        </div>
-                      </div>
-                      <span className="font-bold text-slate-500">₹{product.price * 12 * 0.8}/yr</span>
-                    </label>
-                  </div>
-                  <button 
-                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-indigo-600/20 flex items-center justify-center gap-3 mt-2"
-                    onClick={() => alert(`Subscribing to ${product.name} on selected billing cycle!`)}
-                  >
-                    Subscribe Now
-                  </button>
-                  <button 
-                    className="w-full py-2 bg-transparent text-indigo-700 hover:underline font-semibold text-sm transition-colors flex items-center justify-center gap-2 mt-1"
-                    onClick={() => alert(`Contacting sales for Enterprise plan...`)}
-                  >
-                    Contact for Custom/Enterprise Plan
-                  </button>
-                </div>
-              ) : product.category === 'Home Services' ? (
-                product.isPremium ? (
-                  <div className="flex flex-col gap-3 w-full p-4 bg-teal-50 rounded-2xl border border-teal-100">
-                    <div className="text-teal-800 font-bold text-sm mb-1">Schedule Home Visit</div>
-                    <div className="flex flex-col gap-2">
-                      <textarea 
-                        placeholder="Enter full service address..." 
-                        className="w-full p-3 border border-teal-200 rounded-xl outline-none focus:border-teal-500 text-slate-700 bg-white shadow-sm resize-none" 
-                        rows={2}
-                      ></textarea>
-                      <div className="flex gap-2">
-                        <input type="date" className="flex-1 p-3 border border-teal-200 rounded-xl outline-none focus:border-teal-500 text-slate-700 bg-white shadow-sm" />
-                        <select className="flex-1 p-3 border border-teal-200 rounded-xl outline-none focus:border-teal-500 bg-white text-slate-700 shadow-sm">
-                          <option>Morning (9AM - 1PM)</option>
-                          <option>Afternoon (1PM - 5PM)</option>
-                          <option>Evening (5PM - 9PM)</option>
-                        </select>
-                      </div>
-                    </div>
-                    <button 
-                      className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-teal-600/20 flex items-center justify-center gap-3 mt-1"
-                      onClick={() => alert(`Technician visit requested! ${product.seller} will contact you for confirmation.`)}
-                    >
-                      <CalendarClock className="w-6 h-6" /> Request Technician
-                    </button>
-                    <button 
-                      className="w-full py-2 bg-transparent text-teal-700 hover:underline font-semibold text-sm transition-colors flex items-center justify-center gap-2 mt-1"
-                      onClick={() => alert(`Calling ${product.seller} at +91-9876543210 for an emergency visit!`)}
-                    >
-                      <PhoneCall className="w-4 h-4" /> Emergency / Quick Call
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3 w-full">
-                    <button 
-                      className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-teal-600/20 flex items-center justify-center gap-3"
-                      onClick={() => alert(`Call ${product.seller} at +91-9876543210`)}
-                    >
-                      <PhoneCall className="w-6 h-6 animate-pulse" /> Call for Service (+91-9876543210)
-                    </button>
-                  </div>
-                )
-              ) : product.category === 'Services' ? (
-                product.isPremium ? (
-                  <div className="flex flex-col gap-3 w-full p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                    <div className="text-emerald-800 font-bold text-sm mb-1">Pre-Book Your Token Online</div>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input type="date" className="flex-1 p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-slate-700 bg-white shadow-sm" />
-                      <input type="time" className="flex-1 p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-slate-700 bg-white shadow-sm" />
-                      <select className="flex-[0.5] p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 bg-white text-slate-700 shadow-sm">
-                        <option value="1">1 Person</option>
-                        <option value="2">2 People</option>
-                        <option value="3">3 People</option>
-                      </select>
-                    </div>
-                    <button 
-                      className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-emerald-600/20 flex items-center justify-center gap-3 mt-1"
-                      onClick={() => {
-                        const tokenNo = Math.floor(Math.random() * 50) + 10;
-                        alert(`Success! Your pre-booking Token #${tokenNo} has been generated for ${product.seller}. Show this upon arrival.`);
-                      }}
-                    >
-                      <CalendarClock className="w-6 h-6" /> Generate Pre-Booking Token
-                    </button>
-                    <button 
-                      className="w-full py-2 bg-transparent text-emerald-700 hover:underline font-semibold text-sm transition-colors flex items-center justify-center gap-2 mt-1"
-                      onClick={() => {
-                        alert(`Calling ${product.seller} at +91-9876543210 for a bargain!`);
-                      }}
-                    >
-                      <PhoneCall className="w-4 h-4" /> Prefer to Call? (+91-9876543210)
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3 w-full">
-                    <button 
-                      className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-emerald-600/20 flex items-center justify-center gap-3"
-                      onClick={() => {
-                        alert(`Call ${product.seller} at +91-9876543210`);
-                      }}
-                    >
-                      <PhoneCall className="w-6 h-6 animate-pulse" /> Call to Book (+91-9876543210)
-                    </button>
-                  </div>
-                )
-              ) : product.category === 'Organizers' ? (
-                <div className="flex flex-col gap-3 w-full p-4 bg-rose-50 rounded-2xl border border-rose-100">
-                  <div className="text-rose-800 font-bold text-sm mb-1">Plan Your Event</div>
-                  <div className="flex flex-col gap-2">
-                    <select className="w-full p-3 border border-rose-200 rounded-xl outline-none focus:border-rose-500 bg-white text-slate-700 shadow-sm">
-                      <option value="">Select Event Type</option>
-                      <option value="wedding">Wedding / Reception</option>
-                      <option value="corporate">Corporate Event</option>
-                      <option value="party">Private Party</option>
-                      <option value="other">Other</option>
-                    </select>
-                    <div className="flex gap-2">
-                      <input type="date" className="flex-1 p-3 border border-rose-200 rounded-xl outline-none focus:border-rose-500 text-slate-700 bg-white shadow-sm" />
-                      <input type="number" placeholder="Guest Count" className="flex-1 p-3 border border-rose-200 rounded-xl outline-none focus:border-rose-500 text-slate-700 bg-white shadow-sm" />
-                    </div>
-                  </div>
-                  <button 
-                    className="w-full py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-rose-600/20 mt-1"
-                    onClick={() => alert(`Requesting consultation with ${product.seller} for your event!`)}
-                  >
-                    Request Consultation
-                  </button>
-                </div>
-              ) : product.category === 'B2B' ? (
+              )}
+
+              {/* ── RFQ / QUOTE (no wholesale tiers) ── */}
+              {hasRFQ && !isWholesaleConfig && !hasToken && !hasAppointment && !hasVehicleTestDrive && (
                 <div className="flex flex-col gap-3 w-full p-4 bg-amber-50 rounded-2xl border border-amber-200">
-                  <div className="text-amber-900 font-bold text-sm mb-1">Wholesale & Enterprise Inquiry</div>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex gap-2 items-center bg-white border border-amber-200 p-2 rounded-xl shadow-sm">
-                      <label className="text-xs font-semibold text-slate-600 px-2 whitespace-nowrap">MOQ (Qty):</label>
-                      <input type="number" defaultValue="100" min="10" className="flex-1 p-2 outline-none text-slate-800 font-bold bg-transparent" />
-                    </div>
-                    <button className="w-full p-3 bg-white border border-dashed border-amber-400 text-amber-700 rounded-xl font-medium hover:bg-amber-100 transition-colors text-sm text-left px-4 flex justify-between items-center">
-                      <span>Upload Requirements (PDF/Doc)</span>
-                      <span className="text-xl">📄</span>
-                    </button>
+                  <div className="text-amber-900 font-bold text-sm mb-1">Request for Quotation</div>
+                  <div className="flex gap-2 items-center bg-white border border-amber-200 p-2 rounded-xl shadow-sm">
+                    <label className="text-xs font-semibold text-slate-600 px-2 whitespace-nowrap">Qty Needed:</label>
+                    <input type="number" value={rfqQuantity} onChange={e => setRfqQuantity(parseInt(e.target.value) || 1)} min="1" className="flex-1 p-2 outline-none text-slate-800 font-bold bg-transparent" />
                   </div>
-                  <button 
-                    className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-amber-500/20 mt-1 flex items-center justify-center gap-2"
-                    onClick={() => setIsModalOpen(true)}
+                  <textarea
+                    value={rfqMessage}
+                    onChange={e => setRfqMessage(e.target.value)}
+                    placeholder="Describe your requirements, timeline, and any special needs..."
+                    rows={2}
+                    className="w-full p-3 border border-amber-200 rounded-xl outline-none focus:border-amber-500 text-slate-700 bg-white shadow-sm resize-none"
+                  />
+                  <button
+                    className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-amber-500/20 mt-1"
+                    onClick={submitRfq}
                   >
-                    Request Bulk Quote
-                  </button>
-                  <button 
-                    className="w-full py-2 bg-transparent text-amber-800 hover:underline font-semibold text-sm transition-colors mt-1"
-                    onClick={() => alert(`Opening chat with supplier ${product.seller}...`)}
-                  >
-                    Chat with Supplier
+                    Send RFQ
                   </button>
                 </div>
-              ) : (
+              )}
+
+              {/* ── MEETING / PROPOSAL ── */}
+              {hasMeeting && !hasToken && !hasAppointment && !hasVehicleTestDrive && !isWholesaleConfig && !hasRFQ && (
+                <div className="flex flex-col gap-3 w-full p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                  <div className="text-indigo-800 font-bold text-sm mb-1">Request a Meeting / Proposal</div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      className="flex-1 px-6 py-4 bg-white border-2 border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50 text-indigo-800 rounded-xl font-bold text-base transition-colors"
+                      onClick={() => alert(`Requesting portfolio and quote from ${product.seller}...`)}
+                    >
+                      Request a Quote
+                    </button>
+                    <button
+                      className="flex-1 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-indigo-600/20"
+                      onClick={() => alert(`Connecting you with ${product.seller} to discuss your project.`)}
+                    >
+                      Schedule Meeting
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── PRODUCT STOCK / RETAIL (Buy Now + Add to Cart) ── */}
+              {(hasProductStock || noRulesDefined) && !hasToken && !hasAppointment && !hasVehicleTestDrive && !isWholesaleConfig && (
                 <div className="flex flex-col sm:flex-row gap-4 w-full">
-                  <button 
+                  <button
                     className="flex-1 px-6 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-amber-500/20"
-                    onClick={() => {
-                      alert(`Redirecting to Flipkart-style checkout for ${product.name}!`);
-                    }}
+                    onClick={() => alert(`Redirecting to checkout for ${product.name}!`)}
                   >
                     Buy Now
                   </button>
-                  <button 
+                  <button
                     className="flex-1 px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-base transition-colors shadow-md"
-                    onClick={() => {
-                      addToCart(product);
-                      alert(`Added ${product.name} to cart!`);
-                    }}
+                    onClick={() => { addToCart(product); alert(`Added ${product.name} to cart!`); }}
                   >
                     Add to Cart
                   </button>
                 </div>
               )}
+
+              {/* ── SERVICE-ONLY FALLBACK (no other CTA applies) ── */}
+              {hasService && !hasToken && !hasAppointment && !hasRFQ && !hasMeeting && !hasProductStock && !noRulesDefined && (
+                <div className="flex flex-col gap-3 w-full">
+                  <button
+                    className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-teal-600/20 flex items-center justify-center gap-3"
+                    onClick={() => alert(`Call ${product.seller} at +91-9876543210`)}
+                  >
+                    <PhoneCall className="w-6 h-6 animate-pulse" /> Call to Book (+91-9876543210)
+                  </button>
+                </div>
+              )}
+
             </div>
           </div>
 

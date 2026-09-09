@@ -32,14 +32,22 @@ export default function SellerOnboarding() {
   const [showPassword, setShowPassword] = useState(false);
   const [registeredToken, setRegisteredToken] = useState('');
 
+  const [mainType, setMainType] = useState('B2B');
   const [sellerRole, setSellerRole] = useState('Manufacturer');
-  const [businessSector, setBusinessSector] = useState('Construction');
-  const [businessCategory, setBusinessCategory] = useState('');
+  const [businessSector, setBusinessSector] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
   const [gstNumber, setGstNumber] = useState('');
 
   const [otpArray, setOtpArray] = useState(['', '', '', '']);
+
+  // Structured taxonomy mapping according to V2 architecture
+  const mainTypeMapping: Record<string, string[]> = {
+    'B2B': ['Manufacturer', 'Wholesaler'],
+    'B2C': ['Retailer'],
+    'BOTH': ['Manufacturer', 'Wholesaler', 'Retailer'],
+    'SERVICE': ['Service Provider', 'Organizer']
+  };
 
   const taxonomy: Record<string, Record<string, string[]>> = {
     'Manufacturer': {
@@ -73,8 +81,8 @@ export default function SellerOnboarding() {
     }
   };
 
+  const currentRoles = mainTypeMapping[mainType] || [];
   const currentSectors = Object.keys(taxonomy[sellerRole] || {});
-  const currentCategories = taxonomy[sellerRole]?.[businessSector] || ['Other'];
 
   // Step 1: Create seller account
   const handleAccountSetup = async (e: React.FormEvent) => {
@@ -145,6 +153,11 @@ export default function SellerOnboarding() {
 
   const handleBusinessDetails = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!businessSector) {
+      setError('Please select Sector');
+      return;
+    }
+    setError('');
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
@@ -167,8 +180,8 @@ export default function SellerOnboarding() {
           ownerName,
           businessName: businessName || 'My Business',
           businessType: sellerRole,
+          mainType: mainType,
           sector: businessSector,
-          category: businessCategory || 'Other',
           address: businessLocation,
           email,
           phone,
@@ -381,32 +394,43 @@ export default function SellerOnboarding() {
               <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Business Details</h2>
               <p className="text-slate-500 text-base text-center mb-8">Tell us about your business so we can set up your store</p>
 
+              {error && (
+                <div className="mb-5 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 flex items-start gap-2">
+                  <span className="mt-0.5">⚠️</span> {error}
+                </div>
+              )}
+
               <form onSubmit={handleBusinessDetails} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className={labelClasses}>Who are you?</label>
-                    <select value={sellerRole} onChange={e => setSellerRole(e.target.value)} className={selectClasses}>
-                      <option value="Manufacturer">Manufacturer</option>
-                      <option value="Wholesaler">Wholesaler / Distributor</option>
-                      <option value="Retailer">Retailer / Dealer</option>
-                      <option value="Service Provider">Service Provider</option>
-                      <option value="Organizer">Contractor / Organizer</option>
+                    <label className={labelClasses}>Main Business Model</label>
+                    <select value={mainType} onChange={e => {
+                        setMainType(e.target.value);
+                        const roles = mainTypeMapping[e.target.value] || [];
+                        setSellerRole(roles[0] || '');
+                        setBusinessSector('');
+                      }} className={selectClasses}>
+                      <option value="B2B">B2B (Business to Business)</option>
+                      <option value="B2C">B2C (Business to Consumer)</option>
+                      <option value="BOTH">Both B2B & B2C</option>
+                      <option value="SERVICE">Service & Booking</option>
                     </select>
                   </div>
                   <div>
-                    <label className={labelClasses}>Business Sector</label>
-                    <select value={businessSector} onChange={e => { setBusinessSector(e.target.value); setBusinessCategory(''); }} className={selectClasses}>
-                      {currentSectors.map(sec => (
-                        <option key={sec} value={sec}>{sec}</option>
+                    <label className={labelClasses}>Business Type</label>
+                    <select required value={sellerRole} onChange={e => { setSellerRole(e.target.value); setBusinessSector(''); }} className={selectClasses}>
+                      <option value="" disabled>Select Type...</option>
+                      {currentRoles.map(role => (
+                        <option key={role} value={role}>{role}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className={labelClasses}>Specialization Category</label>
-                    <select required value={businessCategory} onChange={e => setBusinessCategory(e.target.value)} className={selectClasses}>
-                      <option value="" disabled>Select category...</option>
-                      {currentCategories.map((cat: string) => (
-                        <option key={cat} value={cat}>{cat}</option>
+                    <label className={labelClasses}>Business Sector</label>
+                    <select required value={businessSector} onChange={e => { setBusinessSector(e.target.value); }} className={selectClasses}>
+                      <option value="" disabled>Select sector...</option>
+                      {currentSectors.map(sec => (
+                        <option key={sec} value={sec}>{sec}</option>
                       ))}
                     </select>
                   </div>

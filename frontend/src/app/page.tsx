@@ -22,7 +22,7 @@ export default function Home() {
             { name: "Beauty", icon: "💄", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Beauty" },
             { name: "Auto", icon: "🚗", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Auto" },
             { name: "Sports", icon: "⚽", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Sports" },
-            { name: "View All", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>, style: "bg-[#0f1928] text-white", link: "/categories" }
+            { name: "View All", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>, style: "bg-[#0f1928] text-white", link: "/explore" }
           ].map((cat, idx) => (
             <Link href={cat.link} key={idx} className="flex flex-col items-center gap-3 min-w-[65px] cursor-pointer group no-underline">
               <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${cat.style}`}>
@@ -141,9 +141,9 @@ export default function Home() {
                 Everything You Need,<br/>All in One Place
               </h2>
               <div className="h-1 w-12 bg-gradient-to-r from-blue-500 via-teal-400 to-emerald-400 rounded-full mb-2"></div>
-              <Link href="/categories">
+              <Link href="/explore">
                 <button className="bg-[#0f1928] hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 mt-auto w-fit">
-                  Browse Categories <span className="font-normal">→</span>
+                  Explore Markets <span className="font-normal">→</span>
                 </button>
               </Link>
             </div>
@@ -155,7 +155,7 @@ export default function Home() {
                 { name: "Industrial", icon: "👷", bg: "bg-amber-50", link: "/search?category=Industrial" },
                 { name: "Beauty & Personal Care", icon: "🧴", bg: "bg-pink-50", link: "/search?category=Beauty" },
                 { name: "Grocery", icon: "🛒", bg: "bg-emerald-50", link: "/search?category=Grocery" },
-                { name: "More Categories", icon: "🔠", bg: "bg-slate-100", link: "/categories" }
+                { name: "Explore All", icon: "🔠", bg: "bg-slate-100", link: "/explore" }
               ].map((cat, idx) => (
                 <Link href={cat.link} key={idx} className="flex flex-col items-center gap-2 min-w-[75px] text-center cursor-pointer group no-underline">
                   <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-transform group-hover:scale-105 shadow-inner ${cat.bg}`}>
@@ -177,7 +177,7 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-[#0f1928] leading-tight mb-4">
                 Solutions That<br/>Drive Your Success
               </h2>
-              <Link href="/services">
+              <Link href="/explore/services">
                 <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 w-fit">
                   Explore Services <span className="font-normal">→</span>
                 </button>

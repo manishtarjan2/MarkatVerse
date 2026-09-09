@@ -6,6 +6,7 @@ import { useProducts } from '@/context/ProductContext';
 import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
+import DynamicFormEngine from '@/components/DynamicFormEngine';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -16,53 +17,101 @@ function DashboardContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { addProduct, editProduct, deleteProduct, products, categories } = useProducts();
-  const [isPremiumSeller, setIsPremiumSeller] = useState(false); // Mock state to demonstrate the paywall
+  const [isPremiumSeller, setIsPremiumSeller] = useState(true); // Mock state to demonstrate the paywall
   
   const { user } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
 
-  // Consider service providers: either business type OR if any listing is a service category
-  const SERVICE_CATEGORIES = ['Services', 'Home Services', 'salon', 'Salon', 'Spa', 'Organizers', 'Medical', 'Doctor', 'Clinic'];
-  const isServiceProvider = user?.business?.businessType === 'Service Provider' ||
-    products.some(p => (p.seller === sellerName || p.sellerId === user?.id) &&
-      SERVICE_CATEGORIES.some(c => p.category?.toLowerCase().includes(c.toLowerCase())));
+  const myListings = products.filter(p => {
+    const matchId = p.sellerId && user?.id && String(p.sellerId) === String(user.id);
+    const matchUserName = p.seller && user?.name && p.seller.toLowerCase() === user.name.toLowerCase();
+    const matchBusinessName = p.seller && user?.business?.name && p.seller.toLowerCase() === user.business.name.toLowerCase();
+    return matchId || matchUserName || matchBusinessName;
+  });
+
+  const activeSector = myListings.length > 0 ? myListings[0].category : (user?.business?.sector || 'Retail Product');
+  
+  const CART_ORDER_FLOW = ['Retail Product'];
+  const RFQ_QUOTE_FLOW = ['B2B Product', 'Manufacturer', 'Transport'];
+  const QUEUE_TOKEN_FLOW = ['Doctor', 'Salon', 'Spa', 'Beauty Parlour', 'Repair'];
+  const PROJECT_MILESTONE_FLOW = ['Construction', 'Interior Designer'];
+  const MEETING_PROPOSAL_FLOW = ['Wedding Planner', 'Consultant', 'Photography'];
+  const ENQUIRY_ASSET_FLOW = ['Vehicle Sale', 'Vehicle Rental', 'Real Estate'];
+
+  const isCartFlow = CART_ORDER_FLOW.includes(activeSector || '');
+  const isRfqFlow = RFQ_QUOTE_FLOW.includes(activeSector || '');
+  const isQueueFlow = QUEUE_TOKEN_FLOW.includes(activeSector || '');
+  const isProjectFlow = PROJECT_MILESTONE_FLOW.includes(activeSector || '');
+  const isMeetingFlow = MEETING_PROPOSAL_FLOW.includes(activeSector || '');
+  const isAssetFlow = ENQUIRY_ASSET_FLOW.includes(activeSector || '');
+
+  // For backward compatibility in some places
+  const isServiceProvider = isQueueFlow || isProjectFlow || isMeetingFlow || isRfqFlow;
   const [queueData, setQueueData] = useState<any>(null);
   const [isQueueLoading, setIsQueueLoading] = useState(false);
 
-  const fetchQueue = () => {
+  const fetchQueue = async () => {
     if (!user?.id || !isServiceProvider) return;
     setIsQueueLoading(true);
-    fetch(`${API_URL}/salon/seller/${user.id}`)
-      .then(res => res.text())
-      .then(text => {
-        const data = text ? JSON.parse(text) : null;
-        if (data && data.id) {
-          fetch(`${API_URL}/salon/${data.id}/status`)
-            .then(r => r.json())
-            .then(statusData => setQueueData(statusData));
-        } else {
-          // Auto create queue
-          fetch(`${API_URL}/salon/queue`, {
-            method: 'POST',
+    try {
+      const fallbackName = user.business?.name || user.name || '';
+
+      // 1. Try fetching by sellerId
+      let res = await fetch(`${API_URL}/salon/seller/${user.id}`);
+      let text = await res.text();
+      let data = text ? JSON.parse(text) : null;
+      let queueId = data?.id;
+
+      // 2. Fallback: Search all queues by shopName (in case queue was auto-created by a customer)
+      if (!queueId) {
+        const allRes = await fetch(`${API_URL}/salon/queues`);
+        const allText = await allRes.text();
+        const allQueues = allText ? JSON.parse(allText) : [];
+        const matched = Array.isArray(allQueues) ? allQueues.find((q: any) => q.shopName === fallbackName) : null;
+        
+        if (matched) {
+          queueId = matched.id;
+          // Link this queue permanently to the seller
+          await fetch(`${API_URL}/salon/${queueId}/settings`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ shopName: user.business?.name || sellerName, sellerId: user.id })
-          })
-            .then(r => r.json())
-            .then(newData => {
-              if(newData.id) {
-                fetch(`${API_URL}/salon/${newData.id}/status`)
-                  .then(r => r.json())
-                  .then(statusData => setQueueData(statusData));
-              }
-            });
+            body: JSON.stringify({ sellerId: user.id })
+          });
         }
-      })
-      .catch(err => console.error(err))
-      .finally(() => setIsQueueLoading(false));
+      }
+
+      // 3. Fetch status or Auto-create if totally missing
+      if (queueId) {
+        const statusRes = await fetch(`${API_URL}/salon/${queueId}/status`);
+        setQueueData(await statusRes.json());
+      } else {
+        const createRes = await fetch(`${API_URL}/salon/queue`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shopName: fallbackName, sellerId: user.id })
+        });
+        const newData = await createRes.json();
+        if (newData?.id) {
+          const statusRes = await fetch(`${API_URL}/salon/${newData.id}/status`);
+          setQueueData(await statusRes.json());
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsQueueLoading(false);
+    }
   };
 
   React.useEffect(() => {
     fetchQueue();
+    // Auto-poll for new tokens every 10 seconds
+    const interval = setInterval(() => {
+      if (user?.id && isServiceProvider) {
+        fetchQueue();
+      }
+    }, 10000);
+    return () => clearInterval(interval);
   }, [user, isServiceProvider]);
 
   React.useEffect(() => {
@@ -81,11 +130,35 @@ function DashboardContent() {
     { id: 'ORD-8854', buyer: 'Acme Corp (B2B)', item: 'Heavy Freight Transport', date: '2026-08-30', amount: '₹4,500', status: 'Completed' }
   ]);
 
-  // Mock Bookings State
-  const [bookings, setBookings] = useState([
-    { id: 'BK-552', customer: 'Sneha Patel', service: 'Men & Women Hair Cutting', date: '2026-09-02 10:30 AM', status: 'Upcoming' },
-    { id: 'BK-551', customer: 'Amit Kumar', service: 'AC Repair Service', date: '2026-09-01 2:00 PM', status: 'In Progress' }
-  ]);
+  // Live Bookings State synced with Queue Tokens
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (queueData?.waiting || queueData?.serving) {
+      const liveBookings: any[] = [];
+      if (queueData.serving) {
+        liveBookings.push({
+          id: `Token #${queueData.serving.tokenNumber}`,
+          customer: queueData.serving.customerName,
+          service: queueData.serving.service,
+          date: 'Live Now',
+          status: 'In Progress'
+        });
+      }
+      if (queueData.waiting) {
+        queueData.waiting.forEach((t: any) => {
+          liveBookings.push({
+            id: `Token #${t.tokenNumber}`,
+            customer: t.customerName,
+            service: t.service,
+            date: 'Waiting in Queue',
+            status: 'Upcoming'
+          });
+        });
+      }
+      setBookings(liveBookings);
+    }
+  }, [queueData]);
 
   // Form states
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -94,13 +167,12 @@ function DashboardContent() {
   const [originalPrice, setOriginalPrice] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Electronics');
-  const [sellerName, setSellerName] = useState('Amit Verma');
+  const [subcategory, setSubcategory] = useState('');
   const [location, setLocation] = useState('New Delhi, Delhi');
   const [imageUrl, setImageUrl] = useState('');
 
   React.useEffect(() => {
     if (user) {
-      setSellerName(user.business?.name || user.name || 'Seller');
       if (user.business?.address) {
         setLocation(user.business.address);
       }
@@ -114,26 +186,41 @@ function DashboardContent() {
   const [wholesaleTiers, setWholesaleTiers] = useState([{ minQty: 12, margin: 20 }, { minQty: 100, margin: 30 }, { minQty: 150, margin: 50 }]);
 
   React.useEffect(() => {
-    // Reset parameters when category changes, pulling dynamic configurations from the admin context
+    // Reset parameters when category or subcategory changes, pulling dynamic configurations
     const catData = categories.find(c => c.name === category);
-    if (catData && catData.parameters && catData.parameters.length > 0) {
+    
+    // Default to category parameters
+    let targetParams = catData?.parameters || [];
+    
+    // If a subcategory is selected, use its specific parameters instead
+    if (catData?.subcategories && subcategory) {
+      const subCatData = catData.subcategories.find(s => s.name === subcategory);
+      if (subCatData && subCatData.parameters) {
+        targetParams = subCatData.parameters;
+      }
+    }
+
+    if (targetParams.length > 0) {
       const newParams: Record<string, string> = {};
-      catData.parameters.forEach(p => {
+      targetParams.forEach(p => {
         newParams[p.name] = '';
       });
       setParameters(newParams);
     } else {
       setParameters({});
     }
-  }, [category, categories]);
+  }, [category, subcategory, categories]);
 
   const getPlaceholderForParam = (key: string) => {
-    // Check if admin defined a placeholder for this specific variant
     const catData = categories.find(c => c.name === category);
-    if (catData && catData.parameters) {
-      const p = catData.parameters.find(p => p.name === key);
-      if (p && p.placeholder) return p.placeholder;
+    let targetParams = catData?.parameters || [];
+    if (catData?.subcategories && subcategory) {
+      const subCatData = catData.subcategories.find(s => s.name === subcategory);
+      if (subCatData?.parameters) targetParams = subCatData.parameters;
     }
+    
+    const p = targetParams.find(p => p.name === key);
+    if (p && p.placeholder) return p.placeholder;
     
     // Fallback smart placeholders for custom variants
     const k = key.toLowerCase();
@@ -146,98 +233,45 @@ function DashboardContent() {
     return 'e.g. Option 1, Option 2';
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    setIsUploadingFiles(true);
-    const formData = new FormData();
-    Array.from(files).forEach(file => formData.append('files', file));
-    
-    try {
-      const res = await fetch(`${API_URL}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.urls) {
-          setUploadedImages(prev => [...prev, ...data.urls]);
-          if (!imageUrl && data.urls.length > 0) setImageUrl(data.urls[0]);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsUploadingFiles(false);
-    }
-  };
-
-  const handleAddProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveListing = async (productData: any) => {
     setIsSubmitting(true);
-    
     try {
-      const productData = {
-        name: name,
-        price: parseFloat(price),
-        originalPrice: parseFloat(originalPrice) || parseFloat(price),
-        discount: originalPrice && parseFloat(originalPrice) > parseFloat(price) ? `${Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100)}% OFF` : '',
+      const payload = {
+        ...productData,
+        discount: productData.originalPrice && productData.originalPrice > productData.price ? `${Math.round(((productData.originalPrice - productData.price) / productData.originalPrice) * 100)}% OFF` : '',
         rating: 'New',
         reviews: '0',
-        seller: sellerName,
+        seller: user?.name || user?.business?.name || 'Seller',
         sellerId: user?.id,
         location: location,
-        category: category,
-        image: imageUrl || (uploadedImages.length > 0 ? uploadedImages[0] : undefined),
-        images: uploadedImages.length > 0 ? uploadedImages : (imageUrl ? [imageUrl] : undefined),
         badge: 'New Arrival',
         badgeColor: 'badge-gold',
         isPremium: isPremiumSeller,
-        isB2B: enableWholesale || category === 'B2B' || category === 'Construction Materials',
-        wholesaleTiers: enableWholesale || category === 'B2B' || category === 'Construction Materials' ? wholesaleTiers : undefined,
-        parameters: Object.keys(parameters).length > 0 ? Object.fromEntries(
-          Object.entries(parameters)
-            .filter(([_, v]) => v.trim() !== '')
-            .map(([k, v]) => [k, v.split(',').map(s => s.trim()).filter(Boolean)])
-        ) : undefined
       };
 
       if (editingProductId) {
-        await editProduct(editingProductId, productData);
+        await editProduct(editingProductId, payload);
       } else {
-        await addProduct(productData);
+        await addProduct(payload);
       }
 
       setShowSuccess(true);
-      
-      // Reset form
       setEditingProductId(null);
-      setName('');
-      setPrice('');
-      setOriginalPrice('');
-      setDescription('');
-      setImageUrl('');
-      setUploadedImages([]);
-
       setTimeout(() => {
         setShowSuccess(false);
         setActiveTab('listings');
       }, 2500);
     } catch (err) {
       console.error(err);
-      alert('Failed to save product. Please try again.');
+      alert('Failed to save listing.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Match by sellerId (from backend) OR sellerName (from local data)
-  const myListings = products.filter(p =>
-    p.sellerId === user?.id ||
-    p.seller === sellerName ||
-    p.seller === user?.name
-  );
+
+
+
 
   return (
     <div className="min-h-screen w-full bg-slate-50 flex font-sans">
@@ -255,10 +289,12 @@ function DashboardContent() {
         </div>
         
         <div className="p-6 text-center">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-3xl font-bold mx-auto mb-4 shadow-md shadow-blue-600/20">
-            {sellerName.charAt(0)}
+          <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-black text-xl shadow-md mx-auto mb-4">
+            {(user?.name || user?.business?.name || 'S').charAt(0).toUpperCase()}
           </div>
-          <h3 className="text-lg font-bold text-slate-900">{sellerName}</h3>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">{user?.name || user?.business?.name || 'Seller'}</h3>
+          </div>
           <div className="flex items-center justify-center gap-1 text-emerald-600 text-sm font-medium mt-1">
             <CheckCircle2 className="w-4 h-4" /> Verified Seller
           </div>
@@ -292,14 +328,8 @@ function DashboardContent() {
           >
             <PlusCircle className="w-5 h-5" /> {isServiceProvider ? 'Add Service' : 'Add Product'}
           </button>
-          {isServiceProvider ? (
-            <button 
-              onClick={() => setActiveTab('queue')} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'queue' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-            >
-              <span className="w-5 h-5 flex items-center justify-center text-lg">🎟️</span> Queue & Tokens
-            </button>
-          ) : (
+          {/* Dynamic Workflow Tabs */}
+          {(isCartFlow || isRfqFlow) && (
             <button 
               onClick={() => setActiveTab('orders')} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'orders' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
@@ -307,21 +337,58 @@ function DashboardContent() {
               <Package className="w-5 h-5" /> Orders
             </button>
           )}
-          <button 
-            onClick={() => setActiveTab('leads')} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'leads' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-          >
-            <span className="w-5 h-5 flex items-center justify-center text-lg">💬</span> Leads / RFQ
-          </button>
-          <button 
-            onClick={() => setActiveTab('bookings')} 
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'bookings' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-          >
-            <div className="flex items-center gap-3">
-              <CalendarClock className="w-5 h-5" /> Bookings
-            </div>
-            <Crown className="w-4 h-4 text-amber-500" />
-          </button>
+
+          {isQueueFlow && (
+            <button 
+              onClick={() => setActiveTab('queue')} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'queue' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+            >
+              <span className="w-5 h-5 flex items-center justify-center text-lg">🎟️</span> Queue & Tokens
+            </button>
+          )}
+
+          {isRfqFlow && (
+            <button 
+              onClick={() => setActiveTab('leads')} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'leads' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+            >
+              <span className="w-5 h-5 flex items-center justify-center text-lg">💬</span> Leads / RFQ
+            </button>
+          )}
+
+          {(isQueueFlow || isMeetingFlow) && (
+            <button 
+              onClick={() => setActiveTab('bookings')} 
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'bookings' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+            >
+              <div className="flex items-center gap-3">
+                <CalendarClock className="w-5 h-5" /> Bookings
+              </div>
+              <Crown className="w-4 h-4 text-amber-500" />
+            </button>
+          )}
+
+          {isProjectFlow && (
+            <>
+              <button 
+                onClick={() => setActiveTab('projects')} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'projects' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <span className="w-5 h-5 flex items-center justify-center text-lg">🏗️</span> Projects
+              </button>
+            </>
+          )}
+
+          {isAssetFlow && (
+            <>
+              <button 
+                onClick={() => setActiveTab('enquiries')} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'enquiries' ? 'bg-rose-50 text-rose-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <span className="w-5 h-5 flex items-center justify-center text-lg">🔑</span> Enquiries
+              </button>
+            </>
+          )}
         </nav>
       </aside>
 
@@ -332,7 +399,7 @@ function DashboardContent() {
           <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
-              <p className="text-slate-500 mt-2">Welcome back, {sellerName}. Here's what's happening today.</p>
+              <p className="text-slate-500 mt-2">Welcome back, {user?.name || user?.business?.name || 'Seller'}. Here's what's happening today.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -428,7 +495,6 @@ function DashboardContent() {
                             setOriginalPrice(product.originalPrice ? product.originalPrice.toString() : product.price.toString());
                             setDescription(product.description || '');
                             setCategory(product.category || 'Electronics');
-                            setSellerName(product.seller || '');
                             setLocation(product.location || '');
                             setImageUrl(product.image || '');
                             setUploadedImages(product.images || []);
@@ -502,282 +568,16 @@ function DashboardContent() {
                 <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-emerald-800 mb-2">Product Published Successfully!</h3>
-                <p className="text-emerald-600">Your product is now live on MarkatVerse. Redirecting to listings...</p>
+                <h3 className="text-xl font-bold text-emerald-800 mb-2">Listing Published Successfully!</h3>
+                <p className="text-emerald-600">Your listing is now live. Redirecting to your dashboard...</p>
               </div>
             ) : (
-              <form onSubmit={handleAddProduct} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">{isService ? 'Service Title' : 'Product Title'}</label>
-                    <input 
-                      required 
-                      type="text" 
-                      value={name} 
-                      onChange={e => setName(e.target.value)} 
-                      placeholder="E.g., Wireless Noise-Cancelling Headphones" 
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">Category</label>
-                    <select 
-                      required 
-                      value={category} 
-                      onChange={e => setCategory(e.target.value)} 
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white text-slate-900"
-                    >
-                      <option value="Electronics">Electronics</option>
-                      <option value="Fashion">Fashion</option>
-                      <option value="Home">Home & Garden</option>
-                      <option value="Beauty">Beauty</option>
-                      <option value="Automotive">Automotive</option>
-                      <option value="B2B">B2B Wholesale</option>
-                      <option value="Services">Services</option>
-                      <option value="Transport">Transport</option>
-                      <option value="Organizers">Organizers & Contractors</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">Selling Price (₹)</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
-                      <input 
-                        required 
-                        type="number" 
-                        value={price} 
-                        onChange={e => setPrice(e.target.value)} 
-                        placeholder="0.00" 
-                        className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900" 
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">Original M.R.P (₹) <span className="text-slate-400 font-normal">(Optional)</span></label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
-                      <input 
-                        type="number" 
-                        value={originalPrice} 
-                        onChange={e => setOriginalPrice(e.target.value)} 
-                        placeholder="0.00" 
-                        className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900" 
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {Object.keys(parameters).length > 0 && (
-                  <div className="space-y-4 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
-                    <div className="font-bold text-slate-800 border-b border-slate-200 pb-2">Category Configurations (Variants)</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.keys(parameters).map(key => (
-                        <div key={key} className="space-y-2">
-                          <label className="flex items-center justify-between text-xs font-semibold text-slate-700">
-                            <span>{key} Options <span className="text-slate-400 font-normal">(Comma separated)</span></span>
-                            <button type="button" onClick={() => {
-                              const newParams = {...parameters};
-                              delete newParams[key];
-                              setParameters(newParams);
-                            }} className="text-red-500 hover:text-red-700 font-medium">Remove</button>
-                          </label>
-                          <input 
-                            type="text" 
-                            value={parameters[key]} 
-                            onChange={e => setParameters(prev => ({ ...prev, [key]: e.target.value }))} 
-                            placeholder={getPlaceholderForParam(key)}
-                            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900 text-sm" 
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="flex gap-2 items-end pt-2">
-                      <div className="flex-1 space-y-2">
-                        <label className="text-xs font-semibold text-slate-700">Add Custom Variant (e.g. Length, Warranty, Finish)</label>
-                        <input 
-                          type="text"
-                          value={newParamName}
-                          onChange={e => setNewParamName(e.target.value)}
-                          placeholder="Variant Name"
-                          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900 text-sm"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (newParamName.trim() && !parameters[newParamName.trim()]) {
-                            setParameters(prev => ({ ...prev, [newParamName.trim()]: '' }));
-                            setNewParamName('');
-                          }
-                        }}
-                        className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg font-bold text-sm transition-colors border border-slate-300 shrink-0"
-                      >
-                        Add Variant
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {!isService && (
-                <div className="space-y-4 p-5 bg-blue-50 border border-blue-200 rounded-2xl">
-                  <div className="flex items-center justify-between border-b border-blue-200 pb-2">
-                    <div className="font-bold text-blue-900">Wholesale & B2B Pricing</div>
-                    <label className="flex items-center cursor-pointer gap-2">
-                      <span className="text-sm font-semibold text-blue-700">Enable Wholesale</span>
-                      <input 
-                        type="checkbox" 
-                        checked={enableWholesale}
-                        onChange={(e) => setEnableWholesale(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 rounded border-blue-300 focus:ring-blue-500"
-                      />
-                    </label>
-                  </div>
-                  
-                  {(enableWholesale || category === 'B2B' || category === 'Construction Materials') && (
-                    <div className="space-y-3">
-                      <p className="text-xs text-blue-700 font-medium">Define your wholesale bundle tiers (e.g. 12 units get 20% off)</p>
-                      {wholesaleTiers.map((tier, index) => (
-                        <div key={index} className="flex gap-4 items-center">
-                          <div className="flex-1">
-                            <label className="text-xs font-semibold text-slate-700">Min Quantity (Units)</label>
-                            <input 
-                              type="number" 
-                              value={tier.minQty} 
-                              onChange={(e) => {
-                                const newTiers = [...wholesaleTiers];
-                                newTiers[index].minQty = parseInt(e.target.value) || 0;
-                                setWholesaleTiers(newTiers);
-                              }}
-                              className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:border-blue-500 outline-none mt-1" 
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <label className="text-xs font-semibold text-slate-700">Discount / Margin (%)</label>
-                            <div className="relative mt-1">
-                              <input 
-                                type="number" 
-                                value={tier.margin} 
-                                onChange={(e) => {
-                                  const newTiers = [...wholesaleTiers];
-                                  newTiers[index].margin = parseInt(e.target.value) || 0;
-                                  setWholesaleTiers(newTiers);
-                                }}
-                                className="w-full pl-4 pr-8 py-2 rounded-lg border border-slate-300 focus:border-blue-500 outline-none" 
-                              />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">%</span>
-                            </div>
-                          </div>
-                          <div className="pt-5">
-                            <button 
-                              type="button" 
-                              onClick={() => setWholesaleTiers(wholesaleTiers.filter((_, i) => i !== index))}
-                              className="w-9 h-9 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                      <button 
-                        type="button" 
-                        onClick={() => setWholesaleTiers([...wholesaleTiers, { minQty: 0, margin: 0 }])}
-                        className="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                      >
-                        <PlusCircle className="w-4 h-4" /> Add Pricing Tier
-                      </button>
-                    </div>
-                  )}
-                </div>
-                )}
-
-                <div className="space-y-4">
-                  <label className="text-sm font-semibold text-slate-700">{isService ? 'Service Photos / Portfolio' : 'Product Images'}</label>
-                  
-                  {/* File Upload Zone */}
-                  <div className="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center transition-colors bg-slate-50">
-                    <input 
-                      type="file" 
-                      multiple 
-                      accept="image/*" 
-                      onChange={handleFileUpload} 
-                      className="hidden" 
-                      id="product-images-upload" 
-                      disabled={isUploadingFiles}
-                    />
-                    <label htmlFor="product-images-upload" className="cursor-pointer flex flex-col items-center">
-                      <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                      </div>
-                      <span className="text-blue-600 font-bold text-lg">{isUploadingFiles ? 'Uploading...' : 'Click to Upload Images'}</span>
-                      <span className="text-slate-500 text-sm mt-2">Upload up to 5 images (Drag and drop supported)</span>
-                    </label>
-                  </div>
-
-                  {/* Thumbnail Previews */}
-                  {uploadedImages.length > 0 && (
-                    <div className="flex gap-4 overflow-x-auto py-2">
-                      {uploadedImages.map((img, idx) => (
-                        <div key={idx} className="relative w-24 h-24 rounded-xl border border-slate-200 shadow-sm overflow-hidden shrink-0 group">
-                          <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                          <button 
-                            type="button"
-                            onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== idx))}
-                            className="absolute top-1 right-1 bg-white/90 text-red-500 rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-4">
-                    <div className="h-px bg-slate-200 flex-1"></div>
-                    <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider">OR</span>
-                    <div className="h-px bg-slate-200 flex-1"></div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-semibold text-slate-700">Image URL <span className="text-slate-400 font-normal">(Fallback)</span></label>
-                    <input 
-                      type="url" 
-                      value={imageUrl} 
-                      onChange={e => setImageUrl(e.target.value)} 
-                      placeholder="https://example.com/image.jpg" 
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900 mt-2" 
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Description</label>
-                  <textarea 
-                    rows={5} 
-                    value={description} 
-                    onChange={e => setDescription(e.target.value)} 
-                    placeholder={`Describe your ${isService ? 'service' : 'product'}'s key features, specifications, and benefits...`}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-slate-900 resize-none"
-                  ></textarea>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex justify-end">
-                  <button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-70 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex justify-center items-center gap-2 text-lg"
-                  >
-                    {isSubmitting ? (
-                      <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Saving...</>
-                    ) : (
-                      editingProductId ? (isService ? 'Update Service' : 'Update Product') : (isService ? 'Publish Service' : 'Publish Product')
-                    )}
-                  </button>
-                </div>
-              </form>
+              <DynamicFormEngine 
+                isService={isService} 
+                onSave={handleSaveListing} 
+                onCancel={() => setActiveTab('listings')} 
+                initialData={editingProductId ? products.find(p => p.id === editingProductId) : undefined}
+              />
             )}
           </div>
           );
@@ -1089,6 +889,15 @@ function DashboardContent() {
           </div>
         )}
 
+        {['projects', 'milestones', 'enquiries', 'inventory', 'proposals'].includes(activeTab) && (
+          <div className="max-w-6xl mx-auto py-20 text-center animate-in fade-in duration-300">
+            <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-800 mb-4 capitalize">{activeTab} Management</h2>
+            <p className="text-slate-500">This feature is part of your sector's advanced workflow and is currently being built.</p>
+          </div>
+        )}
       </main>
     </div>
   );

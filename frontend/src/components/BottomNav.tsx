@@ -21,9 +21,9 @@ export default function BottomNav() {
         <span className="text-[10px] font-medium">Home</span>
       </Link>
       
-      <Link href="/categories" className={`flex flex-col items-center gap-1 p-2 ${isActive('/categories') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>
-        <Grid className="w-5 h-5" strokeWidth={isActive('/categories') ? 2 : 1.5} />
-        <span className="text-[10px] font-medium">Categories</span>
+      <Link href="/explore" className={`flex flex-col items-center gap-1 p-2 ${pathname?.startsWith('/explore') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>
+        <Grid className="w-5 h-5" strokeWidth={pathname?.startsWith('/explore') ? 2 : 1.5} />
+        <span className="text-[10px] font-medium">Explore</span>
       </Link>
 
       <Link href="/cart" className={`flex flex-col items-center gap-1 p-2 relative ${isActive('/cart') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>

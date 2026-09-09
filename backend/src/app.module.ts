@@ -10,9 +10,11 @@ import { LeadsModule } from './leads/leads.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { UploadModule } from './upload/upload.module.js';
 import { SalonModule } from './salon/salon.module.js';
+import { ConfigurationModule } from './configuration/configuration.module.js';
+import { ListingsModule } from './listings/listings.module.js';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, SalonModule],
+  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, SalonModule, ConfigurationModule, ListingsModule],
   controllers: [AppController],
   providers: [AppService],
 })

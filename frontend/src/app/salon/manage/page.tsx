@@ -5,6 +5,7 @@ import {
   Scissors, Users, Clock, TrendingUp, ChevronRight, Plus, RefreshCw,
   PlayCircle, XCircle, CheckCircle2, Settings, Loader2, IndianRupee,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -53,6 +54,7 @@ export default function SalonManagePage() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"queue" | "stats" | "settings">("queue");
+  const { user } = useAuth();
 
   // Create queue form
   const [showCreate, setShowCreate] = useState(false);
@@ -67,12 +69,29 @@ export default function SalonManagePage() {
   const [settingsSaving, setSettingsSaving] = useState(false);
 
   const loadQueues = async () => {
-    const res = await fetch(`${API}/salon/queues`);
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      setQueues(data);
-      if (!selectedQueueId && data.length > 0) {
-        setSelectedQueueId(data[0].id);
+    if (user?.id) {
+      try {
+        const res = await fetch(`${API}/salon/seller/${user.id}`);
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : null;
+        if (data && data.id) {
+          setQueues([data]);
+          if (!selectedQueueId) setSelectedQueueId(data.id);
+        } else {
+          setQueues([]);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      // Fallback
+      const res = await fetch(`${API}/salon/queues`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setQueues(data);
+        if (!selectedQueueId && data.length > 0) {
+          setSelectedQueueId(data[0].id);
+        }
       }
     }
   };
@@ -103,7 +122,7 @@ export default function SalonManagePage() {
   useEffect(() => {
     loadQueues();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchStatus();
@@ -155,7 +174,12 @@ export default function SalonManagePage() {
       const res = await fetch(`${API}/salon/queue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shopName: newShopName.trim(), avgMinutes: Number(newAvgMin), pricePerHour: Number(newPricePerHour) }),
+        body: JSON.stringify({ 
+          shopName: newShopName.trim(), 
+          avgMinutes: Number(newAvgMin), 
+          pricePerHour: Number(newPricePerHour),
+          sellerId: user?.id || null 
+        }),
       });
       const data = await res.json();
       await loadQueues();
