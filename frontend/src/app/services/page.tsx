@@ -23,7 +23,7 @@ function LiveQueueBadge() {
   const fetchQueues = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     try {
-      const res = await fetch(`${API}/salon/queues`);
+      const res = await fetch(`${API}/service-queue/queues`);
       const data = await res.json();
       setQueues(Array.isArray(data) ? data : []);
     } catch { /* ignore */ } finally {

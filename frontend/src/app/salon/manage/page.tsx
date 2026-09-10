@@ -71,7 +71,7 @@ export default function SalonManagePage() {
   const loadQueues = async () => {
     if (user?.id) {
       try {
-        const res = await fetch(`${API}/salon/seller/${user.id}`);
+        const res = await fetch(`${API}/service-queue/seller/${user.id}`);
         const text = await res.text();
         const data = text ? JSON.parse(text) : null;
         if (data && data.id) {
@@ -85,7 +85,7 @@ export default function SalonManagePage() {
       }
     } else {
       // Fallback
-      const res = await fetch(`${API}/salon/queues`);
+      const res = await fetch(`${API}/service-queue/queues`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setQueues(data);
@@ -101,8 +101,8 @@ export default function SalonManagePage() {
     setLoading(true);
     try {
       const [statusRes, statsRes] = await Promise.all([
-        fetch(`${API}/salon/${selectedQueueId}/status`),
-        fetch(`${API}/salon/${selectedQueueId}/stats`),
+        fetch(`${API}/service-queue/${selectedQueueId}/status`),
+        fetch(`${API}/service-queue/${selectedQueueId}/stats`),
       ]);
       const statusData = await statusRes.json();
       const statsData = await statsRes.json();
@@ -134,7 +134,7 @@ export default function SalonManagePage() {
     if (!selectedQueueId) return;
     setActionLoading("next");
     try {
-      await fetch(`${API}/salon/${selectedQueueId}/next`, { method: "POST" });
+      await fetch(`${API}/service-queue/${selectedQueueId}/next`, { method: "POST" });
       await fetchStatus();
     } finally {
       setActionLoading(null);
@@ -144,7 +144,7 @@ export default function SalonManagePage() {
   const markNoShow = async (tokenId: string) => {
     setActionLoading(tokenId);
     try {
-      await fetch(`${API}/salon/token/${tokenId}/no-show`, { method: "PATCH" });
+      await fetch(`${API}/service-queue/token/${tokenId}/no-show`, { method: "PATCH" });
       await fetchStatus();
     } finally {
       setActionLoading(null);
@@ -154,7 +154,7 @@ export default function SalonManagePage() {
   const markDone = async (tokenId: string) => {
     setActionLoading(tokenId);
     try {
-      await fetch(`${API}/salon/token/${tokenId}/done`, { method: "PATCH" });
+      await fetch(`${API}/service-queue/token/${tokenId}/done`, { method: "PATCH" });
       await fetchStatus();
     } finally {
       setActionLoading(null);
@@ -163,7 +163,7 @@ export default function SalonManagePage() {
 
   const resetQueue = async () => {
     if (!selectedQueueId || !confirm("Reset queue? This removes all tokens for a fresh start.")) return;
-    await fetch(`${API}/salon/${selectedQueueId}/reset`, { method: "DELETE" });
+    await fetch(`${API}/service-queue/${selectedQueueId}/reset`, { method: "DELETE" });
     await fetchStatus();
   };
 
@@ -171,7 +171,7 @@ export default function SalonManagePage() {
     if (!newShopName.trim()) return;
     setCreating(true);
     try {
-      const res = await fetch(`${API}/salon/queue`, {
+      const res = await fetch(`${API}/service-queue/queue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -195,7 +195,7 @@ export default function SalonManagePage() {
     if (!selectedQueueId) return;
     setSettingsSaving(true);
     try {
-      await fetch(`${API}/salon/${selectedQueueId}/settings`, {
+      await fetch(`${API}/service-queue/${selectedQueueId}/settings`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ avgMinutes: Number(settingsAvgMin), pricePerHour: Number(settingsPricePerHour) }),
@@ -208,7 +208,7 @@ export default function SalonManagePage() {
 
   const toggleOpen = async () => {
     if (!selectedQueueId || !status) return;
-    await fetch(`${API}/salon/${selectedQueueId}/settings`, {
+    await fetch(`${API}/service-queue/${selectedQueueId}/settings`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isOpen: !status.queue.isOpen }),

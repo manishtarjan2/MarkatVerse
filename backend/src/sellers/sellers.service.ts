@@ -56,8 +56,37 @@ export class SellersService {
         businessType: seller.businessType || 'WHOLESALER',
         address: seller.address || null,
         verified: false,
+        capabilities: seller.mainType === 'SERVICE' ? ['SERVICE'] : ['B2B', 'B2C'],
       },
     });
+
+    if (seller.mainType === 'SERVICE') {
+      const queue = await this.prisma.serviceQueue.create({
+        data: {
+          sellerId: user.id,
+          shopName: seller.businessName || seller.name || 'My Shop',
+          avgMinutes: 30,
+        },
+      });
+      if (seller.staff && seller.staff.length > 0) {
+        await this.prisma.serviceStaff.createMany({
+          data: seller.staff.map((s: any) => ({
+            queueId: queue.id,
+            name: s.name,
+            role: s.role,
+          })),
+        });
+      }
+      if (seller.resources && seller.resources.length > 0) {
+        await this.prisma.serviceResource.createMany({
+          data: seller.resources.map((r: any) => ({
+            queueId: queue.id,
+            name: r.name,
+            type: r.type,
+          })),
+        });
+      }
+    }
 
     return {
       ...business,
@@ -92,5 +121,39 @@ export class SellersService {
       data: { verified: status === 'Approved' },
     });
     return { ...business, status };
+  }
+
+  async updateUser(userId: string, data: any) {
+    const business = await this.prisma.business.findUnique({ where: { userId } });
+    if (!business) throw new Error('Business not found');
+    return this.prisma.business.update({
+      where: { userId },
+      data: {
+        name: data.businessName,
+        address: data.address,
+      }
+    });
+  }
+
+  async removeUser(userId: string) {
+    // Attempt to delete products associated with the user
+    await this.prisma.product.deleteMany({
+      where: { sellerId: userId },
+    });
+
+    // Attempt to delete business associated with the user
+    await this.prisma.business.deleteMany({
+      where: { userId: userId },
+    });
+
+    // Attempt to delete service queue associated with the user
+    await this.prisma.serviceQueue.deleteMany({
+      where: { sellerId: userId },
+    });
+
+    // Delete the user itself
+    return this.prisma.user.delete({
+      where: { id: userId },
+    });
   }
 }

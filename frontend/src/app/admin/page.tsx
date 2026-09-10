@@ -1,13 +1,14 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Users, Store, TrendingUp, CheckCircle, XCircle, ArrowLeft, Activity, ShieldCheck, Box, ListTree, Plus, Trash2, Edit, Network, ChevronRight, Check, X, Circle } from 'lucide-react';
+import { Users, Store, TrendingUp, CheckCircle, XCircle, ArrowLeft, Activity, ShieldCheck, Box, ListTree, Plus, Trash2, Edit, Network, ChevronRight, Check, X, Circle, Menu } from 'lucide-react';
 import { useProducts, Category, Product, ListingType, BusinessModel, FeatureRule } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [currentAdminRole, setCurrentAdminRole] = useState<'super_admin' | 'catalog_admin' | 'onboarding_admin' | 'support_admin'>('super_admin');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Contexts
   const { products, deleteProduct, addProduct, categories, addCategory, updateCategory, deleteCategory } = useProducts();
@@ -103,10 +104,10 @@ export default function AdminDashboard() {
   }, [currentAdminRole]);
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 text-slate-100 flex font-sans relative">
+    <div className="min-h-screen w-full bg-slate-900 text-slate-100 flex flex-col lg:flex-row font-sans relative overflow-x-hidden">
       
       {/* Top right role simulator */}
-      <div className="absolute top-4 right-10 z-50 flex items-center gap-3 bg-slate-800 p-2 rounded-xl border border-slate-700 shadow-lg">
+      <div className="hidden lg:flex absolute top-4 right-10 z-50 items-center gap-3 bg-slate-800 p-2 rounded-xl border border-slate-700 shadow-lg">
         <span className="text-xs font-bold text-slate-400 uppercase">Simulate Login As:</span>
         <select 
           value={currentAdminRole} 
@@ -120,8 +121,43 @@ export default function AdminDashboard() {
         </select>
       </div>
 
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 bg-slate-950 border-b border-slate-800 shrink-0 sticky top-0 z-40">
+        <Link href="/" className="flex items-center no-underline">
+          <img src="/logo.png" alt="MarkatVerse" className="h-8 object-contain scale-[2] origin-left brightness-0 invert" />
+        </Link>
+        <div className="flex items-center gap-4">
+          <select 
+            value={currentAdminRole} 
+            onChange={(e) => setCurrentAdminRole(e.target.value as any)}
+            className="bg-slate-900 text-emerald-400 text-xs font-bold rounded-lg px-2 py-1 border border-slate-700 focus:outline-none"
+          >
+            <option value="super_admin">Super</option>
+            <option value="catalog_admin">Catalog</option>
+            <option value="onboarding_admin">Onboard</option>
+            <option value="support_admin">Support</option>
+          </select>
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-400 hover:text-white rounded-lg">
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar - Dark Admin Theme */}
-      <aside className="w-[280px] bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 z-50
+        w-[280px] bg-slate-950 border-r border-slate-800 flex flex-col shrink-0
+        transform transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
         <div className="p-6 border-b border-slate-800 flex flex-col gap-4">
           <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity">
             <img src="/logo.png" alt="MarkatVerse" className="h-10 object-contain scale-[2.5] origin-left brightness-0 invert" />
@@ -225,7 +261,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-10 bg-slate-900">
+      <main className="flex-1 flex flex-col h-[calc(100vh-65px)] lg:h-screen overflow-y-auto p-4 lg:p-10">
         
         {activeTab === 'overview' && (
           <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
@@ -234,7 +270,7 @@ export default function AdminDashboard() {
               <p className="text-slate-400 mt-2">Real-time metrics for MarkatVerse ecosystem.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-10">
               <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm">
                 <div className="text-slate-400 text-sm font-medium mb-2">Total Gross Volume</div>
                 <div className="text-3xl font-bold text-white">₹4.2 Cr</div>
@@ -911,10 +947,10 @@ export default function AdminDashboard() {
                 <p className="text-slate-400 mt-2">Define listing types, business models, workflows, attributes, and access rules for each category.</p>
               </div>
 
-              <div className="flex gap-6 h-[calc(100vh-220px)] min-h-[600px]">
+              <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-220px)] lg:min-h-[600px]">
 
-                {/* LEFT — Category List */}
-                <div className="w-[240px] shrink-0 bg-slate-800 rounded-2xl border border-slate-700 overflow-y-auto flex flex-col">
+                {/* LEFT - Category List */}
+                <div className="w-full lg:w-[240px] shrink-0 bg-slate-800 rounded-2xl border border-slate-700 overflow-y-auto flex flex-col h-[300px] lg:h-full">
                   {grouped.map(group => {
                     const cats = categories.filter(c => c.primaryType === group.type);
                     if (cats.length === 0) return null;

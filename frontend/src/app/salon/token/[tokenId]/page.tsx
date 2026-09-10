@@ -50,7 +50,7 @@ export default function TokenTrackerPage() {
   const fetchStatus = useCallback(async (showRefreshing = false) => {
     if (showRefreshing) setRefreshing(true);
     try {
-      const res = await fetch(`${API}/salon/token/${tokenId}`);
+      const res = await fetch(`${API}/service-queue/token/${tokenId}`);
       if (!res.ok) throw new Error("Token not found");
       setData(await res.json());
       setLastUpdated(new Date());

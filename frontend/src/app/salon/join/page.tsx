@@ -42,7 +42,7 @@ export default function SalonJoinPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`${API}/salon/queues`)
+    fetch(`${API}/service-queue/queues`)
       .then((r) => r.json())
       .then((data) => {
         setQueues(Array.isArray(data) ? data : []);
@@ -57,7 +57,7 @@ export default function SalonJoinPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${API}/salon/${selectedQueue.id}/join`, {
+      const res = await fetch(`${API}/service-queue/${selectedQueue.id}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customerName: name.trim(), phone: phone.trim() || undefined, service }),

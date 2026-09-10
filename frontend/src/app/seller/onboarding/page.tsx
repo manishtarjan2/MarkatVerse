@@ -201,6 +201,8 @@ export default function SellerOnboarding() {
     }
   };
 
+
+
   const steps = [
     { num: 1, label: 'Account Setup' },
     { num: 2, label: 'Business Info' },
@@ -462,14 +464,16 @@ export default function SellerOnboarding() {
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        Saving...
+                        Processing...
                       </span>
-                    ) : 'Next: Upload Documents →'}
+                    ) : 'Next: Upload Documents ->'}
                   </button>
                 </div>
               </form>
             </div>
           )}
+
+
 
           {/* ─── STEP 3: Documents ─── */}
           {step === 3 && (
@@ -488,11 +492,42 @@ export default function SellerOnboarding() {
 
               <form onSubmit={handleDocumentUpload} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { title: 'GST / Business Certificate', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '📋' },
-                    { title: 'ID Proof (Aadhar/PAN)', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '🪪' },
-                    { title: 'Cancelled Cheque / Bank Proof', desc: 'Needed for payouts', icon: '🏦' },
-                  ].map((doc, i) => (
+                  {(() => {
+                    let docs = [];
+                    switch (mainType) {
+                      case 'B2B':
+                        docs = [
+                          { title: 'Business License', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '📋' },
+                          { title: 'GST Certificate', desc: 'Required for B2B wholesale', icon: '📝' },
+                          { title: 'Company Registration', desc: 'CIN / Incorporation proof', icon: '🏢' },
+                          { title: 'Factory / Warehouse Photos', desc: 'Up to 3 photos', icon: '🏭' },
+                        ];
+                        break;
+                      case 'B2C':
+                        docs = [
+                          { title: 'ID Proof (Aadhar/PAN)', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '🪪' },
+                          { title: 'Shop/Store Photos', desc: 'Inside and outside', icon: '🏪' },
+                          { title: 'Address Proof', desc: 'Electricity or Water bill', icon: '🧾' },
+                          { title: 'GST Certificate (Optional)', desc: 'If applicable', icon: '📋' },
+                        ];
+                        break;
+                      case 'SERVICE':
+                        docs = [
+                          { title: 'Professional License', desc: 'Medical, Trade, or Salon license', icon: '📜' },
+                          { title: 'ID Proof (Aadhar/PAN)', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '🪪' },
+                          { title: 'Business Certificate', desc: 'Proof of business', icon: '🏢' },
+                        ];
+                        break;
+                      case 'BOTH':
+                      default:
+                        docs = [
+                          { title: 'GST / Business Certificate', desc: 'Required for all trades', icon: '📋' },
+                          { title: 'ID Proof (Aadhar/PAN)', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '🪪' },
+                          { title: 'Shop & Factory Photos', desc: 'Visual proof of premises', icon: '🏭' },
+                          { title: 'Cancelled Cheque', desc: 'Needed for payouts', icon: '🏦' },
+                        ];
+                    }
+                    return docs.map((doc, i) => (
                     <div key={i} className="bg-slate-50 p-5 rounded-xl border border-slate-200 border-dashed hover:border-emerald-400 transition-colors">
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-xl">{doc.icon}</span>
@@ -501,7 +536,8 @@ export default function SellerOnboarding() {
                       <input type="file" className="text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 file:cursor-pointer hover:file:bg-emerald-100" />
                       <p className="text-xs text-slate-400 mt-2">{doc.desc}</p>
                     </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
 
                 {/* Notice */}

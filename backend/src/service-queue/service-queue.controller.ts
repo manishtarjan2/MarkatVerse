@@ -7,15 +7,15 @@ import {
   Body,
   Param,
 } from '@nestjs/common';
-import { SalonService } from './salon.service.js';
+import { ServiceQueueService } from './service-queue.service.js';
 
-@Controller('salon')
-export class SalonController {
-  constructor(private readonly salonService: SalonService) {}
+@Controller('service-queue')
+export class ServiceQueueController {
+  constructor(private readonly serviceQueueService: ServiceQueueService) {}
 
   // ─── Queue Routes ─────────────────────────────────────────────────────────────
 
-  /** Create a new salon queue */
+  /** Create a new service queue */
   @Post('queue')
   createQueue(
     @Body()
@@ -26,25 +26,25 @@ export class SalonController {
       sellerId?: string;
     },
   ) {
-    return this.salonService.createQueue(body);
+    return this.serviceQueueService.createQueue(body);
   }
 
   /** Get queue for a specific seller */
   @Get('seller/:sellerId')
   getQueueBySeller(@Param('sellerId') sellerId: string) {
-    return this.salonService.getQueueBySeller(sellerId);
+    return this.serviceQueueService.getQueueBySeller(sellerId);
   }
 
   /** List all open queues */
   @Get('queues')
   getAllQueues() {
-    return this.salonService.getAllQueues();
+    return this.serviceQueueService.getAllQueues();
   }
 
   /** Get live queue status */
   @Get(':queueId/status')
   getQueueStatus(@Param('queueId') queueId: string) {
-    return this.salonService.getQueueStatus(queueId);
+    return this.serviceQueueService.getQueueStatus(queueId);
   }
 
   /** Customer joins queue */
@@ -53,19 +53,22 @@ export class SalonController {
     @Param('queueId') queueId: string,
     @Body() body: { customerName: string; phone?: string; service?: string },
   ) {
-    return this.salonService.joinQueue(queueId, body);
+    return this.serviceQueueService.joinQueue(queueId, body);
   }
 
-  /** Salon calls next customer */
+  /** ServiceQueue calls next customer */
   @Post(':queueId/next')
-  callNext(@Param('queueId') queueId: string) {
-    return this.salonService.callNext(queueId);
+  callNext(
+    @Param('queueId') queueId: string,
+    @Body() body: { staffId?: string; resourceId?: string }
+  ) {
+    return this.serviceQueueService.callNext(queueId, body?.resourceId, body?.staffId);
   }
 
   /** Today's stats for this queue */
   @Get(':queueId/stats')
   getTodayStats(@Param('queueId') queueId: string) {
-    return this.salonService.getTodayStats(queueId);
+    return this.serviceQueueService.getTodayStats(queueId);
   }
 
   /** Update queue settings (avgMinutes, pricePerHour, isOpen) */
@@ -80,13 +83,13 @@ export class SalonController {
       shopName?: string;
     },
   ) {
-    return this.salonService.updateQueueSettings(queueId, body);
+    return this.serviceQueueService.updateQueueSettings(queueId, body);
   }
 
   /** Reset queue (new day) */
   @Delete(':queueId/reset')
   resetQueue(@Param('queueId') queueId: string) {
-    return this.salonService.resetQueue(queueId);
+    return this.serviceQueueService.resetQueue(queueId);
   }
 
   // ─── Token Routes ─────────────────────────────────────────────────────────────
@@ -94,18 +97,36 @@ export class SalonController {
   /** Get a single customer's token status */
   @Get('token/:tokenId')
   getTokenStatus(@Param('tokenId') tokenId: string) {
-    return this.salonService.getTokenStatus(tokenId);
+    return this.serviceQueueService.getTokenStatus(tokenId);
   }
 
   /** Mark token as NO_SHOW */
   @Patch('token/:tokenId/no-show')
   markNoShow(@Param('tokenId') tokenId: string) {
-    return this.salonService.markNoShow(tokenId);
+    return this.serviceQueueService.markNoShow(tokenId);
   }
 
   /** Mark token as DONE */
   @Patch('token/:tokenId/done')
   markDone(@Param('tokenId') tokenId: string) {
-    return this.salonService.markDone(tokenId);
+    return this.serviceQueueService.markDone(tokenId);
+  }
+
+  /** Check in an appointment */
+  @Post('token/:tokenId/check-in')
+  checkIn(@Param('tokenId') tokenId: string) {
+    return this.serviceQueueService.checkIn(tokenId);
+  }
+
+  // ─── Staff & Resources ───────────────────────────────────────────────────
+
+  @Post(':queueId/staff')
+  addStaff(@Param('queueId') queueId: string, @Body() body: any) {
+    return this.serviceQueueService.addStaff(queueId, body);
+  }
+
+  @Post(':queueId/resource')
+  addResource(@Param('queueId') queueId: string, @Body() body: any) {
+    return this.serviceQueueService.addResource(queueId, body);
   }
 }

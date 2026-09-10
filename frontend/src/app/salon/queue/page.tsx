@@ -66,7 +66,7 @@ function QueueBoardContent() {
 
   // Load available queues
   useEffect(() => {
-    fetch(`${API}/salon/queues`)
+    fetch(`${API}/service-queue/queues`)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -81,7 +81,7 @@ function QueueBoardContent() {
     if (!selectedQueueId) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API}/salon/${selectedQueueId}/status`);
+      const res = await fetch(`${API}/service-queue/${selectedQueueId}/status`);
       if (!res.ok) return;
       const data = await res.json();
       setStatus(data);

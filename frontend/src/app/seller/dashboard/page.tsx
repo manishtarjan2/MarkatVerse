@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
-import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown } from 'lucide-react';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 import DynamicFormEngine from '@/components/DynamicFormEngine';
@@ -18,6 +18,7 @@ function DashboardContent() {
   const [showSuccess, setShowSuccess] = useState(false);
   const { addProduct, editProduct, deleteProduct, products, categories } = useProducts();
   const [isPremiumSeller, setIsPremiumSeller] = useState(true); // Mock state to demonstrate the paywall
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const { user } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
@@ -33,20 +34,25 @@ function DashboardContent() {
   
   const CART_ORDER_FLOW = ['Retail Product'];
   const RFQ_QUOTE_FLOW = ['B2B Product', 'Manufacturer', 'Transport'];
-  const QUEUE_TOKEN_FLOW = ['Doctor', 'Salon', 'Spa', 'Beauty Parlour', 'Repair'];
+  const QUEUE_TOKEN_FLOW = ['Doctor', 'Salon', 'Spa', 'Beauty Parlour', 'Repair', 'Services'];
   const PROJECT_MILESTONE_FLOW = ['Construction', 'Interior Designer'];
   const MEETING_PROPOSAL_FLOW = ['Wedding Planner', 'Consultant', 'Photography'];
   const ENQUIRY_ASSET_FLOW = ['Vehicle Sale', 'Vehicle Rental', 'Real Estate'];
 
-  const isCartFlow = CART_ORDER_FLOW.includes(activeSector || '');
-  const isRfqFlow = RFQ_QUOTE_FLOW.includes(activeSector || '');
-  const isQueueFlow = QUEUE_TOKEN_FLOW.includes(activeSector || '');
+  const capabilities = user?.business?.capabilities || [];
+  const isB2B = capabilities.includes('B2B');
+  const isB2C = capabilities.includes('B2C');
+  const isService = capabilities.includes('SERVICE');
+
+  const isCartFlow = CART_ORDER_FLOW.includes(activeSector || '') || isB2C;
+  const isRfqFlow = RFQ_QUOTE_FLOW.includes(activeSector || '') || isB2B;
+  const isQueueFlow = QUEUE_TOKEN_FLOW.includes(activeSector || '') || isService;
   const isProjectFlow = PROJECT_MILESTONE_FLOW.includes(activeSector || '');
   const isMeetingFlow = MEETING_PROPOSAL_FLOW.includes(activeSector || '');
   const isAssetFlow = ENQUIRY_ASSET_FLOW.includes(activeSector || '');
 
   // For backward compatibility in some places
-  const isServiceProvider = isQueueFlow || isProjectFlow || isMeetingFlow || isRfqFlow;
+  const isServiceProvider = isQueueFlow || isProjectFlow || isMeetingFlow || isService;
   const [queueData, setQueueData] = useState<any>(null);
   const [isQueueLoading, setIsQueueLoading] = useState(false);
 
@@ -57,14 +63,14 @@ function DashboardContent() {
       const fallbackName = user.business?.name || user.name || '';
 
       // 1. Try fetching by sellerId
-      let res = await fetch(`${API_URL}/salon/seller/${user.id}`);
+      let res = await fetch(`${API_URL}/service-queue/seller/${user.id}`);
       let text = await res.text();
       let data = text ? JSON.parse(text) : null;
       let queueId = data?.id;
 
       // 2. Fallback: Search all queues by shopName (in case queue was auto-created by a customer)
       if (!queueId) {
-        const allRes = await fetch(`${API_URL}/salon/queues`);
+        const allRes = await fetch(`${API_URL}/service-queue/queues`);
         const allText = await allRes.text();
         const allQueues = allText ? JSON.parse(allText) : [];
         const matched = Array.isArray(allQueues) ? allQueues.find((q: any) => q.shopName === fallbackName) : null;
@@ -72,7 +78,7 @@ function DashboardContent() {
         if (matched) {
           queueId = matched.id;
           // Link this queue permanently to the seller
-          await fetch(`${API_URL}/salon/${queueId}/settings`, {
+          await fetch(`${API_URL}/service-queue/${queueId}/settings`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sellerId: user.id })
@@ -82,17 +88,17 @@ function DashboardContent() {
 
       // 3. Fetch status or Auto-create if totally missing
       if (queueId) {
-        const statusRes = await fetch(`${API_URL}/salon/${queueId}/status`);
+        const statusRes = await fetch(`${API_URL}/service-queue/${queueId}/status`);
         setQueueData(await statusRes.json());
       } else {
-        const createRes = await fetch(`${API_URL}/salon/queue`, {
+        const createRes = await fetch(`${API_URL}/service-queue/queue`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ shopName: fallbackName, sellerId: user.id })
         });
         const newData = await createRes.json();
         if (newData?.id) {
-          const statusRes = await fetch(`${API_URL}/salon/${newData.id}/status`);
+          const statusRes = await fetch(`${API_URL}/service-queue/${newData.id}/status`);
           setQueueData(await statusRes.json());
         }
       }
@@ -113,6 +119,35 @@ function DashboardContent() {
     }, 10000);
     return () => clearInterval(interval);
   }, [user, isServiceProvider]);
+
+  // Walk-in Customer Form State
+  const [showWalkInForm, setShowWalkInForm] = useState(false);
+  const [walkInName, setWalkInName] = useState('');
+  const [walkInPhone, setWalkInPhone] = useState('');
+  const [walkInService, setWalkInService] = useState('Haircut');
+
+  const handleAddWalkIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!queueData?.queue?.id) return;
+    try {
+      await fetch(`${API_URL}/service-queue/${queueData.queue.id}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: walkInName,
+          phone: walkInPhone,
+          service: walkInService
+        })
+      });
+      setShowWalkInForm(false);
+      setWalkInName('');
+      setWalkInPhone('');
+      fetchQueue();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add walk-in customer');
+    }
+  };
 
   React.useEffect(() => {
     if (user?.id) {
@@ -136,23 +171,37 @@ function DashboardContent() {
   React.useEffect(() => {
     if (queueData?.waiting || queueData?.serving) {
       const liveBookings: any[] = [];
-      if (queueData.serving) {
-        liveBookings.push({
-          id: `Token #${queueData.serving.tokenNumber}`,
-          customer: queueData.serving.customerName,
-          service: queueData.serving.service,
-          date: 'Live Now',
-          status: 'In Progress'
+      if (queueData.serving && Array.isArray(queueData.serving)) {
+        queueData.serving.forEach((s: any) => {
+          liveBookings.push({
+            rawId: s.id,
+            id: s.bookingMode === 'APPOINTMENT' ? `Apt #${s.id.slice(-4).toUpperCase()}` : `Token #${s.tokenNumber}`,
+            customer: s.customerName,
+            service: s.service,
+            date: 'Live Now',
+            status: 'In Progress',
+            bookingMode: s.bookingMode,
+            tokenNumber: s.tokenNumber,
+            appointmentTime: s.appointmentTime,
+            originalStatus: s.status,
+            staffId: s.staffId,
+            resourceId: s.resourceId,
+          });
         });
       }
       if (queueData.waiting) {
         queueData.waiting.forEach((t: any) => {
           liveBookings.push({
-            id: `Token #${t.tokenNumber}`,
+            rawId: t.id,
+            id: t.bookingMode === 'APPOINTMENT' ? `Apt #${t.id.slice(-4).toUpperCase()}` : `Token #${t.tokenNumber}`,
             customer: t.customerName,
             service: t.service,
-            date: 'Waiting in Queue',
-            status: 'Upcoming'
+            date: t.bookingMode === 'APPOINTMENT' ? 'Scheduled Appointment' : 'Waiting in Queue',
+            status: t.status === 'PENDING' ? 'Pending' : t.status === 'CHECKED_IN' ? 'Checked In' : 'Upcoming',
+            bookingMode: t.bookingMode,
+            tokenNumber: t.tokenNumber,
+            appointmentTime: t.appointmentTime,
+            originalStatus: t.status,
           });
         });
       }
@@ -274,10 +323,33 @@ function DashboardContent() {
 
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 flex font-sans">
+    <div className="min-h-screen w-full bg-slate-50 flex flex-col lg:flex-row font-sans overflow-x-hidden relative">
       
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-slate-200 shrink-0 sticky top-0 z-40">
+        <Link href="/" className="flex items-center no-underline">
+          <img src="/logo.png" alt="MarkatVerse" className="h-8 object-contain scale-[2] origin-left" />
+        </Link>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Overlay for mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-[280px] bg-white border-r border-slate-200 flex flex-col shrink-0">
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 z-50
+        w-[280px] bg-white border-r border-slate-200 flex flex-col shrink-0
+        transform transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
         <div className="p-6 border-b border-slate-100 flex flex-col gap-4">
           <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity">
             <img src="/logo.png" alt="MarkatVerse" className="h-10 object-contain scale-[2.5] origin-left" />
@@ -389,11 +461,17 @@ function DashboardContent() {
               </button>
             </>
           )}
+          <button 
+            onClick={() => setActiveTab('settings')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'settings' ? 'bg-red-50 text-red-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+          >
+            <Settings className="w-5 h-5" /> Settings
+          </button>
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-10">
+      <main className="flex-1 overflow-y-auto p-4 lg:p-10">
         
         {activeTab === 'overview' && (
           <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
@@ -402,29 +480,29 @@ function DashboardContent() {
               <p className="text-slate-500 mt-2">Welcome back, {user?.name || user?.business?.name || 'Seller'}. Here's what's happening today.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-10">
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-slate-500 text-sm font-medium mb-2">Total Sales</div>
+                <div className="text-slate-500 text-sm font-medium mb-2">{isB2B ? 'B2B Trade Volume' : 'Total Sales'}</div>
                 <div className="text-3xl font-bold text-slate-900">₹1,45,200</div>
                 <div className="text-emerald-600 text-sm font-medium mt-2 flex items-center gap-1">↑ 12% vs last month</div>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-slate-500 text-sm font-medium mb-2">{isServiceProvider ? 'Active Services' : 'Active Listings'}</div>
+                <div className="text-slate-500 text-sm font-medium mb-2">{isServiceProvider ? 'Active Services' : (isB2B ? 'B2B Catalog' : 'Active Listings')}</div>
                 <div className="text-3xl font-bold text-slate-900">{myListings.length}</div>
                 <button onClick={() => setActiveTab('listings')} className="text-blue-600 text-sm font-medium mt-2 hover:underline">
-                  {isServiceProvider ? 'View services →' : 'View listings →'}
+                  {isServiceProvider ? 'View services →' : 'View catalog →'}
                 </button>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="text-slate-500 text-sm font-medium mb-2">
-                  {isServiceProvider ? 'Queue / Tokens' : 'Pending Orders'}
+                  {isServiceProvider ? 'Queue / Tokens' : (isB2B ? 'Pending RFQs' : 'Pending Orders')}
                 </div>
                 <div className="text-3xl font-bold text-amber-500">
                   {isServiceProvider
                     ? (queueData ? `${queueData.waitingCount ?? 0} waiting` : 'No queue')
-                    : '3'}
+                    : (isB2B ? leads.length.toString() : orders.length.toString())}
                 </div>
-                <button onClick={() => setActiveTab(isServiceProvider ? 'queue' : 'orders')}
+                <button onClick={() => setActiveTab(isServiceProvider ? 'queue' : (isB2B ? 'leads' : 'orders'))}
                   className="text-slate-400 text-sm font-medium mt-2 cursor-pointer hover:text-blue-600 transition-colors">
                   View details →
                 </button>
@@ -432,19 +510,24 @@ function DashboardContent() {
             </div>
 
             {/* Quick Links */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-              {[
-                { label: 'My Listings', icon: '🛍️', tab: 'listings' },
-                { label: isServiceProvider ? 'Queue & Tokens' : 'Orders', icon: isServiceProvider ? '🎟️' : '📦', tab: isServiceProvider ? 'queue' : 'orders' },
-                { label: 'Leads / RFQ', icon: '💬', tab: 'leads' },
-                { label: 'Bookings', icon: '📅', tab: 'bookings' },
-              ].map(item => (
-                <button key={item.tab} onClick={() => setActiveTab(item.tab as any)}
-                  className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3 hover:border-blue-300 hover:shadow-md transition-all group">
-                  <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                  <span className="text-sm font-bold text-slate-700">{item.label}</span>
-                </button>
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4 mb-8 lg:mb-10">
+              {(() => {
+                const quickActions = [
+                  { label: isServiceProvider ? 'My Services' : (isB2B ? 'B2B Catalog' : 'My Listings'), icon: '🛍️', tab: 'listings' },
+                ];
+                if (isService) quickActions.push({ label: 'Queue & Tokens', icon: '🎟️', tab: 'queue' });
+                if (isB2C) quickActions.push({ label: 'Retail Orders', icon: '📦', tab: 'orders' });
+                if (isB2B) quickActions.push({ label: 'Leads / RFQ', icon: '💬', tab: 'leads' });
+                if (isService || isMeetingFlow) quickActions.push({ label: 'Bookings', icon: '📅', tab: 'bookings' });
+
+                return quickActions.map(item => (
+                  <button key={item.tab} onClick={() => setActiveTab(item.tab as any)}
+                    className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3 hover:border-blue-300 hover:shadow-md transition-all group">
+                    <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                    <span className="text-sm font-bold text-slate-700">{item.label}</span>
+                  </button>
+                ));
+              })()}
             </div>
           </div>
         )}
@@ -565,7 +648,7 @@ function DashboardContent() {
             </div>
             
             {showSuccess ? (
-              <div className="bg-emerald-50 border border-emerald-200 p-8 rounded-2xl text-center">
+              <div className="bg-emerald-50 border border-emerald-200 p-6 lg:p-8 rounded-2xl text-center">
                 <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
@@ -591,62 +674,142 @@ function DashboardContent() {
                 <h1 className="text-3xl font-bold text-slate-900">Queue & Token Management</h1>
                 <p className="text-slate-500 mt-2">Manage your live walk-in customers and tokens.</p>
               </div>
-              <button onClick={fetchQueue} className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm">
-                Refresh Status
-              </button>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowWalkInForm(true)} 
+                  className="bg-blue-600 border border-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <PlusCircle className="w-4 h-4" /> Add Walk-in
+                </button>
+                <button onClick={fetchQueue} className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm">
+                  Refresh Status
+                </button>
+              </div>
             </div>
+
+            {showWalkInForm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                  <h3 className="text-xl font-bold text-slate-900 mb-4">Add Walk-in Customer</h3>
+                  <form onSubmit={handleAddWalkIn} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Customer Name</label>
+                      <input type="text" required value={walkInName} onChange={e => setWalkInName(e.target.value)} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Rahul Sharma" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number (Optional)</label>
+                      <input type="text" value={walkInPhone} onChange={e => setWalkInPhone(e.target.value)} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. 9876543210" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Service Requested</label>
+                      <input type="text" required value={walkInService} onChange={e => setWalkInService(e.target.value)} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Haircut, Spa" />
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-slate-100">
+                      <button type="button" onClick={() => setShowWalkInForm(false)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
+                      <button type="submit" className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors">Add to Queue</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
             
             {isQueueLoading && !queueData ? (
               <div className="text-center py-20 text-slate-500">Loading queue...</div>
             ) : !queueData ? (
               <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm text-slate-500">No active queue found.</div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-6">
                 
-                {/* Live Status Card */}
-                <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-8 text-white shadow-lg lg:col-span-1 flex flex-col items-center justify-center relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
-                  <div className="relative z-10 text-center w-full">
-                    <div className="text-indigo-200 text-sm font-bold tracking-widest uppercase mb-2">NOW SERVING</div>
-                    {queueData.serving ? (
-                      <>
-                        <div className="text-8xl font-black mb-2 text-white drop-shadow-md">#{queueData.serving.tokenNumber}</div>
-                        <div className="text-xl font-bold text-blue-100">{queueData.serving.customerName}</div>
-                        <div className="text-indigo-200 text-sm mt-1">{queueData.serving.service}</div>
-                      </>
-                    ) : (
-                      <div className="py-10">
-                        <div className="text-6xl font-black text-indigo-300/50 mb-4">—</div>
-                        <div className="text-indigo-200">No one currently serving</div>
-                      </div>
-                    )}
-                    
-                    <div className="mt-8 pt-8 border-t border-indigo-500/30 w-full flex justify-between">
-                      <div className="text-center">
-                        <div className="text-3xl font-black">{queueData.waitingCount}</div>
-                        <div className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Waiting</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-3xl font-black">{queueData.doneToday}</div>
-                        <div className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Done Today</div>
+                {/* Live Status Cards */}
+                {queueData.resources && queueData.resources.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {queueData.resources.map((resource: any) => {
+                      const servingTokens = Array.isArray(queueData.serving) ? queueData.serving : [];
+                      const servingToken = servingTokens.find((s: any) => s.resourceId === resource.id);
+                      return (
+                        <div key={resource.id} className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
+                          <div className="relative z-10 text-center w-full">
+                            <div className="text-indigo-200 text-sm font-bold tracking-widest uppercase mb-2">{resource.name}</div>
+                            {servingToken ? (
+                              <>
+                                <div className="text-6xl font-black mb-2 text-white drop-shadow-md">
+                                  {servingToken.bookingMode === 'APPOINTMENT' ? 'Apt' : `#${servingToken.tokenNumber}`}
+                                </div>
+                                <div className="text-xl font-bold text-blue-100">{servingToken.customerName}</div>
+                                <div className="text-indigo-200 text-sm mt-1 mb-4">{servingToken.service}</div>
+                              </>
+                            ) : (
+                              <div className="py-6">
+                                <div className="text-4xl font-black text-indigo-300/50 mb-4">—</div>
+                                <div className="text-indigo-200 mb-4">No one currently serving</div>
+                              </div>
+                            )}
+                            <button 
+                              onClick={() => {
+                                fetch(`${API_URL}/service-queue/${queueData.queue.id}/next`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ resourceId: resource.id })
+                                }).then(() => fetchQueue());
+                              }}
+                              className="bg-white/20 hover:bg-white/30 text-white w-full py-2 rounded-lg font-bold text-sm shadow-sm transition-colors border border-white/20"
+                            >
+                              Call Next
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-8 text-white shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
+                    <div className="relative z-10 text-center w-full">
+                      <div className="text-indigo-200 text-sm font-bold tracking-widest uppercase mb-2">NOW SERVING</div>
+                      {queueData.serving && queueData.serving.length > 0 ? (
+                        <>
+                          <div className="text-8xl font-black mb-2 text-white drop-shadow-md">
+                            {queueData.serving[0].bookingMode === 'APPOINTMENT' ? 'Apt' : `#${queueData.serving[0].tokenNumber}`}
+                          </div>
+                          <div className="text-xl font-bold text-blue-100">{queueData.serving[0].customerName}</div>
+                          <div className="text-indigo-200 text-sm mt-1">{queueData.serving[0].service}</div>
+                        </>
+                      ) : (
+                        <div className="py-10">
+                          <div className="text-6xl font-black text-indigo-300/50 mb-4">—</div>
+                          <div className="text-indigo-200">No one currently serving</div>
+                        </div>
+                      )}
+                      <div className="mt-8 pt-8 border-t border-indigo-500/30 w-full flex justify-between">
+                        <div className="text-center">
+                          <div className="text-3xl font-black">{queueData.waitingCount}</div>
+                          <div className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Waiting</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-3xl font-black">{queueData.doneToday}</div>
+                          <div className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Done Today</div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Waiting List */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
                   <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h2 className="text-lg font-bold text-slate-900">Up Next</h2>
-                    <button 
-                      onClick={() => {
-                        fetch(`${API_URL}/salon/${queueData.queue.id}/next`, { method: 'POST' })
-                          .then(() => fetchQueue());
-                      }}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors"
-                    >
-                      Call Next Customer
-                    </button>
+                    {(!queueData.resources || queueData.resources.length === 0) && (
+                      <button 
+                        onClick={() => {
+                          fetch(`${API_URL}/service-queue/${queueData.queue.id}/next`, { method: 'POST' })
+                            .then(() => fetchQueue());
+                        }}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors"
+                      >
+                        Call Next Customer
+                      </button>
+                    )}
                   </div>
                   
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -658,11 +821,23 @@ function DashboardContent() {
                       queueData.waiting?.map((token: any, i: number) => (
                         <div key={token.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-sm transition-all">
                           <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg ${i === 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>
-                              #{token.tokenNumber}
+                            <div className={`w-14 h-12 rounded-xl flex flex-col items-center justify-center font-black text-sm ${i === 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>
+                              {token.bookingMode === 'APPOINTMENT' ? (
+                                <><span>Apt</span><span className="text-[10px] font-bold">{new Date(token.appointmentTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></>
+                              ) : (
+                                <span className="text-lg">#{token.tokenNumber}</span>
+                              )}
                             </div>
                             <div>
-                              <div className="font-bold text-slate-900">{token.customerName}</div>
+                              <div className="font-bold text-slate-900 flex items-center gap-2">
+                                {token.customerName}
+                                {token.bookingMode === 'APPOINTMENT' && token.status === 'PENDING' && (
+                                  <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Pending Arrival</span>
+                                )}
+                                {token.bookingMode === 'APPOINTMENT' && token.status === 'CHECKED_IN' && (
+                                  <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Checked In</span>
+                                )}
+                              </div>
                               <div className="text-xs text-slate-500 font-medium">{token.service}</div>
                             </div>
                           </div>
@@ -673,7 +848,7 @@ function DashboardContent() {
                             <button 
                               onClick={() => {
                                 if(confirm('Mark this customer as No-Show?')) {
-                                  fetch(`${API_URL}/salon/token/${token.id}/no-show`, { method: 'PATCH' })
+                                  fetch(`${API_URL}/service-queue/token/${token.id}/no-show`, { method: 'PATCH' })
                                     .then(() => fetchQueue());
                                 }
                               }}
@@ -692,7 +867,82 @@ function DashboardContent() {
           </div>
         )}
 
-        {activeTab === 'orders' && !isServiceProvider && (
+        {activeTab === 'bookings' && (
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900">Bookings & Appointments</h1>
+              <p className="text-slate-500 mt-2">Track and manage your live tokens and upcoming appointments.</p>
+            </div>
+            
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
+                    <th className="p-4 pl-6">ID / Token</th>
+                    <th className="p-4">Customer</th>
+                    <th className="p-4">Service</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 pr-6 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {bookings.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-slate-500">
+                        No active bookings or tokens in queue right now.
+                      </td>
+                    </tr>
+                  ) : (
+                    bookings.map((booking, index) => (
+                      <tr key={index} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4 pl-6 font-bold text-indigo-700">
+                          {booking.id.startsWith('Token') ? booking.id : (booking.id.includes('Apt') ? booking.id : (booking.bookingMode === 'APPOINTMENT' ? 'Appointment' : `Token #${booking.tokenNumber || '?'}`))}
+                        </td>
+                        <td className="p-4 text-slate-900 font-medium">
+                          {booking.customer}
+                          {booking.appointmentTime && <div className="text-xs text-slate-500">{new Date(booking.appointmentTime).toLocaleString()}</div>}
+                        </td>
+                        <td className="p-4 text-slate-600">{booking.service}</td>
+                        <td className="p-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            booking.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                            booking.status === 'Upcoming' ? 'bg-amber-100 text-amber-700' :
+                            booking.status === 'Pending' ? 'bg-slate-100 text-slate-700' :
+                            booking.status === 'Checked In' ? 'bg-emerald-100 text-emerald-700' :
+                            'bg-emerald-100 text-emerald-700'
+                          }`}>
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td className="p-4 pr-6 text-right flex justify-end gap-2">
+                          {booking.originalStatus === 'PENDING' && (
+                            <button 
+                              className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors"
+                              onClick={() => {
+                                fetch(`${API_URL}/service-queue/token/${booking.rawId}/check-in`, { method: 'POST' })
+                                  .then(() => fetchQueue());
+                              }}
+                            >
+                              Check-In Arrival
+                            </button>
+                          )}
+                          <button 
+                            className="text-slate-400 hover:text-blue-600 font-medium text-sm transition-colors px-3 py-1.5"
+                            onClick={() => setActiveTab('queue')}
+                          >
+                            Manage in Queue
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'orders' && (
           <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-slate-900">Recent Orders</h1>
@@ -819,76 +1069,7 @@ function DashboardContent() {
           </div>
         )}
 
-        {activeTab === 'bookings' && (
-          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-slate-900">Customer Bookings</h1>
-              <p className="text-slate-500 mt-2">Manage appointments and service requests.</p>
-            </div>
-            
-            {isPremiumSeller ? (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                      <th className="p-4 pl-6">Booking ID</th>
-                      <th className="p-4">Customer</th>
-                      <th className="p-4">Service</th>
-                      <th className="p-4">Scheduled Date</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4 pr-6 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {bookings.map((booking) => (
-                      <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-4 pl-6 font-medium text-slate-900">{booking.id}</td>
-                        <td className="p-4 text-slate-700 font-medium">{booking.customer}</td>
-                        <td className="p-4 text-slate-600">{booking.service}</td>
-                        <td className="p-4 text-indigo-700 font-medium text-sm flex items-center gap-2">
-                          <CalendarClock className="w-4 h-4" /> {booking.date}
-                        </td>
-                        <td className="p-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            booking.status === 'Upcoming' ? 'bg-amber-100 text-amber-700' :
-                            'bg-blue-100 text-blue-700'
-                          }`}>
-                            {booking.status}
-                          </span>
-                        </td>
-                        <td className="p-4 pr-6 text-right">
-                          <button 
-                            className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors mr-2"
-                            onClick={() => setBookings(bookings.map(b => b.id === booking.id ? {...b, status: 'Completed'} : b))}
-                          >
-                            Complete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200 shadow-sm p-10 md:p-16 text-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-                <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30 relative z-10">
-                  <Crown className="w-10 h-10" />
-                </div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-4 relative z-10">Premium Feature</h2>
-                <p className="text-slate-600 text-lg max-w-xl mx-auto mb-8 relative z-10">
-                  Unlock the full potential of your service business. Let customers book slots directly on your product pages and manage them all in one place.
-                </p>
-                <button 
-                  onClick={() => setIsPremiumSeller(true)}
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-amber-500/20 transition-all hover:-translate-y-1 relative z-10 cursor-pointer border-none"
-                >
-                  Upgrade to Premium
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+
 
         {['projects', 'milestones', 'enquiries', 'inventory', 'proposals'].includes(activeTab) && (
           <div className="max-w-6xl mx-auto py-20 text-center animate-in fade-in duration-300">
@@ -897,6 +1078,86 @@ function DashboardContent() {
             </div>
             <h2 className="text-3xl font-bold text-slate-800 mb-4 capitalize">{activeTab} Management</h2>
             <p className="text-slate-500">This feature is part of your sector's advanced workflow and is currently being built.</p>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900">Account Settings</h1>
+              <p className="text-slate-500 mt-2">Manage your seller account, profile, and preferences.</p>
+            </div>
+            
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-8 max-w-2xl mb-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-blue-600" /> Business Profile
+              </h2>
+              <form className="space-y-4" onSubmit={async (e) => { 
+                e.preventDefault(); 
+                const form = e.target as HTMLFormElement;
+                const data = {
+                  businessName: (form[0] as HTMLInputElement).value,
+                  gstNumber: (form[1] as HTMLInputElement).value,
+                  address: (form[2] as HTMLTextAreaElement).value,
+                };
+                try {
+                  const res = await fetch(`${API_URL}/sellers/user/${user?.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                  });
+                  if (res.ok) alert('Profile updated successfully!');
+                  else alert('Failed to update profile.');
+                } catch(err) {
+                  alert('Error updating profile.');
+                }
+              }}>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Business Name</label>
+                  <input type="text" required defaultValue={user?.business?.name} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">GST Number</label>
+                  <input type="text" defaultValue={user?.business?.gstNumber} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Business Address</label>
+                  <textarea defaultValue={user?.business?.address} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-24" />
+                </div>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-colors">
+                  Save Changes
+                </button>
+              </form>
+            </div>
+            
+            <div className="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden p-8 max-w-2xl">
+              <h2 className="text-xl font-bold text-red-600 mb-2 flex items-center gap-2">
+                <Trash2 className="w-5 h-5" /> Danger Zone
+              </h2>
+              <p className="text-slate-600 mb-6 text-sm">
+                Deleting your seller account will permanently remove your business profile, all your listings/services, and any associated queues or data. This action cannot be undone.
+              </p>
+              <button 
+                onClick={async () => {
+                  if(window.confirm('Are you absolutely sure you want to delete your seller account? All data will be lost forever.')) {
+                    try {
+                      const res = await fetch(`${API_URL}/sellers/user/${user?.id}`, { method: 'DELETE' });
+                      if(res.ok) {
+                        alert('Account successfully deleted.');
+                        window.location.href = '/seller/login';
+                      } else {
+                        alert('Failed to delete account.');
+                      }
+                    } catch(err) {
+                      alert('Error deleting account.');
+                    }
+                  }
+                }}
+                className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-6 py-3 rounded-xl font-bold transition-colors flex items-center gap-2"
+              >
+                Delete My Account
+              </button>
+            </div>
           </div>
         )}
       </main>

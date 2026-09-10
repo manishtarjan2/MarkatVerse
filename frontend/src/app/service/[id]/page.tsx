@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import {
   MapPin, Star, ShieldCheck, Clock, Calendar, CheckCircle2, PhoneCall,
   Info, Camera, Users, Ticket, ChevronRight, Loader2, RefreshCw,
-  Scissors, ArrowLeft, Share2, Heart, Zap, TrendingUp
+  Scissors, ArrowLeft, Share2, Heart, Zap, TrendingUp, CalendarClock
 } from 'lucide-react';
 
 // ─── Dynamic Walk-in Services ───────────────────────────────────────────────────
@@ -43,13 +43,16 @@ function SmartQueueWidget({ service }: { service: any }) {
   const [step, setStep] = useState<'view' | 'join' | 'done'>('view');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [bookingMode, setBookingMode] = useState<'TOKEN' | 'APPOINTMENT'>('TOKEN');
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('');
+  const [joining, setJoining] = useState(false);
   
   const emoji = service.category?.toLowerCase().includes('doctor') || service.category?.toLowerCase().includes('clinic') ? '🩺' : 
                 service.category?.toLowerCase().includes('spa') ? '💆' : '✂️';
   const availableServices = [{ label: service.name, price: service.price, emoji }];
   const [selectedServices, setSelectedServices] = useState<typeof availableServices>(availableServices);
   const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
-  const [joining, setJoining] = useState(false);
   const [result, setResult] = useState<JoinResult | null>(null);
   const [err, setErr] = useState('');
 
@@ -60,7 +63,7 @@ function SmartQueueWidget({ service }: { service: any }) {
 
         // Always try by sellerId first if provided
         if (service.sellerId) {
-          const r = await fetch(`${API}/salon/seller/${service.sellerId}`);
+          const r = await fetch(`${API}/service-queue/seller/${service.sellerId}`);
           const text = await r.text();
           const d = text ? JSON.parse(text) : null;
           if (d && d.id) list = [d];
@@ -68,7 +71,7 @@ function SmartQueueWidget({ service }: { service: any }) {
 
         // If still no queue, search all queues filtered by shopName matching this seller
         if (list.length === 0) {
-          const r = await fetch(`${API}/salon/queues`);
+          const r = await fetch(`${API}/service-queue/queues`);
           const text = await r.text();
           const all: QueueSummary[] = text ? JSON.parse(text) : [];
           const targetShopName = service.seller || service.name || 'Walk-in Service';
@@ -80,7 +83,7 @@ function SmartQueueWidget({ service }: { service: any }) {
 
         // If still no queue, create one scoped exclusively to this seller
         if (list.length === 0) {
-          const createRes = await fetch(`${API}/salon/queue`, {
+          const createRes = await fetch(`${API}/service-queue/queue`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -107,7 +110,7 @@ function SmartQueueWidget({ service }: { service: any }) {
     if (!selected) return;
     if (showRefresh) setRefreshing(true);
     try {
-      const r = await fetch(`${API}/salon/${selected.id}/status`);
+      const r = await fetch(`${API}/service-queue/${selected.id}/status`);
       setStatus(await r.json());
     } catch {/* ignore */} finally { setRefreshing(false); }
   }, [selected]);
@@ -124,13 +127,25 @@ function SmartQueueWidget({ service }: { service: any }) {
     if (!selected) return;
     setErr(''); setJoining(true);
     try {
-      const r = await fetch(`${API}/salon/${selected.id}/join`, {
+      const payload: any = {
+        customerName: name.trim(),
+        phone: phone.trim() || undefined,
+        service: selectedServices.map(s => s.label).join(', '),
+        bookingMode: bookingMode,
+      };
+      
+      if (bookingMode === 'APPOINTMENT') {
+        if (!appointmentDate || !appointmentTime) {
+          setErr('Please select appointment date and time');
+          setJoining(false);
+          return;
+        }
+        payload.appointmentTime = `${appointmentDate}T${appointmentTime}:00`;
+      }
+
+      const r = await fetch(`${API}/service-queue/${selected.id}/join`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: name.trim(),
-          phone: phone.trim() || undefined,
-          service: selectedServices.map(s => s.label).join(', '),
-        }),
+        body: JSON.stringify(payload),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.message ?? 'Failed');
@@ -153,10 +168,10 @@ function SmartQueueWidget({ service }: { service: any }) {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Link href={`/salon/token/${result.token.id}`} className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-sm transition-all shadow-lg">
+        <Link href={`/service-queue/token/${result.token.id}`} className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-sm transition-all shadow-lg">
           <Clock className="w-4 h-4" /> Track Live
         </Link>
-        <Link href="/salon/queue" className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm transition-all">
+        <Link href="/service-queue/queue" className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm transition-all">
           <Users className="w-4 h-4" /> Queue Board
         </Link>
       </div>
@@ -237,15 +252,41 @@ function SmartQueueWidget({ service }: { service: any }) {
         </div>
       )}
 
+      {/* Booking Mode Selector */}
+      <div className="flex gap-2 p-1 bg-slate-100 rounded-xl mb-4">
+        <button 
+          onClick={() => setBookingMode('TOKEN')}
+          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${bookingMode === 'TOKEN' ? 'bg-white shadow text-violet-700' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Walk-in Now (Token)
+        </button>
+        <button 
+          onClick={() => setBookingMode('APPOINTMENT')}
+          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors ${bookingMode === 'APPOINTMENT' ? 'bg-white shadow text-violet-700' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Book Appointment
+        </button>
+      </div>
+
       <input type="text" placeholder="Your name *" value={name} onChange={e => setName(e.target.value)}
         className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
       <input type="tel" placeholder="Phone number (optional)" value={phone} onChange={e => setPhone(e.target.value)}
         className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
+      
+      {bookingMode === 'APPOINTMENT' && (
+        <div className="flex gap-3">
+          <input type="date" value={appointmentDate} onChange={e => setAppointmentDate(e.target.value)}
+            className="flex-1 px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
+          <input type="time" value={appointmentTime} onChange={e => setAppointmentTime(e.target.value)}
+            className="flex-1 px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
+        </div>
+      )}
+
       {err && <p className="text-red-500 text-sm bg-red-50 border border-red-100 px-4 py-3 rounded-xl">⚠️ {err}</p>}
       <button onClick={join} disabled={joining || selectedServices.length === 0}
         className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2">
-        {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ticket className="w-4 h-4" />}
-        {joining ? 'Getting your token…' : `Pay ₹${totalPrice} & Get Token 🎫`}
+        {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : (bookingMode === 'TOKEN' ? <Ticket className="w-4 h-4" /> : <CalendarClock className="w-4 h-4" />)}
+        {joining ? 'Processing…' : (bookingMode === 'TOKEN' ? `Pay ₹${totalPrice} & Get Token 🎫` : `Pay ₹${totalPrice} & Book 📅`)}
       </button>
     </div>
   );
@@ -270,13 +311,13 @@ function SmartQueueWidget({ service }: { service: any }) {
             // First attempt to fetch the queue by sellerId or shopName
             let queueId = null;
             if (service.sellerId) {
-              const r = await fetch(`${API}/salon/seller/${service.sellerId}`);
+              const r = await fetch(`${API}/service-queue/seller/${service.sellerId}`);
               const d = await r.json().catch(() => null);
               if (d && d.id) queueId = d.id;
             }
             if (!queueId) {
               const targetShopName = service.seller || service.name || 'Walk-in Service';
-              const r = await fetch(`${API}/salon/queues`);
+              const r = await fetch(`${API}/service-queue/queues`);
               const all = await r.json().catch(() => []);
               const matched = Array.isArray(all) ? all.find((q: any) => q.shopName === targetShopName) : null;
               if (matched) queueId = matched.id;
@@ -284,7 +325,7 @@ function SmartQueueWidget({ service }: { service: any }) {
 
             // If still no queue, try to create it
             if (!queueId) {
-              const createRes = await fetch(`${API}/salon/queue`, {
+              const createRes = await fetch(`${API}/service-queue/queue`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -299,7 +340,7 @@ function SmartQueueWidget({ service }: { service: any }) {
             if (!queueId) throw new Error("Could not find or create a queue for this service.");
             
             // Join the queue
-            const joinRes = await fetch(`${API}/salon/${queueId}/join`, {
+            const joinRes = await fetch(`${API}/service-queue/${queueId}/join`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ customerName: name.trim(), phone: phone.trim() || undefined, service: service.name }),
             });
@@ -398,11 +439,11 @@ function SmartQueueWidget({ service }: { service: any }) {
       )}
 
       <div className="grid grid-cols-2 gap-2">
-        <Link href="/salon/queue" className="flex items-center justify-center gap-1.5 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-all">
+        <Link href="/service-queue/queue" className="flex items-center justify-center gap-1.5 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-all">
           <Users className="w-3.5 h-3.5" /> Live Board
         </Link>
         {isSeller && (
-          <Link href="/salon/manage" className="flex items-center justify-center gap-1.5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-violet-200">
+          <Link href="/service-queue/manage" className="flex items-center justify-center gap-1.5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-violet-200">
             <ChevronRight className="w-3.5 h-3.5" /> Manage Shop
           </Link>
         )}

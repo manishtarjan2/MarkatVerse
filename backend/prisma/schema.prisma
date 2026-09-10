@@ -22,7 +22,7 @@ model User {
   orders      Order[]
   buyerLeads  Lead[]    @relation("BuyerLeads")
   sellerLeads Lead[]    @relation("SellerLeads")
-  salonQueue  SalonQueue?
+  serviceQueue ServiceQueue?
 
   // V2 Relations
   listings    Listing[] @relation("UserListings")
@@ -39,6 +39,8 @@ model Business {
   verified     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  capabilities String[] @default([]) // B2B, B2C, SERVICE, CONTRACTOR, etc.
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -138,35 +140,92 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 }
 
-model SalonQueue {
-  id           String       @id @default(auto()) @map("_id") @db.ObjectId
-  shopName     String
-  sellerId     String?      @unique @db.ObjectId
-  currentToken Int          @default(0)
-  lastToken    Int          @default(0)
-  avgMinutes   Int          @default(20)
-  pricePerHour Float        @default(0)
-  isOpen       Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+model ServiceQueue {
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  shopName           String
+  sellerId           String?      @unique @db.ObjectId
+  currentToken       Int          @default(0)
+  lastToken          Int          @default(0)
+  avgMinutes         Int          @default(20)
+  pricePerHour       Float        @default(0)
+  isOpen             Boolean      @default(true)
+  
+  // Universal Engine Settings
+  enableTokens       Boolean      @default(true)
+  enableAppointments Boolean      @default(false)
+  queuePolicy        String       @default("FIFO") // FIFO, APPOINTMENT_PRIORITY, MIXED
+  
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
-  tokens SalonToken[]
-  seller User?        @relation(fields: [sellerId], references: [id])
+  bookings           ServiceBooking[]
+  staff              ServiceStaff[]
+  resources          ServiceResource[]
+  seller             User?        @relation(fields: [sellerId], references: [id])
 }
 
-model SalonToken {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  queueId      String    @db.ObjectId
-  tokenNumber  Int
-  customerName String
-  phone        String?
-  service      String    @default("Haircut")
-  status       String    @default("WAITING") // WAITING, SERVING, DONE, NO_SHOW
-  joinedAt     DateTime  @default(now())
-  servedAt     DateTime?
-  doneAt       DateTime?
+model ServiceBooking {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  queueId          String       @db.ObjectId
+  
+  // Unified Booking Identity
+  bookingMode      String       @default("TOKEN") // TOKEN, APPOINTMENT
+  tokenNumber      Int?
+  appointmentTime  DateTime?
+  
+  customerName     String
+  phone            String?
+  service          String       @default("General")
+  staffName        String?
+  
+  // Status tracking
+  status           String       @default("WAITING") // PENDING, CHECKED_IN, WAITING, SERVING, DONE, NO_SHOW
+  
+  // Assignment
+  staffId          String?      @db.ObjectId
+  resourceId       String?      @db.ObjectId
 
-  queue SalonQueue @relation(fields: [queueId], references: [id])
+  joinedAt         DateTime     @default(now())
+  servedAt         DateTime?
+  doneAt           DateTime?
+
+  queue            ServiceQueue     @relation(fields: [queueId], references: [id])
+  staff            ServiceStaff?    @relation(fields: [staffId], references: [id])
+  resource         ServiceResource? @relation(fields: [resourceId], references: [id])
+}
+
+model ServiceStaff {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  queueId          String       @db.ObjectId
+  name             String
+  role             String?
+  specialization   String?
+  services         String[]     @default([])
+  workingHours     Json?
+  status           String       @default("AVAILABLE") // AVAILABLE, IN_SERVICE, BREAK, INACTIVE
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  queue            ServiceQueue @relation(fields: [queueId], references: [id])
+  bookings         ServiceBooking[]
+  resources        ServiceResource[]
+}
+
+model ServiceResource {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  queueId          String       @db.ObjectId
+  name             String       // e.g. "Chair 1", "Room 4"
+  type             String       // e.g. "Chair", "Room"
+  capacity         Int          @default(1)
+  services         String[]     @default([])
+  status           String       @default("AVAILABLE") // AVAILABLE, IN_USE, MAINTENANCE
+  assignedStaffId  String?      @db.ObjectId
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  queue            ServiceQueue  @relation(fields: [queueId], references: [id])
+  assignedStaff    ServiceStaff? @relation(fields: [assignedStaffId], references: [id])
+  bookings         ServiceBooking[]
 }
 
 // ---------------------------------------------------------
