@@ -34,6 +34,7 @@ model Business {
   name         String
   logo         String?
   description  String?
+  businessModel MainType @default(B2C)
   businessType String // MANUFACTURER, WHOLESALER, etc
   address      String?
   verified     Boolean  @default(false)
@@ -42,7 +43,10 @@ model Business {
 
   capabilities String[] @default([]) // B2B, B2C, SERVICE, CONTRACTOR, etc.
 
-  user User @relation(fields: [userId], references: [id])
+  user       User               @relation(fields: [userId], references: [id])
+  wallet     Wallet?
+  features   BusinessFeature[]
+  bankAccounts BankAccount[]
 }
 
 model Category {
@@ -323,4 +327,114 @@ model Listing {
   businessType   BusinessType @relation(fields: [businessTypeId], references: [id])
   sector         Sector       @relation(fields: [sectorId], references: [id])
   category       Category?    @relation("CategoryToListing", fields: [categoryId], references: [id])
+}
+
+// ---------------------------------------------------------
+// SELLER WALLET & SETTLEMENT SYSTEM
+// ---------------------------------------------------------
+
+model Wallet {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  businessId      String   @unique @db.ObjectId
+  totalEarnings   Float    @default(0)
+  pendingBalance  Float    @default(0)
+  availableBalance Float   @default(0)
+  withdrawn       Float    @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  business        Business @relation(fields: [businessId], references: [id])
+  transactions    LedgerTransaction[]
+  withdrawals     WithdrawalRequest[]
+}
+
+model LedgerTransaction {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  walletId        String   @db.ObjectId
+  referenceId     String?  // Order ID, Booking ID, etc.
+  referenceType   String?  // ORDER, BOOKING, PROJECT
+  paymentRef      String?  // Gateway transaction ID
+  
+  grossAmount     Float
+  platformFee     Float    @default(0)
+  commission      Float    @default(0)
+  tax             Float    @default(0)
+  netAmount       Float
+  
+  type            String   // CREDIT, DEBIT, SETTLEMENT, REFUND, ADJUSTMENT
+  status          String   @default("PENDING") // PENDING, SETTLED, AVAILABLE, FAILED, REFUNDED
+  
+  createdAt       DateTime @default(now())
+  settledAt       DateTime?
+
+  wallet          Wallet   @relation(fields: [walletId], references: [id])
+}
+
+model BankAccount {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  businessId      String   @db.ObjectId
+  accountName     String
+  accountNumber   String
+  ifscCode        String?
+  bankName        String
+  isPrimary       Boolean  @default(false)
+  isVerified      Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  business        Business @relation(fields: [businessId], references: [id])
+  withdrawals     WithdrawalRequest[]
+}
+
+model WithdrawalRequest {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  walletId        String   @db.ObjectId
+  bankAccountId   String   @db.ObjectId
+  amount          Float
+  fee             Float    @default(0)
+  netAmount       Float
+  status          String   @default("REQUESTED") // REQUESTED, PROCESSING, COMPLETED, FAILED
+  referenceNumber String?  // Bank reference
+  
+  createdAt       DateTime @default(now())
+  processedAt     DateTime?
+
+  wallet          Wallet      @relation(fields: [walletId], references: [id])
+  bankAccount     BankAccount @relation(fields: [bankAccountId], references: [id])
+}
+
+// ---------------------------------------------------------
+// CAPABILITY & FEATURE SYSTEM
+// ---------------------------------------------------------
+
+model FeatureRegistry {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  key             String   @unique // e.g. PRODUCT_SALES, SERVICE_BOOKING, TOKEN_QUEUE
+  name            String
+  description     String?
+  requires        String[] @default([]) // Array of feature keys required for this to be active
+  category        String   // CORE, ADDON
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  businesses      BusinessFeature[]
+}
+
+model BusinessFeature {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  businessId      String   @db.ObjectId
+  featureKey      String   // Links to FeatureRegistry.key
+  isActive        Boolean  @default(true)
+  settings        Json?    // Optional feature-specific configuration
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  business        Business        @relation(fields: [businessId], references: [id])
+  feature         FeatureRegistry @relation(fields: [featureKey], references: [key])
+
+  @@unique([businessId, featureKey])
 }

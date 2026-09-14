@@ -26,17 +26,19 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex items-center justify-between py-2 px-3 sm:px-6 bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-sm">
-      <div className="flex items-center gap-2 sm:gap-6">
-        <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity mr-8 sm:mr-16 lg:mr-28">
-          <img src="/logo.png" alt="MarkatVerse" className="h-8 sm:h-10 lg:h-12 object-contain scale-[1.5] sm:scale-[2] lg:scale-[2.5] origin-left pl-2 sm:pl-0" />
+    <nav className="flex flex-wrap md:flex-nowrap items-center justify-between py-2 px-3 sm:px-6 bg-white border-b border-slate-200 sticky top-0 z-[100] shadow-sm gap-y-3 gap-x-2">
+      {/* 1. Logo (Top Left on Mobile, Left on Desktop) */}
+      <div className="flex items-center shrink-0 order-1">
+        <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity mr-2 sm:mr-8 md:mr-12 lg:mr-24 shrink-0">
+          <img src="/logo.png" alt="MarkatVerse" className="h-10 sm:h-12 lg:h-14 object-contain scale-[2] sm:scale-[2.2] lg:scale-[2.5] origin-left pl-2 sm:pl-0" />
         </Link>
       </div>
 
       {user?.role !== 'super_admin' && (
         <>
+          {/* Deliver to (Hidden on Mobile, Left on Desktop) */}
           <div
-            className="hidden lg:flex items-center gap-2 px-3 py-1.5 cursor-pointer relative hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200 ml-4"
+            className="hidden lg:flex items-center gap-2 px-3 py-1.5 cursor-pointer relative hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-200 ml-2 shrink-0 order-2"
             onClick={() => setIsLocationPopupOpen(!isLocationPopupOpen)}
           >
             <MapPin className="w-5 h-5 text-slate-600" strokeWidth={1.5} />
@@ -58,13 +60,13 @@ export default function Navbar() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Enter Pincode or City"
+                    placeholder="Enter pincode or city"
+                    className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
                     value={locationInput}
                     onChange={(e) => setLocationInput(e.target.value)}
-                    className="flex-1 p-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                   />
                   <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors text-sm"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors"
                     onClick={() => {
                       if (locationInput.trim()) {
                         setLocationStr(locationInput.trim());
@@ -79,16 +81,17 @@ export default function Navbar() {
             )}
           </div>
 
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[700px] bg-slate-50 rounded-xl overflow-hidden mx-8 border border-slate-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-inner">
+          {/* 3. Search Bar (Bottom Row on Mobile, Middle on Desktop) */}
+          <form onSubmit={handleSearch} className="flex order-3 md:order-2 w-full md:flex-1 md:max-w-[700px] bg-slate-50 rounded-xl overflow-hidden md:mx-6 border border-slate-300 hover:border-blue-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-inner">
             <input
               type="text"
-              placeholder="Search for products, brands, services and more..."
+              placeholder="Search for products, brands, services..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent text-slate-800 border-none py-2.5 px-4 outline-none placeholder:text-slate-400 text-sm"
             />
             
-            <button type="submit" className="cursor-pointer px-6 bg-blue-600 hover:bg-blue-700 text-white border-none flex items-center justify-center transition-colors">
+            <button type="submit" className="cursor-pointer px-5 md:px-6 bg-blue-600 hover:bg-blue-700 text-white border-none flex items-center justify-center transition-colors shrink-0">
               <Search className="w-5 h-5" strokeWidth={2.5} />
             </button>
           </form>
@@ -96,7 +99,7 @@ export default function Navbar() {
       )}
 
       {user?.role === 'super_admin' && (
-        <div className="flex-1 flex justify-center">
+        <div className="flex-1 flex justify-center hidden md:flex order-2">
           <div className="bg-amber-50 px-5 py-2 rounded-lg border border-amber-500/50 flex items-center gap-2 shadow-sm">
             <span className="text-amber-500">🛡️</span>
             <span className="text-amber-600 font-bold text-sm tracking-wide">ADMIN MODE</span>
@@ -104,10 +107,7 @@ export default function Navbar() {
         </div>
       )}
 
-      <div className="flex items-center gap-3 sm:gap-5 text-slate-600">
-        <Link href="/search" className="flex md:hidden flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group">
-          <Search className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-        </Link>
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-5 text-slate-600 shrink-0 order-2 md:order-3 ml-auto md:ml-0">
 
         {user?.role !== 'super_admin' && (
           <>

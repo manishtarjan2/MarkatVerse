@@ -5,28 +5,53 @@ import { useRouter } from 'next/navigation';
 import { useProducts, Product } from '@/context/ProductContext';
 import { MapPin, Heart, Share2 } from 'lucide-react';
 
-export default function ProductGrid({ products: propProducts, limit, category }: { products?: Product[], limit?: number, category?: string }) {
+import { useUserTrends } from '@/hooks/useUserTrends';
+
+export default function ProductGrid({ products: propProducts, limit, category, personalized, recent }: { products?: Product[], limit?: number, category?: string, personalized?: boolean, recent?: boolean }) {
   const { products: contextProducts, userLocation } = useProducts();
+  const { getTopCategories, trends } = useUserTrends();
   const router = useRouter();
   const [showLocationToast, setShowLocationToast] = useState(false);
 
   useEffect(() => {
-    if (contextProducts.length > 0) setShowLocationToast(true);
+    if (contextProducts.length > 0 && !personalized && !recent) setShowLocationToast(true);
     const timer = setTimeout(() => setShowLocationToast(false), 3000);
     return () => clearTimeout(timer);
-  }, [contextProducts]);
+  }, [contextProducts, personalized, recent]);
 
-  const items = propProducts || contextProducts;
+  let items = propProducts || contextProducts;
+  
+  if (recent) {
+    items = items.filter(p => trends.recentlyViewed.includes(p.id));
+    items.sort((a, b) => trends.recentlyViewed.indexOf(a.id) - trends.recentlyViewed.indexOf(b.id));
+  }
+  
   const productsToRender = [...(items || [])].filter(p => category ? p.category === category : true);
 
-  // Sort by nearest (matching location first)
-  productsToRender.sort((a, b) => {
-    const aMatch = (a.location || '').toLowerCase().includes(userLocation.toLowerCase());
-    const bMatch = (b.location || '').toLowerCase().includes(userLocation.toLowerCase());
-    if (aMatch && !bMatch) return -1;
-    if (!aMatch && bMatch) return 1;
-    return 0;
-  });
+  if (!recent) {
+    const topCategories = personalized ? getTopCategories() : [];
+    
+    // Sort by personalized category first, then nearest
+    productsToRender.sort((a, b) => {
+      if (personalized) {
+        const aCatScore = topCategories.indexOf(a.category);
+        const bCatScore = topCategories.indexOf(b.category);
+        
+        const aScore = aCatScore !== -1 ? topCategories.length - aCatScore : 0;
+        const bScore = bCatScore !== -1 ? topCategories.length - bCatScore : 0;
+        
+        if (aScore !== bScore) {
+          return bScore - aScore;
+        }
+      }
+
+      const aMatch = (a.location || '').toLowerCase().includes(userLocation.toLowerCase());
+      const bMatch = (b.location || '').toLowerCase().includes(userLocation.toLowerCase());
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    });
+  }
 
   // Limit items if specified
   const finalProducts = limit ? productsToRender.slice(0, limit) : productsToRender;
@@ -101,8 +126,8 @@ export default function ProductGrid({ products: propProducts, limit, category }:
             </div>
             <div className="mt-auto">
               <div className="font-bold text-sm sm:text-base text-slate-900 flex items-center gap-1 sm:gap-2 flex-wrap">
-                ₹{product.price.toLocaleString('en-IN')}
-                {product.originalPrice > product.price && (
+                ₹{(product.price ?? 0).toLocaleString('en-IN')}
+                {product.originalPrice != null && product.originalPrice > (product.price ?? 0) && (
                   <span className="text-[#94A3B8] line-through text-[9px] sm:text-[10px] font-normal">₹{product.originalPrice.toLocaleString('en-IN')}</span>
                 )}
                 {product.discount && (

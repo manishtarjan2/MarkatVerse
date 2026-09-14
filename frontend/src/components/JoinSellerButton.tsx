@@ -22,9 +22,9 @@ export default function JoinSellerButton() {
   }
 
   return (
-    <Link href={targetUrl}>
+    <Link href={targetUrl} className="w-full block">
       <button
-        className={`px-6 py-3 rounded-xl font-bold transition-all border-2 ${
+        className={`w-full px-3 sm:px-6 py-3 rounded-xl font-bold text-sm sm:text-base whitespace-nowrap transition-all border-2 ${
           isSeller
             ? 'bg-[#0f1928] text-white border-[#0f1928] hover:bg-slate-700 shadow-lg'
             : 'bg-white/50 backdrop-blur hover:bg-white text-[#0f1928] border-[#0f1928]'

@@ -37,6 +37,9 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
   // Dynamic Attributes
   const [parameters, setParameters] = useState<Record<string, string | string[]>>(initialData?.parameters || {});
   
+  // Custom Options (Variants/Services Menu)
+  const [options, setOptions] = useState<{ id: string, name: string, price: number }[]>(initialData?.options || []);
+  
   // Media
   const [uploadedImages, setUploadedImages] = useState<string[]>(initialData?.images || (initialData?.image ? [initialData.image] : []));
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
@@ -128,7 +131,8 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
       wholesaleTiers: sellingType === 'B2B' ? wholesaleTiers : undefined,
       images: uploadedImages.length > 0 ? uploadedImages : undefined,
       image: uploadedImages.length > 0 ? uploadedImages[0] : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80',
-      parameters
+      parameters,
+      options: options.length > 0 ? options : undefined
     };
 
     await onSave(payload);
@@ -365,6 +369,44 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
               <button type="button" onClick={() => setWholesaleTiers(prev => [...prev, { minQty: 0, price: 0 }])} className="p-4 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 flex flex-col items-center justify-center gap-2 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-colors">
                 <PlusCircle className="w-6 h-6" />
                 <span className="text-sm font-semibold">Add Tier</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Dynamic Options (Variants/Services) */}
+        {(canSellB2C || isService) && (
+          <div className="space-y-4 pt-6 border-t border-slate-100">
+            <h4 className="text-sm font-bold text-slate-800">Custom Options & Variants</h4>
+            <p className="text-xs text-slate-500">Add variations like specific services (e.g. Haircut, Massage) or product variants (e.g. Size, Material) with custom pricing.</p>
+            
+            <div className="grid grid-cols-1 gap-3">
+              {options.map((opt, index) => (
+                <div key={opt.id} className="flex gap-3 items-center p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <div className="flex-1">
+                    <input type="text" value={opt.name} onChange={e => {
+                      const newOpts = [...options];
+                      newOpts[index].name = e.target.value;
+                      setOptions(newOpts);
+                    }} placeholder="Option Name (e.g. Haircut, Size L)" className="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none text-sm" />
+                  </div>
+                  <div className="w-32">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                      <input type="number" value={opt.price} onChange={e => {
+                        const newOpts = [...options];
+                        newOpts[index].price = Number(e.target.value);
+                        setOptions(newOpts);
+                      }} placeholder="0" className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-300 outline-none text-sm" />
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => setOptions(options.filter((_, i) => i !== index))} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button type="button" onClick={() => setOptions([...options, { id: Math.random().toString(36).substr(2, 9), name: '', price: 0 }])} className="w-full p-3 border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl text-blue-600 flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm">
+                <PlusCircle className="w-4 h-4" /> Add Option / Variant
               </button>
             </div>
           </div>

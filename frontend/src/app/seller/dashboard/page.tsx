@@ -563,7 +563,7 @@ function DashboardContent() {
                   <div className="p-5 flex-1 flex flex-col">
                     <div className="font-bold text-base text-slate-900 mb-2 line-clamp-2 leading-snug">{product.name}</div>
                     <div className="flex justify-between items-end mb-5 mt-auto">
-                      <span className="text-xl font-bold text-slate-900">₹{product.price.toLocaleString('en-IN')}</span>
+                      <span className="text-xl font-bold text-slate-900">₹{(product.price ?? 0).toLocaleString('en-IN')}</span>
                       <span className="text-xs text-emerald-600 font-medium flex items-center gap-1.5 bg-emerald-50 px-2 py-1 rounded-md">
                         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active
                       </span>

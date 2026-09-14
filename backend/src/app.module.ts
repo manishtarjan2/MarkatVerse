@@ -12,9 +12,12 @@ import { UploadModule } from './upload/upload.module.js';
 import { ServiceQueueModule } from './service-queue/service-queue.module.js';
 import { ConfigurationModule } from './configuration/configuration.module.js';
 import { ListingsModule } from './listings/listings.module.js';
+import { WalletModule } from './wallet/wallet.module.js';
+import { WebhookModule } from './webhook/webhook.module.js';
+import { SellerConfigModule } from './seller-config/seller-config.module.js';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule],
+  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -5,13 +5,16 @@ import { useProducts, useCategoryRules } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useUserTrends } from '@/hooks/useUserTrends';
 import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin, PhoneCall, CalendarClock } from 'lucide-react';
+import SmartQueueWidget from '@/components/SmartQueueWidget';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function ProductDetails() {
   const params = useParams();
   const id = params?.id as string;
+  const { trackCategory, trackProductView } = useUserTrends();
   const { addToCart } = useCart();
   const { products } = useProducts();
   const { user, updateUserRole, login } = useAuth();
@@ -36,6 +39,13 @@ export default function ProductDetails() {
   const hasMeeting         = rules.allows('Meeting') || rules.isOptional('Meeting');
   const hasVehicleTestDrive = rules.allows('Vehicle Test Drive');
   const hasService         = rules.allows('Service');
+
+  useEffect(() => {
+    if (product) {
+      trackCategory(product.category);
+      trackProductView(product.id);
+    }
+  }, [product?.id, product?.category]);
 
   // Initialize RFQ quantity and variants
   useEffect(() => {
@@ -515,33 +525,7 @@ export default function ProductDetails() {
 
               {/* ── TOKEN BOOKING ── */}
               {hasToken && (
-                <div className="flex flex-col gap-3 w-full p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                  <div className="text-emerald-800 font-bold text-sm mb-1">Pre-Book Your Token Online</div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input type="date" className="flex-1 p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-slate-700 bg-white shadow-sm" />
-                    <input type="time" className="flex-1 p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-slate-700 bg-white shadow-sm" />
-                    <select className="flex-[0.5] p-3 border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 bg-white text-slate-700 shadow-sm">
-                      <option value="1">1 Person</option>
-                      <option value="2">2 People</option>
-                      <option value="3">3 People</option>
-                    </select>
-                  </div>
-                  <button
-                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-emerald-600/20 flex items-center justify-center gap-3 mt-1"
-                    onClick={() => {
-                      const tokenNo = Math.floor(Math.random() * 50) + 10;
-                      alert(`Success! Your pre-booking Token #${tokenNo} has been generated for ${product.seller}. Show this upon arrival.`);
-                    }}
-                  >
-                    <CalendarClock className="w-6 h-6" /> Generate Pre-Booking Token
-                  </button>
-                  <button
-                    className="w-full py-2 bg-transparent text-emerald-700 hover:underline font-semibold text-sm transition-colors flex items-center justify-center gap-2 mt-1"
-                    onClick={() => alert(`Calling ${product.seller} at +91-9876543210`)}
-                  >
-                    <PhoneCall className="w-4 h-4" /> Prefer to Call? (+91-9876543210)
-                  </button>
-                </div>
+                <SmartQueueWidget service={product} />
               )}
 
               {/* ── APPOINTMENT BOOKING ── */}

@@ -34,10 +34,10 @@ export default function Home() {
         </section>
 
         {/* Dual Hero Section */}
-        <section className="grid grid-cols-1 md:grid-cols-10 gap-3 lg:gap-4 w-full h-auto md:h-[440px]">
+        <section className="grid grid-cols-1 md:grid-cols-10 gap-3 lg:gap-4 w-full h-auto md:h-[440px] pb-2 md:pb-0">
           
           {/* Left Banner - Light Theme */}
-          <div className="md:col-span-7 bg-white rounded-3xl p-5 sm:p-6 lg:p-10 flex flex-col items-start justify-center border border-slate-200 shadow-sm relative overflow-hidden group min-h-[350px] md:min-h-0">
+          <div className="md:col-span-7 bg-white rounded-3xl p-5 sm:p-6 lg:p-10 flex flex-col items-start justify-center border border-slate-200 shadow-sm relative overflow-hidden group min-h-[300px] md:min-h-0">
             
             {/* Background Image seamlessly blended */}
             <div className="absolute top-0 right-0 w-full sm:w-[55%] h-full z-0">
@@ -54,34 +54,36 @@ export default function Home() {
                 Shop, Sell & Grow with Markatverse
               </p>
               
-              <div className="flex flex-wrap gap-3 mb-6 relative z-20">
-                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4">
+              <div className="flex flex-row flex-nowrap overflow-x-auto hide-scrollbar gap-3 mb-6 relative z-20 w-full pb-2">
+                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4 min-w-max">
                   <div className="text-blue-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg></div>
                   <div className="flex flex-col"><span className="text-xs font-bold text-slate-900 leading-tight">B2B</span><span className="text-[10px] text-slate-500 leading-tight">Business to<br/>Business</span></div>
                 </div>
-                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4">
+                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4 min-w-max">
                   <div className="text-orange-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg></div>
                   <div className="flex flex-col"><span className="text-xs font-bold text-slate-900 leading-tight">B2C</span><span className="text-[10px] text-slate-500 leading-tight">Business to<br/>Consumer</span></div>
                 </div>
-                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4">
+                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4 min-w-max">
                   <div className="text-emerald-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div>
                   <div className="flex flex-col"><span className="text-xs font-bold text-slate-900 leading-tight">Services</span><span className="text-[10px] text-slate-500 leading-tight">Solutions for<br/>Every Need</span></div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3 relative z-20 mt-auto">
-                <Link href="/search">
-                  <button className="bg-[#0f1928] hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2">
+              <div className="flex flex-row flex-nowrap gap-2 sm:gap-3 relative z-20 mt-auto w-full">
+                <Link href="/search" className="flex-1 sm:flex-none">
+                  <button className="w-full bg-[#0f1928] hover:bg-slate-800 text-white px-3 sm:px-6 py-3 rounded-xl font-bold text-sm sm:text-base transition-all flex items-center justify-center gap-1 sm:gap-2 whitespace-nowrap">
                     Shop Now <span className="font-normal">→</span>
                   </button>
                 </Link>
-                <JoinSellerButton />
+                <div className="flex-1 sm:flex-none">
+                  <JoinSellerButton />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Banner - Dark Theme */}
-          <div className="md:col-span-3 bg-[#061224] rounded-3xl p-5 sm:p-6 lg:p-8 flex flex-col shadow-xl relative overflow-hidden group border border-slate-800 min-h-[250px] md:min-h-0">
+          <div className="md:col-span-3 bg-[#061224] rounded-3xl p-4 sm:p-6 lg:p-8 flex flex-col shadow-xl relative overflow-hidden group border border-slate-800 min-h-[220px] md:min-h-0">
             
             {/* Background glowing effects & Image */}
             <div className="absolute inset-0 z-0 opacity-100 transition-opacity duration-700">
@@ -90,41 +92,41 @@ export default function Home() {
               <img src="/hero-right-graphic.jpg" alt="Global Delivery Network" className="w-full h-full object-cover object-bottom opacity-60 sm:opacity-100" />
             </div>
             
-            <div className="flex flex-col z-10 w-full mb-4 relative h-full">
+            <div className="flex flex-col z-10 w-full mb-3 md:mb-4 relative h-full">
               <div className="flex flex-col relative z-20">
-                <h2 className="text-2xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-[1.15] mb-2 tracking-tight drop-shadow-md">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-[1.15] mb-2 tracking-tight drop-shadow-md">
                   Empowering<br/>Businesses.<br/>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-teal-300 to-emerald-400">Enriching Lives.</span>
                 </h2>
-                <p className="text-slate-200 font-medium mb-6 text-xs lg:text-sm leading-relaxed drop-shadow-sm">
+                <p className="text-slate-200 font-medium mb-4 sm:mb-6 text-[10px] sm:text-xs lg:text-sm leading-relaxed drop-shadow-sm">
                   B2B, B2C & Services<br/>All in One Place.
                 </p>
                 
                 <Link href="/about" className="self-start">
-                  <button className="bg-white/95 backdrop-blur hover:bg-white text-[#0f1928] px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg">
+                  <button className="bg-white/95 backdrop-blur hover:bg-white text-[#0f1928] px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-2 shadow-lg">
                     Explore More <span className="font-normal">→</span>
                   </button>
                 </Link>
               </div>
               
-              <div className="flex flex-row justify-between items-center mt-auto relative z-20 bg-[#061224]/20 backdrop-blur-md pt-3 pb-2 lg:pt-4 lg:pb-3 px-4 lg:px-6 -mx-6 -mb-6 lg:-mx-8 lg:-mb-8 rounded-b-3xl border-t border-white/10">
-                <div className="flex items-center gap-2 flex-1 justify-center">
-                  <div className="text-blue-400 drop-shadow"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg></div>
-                  <span className="text-[9px] xl:text-[10px] text-white font-medium leading-tight">Wide Range<br/>of Products</span>
+              <div className="flex flex-row justify-between items-center mt-auto relative z-20 bg-[#061224]/20 backdrop-blur-md pt-2 pb-1.5 sm:pt-3 sm:pb-2 lg:pt-4 lg:pb-3 px-3 sm:px-4 lg:px-6 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 lg:-mx-8 lg:-mb-8 rounded-b-3xl border-t border-white/10">
+                <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center">
+                  <div className="text-blue-400 drop-shadow"><svg className="w-4 h-4 sm:w-5 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg></div>
+                  <span className="text-[7px] sm:text-[9px] xl:text-[10px] text-white font-medium leading-tight">Wide Range<br/>of Products</span>
                 </div>
                 
-                <div className="w-[1px] h-8 bg-white/10 mx-1"></div>
+                <div className="w-[1px] h-6 sm:h-8 bg-white/10 mx-0.5 sm:mx-1"></div>
                 
-                <div className="flex items-center gap-2 flex-1 justify-center">
-                  <div className="text-blue-400 drop-shadow"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg></div>
-                  <span className="text-[9px] xl:text-[10px] text-white font-medium leading-tight">Trusted<br/>& Secure</span>
+                <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center">
+                  <div className="text-blue-400 drop-shadow"><svg className="w-4 h-4 sm:w-5 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg></div>
+                  <span className="text-[7px] sm:text-[9px] xl:text-[10px] text-white font-medium leading-tight">Trusted<br/>& Secure</span>
                 </div>
                 
-                <div className="w-[1px] h-8 bg-white/10 mx-1"></div>
+                <div className="w-[1px] h-6 sm:h-8 bg-white/10 mx-0.5 sm:mx-1"></div>
                 
-                <div className="flex items-center gap-2 flex-1 justify-center">
-                  <div className="text-blue-400 drop-shadow"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg></div>
-                  <span className="text-[9px] xl:text-[10px] text-white font-medium leading-tight">Fast & Reliable<br/>Delivery</span>
+                <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center">
+                  <div className="text-blue-400 drop-shadow"><svg className="w-4 h-4 sm:w-5 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg></div>
+                  <span className="text-[7px] sm:text-[9px] xl:text-[10px] text-white font-medium leading-tight">Fast & Reliable<br/>Delivery</span>
                 </div>
               </div>
             </div>
@@ -135,20 +137,20 @@ export default function Home() {
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-2">
           
           {/* Categories Panel */}
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 lg:p-8 flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
-            <div className="flex flex-col gap-4 min-w-[200px] shrink-0">
-              <h2 className="text-2xl font-bold text-[#0f1928] leading-tight">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5 lg:p-8 flex flex-col md:flex-row justify-between items-center md:items-start gap-4 md:gap-8">
+            <div className="flex flex-col items-center text-center md:items-start md:text-left gap-3 md:gap-4 min-w-[150px] md:min-w-[200px] shrink-0">
+              <h2 className="text-xl md:text-2xl font-bold text-[#0f1928] leading-tight">
                 Everything You Need,<br/>All in One Place
               </h2>
-              <div className="h-1 w-12 bg-gradient-to-r from-blue-500 via-teal-400 to-emerald-400 rounded-full mb-2"></div>
-              <Link href="/explore">
-                <button className="bg-[#0f1928] hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 mt-auto w-fit">
+              <div className="h-1 w-10 md:w-12 bg-gradient-to-r from-blue-500 via-teal-400 to-emerald-400 rounded-full mb-1 md:mb-2"></div>
+              <Link href="/explore" className="mx-auto md:mx-0 mt-1 md:mt-auto">
+                <button className="bg-[#0f1928] hover:bg-slate-800 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 w-fit">
                   Explore Markets <span className="font-normal">→</span>
                 </button>
               </Link>
             </div>
             
-            <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar w-full md:w-auto pb-2">
+            <div className="flex items-center gap-2 md:gap-3 overflow-x-auto w-full md:w-auto pb-3 custom-scrollbar">
               {[
                 { name: "Electronics", icon: "📱", bg: "bg-blue-50", link: "/search?category=Electronics" },
                 { name: "Home & Living", icon: "🛋️", bg: "bg-slate-100", link: "/search?category=Home%20%26%20Living" },
@@ -157,45 +159,45 @@ export default function Home() {
                 { name: "Grocery", icon: "🛒", bg: "bg-emerald-50", link: "/search?category=Grocery" },
                 { name: "Explore All", icon: "🔠", bg: "bg-slate-100", link: "/explore" }
               ].map((cat, idx) => (
-                <Link href={cat.link} key={idx} className="flex flex-col items-center gap-2 min-w-[75px] text-center cursor-pointer group no-underline">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-transform group-hover:scale-105 shadow-inner ${cat.bg}`}>
+                <Link href={cat.link} key={idx} className="flex flex-col items-center gap-1 md:gap-2 min-w-[65px] md:min-w-[75px] text-center cursor-pointer group no-underline">
+                  <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl transition-transform group-hover:scale-105 shadow-inner ${cat.bg}`}>
                     {cat.icon}
                   </div>
-                  <span className="text-[10px] font-bold text-[#0f1928] leading-tight max-w-[75px] group-hover:text-blue-600 transition-colors">{cat.name}</span>
+                  <span className="text-[9px] md:text-[10px] font-bold text-[#0f1928] leading-tight max-w-[65px] md:max-w-[75px] group-hover:text-blue-600 transition-colors">{cat.name}</span>
                 </Link>
               ))}
             </div>
           </div>
 
           {/* Services Panel */}
-          <div className="bg-[#f0fdf4] rounded-3xl border border-emerald-100 shadow-sm p-6 lg:p-8 flex flex-col md:flex-row justify-between items-center md:items-start gap-8 relative overflow-hidden">
+          <div className="bg-[#f0fdf4] rounded-3xl border border-emerald-100 shadow-sm p-4 sm:p-5 lg:p-8 flex flex-col md:flex-row justify-between items-center md:items-start gap-4 md:gap-8 relative overflow-hidden">
             {/* Dot pattern background */}
             <div className="absolute right-0 top-0 bottom-0 w-48 bg-[radial-gradient(#a7f3d0_2px,transparent_2px)] [background-size:16px_16px] opacity-40 z-0 mask-image-linear-gradient"></div>
             
-            <div className="flex flex-col gap-2 min-w-[200px] shrink-0 relative z-10">
-              <span className="text-emerald-600 font-bold text-sm">Services</span>
-              <h2 className="text-2xl font-bold text-[#0f1928] leading-tight mb-4">
+            <div className="flex flex-col items-center text-center md:items-start md:text-left gap-1 md:gap-2 min-w-[150px] md:min-w-[200px] shrink-0 relative z-10">
+              <span className="text-emerald-600 font-bold text-xs md:text-sm">Services</span>
+              <h2 className="text-xl md:text-2xl font-bold text-[#0f1928] leading-tight mb-2 md:mb-4">
                 Solutions That<br/>Drive Your Success
               </h2>
-              <Link href="/explore/services">
-                <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 w-fit">
+              <Link href="/explore/services" className="mx-auto md:mx-0 mt-1 md:mt-0">
+                <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 w-fit">
                   Explore Services <span className="font-normal">→</span>
                 </button>
               </Link>
             </div>
             
-            <div className="flex items-center gap-3 overflow-x-auto hide-scrollbar w-full md:w-auto relative z-10 pb-2">
+            <div className="flex items-center gap-2 md:gap-3 overflow-x-auto w-full md:w-auto relative z-10 pb-3 custom-scrollbar">
               {[
                 { name: "Logistics & Delivery", icon: "🚚" },
                 { name: "Installation & Setup", icon: "🔧" },
                 { name: "Maintenance & Support", icon: "👨‍🔧" },
                 { name: "Business Consulting", icon: "💼" }
               ].map((srv, idx) => (
-                <div key={idx} className="flex flex-col items-center gap-3 bg-white p-3 rounded-2xl border border-emerald-50 shadow-sm min-w-[90px] h-[100px] justify-center text-center cursor-pointer group hover:border-emerald-200 transition-colors">
-                  <div className="text-3xl transition-transform group-hover:scale-110">
+                <div key={idx} className="flex flex-col items-center gap-2 md:gap-3 bg-white p-2 md:p-3 rounded-2xl border border-emerald-50 shadow-sm min-w-[80px] h-[90px] md:min-w-[90px] md:h-[100px] justify-center text-center cursor-pointer group hover:border-emerald-200 transition-colors">
+                  <div className="text-2xl md:text-3xl transition-transform group-hover:scale-110">
                     {srv.icon}
                   </div>
-                  <span className="text-[10px] font-bold text-[#0f1928] leading-tight">{srv.name}</span>
+                  <span className="text-[9px] md:text-[10px] font-bold text-[#0f1928] leading-tight">{srv.name}</span>
                 </div>
               ))}
             </div>
@@ -209,7 +211,15 @@ export default function Home() {
             <h2 className="text-xl lg:text-2xl font-bold text-slate-900">Top Picks For You</h2>
             <Link href="/search?filter=top_picks" className="text-blue-600 font-bold hover:underline text-sm flex items-center gap-1">View All <span className="text-lg leading-none">›</span></Link>
           </div>
-          <ProductGrid />
+          <ProductGrid personalized={true} />
+        </section>
+
+        {/* Recently Viewed */}
+        <section className="mt-4">
+          <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+            <h2 className="text-xl lg:text-2xl font-bold text-slate-900">Recently Viewed</h2>
+          </div>
+          <ProductGrid recent={true} />
         </section>
 
         {/* Global Markets & Hubs (Grid Layout replacing the long scrolling lists) */}

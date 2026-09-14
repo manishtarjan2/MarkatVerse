@@ -100,7 +100,7 @@ export default function ServiceDirectoryList({ products }: { products: Product[]
                   {product.category === 'Home Services' ? 'Service Fee' : 'Starting from'}
                 </span>
                 <div className="font-bold text-xl text-slate-900 flex items-baseline gap-1">
-                  ₹{product.price.toLocaleString('en-IN')}
+                  ₹{(product.price ?? 0).toLocaleString('en-IN')}
                   {product.category === 'Home Services' && <span className="text-xs font-normal text-slate-500">/ hr</span>}
                 </div>
               </div>

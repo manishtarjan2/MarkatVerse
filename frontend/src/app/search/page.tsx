@@ -31,8 +31,16 @@ function SearchContent() {
   // Sync with URL if it changes
   useEffect(() => {
     setQ(searchParams.get('q') || '');
-    const cat = searchParams.get('cat');
+    const cat = searchParams.get('category') || searchParams.get('cat');
     if (cat && cat !== 'All Categories') setSelectedCategory(cat);
+    
+    const filter = searchParams.get('filter');
+    if (filter === 'top_deals') setSortBy('discount');
+    if (filter === 'b2b') setB2BOnly(true);
+    if (filter === 'top_picks') setSortBy('recommended'); // Default behavior
+
+    const type = searchParams.get('type');
+    if (type === 'services') setProductType('services');
   }, [searchParams]);
 
   // Derived filtered products
@@ -103,6 +111,18 @@ function SearchContent() {
       result.sort((a, b) => b.price - a.price);
     } else if (sortBy === 'rating') {
       result.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+    } else if (sortBy === 'discount') {
+      // Products with a discount label should be sorted higher
+      result.sort((a, b) => {
+        const hasDiscOrigA = a.originalPrice && a.originalPrice > a.price;
+        const hasDiscOrigB = b.originalPrice && b.originalPrice > b.price;
+        const hasDiscTextA = !!a.discount;
+        const hasDiscTextB = !!b.discount;
+        
+        if ((hasDiscOrigA || hasDiscTextA) && !(hasDiscOrigB || hasDiscTextB)) return -1;
+        if (!(hasDiscOrigA || hasDiscTextA) && (hasDiscOrigB || hasDiscTextB)) return 1;
+        return 0;
+      });
     }
     
     return result;

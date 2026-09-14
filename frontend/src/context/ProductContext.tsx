@@ -29,6 +29,7 @@ export type Product = {
   wholesaleTiers?: { minQty: number, margin: number }[];
   brand?: string;
   parameters?: Record<string, string | string[]>;
+  options?: { id: string; name: string; price: number }[];
 };
 
 export type FormField = {
