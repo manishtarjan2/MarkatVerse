@@ -1,0 +1,91 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma.service.js';
+
+@Injectable()
+export class WalletService {
+  constructor(private prisma: PrismaService) {}
+
+  async getWallet(businessId: string) {
+    let wallet = await this.prisma.wallet.findUnique({
+      where: { businessId }
+    });
+
+    if (!wallet) {
+      // Auto-create wallet if it doesn't exist
+      wallet = await this.prisma.wallet.create({
+        data: { businessId }
+      });
+    }
+
+    return wallet;
+  }
+
+  async getTransactions(walletId: string) {
+    return this.prisma.ledgerTransaction.findMany({
+      where: { walletId },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async addBankAccount(businessId: string, data: { accountName: string, accountNumber: string, ifscCode: string, bankName: string }) {
+    return this.prisma.bankAccount.create({
+      data: {
+        businessId,
+        ...data
+      }
+    });
+  }
+
+  async getBankAccounts(businessId: string) {
+    return this.prisma.bankAccount.findMany({
+      where: { businessId }
+    });
+  }
+
+  async requestWithdrawal(businessId: string, amount: number, bankAccountId: string) {
+    const wallet = await this.getWallet(businessId);
+    
+    if (wallet.availableBalance < amount) {
+      throw new BadRequestException('Insufficient available balance');
+    }
+
+    // Wrap in transaction to ensure atomicity
+    return this.prisma.$transaction(async (tx: any) => {
+      // Create withdrawal request
+      const request = await tx.withdrawalRequest.create({
+        data: {
+          walletId: wallet.id,
+          bankAccountId,
+          amount,
+          netAmount: amount, // Assuming no withdrawal fee for now
+          status: 'REQUESTED'
+        }
+      });
+
+      // Update wallet balance
+      await tx.wallet.update({
+        where: { id: wallet.id },
+        data: {
+          availableBalance: { decrement: amount },
+          withdrawn: { increment: amount }
+        }
+      });
+
+      // Add ledger entry
+      await tx.ledgerTransaction.create({
+        data: {
+          walletId: wallet.id,
+          referenceId: request.id,
+          referenceType: 'WITHDRAWAL',
+          grossAmount: amount,
+          netAmount: amount,
+          type: 'DEBIT',
+          status: 'PENDING'
+        }
+      });
+
+      return request;
+    });
+  }
+}
+

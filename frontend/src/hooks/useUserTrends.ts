@@ -1,0 +1,51 @@
+import { useState, useEffect } from 'react';
+
+export interface UserTrends {
+  categories: Record<string, number>;
+  recentlyViewed: string[];
+}
+
+export function useUserTrends() {
+  const [trends, setTrends] = useState<UserTrends>({ categories: {}, recentlyViewed: [] });
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('markatverse_trends');
+      if (stored) {
+        setTrends(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error('Failed to parse trends', e);
+    }
+  }, []);
+
+  const trackCategory = (category: string) => {
+    if (!category) return;
+    setTrends(prev => {
+      const newTrends = { ...prev };
+      newTrends.categories = { ...prev.categories };
+      newTrends.categories[category] = (newTrends.categories[category] || 0) + 1;
+      localStorage.setItem('markatverse_trends', JSON.stringify(newTrends));
+      return newTrends;
+    });
+  };
+
+  const trackProductView = (productId: string) => {
+    if (!productId) return;
+    setTrends(prev => {
+      const newTrends = { ...prev };
+      const filtered = prev.recentlyViewed.filter(id => id !== productId);
+      newTrends.recentlyViewed = [productId, ...filtered].slice(0, 12); // Keep last 12 views
+      localStorage.setItem('markatverse_trends', JSON.stringify(newTrends));
+      return newTrends;
+    });
+  };
+
+  const getTopCategories = () => {
+    return Object.entries(trends.categories)
+      .sort((a, b) => b[1] - a[1])
+      .map(entry => entry[0]);
+  };
+
+  return { trends, trackCategory, trackProductView, getTopCategories };
+}
