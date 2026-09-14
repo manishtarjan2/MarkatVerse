@@ -48,13 +48,14 @@ export default function SmartQueueWidget({ service }: { service: any }) {
   const [appointmentTime, setAppointmentTime] = useState('');
   const [joining, setJoining] = useState(false);
   
+  interface ServiceItem { label: string; price: number; emoji: string; }
   const emoji = service.category?.toLowerCase().includes('doctor') || service.category?.toLowerCase().includes('clinic') ? '🩺' : 
                 service.category?.toLowerCase().includes('spa') ? '💆' : '✂️';
-  const availableServices = (service.options && service.options.length > 0)
+  const availableServices: ServiceItem[] = (service.options && service.options.length > 0)
     ? service.options.map((opt: { name: string; price: number }) => ({ label: opt.name, price: opt.price, emoji }))
     : [{ label: service.name, price: service.price, emoji }];
-  const [selectedServices, setSelectedServices] = useState<typeof availableServices>(availableServices);
-  const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+  const [selectedServices, setSelectedServices] = useState<ServiceItem[]>(availableServices);
+  const totalPrice = selectedServices.reduce((sum: number, s: ServiceItem) => sum + s.price, 0);
   const [result, setResult] = useState<JoinResult | null>(null);
   const [err, setErr] = useState('');
 

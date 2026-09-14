@@ -13,7 +13,7 @@ export default function SellerStorefront() {
   const { products } = useProducts();
   const { addToCart } = useCart();
 
-  const sellerProducts = products.filter(p => p.sellerName === sellerName || p.seller === sellerName);
+  const sellerProducts = products.filter(p => p.seller === sellerName);
 
   // Dynamic detection (Mocked based on name for demonstration)
   const isDoctor = sellerName.toLowerCase().includes('hospital') || sellerName.toLowerCase().includes('clinic') || sellerName.toLowerCase().includes('doctor');
