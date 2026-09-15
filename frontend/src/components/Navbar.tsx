@@ -30,7 +30,7 @@ export default function Navbar() {
       {/* 1. Logo (Top Left on Mobile, Left on Desktop) */}
       <div className="flex items-center shrink-0 order-1">
         <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity mr-2 sm:mr-8 md:mr-12 lg:mr-24 shrink-0">
-          <img src="/logo.png" alt="MarkatVerse" className="h-10 sm:h-12 lg:h-14 object-contain scale-[2] sm:scale-[2.2] lg:scale-[2.5] origin-left pl-2 sm:pl-0" />
+          <img src="/logo.png" alt="MarkatVerse" className="h-10 sm:h-12 lg:h-14 object-contain scale-[1.8] sm:scale-[2] lg:scale-[2.2] origin-left pl-2 sm:pl-0" />
         </Link>
       </div>
 

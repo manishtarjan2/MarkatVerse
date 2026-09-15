@@ -52,6 +52,21 @@ model Business {
 model Category {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
   name      String
+  theme     String?    @default("slate")
+  icon      String?    @default("Box")
+  primaryType String?  @default("PRODUCT")
+  
+  // Relationship Manager settings (stored as arrays of strings in JSON)
+  allowedListingTypes String[] @default([])
+  businessModels      String[] @default([])
+  workflow            String?
+  allowedFeatures     String[] @default([])
+  notApplicable       String[] @default([])
+  optionalFeatures    String[] @default([])
+  
+  parameters Json?
+  subcategories Json?
+
   parentId  String?    @db.ObjectId
   parent    Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children  Category[] @relation("CategoryToCategory")
@@ -84,6 +99,7 @@ model Product {
   categoryName  String?
   subcategory   String?
   parameters    Json?
+  options       Json?
   badge         String?
   badgeColor    String?
   image         String?

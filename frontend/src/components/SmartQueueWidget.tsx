@@ -51,10 +51,25 @@ export default function SmartQueueWidget({ service }: { service: any }) {
   interface ServiceItem { label: string; price: number; emoji: string; }
   const emoji = service.category?.toLowerCase().includes('doctor') || service.category?.toLowerCase().includes('clinic') ? '🩺' : 
                 service.category?.toLowerCase().includes('spa') ? '💆' : '✂️';
-  const availableServices: ServiceItem[] = (service.options && service.options.length > 0)
-    ? service.options.map((opt: { name: string; price: number }) => ({ label: opt.name, price: opt.price, emoji }))
-    : [{ label: service.name, price: service.price, emoji }];
-  const [selectedServices, setSelectedServices] = useState<ServiceItem[]>(availableServices);
+  let availableServices: ServiceItem[] = [];
+  if (service.options && service.options.length > 0) {
+    availableServices = service.options.map((opt: { name: string; price: number }) => ({ label: opt.name, price: opt.price, emoji }));
+  } else {
+    let paramServices: string[] = [];
+    if (service.parameters) {
+      for (const key of Object.keys(service.parameters)) {
+        if (Array.isArray(service.parameters[key]) && service.parameters[key].length > 0) {
+          paramServices = [...paramServices, ...service.parameters[key]];
+        }
+      }
+    }
+    if (paramServices.length > 0) {
+      availableServices = paramServices.map(name => ({ label: name, price: service.price, emoji }));
+    } else {
+      availableServices = [{ label: service.name, price: service.price, emoji }];
+    }
+  }
+  const [selectedServices, setSelectedServices] = useState<ServiceItem[]>([]);
   const totalPrice = selectedServices.reduce((sum: number, s: ServiceItem) => sum + s.price, 0);
   const [result, setResult] = useState<JoinResult | null>(null);
   const [err, setErr] = useState('');
@@ -170,6 +185,34 @@ export default function SmartQueueWidget({ service }: { service: any }) {
           </div>
         </div>
       </div>
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-2 relative shadow-sm">
+        <div className="absolute top-4 right-4 flex items-center gap-1.5">
+          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Live</span>
+        </div>
+        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Queue Status</div>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-center text-xl font-black text-slate-800">
+            #{status?.serving?.[0]?.tokenNumber ?? status?.queue?.currentToken ?? 0}
+          </div>
+          <div>
+            <div className="text-sm font-bold text-slate-800">Now Serving</div>
+            <div className="text-xs text-slate-500">{status?.serving?.[0]?.customerName || 'In Progress'}</div>
+          </div>
+        </div>
+        
+        {((status?.serving?.[0]?.tokenNumber ?? status?.queue?.currentToken ?? 0) > 1) && (
+          <div className="mt-2 pt-3 border-t border-slate-200 flex items-center gap-3 opacity-60">
+            <div className="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center text-xs font-bold text-slate-500">
+              #{(status?.serving?.[0]?.tokenNumber ?? status?.queue?.currentToken ?? 1) - 1}
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-600">Previous Completed</div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <Link href={`/service-queue/token/${result.token.id}`} className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-sm transition-all shadow-lg">
           <Clock className="w-4 h-4" /> Track Live
@@ -193,7 +236,7 @@ export default function SmartQueueWidget({ service }: { service: any }) {
       {/* Multi-Service Selector */}
       <div>
         <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Services <span className="normal-case font-medium text-slate-400">(pick one or more)</span></p>
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {availableServices.map(svc => {
             const isChosen = selectedServices.some(s => s.label === svc.label);
             return (

@@ -15,9 +15,10 @@ import { ListingsModule } from './listings/listings.module.js';
 import { WalletModule } from './wallet/wallet.module.js';
 import { WebhookModule } from './webhook/webhook.module.js';
 import { SellerConfigModule } from './seller-config/seller-config.module.js';
+import { CategoriesModule } from './categories/categories.module.js';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule],
+  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule],
   controllers: [AppController],
   providers: [AppService],
 })

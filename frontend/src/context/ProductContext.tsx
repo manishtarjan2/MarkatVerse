@@ -611,25 +611,23 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [userLocation, setUserLocation] = useState<string>('Mumbai'); // Default mock location
 
   useEffect(() => {
+    // Fetch products
     console.log('Fetching products from:', `${API_URL}/products`);
     fetch(`${API_URL}/products`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          // Map backend data format to frontend expected format
           const mappedData = data.map(item => ({
             ...item,
-            seller: item.sellerName, // Map DB's sellerName to Context's seller
-            category: item.categoryName, // Map DB's categoryName to Context's category
-            subcategory: item.subcategory, // Map subcategory if exists
-            image: item.image || item.sku || undefined, // Remove hardcoded fallback
+            seller: item.sellerName,
+            category: item.categoryName,
+            subcategory: item.subcategory,
+            image: item.image || item.sku || undefined,
             images: item.images || (item.image ? [item.image] : []),
             isPremium: false,
             isB2B: item.isB2B,
             moq: item.moq
           }));
-          
-          // Bind default mock products to the logged-in user so they can test their dashboard
           const userLinkedDefaults = defaultProducts.map(p => ({
             ...p,
             sellerId: user && user.role !== 'buyer' ? user.id : p.sellerId,
@@ -637,7 +635,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
           }));
           setProducts([...mappedData, ...userLinkedDefaults]);
         } else {
-          // Bind default mock products to the logged-in user
           const userLinkedDefaults = defaultProducts.map(p => ({
             ...p,
             sellerId: user && user.role !== 'buyer' ? user.id : p.sellerId,
@@ -648,13 +645,28 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       })
       .catch(err => {
         console.error('Failed to fetch products:', err);
-        // Bind default mock products to the logged-in user
         const userLinkedDefaults = defaultProducts.map(p => ({
           ...p,
           sellerId: user && user.role !== 'buyer' ? user.id : p.sellerId,
           seller: user && user.role !== 'buyer' ? (user.business?.name || user.name || p.seller) : p.seller
         }));
         setProducts(userLinkedDefaults);
+      });
+
+    // Fetch categories
+    console.log('Fetching categories from:', `${API_URL}/categories`);
+    fetch(`${API_URL}/categories`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories([...data, ...defaultCategories.filter(dc => !data.find((d: any) => d.name === dc.name))]);
+        } else {
+          setCategories(defaultCategories);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch categories:', err);
+        setCategories(defaultCategories);
       });
   }, [user?.id]);
 
@@ -667,9 +679,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       });
       if (!res.ok) throw new Error('Failed to add product');
       const newProduct = await res.json();
-      
-      // Map returned db entity format back to context format if needed, 
-      // though the backend mapProduct seems to handle it nicely
       setProducts(prev => [newProduct, ...prev]);
     } catch (err) {
       console.error(err);
@@ -686,7 +695,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       });
       if (!res.ok) throw new Error('Failed to edit product');
       const updatedProduct = await res.json();
-      
       setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedProduct } : p));
     } catch (err) {
       console.error(err);
@@ -700,7 +708,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Failed to delete product');
-      
       setProducts(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error(err);
@@ -708,16 +715,70 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addCategory = (cat: Category) => {
-    setCategories(prev => [...prev, cat]);
+  const addCategory = async (cat: Category) => {
+    try {
+      // Handle fallback IDs for default categories
+      const { id, ...dataToSave } = cat; 
+      const payload = id.length > 20 ? cat : dataToSave; // Only keep id if it looks like a real MongoID
+      
+      const res = await fetch(`${API_URL}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to add category');
+      const newCategory = await res.json();
+      setCategories(prev => [...prev, newCategory]);
+    } catch (err) {
+      console.error(err);
+      // Fallback
+      setCategories(prev => [...prev, cat]);
+    }
   };
 
-  const updateCategory = (id: string, updated: Partial<Category>) => {
-    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c));
+  const updateCategory = async (id: string, updated: Partial<Category>) => {
+    try {
+      // If it's a mock hardcoded category (id like 'p1', 's1'), we need to POST it first to 'upgrade' it to a DB category
+      if (id.length < 20) {
+        const fullCat = categories.find(c => c.id === id);
+        if (fullCat) {
+          const { id: oldId, ...dataToSave } = { ...fullCat, ...updated };
+          const res = await fetch(`${API_URL}/categories`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSave)
+          });
+          const newCat = await res.json();
+          setCategories(prev => prev.map(c => c.id === oldId ? newCat : c));
+          return;
+        }
+      }
+
+      const res = await fetch(`${API_URL}/categories/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+      if (!res.ok) throw new Error('Failed to update category');
+      const updatedCat = await res.json();
+      setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updatedCat } : c));
+    } catch (err) {
+      console.error(err);
+      // Fallback
+      setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c));
+    }
   };
 
-  const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(c => c.id !== id));
+  const deleteCategory = async (id: string) => {
+    try {
+      if (id.length > 20) {
+        await fetch(`${API_URL}/categories/${id}`, { method: 'DELETE' });
+      }
+      setCategories(prev => prev.filter(c => c.id !== id));
+    } catch (err) {
+      console.error(err);
+      setCategories(prev => prev.filter(c => c.id !== id));
+    }
   };
 
   const activeCategories = useMemo(() => {

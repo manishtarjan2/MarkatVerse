@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useProducts, Category, FormField, useCategoryRules, BusinessModel } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -383,6 +383,26 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
             <div className="grid grid-cols-1 gap-3">
               {options.map((opt, index) => (
                 <div key={opt.id} className="flex gap-3 items-center p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <div className="flex flex-col gap-1">
+                    <button type="button" disabled={index === 0} onClick={() => {
+                      const newOpts = [...options];
+                      const temp = newOpts[index - 1];
+                      newOpts[index - 1] = newOpts[index];
+                      newOpts[index] = temp;
+                      setOptions(newOpts);
+                    }} className="text-slate-400 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-400 p-0.5 rounded transition">
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button type="button" disabled={index === options.length - 1} onClick={() => {
+                      const newOpts = [...options];
+                      const temp = newOpts[index + 1];
+                      newOpts[index + 1] = newOpts[index];
+                      newOpts[index] = temp;
+                      setOptions(newOpts);
+                    }} className="text-slate-400 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-400 p-0.5 rounded transition">
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </div>
                   <div className="flex-1">
                     <input type="text" value={opt.name} onChange={e => {
                       const newOpts = [...options];
