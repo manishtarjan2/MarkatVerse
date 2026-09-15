@@ -1,6 +1,9 @@
+"use client";
 import Link from 'next/link';
+import { useSettings } from '@/context/SettingsContext';
 
 export default function Footer() {
+  const { isSectorActive } = useSettings();
   return (
     <footer className="bg-slate-900 text-slate-300 py-10 pb-24 md:py-16 md:pb-16 border-t border-slate-800">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
@@ -31,7 +34,9 @@ export default function Footer() {
               <li><Link href="/category/electronics" className="hover:text-blue-400 transition-colors">Electronics</Link></li>
               <li><Link href="/category/fashion" className="hover:text-blue-400 transition-colors">Fashion</Link></li>
               <li><Link href="/category/home" className="hover:text-blue-400 transition-colors">Home & Living</Link></li>
-              <li><Link href="/search?filter=b2b" className="hover:text-blue-400 transition-colors">B2B Wholesale</Link></li>
+              {isSectorActive('b2b') && (
+                <li><Link href="/search?filter=b2b" className="hover:text-blue-400 transition-colors">B2B Wholesale</Link></li>
+              )}
               <li><Link href="/categories" className="hover:text-blue-400 transition-colors">All Categories</Link></li>
             </ul>
           </div>
@@ -40,10 +45,18 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-bold mb-4">Services</h4>
             <ul className="flex flex-col gap-3 text-sm">
-              <li><Link href="/search?cat=Home Services" className="hover:text-blue-400 transition-colors">Home Repairs</Link></li>
-              <li><Link href="/search?cat=Services" className="hover:text-blue-400 transition-colors">Salon & Beauty</Link></li>
-              <li><Link href="/search?cat=Organizers" className="hover:text-blue-400 transition-colors">Event Organizers</Link></li>
-              <li><Link href="/search?cat=Transport" className="hover:text-blue-400 transition-colors">Transport & Rentals</Link></li>
+              {isSectorActive('home') && (
+                <li><Link href="/search?cat=Home Services" className="hover:text-blue-400 transition-colors">Home Repairs</Link></li>
+              )}
+              {isSectorActive('salon') && (
+                <li><Link href="/search?cat=Services" className="hover:text-blue-400 transition-colors">Salon & Beauty</Link></li>
+              )}
+              {isSectorActive('events') && (
+                <li><Link href="/search?cat=Organizers" className="hover:text-blue-400 transition-colors">Event Organizers</Link></li>
+              )}
+              {isSectorActive('transport') && (
+                <li><Link href="/search?cat=Transport" className="hover:text-blue-400 transition-colors">Transport & Rentals</Link></li>
+              )}
             </ul>
           </div>
 

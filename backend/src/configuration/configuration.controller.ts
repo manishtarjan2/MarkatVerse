@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, Query } from '@nestjs/common';
 import { ConfigurationService } from './configuration.service.js';
 import { MainType } from '@prisma/client';
 
@@ -24,6 +24,11 @@ export class ConfigurationController {
   @Post('sectors')
   createSector(@Body() data: { businessTypeId: string; name: string; description?: string }) {
     return this.configService.createSector(data);
+  }
+
+  @Patch('sectors/:id')
+  updateSector(@Param('id') id: string, @Body() data: { isActive?: boolean; name?: string; description?: string }) {
+    return this.configService.updateSector(id, data);
   }
 
   @Get('categories')

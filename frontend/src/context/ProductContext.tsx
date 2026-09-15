@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -599,11 +599,13 @@ const defaultCategories: Category[] = [
 ];
 
 import { useAuth } from './AuthContext';
+import { useSettings } from './SettingsContext';
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export function ProductProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { isSectorActive } = useSettings();
   const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
   const [userLocation, setUserLocation] = useState<string>('Mumbai'); // Default mock location
@@ -718,8 +720,32 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     setCategories(prev => prev.filter(c => c.id !== id));
   };
 
+  const activeCategories = useMemo(() => {
+    return categories.filter(c => {
+      if (c.name === 'Construction' || c.name === 'Agriculture') return isSectorActive('b2b');
+      if (c.name === 'Beauty') return isSectorActive('salon');
+      if (c.name === 'Home') return isSectorActive('home');
+      if (c.name === 'Professional') return isSectorActive('events');
+      if (c.name === 'Sales & Rentals') return isSectorActive('transport');
+      return true;
+    });
+  }, [categories, isSectorActive]);
+
+  const activeProducts = useMemo(() => {
+    return products.filter(p => {
+      if (p.isB2B && !isSectorActive('b2b')) return false;
+      if (p.category === 'Beauty' && !isSectorActive('salon')) return false;
+      if (p.category === 'Home' && !isSectorActive('home')) return false;
+      if (p.category === 'Professional' && !isSectorActive('events')) return false;
+      if (p.category === 'Rentals' && !isSectorActive('transport')) return false;
+      if (p.category === 'B2B' && !isSectorActive('b2b')) return false;
+      if (p.category === 'Construction Materials' && !isSectorActive('b2b')) return false;
+      return true;
+    });
+  }, [products, isSectorActive]);
+
   return (
-    <ProductContext.Provider value={{ products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories, addCategory, updateCategory, deleteCategory }}>
+    <ProductContext.Provider value={{ products: activeProducts, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories: activeCategories, addCategory, updateCategory, deleteCategory }}>
       {children}
     </ProductContext.Provider>
   );

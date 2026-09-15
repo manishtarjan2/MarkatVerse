@@ -30,6 +30,13 @@ export class ConfigurationService {
     return this.prisma.sector.create({ data });
   }
 
+  async updateSector(id: string, data: { isActive?: boolean; name?: string; description?: string }) {
+    return this.prisma.sector.update({
+      where: { id },
+      data,
+    });
+  }
+
   // --- Categories ---
   async getCategories(sectorId?: string) {
     return this.prisma.category.findMany({
