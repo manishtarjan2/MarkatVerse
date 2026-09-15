@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
-import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X } from 'lucide-react';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
+import StaffResourceManagementModal from '@/components/StaffResourceManagementModal';
 import DynamicFormEngine from '@/components/DynamicFormEngine';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -122,6 +123,7 @@ function DashboardContent() {
 
   // Walk-in Customer Form State
   const [showWalkInForm, setShowWalkInForm] = useState(false);
+  const [showStaffModal, setShowStaffModal] = useState(false);
   const [walkInName, setWalkInName] = useState('');
   const [walkInPhone, setWalkInPhone] = useState('');
   const [walkInService, setWalkInService] = useState('Haircut');
@@ -676,6 +678,12 @@ function DashboardContent() {
               </div>
               <div className="flex gap-3">
                 <button 
+                  onClick={() => setShowStaffModal(true)} 
+                  className="bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <Users className="w-4 h-4" /> Manage Staff & Stations
+                </button>
+                <button 
                   onClick={() => setShowWalkInForm(true)} 
                   className="bg-blue-600 border border-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
                 >
@@ -711,6 +719,15 @@ function DashboardContent() {
                   </form>
                 </div>
               </div>
+            )}
+
+            {showStaffModal && queueData && (
+              <StaffResourceManagementModal 
+                queueId={queueData.queue.id} 
+                queueData={queueData} 
+                onClose={() => setShowStaffModal(false)} 
+                onUpdate={fetchQueue} 
+              />
             )}
             
             {isQueueLoading && !queueData ? (

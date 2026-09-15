@@ -99,6 +99,8 @@ export class ServiceQueueService {
       bookingMode?: string; 
       appointmentTime?: string;
       staffName?: string;
+      staffId?: string;
+      resourceId?: string;
     },
   ) {
     const queue = await this.prisma.serviceQueue.findUnique({
@@ -141,6 +143,8 @@ export class ServiceQueueService {
         phone: data.phone,
         service: data.service ?? 'General',
         staffName: data.staffName,
+        staffId: data.staffId,
+        resourceId: data.resourceId,
         status: status,
       },
     });
@@ -373,8 +377,15 @@ export class ServiceQueueService {
         queueId,
         name: data.name,
         role: data.role,
+        imageUrl: data.imageUrl,
         services: data.services || [],
       }
+    });
+  }
+
+  async deleteStaff(queueId: string, staffId: string) {
+    return this.prisma.serviceStaff.delete({
+      where: { id: staffId }
     });
   }
 
@@ -388,6 +399,12 @@ export class ServiceQueueService {
         services: data.services || [],
         assignedStaffId: data.assignedStaffId,
       }
+    });
+  }
+
+  async deleteResource(queueId: string, resourceId: string) {
+    return this.prisma.serviceResource.delete({
+      where: { id: resourceId }
     });
   }
 }

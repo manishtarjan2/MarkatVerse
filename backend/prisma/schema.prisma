@@ -218,6 +218,7 @@ model ServiceStaff {
   id               String       @id @default(auto()) @map("_id") @db.ObjectId
   queueId          String       @db.ObjectId
   name             String
+  imageUrl         String?
   role             String?
   specialization   String?
   services         String[]     @default([])

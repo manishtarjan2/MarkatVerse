@@ -129,4 +129,14 @@ export class ServiceQueueController {
   addResource(@Param('queueId') queueId: string, @Body() body: any) {
     return this.serviceQueueService.addResource(queueId, body);
   }
+
+  @Delete(':queueId/staff/:staffId')
+  deleteStaff(@Param('queueId') queueId: string, @Param('staffId') staffId: string) {
+    return this.serviceQueueService.deleteStaff(queueId, staffId);
+  }
+
+  @Delete(':queueId/resource/:resourceId')
+  deleteResource(@Param('queueId') queueId: string, @Param('resourceId') resourceId: string) {
+    return this.serviceQueueService.deleteResource(queueId, resourceId);
+  }
 }
