@@ -193,18 +193,18 @@ export default function SmartQueueWidget({ service }: { service: any }) {
         <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Queue Status</div>
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-center text-xl font-black text-slate-800">
-            #{status?.serving?.[0]?.tokenNumber ?? status?.queue?.currentToken ?? 0}
+            #{status?.serving?.tokenNumber ?? status?.queue?.currentToken ?? 0}
           </div>
           <div>
             <div className="text-sm font-bold text-slate-800">Now Serving</div>
-            <div className="text-xs text-slate-500">{status?.serving?.[0]?.customerName || 'In Progress'}</div>
+            <div className="text-xs text-slate-500">{status?.serving?.customerName || 'In Progress'}</div>
           </div>
         </div>
         
-        {((status?.serving?.[0]?.tokenNumber ?? status?.queue?.currentToken ?? 0) > 1) && (
+        {((status?.serving?.tokenNumber ?? status?.queue?.currentToken ?? 0) > 1) && (
           <div className="mt-2 pt-3 border-t border-slate-200 flex items-center gap-3 opacity-60">
             <div className="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center text-xs font-bold text-slate-500">
-              #{(status?.serving?.[0]?.tokenNumber ?? status?.queue?.currentToken ?? 1) - 1}
+              #{(status?.serving?.tokenNumber ?? status?.queue?.currentToken ?? 1) - 1}
             </div>
             <div>
               <div className="text-xs font-bold text-slate-600">Previous Completed</div>
