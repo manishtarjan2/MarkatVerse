@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Activity, Users, ShoppingBag, Store, ArrowUpRight, TrendingUp, DollarSign, Wallet, ShieldCheck, Zap, Database } from 'lucide-react';
-import { SettingsContext, defaultSettings } from '@/context/SettingsContext';
+import { SettingsContext } from '@/context/SettingsContext';
 import { useAdminRole } from '@/context/AdminRoleContext';
 
 export default function AdminDashboardPage() {

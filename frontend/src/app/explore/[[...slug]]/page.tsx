@@ -185,6 +185,7 @@ export default function DynamicExplorePage({ params }: { params: Promise<{ slug?
                   <span className="text-slate-400">-</span>
                   <input type="number" placeholder="Max" className="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none text-sm" />
                 </div>
+              </div>
               <div className="space-y-3">
                 <label className="text-sm font-semibold text-slate-700">Location / Near Me</label>
                 <div className="relative">
