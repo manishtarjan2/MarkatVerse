@@ -4,9 +4,17 @@ import { UpdateUserDto } from './dto/update-user.dto.js';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
-    create(createUserDto: CreateUserDto): string;
-    findAll(): string;
-    findOne(id: string): string;
-    update(id: string, updateUserDto: UpdateUserDto): string;
-    remove(id: string): string;
+    create(createUserDto: CreateUserDto): {
+        message: string;
+    };
+    findAll(): never[];
+    findOne(id: string): {
+        message: string;
+    };
+    update(id: string, updateUserDto: UpdateUserDto): {
+        message: string;
+    };
+    remove(id: string): {
+        message: string;
+    };
 }

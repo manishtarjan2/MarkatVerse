@@ -6,6 +6,14 @@ import { Activity, Users, ShoppingBag, Store, ArrowUpRight, TrendingUp, DollarSi
 import { SettingsContext } from '@/context/SettingsContext';
 import { useAdminRole } from '@/context/AdminRoleContext';
 
+const defaultSettings = {
+  sectors: [
+    { id: 'b2b', name: 'B2B Wholesale', icon: '🏭', isActive: true },
+    { id: 'b2c', name: 'B2C Retail', icon: '🛍️', isActive: true },
+    { id: 'services', name: 'Services & Bookings', icon: '🔧', isActive: true }
+  ]
+};
+
 export default function AdminDashboardPage() {
   const { allUsers } = useAuth();
   const { currentAdminRole, canEdit, canToggleSector } = useAdminRole();

@@ -1,9 +1,17 @@
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 export declare class UsersService {
-    create(createUserDto: CreateUserDto): string;
-    findAll(): string;
-    findOne(id: number): string;
-    update(id: number, updateUserDto: UpdateUserDto): string;
-    remove(id: number): string;
+    create(createUserDto: CreateUserDto): {
+        message: string;
+    };
+    findAll(): never[];
+    findOne(id: number): {
+        message: string;
+    };
+    update(id: number, updateUserDto: UpdateUserDto): {
+        message: string;
+    };
+    remove(id: number): {
+        message: string;
+    };
 }

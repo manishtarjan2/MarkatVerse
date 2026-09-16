@@ -7,19 +7,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { Injectable } from '@nestjs/common';
 let UsersService = class UsersService {
     create(createUserDto) {
-        return 'This action adds a new user';
+        return { message: 'This action adds a new user' };
     }
     findAll() {
-        return `This action returns all users`;
+        return [];
     }
     findOne(id) {
-        return `This action returns a #${id} user`;
+        return { message: `This action returns a #${id} user` };
     }
     update(id, updateUserDto) {
-        return `This action updates a #${id} user`;
+        return { message: `This action updates a #${id} user` };
     }
     remove(id) {
-        return `This action removes a #${id} user`;
+        return { message: `This action removes a #${id} user` };
     }
 };
 UsersService = __decorate([
