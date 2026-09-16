@@ -1,6 +1,6 @@
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
 }
 
 generator client {
@@ -8,7 +8,7 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   email     String?  @unique
   phone     String?  @unique
   password  String
@@ -29,8 +29,8 @@ model User {
 }
 
 model Business {
-  id           String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String  @unique @db.ObjectId
+  id           String  @id @default(uuid())
+  userId       String  @unique
   name         String
   logo         String?
   description  String?
@@ -61,7 +61,7 @@ model Business {
 }
 
 model Category {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  id        String     @id @default(uuid())
   name      String
   theme     String?    @default("slate")
   icon      String?    @default("Box")
@@ -78,7 +78,7 @@ model Category {
   parameters Json?
   subcategories Json?
 
-  parentId  String?    @db.ObjectId
+  parentId  String?   
   parent    Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children  Category[] @relation("CategoryToCategory")
   createdAt DateTime   @default(now())
@@ -87,15 +87,15 @@ model Category {
   products Product[]
   
   // V2 Relations
-  sectorId String?   @db.ObjectId
+  sectorId String?  
   sector   Sector?   @relation("SectorToCategory", fields: [sectorId], references: [id])
   listings Listing[] @relation("CategoryToListing")
 }
 
 model Product {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  sellerId      String?  @db.ObjectId
-  categoryId    String?  @db.ObjectId
+  id            String   @id @default(uuid())
+  sellerId      String? 
+  categoryId    String? 
 
   // Frontend fields
   name          String
@@ -135,10 +135,10 @@ model Product {
 }
 
 model Lead {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  buyerId           String   @db.ObjectId
-  sellerId          String   @db.ObjectId
-  productId         String   @db.ObjectId
+  id                String   @id @default(uuid())
+  buyerId           String  
+  sellerId          String  
+  productId         String  
   message           String
   quantityRequested Int
   status            String   @default("PENDING") // PENDING, REPLIED, CLOSED
@@ -151,8 +151,8 @@ model Lead {
 }
 
 model Order {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
-  buyerId   String      @db.ObjectId
+  id        String      @id @default(uuid())
+  buyerId   String     
   total     Float
   status    String      @default("PENDING") // PENDING, SHIPPED, etc
   createdAt DateTime    @default(now())
@@ -163,9 +163,9 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  orderId   String   @db.ObjectId
-  productId String   @db.ObjectId
+  id        String   @id @default(uuid())
+  orderId   String  
+  productId String  
   quantity  Int
   price     Float
   createdAt DateTime @default(now())
@@ -176,13 +176,13 @@ model OrderItem {
 }
 
 model ServiceQueue {
-  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  id                 String       @id @default(uuid())
   shopName           String
   location           String?
   pincode            String?
   latitude           Float?
   longitude          Float?
-  sellerId           String?      @db.ObjectId
+  sellerId           String?     
   currentToken       Int          @default(0)
   lastToken          Int          @default(0)
   avgMinutes         Int          @default(20)
@@ -205,8 +205,8 @@ model ServiceQueue {
 }
 
 model ServiceBooking {
-  id               String       @id @default(auto()) @map("_id") @db.ObjectId
-  queueId          String       @db.ObjectId
+  id               String       @id @default(uuid())
+  queueId          String      
   
   // Unified Booking Identity
   bookingMode      String       @default("TOKEN") // TOKEN, APPOINTMENT
@@ -223,8 +223,8 @@ model ServiceBooking {
   status           String       @default("WAITING") // PENDING, CHECKED_IN, WAITING, SERVING, DONE, NO_SHOW
   
   // Assignment
-  staffId          String?      @db.ObjectId
-  resourceId       String?      @db.ObjectId
+  staffId          String?     
+  resourceId       String?     
 
   joinedAt         DateTime     @default(now())
   servedAt         DateTime?
@@ -236,8 +236,8 @@ model ServiceBooking {
 }
 
 model ServiceStaff {
-  id               String       @id @default(auto()) @map("_id") @db.ObjectId
-  queueId          String       @db.ObjectId
+  id               String       @id @default(uuid())
+  queueId          String      
   name             String
   imageUrl         String?
   role             String?
@@ -254,14 +254,14 @@ model ServiceStaff {
 }
 
 model ServiceResource {
-  id               String       @id @default(auto()) @map("_id") @db.ObjectId
-  queueId          String       @db.ObjectId
+  id               String       @id @default(uuid())
+  queueId          String      
   name             String       // e.g. "Chair 1", "Room 4"
   type             String       // e.g. "Chair", "Room"
   capacity         Int          @default(1)
   services         String[]     @default([])
   status           String       @default("AVAILABLE") // AVAILABLE, IN_USE, MAINTENANCE
-  assignedStaffId  String?      @db.ObjectId
+  assignedStaffId  String?     
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -282,7 +282,7 @@ enum MainType {
 }
 
 model BusinessType {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String    @id @default(uuid())
   mainType    MainType
   name        String    // e.g. Manufacturer, Wholesaler, Shop, Professional
   description String?
@@ -295,8 +295,8 @@ model BusinessType {
 }
 
 model Sector {
-  id             String       @id @default(auto()) @map("_id") @db.ObjectId
-  businessTypeId String       @db.ObjectId
+  id             String       @id @default(uuid())
+  businessTypeId String      
   name           String       // e.g. Electronics, Salon, Healthcare
   description    String?
   isActive       Boolean      @default(true)
@@ -316,7 +316,7 @@ model Sector {
 // Since I'm appending here, I will just append the new models first.
 
 model Configuration {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   name      String
   type      String   // e.g. PRICING, AVAILABILITY, WORKFLOW
   data      Json     // The flexible config payload
@@ -325,7 +325,7 @@ model Configuration {
 }
 
 model Workflow {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(uuid())
   name        String   // e.g. B2B_RFQ, SALON_BOOKING
   description String?
   version     Int      @default(1)
@@ -335,7 +335,7 @@ model Workflow {
 }
 
 model Interface {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(uuid())
   name        String   // e.g. Salon Profile, Doctor Profile
   components  Json     // UI layout definitions and enabled features
   createdAt   DateTime @default(now())
@@ -343,11 +343,11 @@ model Interface {
 }
 
 model Listing {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  sellerId       String   @db.ObjectId
-  businessTypeId String   @db.ObjectId
-  sectorId       String   @db.ObjectId
-  categoryId     String?  @db.ObjectId
+  id             String   @id @default(uuid())
+  sellerId       String  
+  businessTypeId String  
+  sectorId       String  
+  categoryId     String? 
 
   title          String
   description    String?
@@ -372,8 +372,8 @@ model Listing {
 // ---------------------------------------------------------
 
 model Wallet {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  businessId      String   @unique @db.ObjectId
+  id              String   @id @default(uuid())
+  businessId      String   @unique
   totalEarnings   Float    @default(0)
   pendingBalance  Float    @default(0)
   availableBalance Float   @default(0)
@@ -389,8 +389,8 @@ model Wallet {
 }
 
 model LedgerTransaction {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  walletId        String   @db.ObjectId
+  id              String   @id @default(uuid())
+  walletId        String  
   referenceId     String?  // Order ID, Booking ID, etc.
   referenceType   String?  // ORDER, BOOKING, PROJECT
   paymentRef      String?  // Gateway transaction ID
@@ -411,8 +411,8 @@ model LedgerTransaction {
 }
 
 model BankAccount {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  businessId      String   @db.ObjectId
+  id              String   @id @default(uuid())
+  businessId      String  
   accountName     String
   accountNumber   String
   ifscCode        String?
@@ -428,9 +428,9 @@ model BankAccount {
 }
 
 model WithdrawalRequest {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  walletId        String   @db.ObjectId
-  bankAccountId   String   @db.ObjectId
+  id              String   @id @default(uuid())
+  walletId        String  
+  bankAccountId   String  
   amount          Float
   fee             Float    @default(0)
   netAmount       Float
@@ -449,7 +449,7 @@ model WithdrawalRequest {
 // ---------------------------------------------------------
 
 model FeatureRegistry {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  id              String   @id @default(uuid())
   key             String   @unique // e.g. PRODUCT_SALES, SERVICE_BOOKING, TOKEN_QUEUE
   name            String
   description     String?
@@ -463,8 +463,8 @@ model FeatureRegistry {
 }
 
 model BusinessFeature {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  businessId      String   @db.ObjectId
+  id              String   @id @default(uuid())
+  businessId      String  
   featureKey      String   // Links to FeatureRegistry.key
   isActive        Boolean  @default(true)
   settings        Json?    // Optional feature-specific configuration
@@ -479,7 +479,7 @@ model BusinessFeature {
 }
 
 model SystemConfig {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(uuid())
   key         String   @unique // e.g. HEXAGONAL_RADIUS
   value       String   // e.g. "5"
   description String?
