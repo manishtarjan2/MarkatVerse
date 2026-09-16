@@ -55,7 +55,7 @@ export default function Home() {
                 One Platform.<br />Endless Possibilities.
               </h1>
               <p className="text-slate-600 font-medium mb-6 text-base relative z-20">
-                Shop, Sell & Grow with Markatverse
+                Shop, Sell & Grow with MarkatVerse
               </p>
               
               <div className="flex flex-row flex-nowrap overflow-x-auto hide-scrollbar gap-3 mb-6 relative z-20 w-full pb-2">
