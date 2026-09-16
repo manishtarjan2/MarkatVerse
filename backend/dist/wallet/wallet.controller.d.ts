@@ -11,6 +11,7 @@ export declare class WalletController {
         pendingBalance: number;
         availableBalance: number;
         withdrawn: number;
+        owedToPlatform: number;
     }>;
     getTransactions(walletId: string): Promise<{
         id: string;
@@ -61,4 +62,15 @@ export declare class WalletController {
         amount: number;
         bankAccountId: string;
     }): Promise<any>;
+    payPlatform(businessId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        businessId: string;
+        totalEarnings: number;
+        pendingBalance: number;
+        availableBalance: number;
+        withdrawn: number;
+        owedToPlatform: number;
+    }>;
 }

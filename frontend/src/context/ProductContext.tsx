@@ -28,13 +28,14 @@ export type Product = {
   moq?: number;
   wholesaleTiers?: { minQty: number, margin: number }[];
   brand?: string;
+  status?: string;
   parameters?: Record<string, string | string[]>;
-  options?: { id: string; name: string; price: number }[];
+  options?: { id: string; name: string; price: number; discountPercentage?: number }[];
 };
 
 export type FormField = {
   name: string;
-  type: 'radio' | 'checkbox' | 'text' | 'number';
+  type: 'radio' | 'checkbox' | 'text' | 'number' | 'pricelist';
   options?: string[];
   placeholder?: string;
 };
@@ -73,18 +74,40 @@ export type Category = {
 
 type ProductContextType = {
   products: Product[];
+  allProducts: Product[];
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   editProduct: (id: string, updated: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   userLocation: string;
   setUserLocation: (location: string) => void;
+  userLat: number | null;
+  setUserLat: (lat: number | null) => void;
+  userLng: number | null;
+  setUserLng: (lng: number | null) => void;
+  radiusFilter: number | null;
+  setRadiusFilter: (radius: number | null) => void;
   categories: Category[];
   addCategory: (cat: Category) => void;
   updateCategory: (id: string, updated: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
 };
 
-const defaultProducts: Product[] = [
+export const defaultProducts: Product[] = [
+  {
+    id: 's100',
+    name: 'Professional AC Repair',
+    price: 499,
+    originalPrice: 799,
+    discount: '37% OFF',
+    rating: '4.8',
+    reviews: '(1.2k+)',
+    seller: 'Cooling Experts Ltd',
+    location: 'New Delhi, Delhi',
+    category: 'Services',
+    badge: 'NEW ARRIVAL',
+    badgeColor: 'badge-gold',
+    image: '/hero-left-logo.png'
+  },
   {
     id: 'iphone-15-pro-max',
     name: 'iPhone 15 Pro Max 256GB',
@@ -514,7 +537,7 @@ const defaultCategories: Category[] = [
     notApplicable: ['Product Stock', 'Vehicle Test Drive', 'RFQ', 'B2B'],
     optionalFeatures: ['Meeting'],
     subcategories: [
-      { name: 'Salon', parameters: [{ name: 'Service Type', type: 'checkbox', options: ['Haircut', 'Coloring', 'Styling'] }] },
+      { name: 'Salon', parameters: [{ name: 'Service Type', type: 'pricelist', options: ['Haircut', 'Coloring', 'Styling'] }] },
       { name: 'Spa' },
       { name: 'Beauty Parlour' }
     ]
@@ -573,6 +596,31 @@ const defaultCategories: Category[] = [
       { name: 'Accountant' }
     ]
   },
+  {
+    id: 's5',
+    primaryType: 'SERVICE',
+    name: 'Car Wash',
+    theme: 'bg-blue-50 text-blue-600',
+    icon: 'Droplet',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'Appointment', 'Token'],
+    workflow: 'Queue Workflow',
+    allowedFeatures: ['Service', 'Appointment', 'Token', 'B2C'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'RFQ', 'B2B'],
+    optionalFeatures: ['Meeting'],
+    subcategories: [
+      { 
+        name: 'Car Washing Center', 
+        parameters: [
+          { 
+            name: 'Vehicle Type', 
+            type: 'pricelist', 
+            options: ['Mini Car', 'Car', 'Bike', 'Bus', 'Truck'] 
+          }
+        ] 
+      }
+    ]
+  },
 
   // ── VEHICLE ──
   {
@@ -609,14 +657,25 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
   const [userLocation, setUserLocation] = useState<string>('Mumbai'); // Default mock location
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLng, setUserLng] = useState<number | null>(null);
+  const [radiusFilter, setRadiusFilter] = useState<number | null>(null);
 
   useEffect(() => {
     // Fetch products
-    console.log('Fetching products from:', `${API_URL}/products`);
-    fetch(`${API_URL}/products`)
+    console.log('Fetching products for location:', userLocation, userLat, userLng, radiusFilter);
+    let url = `${API_URL}/products?location=${encodeURIComponent(userLocation)}`;
+    if (userLat !== null && userLng !== null) {
+      url += `&lat=${userLat}&lng=${userLng}`;
+    }
+    if (radiusFilter !== null) {
+      url += `&radius=${radiusFilter}`;
+    }
+    
+    fetch(url)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const mappedData = data.map(item => ({
             ...item,
             seller: item.sellerName,
@@ -626,31 +685,28 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             images: item.images || (item.image ? [item.image] : []),
             isPremium: false,
             isB2B: item.isB2B,
-            moq: item.moq
+            moq: item.moq,
+            status: item.status
           }));
-          const userLinkedDefaults = defaultProducts.map(p => ({
-            ...p,
-            sellerId: user && user.role !== 'buyer' ? user.id : p.sellerId,
-            seller: user && user.role !== 'buyer' ? (user.business?.name || user.name || p.seller) : p.seller
-          }));
-          setProducts([...mappedData, ...userLinkedDefaults]);
+          const isDummyActive = mappedData.some(p => p.name.includes('Dummy') && p.status !== 'SUSPENDED');
+
+          if (isDummyActive) {
+            const userLinkedDefaults = defaultProducts.map(p => ({
+              ...p,
+              sellerId: user && user.role !== 'buyer' ? user.id : p.sellerId,
+              seller: user && user.role !== 'buyer' ? (user.business?.name || user.name || p.seller) : (p.seller + ' (Dummy)')
+            }));
+            setProducts([...mappedData, ...userLinkedDefaults]);
+          } else {
+            setProducts(mappedData);
+          }
         } else {
-          const userLinkedDefaults = defaultProducts.map(p => ({
-            ...p,
-            sellerId: user && user.role !== 'buyer' ? user.id : p.sellerId,
-            seller: user && user.role !== 'buyer' ? (user.business?.name || user.name || p.seller) : p.seller
-          }));
-          setProducts(userLinkedDefaults);
+          setProducts([]);
         }
       })
       .catch(err => {
         console.error('Failed to fetch products:', err);
-        const userLinkedDefaults = defaultProducts.map(p => ({
-          ...p,
-          sellerId: user && user.role !== 'buyer' ? user.id : p.sellerId,
-          seller: user && user.role !== 'buyer' ? (user.business?.name || user.name || p.seller) : p.seller
-        }));
-        setProducts(userLinkedDefaults);
+        setProducts([]);
       });
 
     // Fetch categories
@@ -668,7 +724,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to fetch categories:', err);
         setCategories(defaultCategories);
       });
-  }, [user?.id]);
+  }, [user?.id, userLocation, userLat, userLng, radiusFilter]);
 
   const addProduct = async (product: Omit<Product, 'id'>) => {
     try {
@@ -794,6 +850,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
   const activeProducts = useMemo(() => {
     return products.filter(p => {
+      if (p.status === 'SUSPENDED') return false;
       if (p.isB2B && !isSectorActive('b2b')) return false;
       if (p.category === 'Beauty' && !isSectorActive('salon')) return false;
       if (p.category === 'Home' && !isSectorActive('home')) return false;
@@ -806,7 +863,15 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   }, [products, isSectorActive]);
 
   return (
-    <ProductContext.Provider value={{ products: activeProducts, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories: activeCategories, addCategory, updateCategory, deleteCategory }}>
+    <ProductContext.Provider value={{ products: activeProducts, allProducts: products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories: activeCategories, addCategory,      updateCategory,
+      deleteCategory,
+      userLat,
+      setUserLat,
+      userLng,
+      setUserLng,
+      radiusFilter,
+      setRadiusFilter
+    }}>
       {children}
     </ProductContext.Provider>
   );

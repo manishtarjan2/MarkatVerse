@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 let WalletService = class WalletService {
     prisma;
@@ -79,6 +79,19 @@ let WalletService = class WalletService {
             });
             return request;
         });
+    }
+    async payPlatform(businessId) {
+        const wallet = await this.getWallet(businessId);
+        if (!wallet)
+            throw new NotFoundException('Wallet not found');
+        const amountOwed = wallet.owedToPlatform;
+        if (amountOwed <= 0)
+            return wallet;
+        const updatedWallet = await this.prisma.wallet.update({
+            where: { id: wallet.id },
+            data: { owedToPlatform: 0 }
+        });
+        return updatedWallet;
     }
 };
 WalletService = __decorate([

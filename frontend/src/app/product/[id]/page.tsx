@@ -67,6 +67,19 @@ export default function ProductDetails() {
   const printRate = (product?.originalPrice && product?.price && product.originalPrice > product.price) ? product.originalPrice : (product?.price || 0);
   let currentActivePrice = product?.price || 0;
   
+  // Dynamic Pricing based on selected option
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  useEffect(() => {
+    if (product?.options && product.options.length > 0 && !selectedOptionId) {
+      setSelectedOptionId(product.options[0].id);
+    }
+  }, [product, selectedOptionId]);
+
+  const activeOption = product?.options?.find(o => o.id === selectedOptionId);
+  if (activeOption) {
+    currentActivePrice = activeOption.price;
+  }
+  
   const isElite = user?.role === 'elite';
   const isRetail = noRulesDefined
     ? !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product?.category || '')
@@ -75,7 +88,7 @@ export default function ProductDetails() {
     ? (product?.category === 'B2B' || product?.category === 'Construction Materials' || (isRetail && isElite))
     : ((hasB2B && hasBulkPricing) || (isRetail && isElite));
   
-  if (product) {
+  if (product && !activeOption) { // Only apply wholesale logic if not using dynamic options
     if (isWholesaleConfig) {
       if (product.wholesaleTiers && product.wholesaleTiers.length > 0) {
         const sortedTiers = [...product.wholesaleTiers].sort((a, b) => b.minQty - a.minQty);
@@ -117,12 +130,12 @@ export default function ProductDetails() {
 
   // Map actual images from product, falling back to mock structure if none exist
   const productImages = product.images && product.images.length > 0 
-    ? product.images.map((img, i) => ({ url: img, label: `View ${i + 1}`, icon: <Camera className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} /> }))
+    ? product.images.map((img, i) => ({ url: img || "/hero-left-logo.png", label: `View ${i + 1}`, icon: <Camera className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} /> }))
     : [
-        { icon: <Camera className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Front View', url: product.image },
-        { icon: <Ruler className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Side View' },
-        { icon: <ZoomIn className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Close Up' },
-        { icon: <Package className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'In Box' }
+        { icon: <Camera className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Front View', url: product.image || "/hero-left-logo.png" },
+        { icon: <Ruler className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Side View', url: "/hero-left-logo.png" },
+        { icon: <ZoomIn className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'Close Up', url: "/hero-left-logo.png" },
+        { icon: <Package className="w-16 h-16 opacity-50 mb-4" strokeWidth={1.5} />, label: 'In Box', url: "/hero-left-logo.png" }
       ];
 
   const submitRfq = async () => {
@@ -231,12 +244,12 @@ export default function ProductDetails() {
               <div>
                 <div className="text-xs text-slate-500 font-medium mb-1">Seller Rating</div>
                 <div className="font-bold text-amber-500 flex items-center gap-1">
-                  4.9/5 <span className="text-slate-400 font-normal text-xs ml-1">(10k+ Reviews)</span>
+                  {product.rating || 'New'} <span className="text-slate-400 font-normal text-xs ml-1">({product.reviews || '0'} Reviews)</span>
                 </div>
               </div>
               <div>
                 <div className="text-xs text-slate-500 font-medium mb-1">Active Since</div>
-                <div className="font-bold text-slate-900">2021</div>
+                <div className="font-bold text-slate-900">{new Date().getFullYear()}</div>
               </div>
             </div>
 
@@ -399,15 +412,26 @@ export default function ProductDetails() {
               );
             })()}
             
-            {product.originalPrice > product.price && product.category !== 'Organizers' && (
-              <>
-                <div className="text-slate-500 line-through mt-2 text-sm">
-                  M.R.P: ₹{product.originalPrice.toLocaleString('en-IN')}
-                  {product.category === 'Transport' && ' / km'}
-                  {product.category === 'B2B' && ' / unit'}
-                </div>
-                <div className="text-emerald-600 font-bold mt-1 text-sm">You Save: {product.discount}</div>
-              </>
+            {activeOption ? (
+              activeOption.discountPercentage && activeOption.discountPercentage > 0 ? (
+                <>
+                  <div className="text-slate-500 line-through mt-2 text-sm">
+                    M.R.P: ₹{Math.round(activeOption.price / (1 - activeOption.discountPercentage / 100)).toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-emerald-600 font-bold mt-1 text-sm">You Save: {activeOption.discountPercentage}% OFF</div>
+                </>
+              ) : null
+            ) : (
+              product.originalPrice > product.price && product.category !== 'Organizers' && (
+                <>
+                  <div className="text-slate-500 line-through mt-2 text-sm">
+                    M.R.P: ₹{product.originalPrice.toLocaleString('en-IN')}
+                    {product.category === 'Transport' && ' / km'}
+                    {product.category === 'B2B' && ' / unit'}
+                  </div>
+                  <div className="text-emerald-600 font-bold mt-1 text-sm">You Save: {product.discount}</div>
+                </>
+              )
             )}
 
             {(noRulesDefined ? !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product.category) : hasProductStock) && (
@@ -437,8 +461,39 @@ export default function ProductDetails() {
             )}
             
             {/* Dynamic Variant Selectors */}
-            {product.parameters && Object.keys(product.parameters).length > 0 && (
+            {product.options && product.options.length > 0 && (
               <div className="mt-8 space-y-6 pt-6 border-t border-slate-200">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-slate-800 text-sm uppercase tracking-wider">
+                      Selected Option: <span className="text-blue-600 font-extrabold">{activeOption?.name}</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {product.options.map(option => {
+                      const isSelected = selectedOptionId === option.id;
+                      return (
+                        <button 
+                          key={option.id}
+                          onClick={() => setSelectedOptionId(option.id)}
+                          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all border-2 flex flex-col items-start gap-1 ${isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20' : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'}`}
+                        >
+                          <span>{option.name}</span>
+                          {option.discountPercentage && option.discountPercentage > 0 && (
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-green-100 text-green-700'}`}>
+                              {option.discountPercentage}% OFF
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {product.parameters && Object.keys(product.parameters).length > 0 && (
+              <div className={`space-y-6 pt-6 border-t border-slate-200 ${product.options && product.options.length > 0 ? 'mt-6' : 'mt-8'}`}>
                 {Object.entries(product.parameters).map(([paramName, options]) => (
                   <div key={paramName}>
                     <div className="flex items-center justify-between mb-3">
@@ -742,7 +797,7 @@ export default function ProductDetails() {
               <div className="p-4 bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-colors shadow-sm group-hover:shadow-md">
                 <div className="h-48 bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden mb-4 border border-slate-100">
                   {relatedItem.image ? (
-                    <img src={relatedItem.image} alt={relatedItem.name} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform" />
+                    <img src={relatedItem.image || "/hero-left-logo.png"} alt={relatedItem.name} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform" />
                   ) : (
                     <Camera className="w-10 h-10 text-slate-300" strokeWidth={1.5} />
                   )}

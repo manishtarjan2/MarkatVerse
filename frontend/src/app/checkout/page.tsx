@@ -3,12 +3,14 @@ import React, { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import { MapPin, CreditCard, CheckCircle2, ChevronRight, Lock, Package, ArrowRight, Smartphone, Banknote, Building2 } from 'lucide-react';
+import MockPaymentGateway from '@/components/MockPaymentGateway';
 
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'cod'>('card');
+  const [showGateway, setShowGateway] = useState(false);
 
   if (items.length === 0 && step !== 3) {
     return (
@@ -29,13 +31,10 @@ export default function CheckoutPage() {
     );
   }
 
-  const handlePayment = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      clearCart();
-      setStep(3); // Success step
-    }, 2000);
+  const handlePaymentSuccess = () => {
+    setShowGateway(false);
+    clearCart();
+    setStep(3); // Success step
   };
 
   return (
@@ -200,18 +199,10 @@ export default function CheckoutPage() {
                       ← Back
                     </button>
                     <button 
-                      onClick={handlePayment}
-                      disabled={isProcessing}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                      onClick={() => setShowGateway(true)}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
                     >
-                      {isProcessing ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          Processing...
-                        </>
-                      ) : (
-                        `Pay ₹${total.toLocaleString('en-IN')}`
-                      )}
+                      Continue to Pay
                     </button>
                   </div>
                 </div>
@@ -228,7 +219,7 @@ export default function CheckoutPage() {
                     <div key={item.id} className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
                         {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <img src={item.image || "/hero-left-logo.png"} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
                           <Package className="w-6 h-6 text-slate-300" />
                         )}
@@ -316,6 +307,14 @@ export default function CheckoutPage() {
         )}
 
       </div>
+      
+      {showGateway && (
+        <MockPaymentGateway 
+          amount={total} 
+          onSuccess={handlePaymentSuccess} 
+          onCancel={() => setShowGateway(false)} 
+        />
+      )}
     </div>
   );
 }

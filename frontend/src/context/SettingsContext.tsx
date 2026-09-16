@@ -17,12 +17,16 @@ type SettingsContextType = {
   isSectorActive: (sectorName: string) => boolean;
   refreshSectors: () => Promise<void>;
   toggleSector: (id: string, isActive: boolean) => Promise<void>;
+  editSector: (id: string, data: { name?: string; description?: string }) => Promise<void>;
+  systemConfig: any;
+  updateSystemConfig: (data: any) => Promise<void>;
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [sectors, setSectors] = useState<Sector[]>([]);
+  const [systemConfig, setSystemConfig] = useState<any>({});
 
   const refreshSectors = async () => {
     try {
@@ -30,16 +34,27 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setSectors(data);
-      } else {
-        console.error('Failed to fetch sectors');
       }
     } catch (err) {
       console.error('Error fetching sectors:', err);
     }
   };
 
+  const refreshSystemConfig = async () => {
+    try {
+      const res = await fetch(`${API_URL}/configuration/system-settings`);
+      if (res.ok) {
+        const data = await res.json();
+        setSystemConfig(data);
+      }
+    } catch (err) {
+      console.error('Error fetching system config:', err);
+    }
+  };
+
   useEffect(() => {
     refreshSectors();
+    refreshSystemConfig();
   }, []);
 
   const isSectorActive = (sectorName: string) => {
@@ -54,20 +69,51 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive }),
       });
-      if (!res.ok) throw new Error('Failed to update sector');
+      if (!res.ok) throw new Error('Failed to update sector status');
       
-      // Optimistically update
       setSectors(prev => prev.map(s => s.id === id ? { ...s, isActive } : s));
     } catch (err) {
       console.error(err);
-      // Re-fetch to sync if failed
       refreshSectors();
       throw err;
     }
   };
 
+  const editSector = async (id: string, data: { name?: string; description?: string }) => {
+    try {
+      const res = await fetch(`${API_URL}/configuration/sectors/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to update sector details');
+      
+      setSectors(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
+    } catch (err) {
+      console.error(err);
+      refreshSectors();
+      throw err;
+    }
+  };
+
+  const updateSystemConfig = async (data: any) => {
+    try {
+      const res = await fetch(`${API_URL}/configuration/system-settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to update system config');
+      const updated = await res.json();
+      setSystemConfig(updated.data || updated);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
   return (
-    <SettingsContext.Provider value={{ sectors, isSectorActive, refreshSectors, toggleSector }}>
+    <SettingsContext.Provider value={{ sectors, isSectorActive, refreshSectors, toggleSector, editSector, systemConfig, updateSystemConfig }}>
       {children}
     </SettingsContext.Provider>
   );

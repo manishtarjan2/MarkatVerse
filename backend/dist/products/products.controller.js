@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 let ProductsController = class ProductsController {
     productsService;
@@ -20,11 +20,17 @@ let ProductsController = class ProductsController {
     create(data) {
         return this.productsService.create(data);
     }
-    findAll() {
-        return this.productsService.findAll();
+    findAll(location, lat, lng, radius) {
+        return this.productsService.findAll(location, lat ? parseFloat(lat) : undefined, lng ? parseFloat(lng) : undefined, radius ? parseFloat(radius) : undefined);
     }
     findOne(id) {
         return this.productsService.findOne(id);
+    }
+    toggleDummy(enable) {
+        return this.productsService.toggleDummyData(enable);
+    }
+    updateAdminStatus(id, status) {
+        return this.productsService.updateAdminStatus(id, status);
     }
     update(id, data) {
         return this.productsService.update(id, data);
@@ -42,8 +48,12 @@ __decorate([
 ], ProductsController.prototype, "create", null);
 __decorate([
     Get(),
+    __param(0, Query('location')),
+    __param(1, Query('lat')),
+    __param(2, Query('lng')),
+    __param(3, Query('radius')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findAll", null);
 __decorate([
@@ -53,6 +63,21 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findOne", null);
+__decorate([
+    Post('toggle-dummy'),
+    __param(0, Body('enable')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Boolean]),
+    __metadata("design:returntype", void 0)
+], ProductsController.prototype, "toggleDummy", null);
+__decorate([
+    Patch(':id/admin-status'),
+    __param(0, Param('id')),
+    __param(1, Body('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ProductsController.prototype, "updateAdminStatus", null);
 __decorate([
     Patch(':id'),
     __param(0, Param('id')),

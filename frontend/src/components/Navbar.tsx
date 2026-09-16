@@ -4,15 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useProducts } from "@/context/ProductContext";
 import { Search, MapPin, Headphones, Store, MessageSquare, Bell, Heart, ShoppingCart, User, ChevronDown } from "lucide-react";
+import LiveTokenToggle from "@/components/LiveTokenToggle";
 
 export default function Navbar() {
   const { items } = useCart();
   const { user } = useAuth();
+  const { userLocation, setUserLocation, setUserLat, setUserLng } = useProducts();
   const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const [isLocationPopupOpen, setIsLocationPopupOpen] = useState(false);
-  const [locationStr, setLocationStr] = useState("Select Location");
   const [locationInput, setLocationInput] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,7 +47,7 @@ export default function Navbar() {
             <div className="flex flex-col gap-0">
               <span className="text-[11px] text-slate-500 font-medium">Deliver to</span>
               <span className="text-sm font-semibold text-slate-800 flex items-center gap-1">
-                {locationStr}
+                {userLocation || "Select Location"}
                 <ChevronDown className="w-3 h-3 text-slate-500" />
               </span>
             </div>
@@ -57,7 +59,7 @@ export default function Navbar() {
               >
                 <h4 className="mb-2 text-sm font-bold text-slate-800">Choose your location</h4>
                 <p className="text-xs text-slate-500 mb-4 leading-relaxed">Delivery options and speeds may vary depending on your specific location</p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-3">
                   <input
                     type="text"
                     placeholder="Enter pincode or city"
@@ -69,7 +71,9 @@ export default function Navbar() {
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors"
                     onClick={() => {
                       if (locationInput.trim()) {
-                        setLocationStr(locationInput.trim());
+                        setUserLocation(locationInput.trim());
+                        setUserLat(null);
+                        setUserLng(null);
                       }
                       setIsLocationPopupOpen(false);
                     }}
@@ -77,6 +81,53 @@ export default function Navbar() {
                     Apply
                   </button>
                 </div>
+                <button
+                  onClick={() => {
+                    if (!navigator.geolocation) {
+                      alert("Geolocation is not supported by your browser");
+                      return;
+                    }
+                    setUserLocation("Locating...");
+                    navigator.geolocation.getCurrentPosition(async (position) => {
+                      try {
+                        const { latitude, longitude } = position.coords;
+                        setUserLat(latitude);
+                        setUserLng(longitude);
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const data = await res.json();
+
+                        const pincode = data?.address?.postcode;
+                        const city = data?.address?.city || data?.address?.town || data?.address?.village || data?.address?.state_district;
+
+                        if (pincode) {
+                          const displayStr = city ? `${city}, ${pincode}` : pincode;
+                          setLocationInput(pincode);
+                          setUserLocation(displayStr);
+                        } else if (city) {
+                          setLocationInput(city);
+                          setUserLocation(city);
+                        } else {
+                          setUserLocation("Select Location");
+                          alert("Could not determine your pincode.");
+                        }
+                      } catch (error) {
+                        console.error("Error fetching location:", error);
+                        setUserLocation("Select Location");
+                        alert("Failed to fetch location details.");
+                      } finally {
+                        setIsLocationPopupOpen(false);
+                      }
+                    }, (error) => {
+                      console.error("Geolocation error:", error);
+                      setUserLocation("Select Location");
+                      alert("Unable to retrieve your location. Please check your browser permissions.");
+                    });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  Use my current location
+                </button>
               </div>
             )}
           </div>
@@ -90,7 +141,7 @@ export default function Navbar() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent text-slate-800 border-none py-2.5 px-4 outline-none placeholder:text-slate-400 text-sm"
             />
-            
+
             <button type="submit" className="cursor-pointer px-5 md:px-6 bg-blue-600 hover:bg-blue-700 text-white border-none flex items-center justify-center transition-colors shrink-0">
               <Search className="w-5 h-5" strokeWidth={2.5} />
             </button>
@@ -129,18 +180,7 @@ export default function Navbar() {
 
         {user && (
           <>
-            {user.role !== 'buyer' && (
-              <Link href="/seller/dashboard" className="hidden sm:flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group">
-                <div className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] py-[1px] px-1.5 rounded-full font-bold border border-white">12</div>
-                <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                <span className="text-[11px] font-medium">Messages</span>
-              </Link>
-            )}
-            <Link href="/profile" className="hidden sm:flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group ml-2">
-              <div className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] py-[1px] px-1.5 rounded-full font-bold border border-white">23</div>
-              <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-              <span className="text-[11px] font-medium">Alerts</span>
-            </Link>
+            <LiveTokenToggle />
           </>
         )}
 
@@ -148,10 +188,6 @@ export default function Navbar() {
           <>
             {user && (
               <>
-                <Link href="/wishlist" className="hidden sm:flex flex-col items-center gap-1 cursor-pointer hover:text-red-500 transition-colors group ml-2">
-                  <Heart className="w-5 h-5 group-hover:scale-110 transition-transform group-hover:fill-red-50" strokeWidth={1.5} />
-                  <span className="text-[11px] font-medium">Wishlist</span>
-                </Link>
                 <Link href="/cart" className="flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group ml-2">
                   {cartItemCount > 0 && (
                     <div className="absolute -top-1.5 -right-2 bg-amber-400 text-slate-900 font-bold text-[10px] py-[1px] px-1.5 rounded-full border border-white">{cartItemCount}</div>

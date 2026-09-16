@@ -17,7 +17,7 @@ async function bootstrap() {
 }
 if (!process.env.VERCEL) {
     bootstrap().then((app) => {
-        app.listen(process.env.PORT ?? 3001, () => {
+        app.listen(process.env.PORT ?? 3001, '0.0.0.0', () => {
             console.log('Backend is running on port ' + (process.env.PORT ?? 3001));
         });
     });

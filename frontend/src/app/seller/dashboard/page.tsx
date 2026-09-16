@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
-import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users } from 'lucide-react';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 import StaffResourceManagementModal from '@/components/StaffResourceManagementModal';
@@ -25,17 +25,16 @@ function DashboardContent() {
   const [leads, setLeads] = useState<any[]>([]);
 
   const myListings = products.filter(p => {
-    const matchId = p.sellerId && user?.id && String(p.sellerId) === String(user.id);
-    const matchUserName = p.seller && user?.name && p.seller.toLowerCase() === user.name.toLowerCase();
-    const matchBusinessName = p.seller && user?.business?.name && p.seller.toLowerCase() === user.business.name.toLowerCase();
-    return matchId || matchUserName || matchBusinessName;
+    // Only match strictly by sellerId to prevent generic names from claiming dummy data
+    if (!p.sellerId || !user?.id) return false;
+    return String(p.sellerId) === String(user.id);
   });
 
   const activeSector = myListings.length > 0 ? myListings[0].category : (user?.business?.sector || 'Retail Product');
   
   const CART_ORDER_FLOW = ['Retail Product'];
   const RFQ_QUOTE_FLOW = ['B2B Product', 'Manufacturer', 'Transport'];
-  const QUEUE_TOKEN_FLOW = ['Doctor', 'Salon', 'Spa', 'Beauty Parlour', 'Repair', 'Services'];
+  const QUEUE_TOKEN_FLOW = ['Doctor', 'Salon', 'Spa', 'Beauty Parlour', 'Repair', 'Services', 'Beauty', 'Car Wash'];
   const PROJECT_MILESTONE_FLOW = ['Construction', 'Interior Designer'];
   const MEETING_PROPOSAL_FLOW = ['Wedding Planner', 'Consultant', 'Photography'];
   const ENQUIRY_ASSET_FLOW = ['Vehicle Sale', 'Vehicle Rental', 'Real Estate'];
@@ -45,62 +44,109 @@ function DashboardContent() {
   const isB2C = capabilities.includes('B2C');
   const isService = capabilities.includes('SERVICE');
 
-  const isCartFlow = CART_ORDER_FLOW.includes(activeSector || '') || isB2C;
-  const isRfqFlow = RFQ_QUOTE_FLOW.includes(activeSector || '') || isB2B;
-  const isQueueFlow = QUEUE_TOKEN_FLOW.includes(activeSector || '') || isService;
-  const isProjectFlow = PROJECT_MILESTONE_FLOW.includes(activeSector || '');
-  const isMeetingFlow = MEETING_PROPOSAL_FLOW.includes(activeSector || '');
-  const isAssetFlow = ENQUIRY_ASSET_FLOW.includes(activeSector || '');
+  const sellerSector = user?.business?.sector || '';
+
+  const hasCartProducts = myListings.some(p => CART_ORDER_FLOW.includes(p.category));
+  const hasRfqProducts = myListings.some(p => RFQ_QUOTE_FLOW.includes(p.category));
+  const hasQueueServices = myListings.some(p => QUEUE_TOKEN_FLOW.includes(p.category));
+  const hasProjectServices = myListings.some(p => PROJECT_MILESTONE_FLOW.includes(p.category));
+  const hasMeetingServices = myListings.some(p => MEETING_PROPOSAL_FLOW.includes(p.category));
+  const hasAssetListings = myListings.some(p => ENQUIRY_ASSET_FLOW.includes(p.category));
+
+  const isCartFlow = hasCartProducts || CART_ORDER_FLOW.includes(sellerSector) || isB2C || sellerSector === 'Retail Product';
+  const isRfqFlow = hasRfqProducts || RFQ_QUOTE_FLOW.includes(sellerSector) || isB2B;
+  const isQueueFlow = hasQueueServices || QUEUE_TOKEN_FLOW.includes(sellerSector) || isService || QUEUE_TOKEN_FLOW.includes(sellerSector);
+  const isProjectFlow = hasProjectServices || PROJECT_MILESTONE_FLOW.includes(sellerSector);
+  const isMeetingFlow = hasMeetingServices || MEETING_PROPOSAL_FLOW.includes(sellerSector);
+  const isAssetFlow = hasAssetListings || ENQUIRY_ASSET_FLOW.includes(sellerSector);
 
   // For backward compatibility in some places
   const isServiceProvider = isQueueFlow || isProjectFlow || isMeetingFlow || isService;
   const [queueData, setQueueData] = useState<any>(null);
   const [isQueueLoading, setIsQueueLoading] = useState(false);
+  const [queueAnalytics, setQueueAnalytics] = useState<any>(null);
+  const [availableQueues, setAvailableQueues] = useState<any[]>([]);
+  const [selectedQueueId, setSelectedQueueId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const fetchQueue = async () => {
+  const handleQueueAction = async (actionId: string, endpoint: string, method: string = 'POST', body?: any) => {
+    setActionLoading(actionId);
+    try {
+      const isJson = method === 'POST' || method === 'PATCH';
+      await fetch(`${API_URL}${endpoint}`, {
+        method,
+        headers: isJson ? { 'Content-Type': 'application/json' } : undefined,
+        body: isJson ? JSON.stringify(body || {}) : undefined
+      });
+      await fetchQueue();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const fetchQueue = async (forceQueueId?: string) => {
     if (!user?.id || !isServiceProvider) return;
     setIsQueueLoading(true);
     try {
       const fallbackName = user.business?.name || user.name || '';
 
-      // 1. Try fetching by sellerId
+      // 1. Fetch all queues by sellerId
       let res = await fetch(`${API_URL}/service-queue/seller/${user.id}`);
       let text = await res.text();
       let data = text ? JSON.parse(text) : null;
-      let queueId = data?.id;
+      let queues = Array.isArray(data) ? data : (data ? [data] : []);
+
+      let activeQueueId = forceQueueId || selectedQueueId;
 
       // 2. Fallback: Search all queues by shopName (in case queue was auto-created by a customer)
-      if (!queueId) {
+      if (queues.length === 0) {
         const allRes = await fetch(`${API_URL}/service-queue/queues`);
         const allText = await allRes.text();
         const allQueues = allText ? JSON.parse(allText) : [];
         const matched = Array.isArray(allQueues) ? allQueues.find((q: any) => q.shopName === fallbackName) : null;
         
         if (matched) {
-          queueId = matched.id;
+          activeQueueId = matched.id;
+          queues = [matched];
           // Link this queue permanently to the seller
-          await fetch(`${API_URL}/service-queue/${queueId}/settings`, {
+          await fetch(`${API_URL}/service-queue/${activeQueueId}/settings`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ sellerId: user.id })
           });
+        } else {
+          // Auto create
+          const createRes = await fetch(`${API_URL}/service-queue/queue`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shopName: fallbackName, sellerId: user.id })
+          });
+          const newData = await createRes.json();
+          if (newData?.id) {
+            queues = [newData];
+            activeQueueId = newData.id;
+          }
         }
       }
 
-      // 3. Fetch status or Auto-create if totally missing
-      if (queueId) {
-        const statusRes = await fetch(`${API_URL}/service-queue/${queueId}/status`);
+      setAvailableQueues(queues);
+
+      if (!activeQueueId && queues.length > 0) {
+        activeQueueId = queues[0].id;
+      }
+      setSelectedQueueId(activeQueueId);
+
+      // 3. Fetch status and analytics for the active queue
+      if (activeQueueId) {
+        const [statusRes, analyticsRes] = await Promise.all([
+          fetch(`${API_URL}/service-queue/${activeQueueId}/status`),
+          fetch(`${API_URL}/service-queue/${activeQueueId}/analytics`)
+        ]);
         setQueueData(await statusRes.json());
-      } else {
-        const createRes = await fetch(`${API_URL}/service-queue/queue`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ shopName: fallbackName, sellerId: user.id })
-        });
-        const newData = await createRes.json();
-        if (newData?.id) {
-          const statusRes = await fetch(`${API_URL}/service-queue/${newData.id}/status`);
-          setQueueData(await statusRes.json());
+        if (analyticsRes.ok) {
+          setQueueAnalytics(await analyticsRes.json());
         }
       }
     } catch (err) {
@@ -112,12 +158,12 @@ function DashboardContent() {
 
   React.useEffect(() => {
     fetchQueue();
-    // Auto-poll for new tokens every 10 seconds
+    // Auto-poll for new tokens every 3 seconds for near real-time updates
     const interval = setInterval(() => {
       if (user?.id && isServiceProvider) {
         fetchQueue();
       }
-    }, 10000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [user, isServiceProvider]);
 
@@ -127,18 +173,20 @@ function DashboardContent() {
   const [walkInName, setWalkInName] = useState('');
   const [walkInPhone, setWalkInPhone] = useState('');
   const [walkInService, setWalkInService] = useState('Haircut');
+  const [walkInPrice, setWalkInPrice] = useState('');
 
   const handleAddWalkIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!queueData?.queue?.id) return;
+    if (!selectedQueueId) return;
     try {
-      await fetch(`${API_URL}/service-queue/${queueData.queue.id}/join`, {
+      await fetch(`${API_URL}/service-queue/${selectedQueueId}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerName: walkInName,
           phone: walkInPhone,
-          service: walkInService
+          service: walkInService,
+          price: parseFloat(walkInPrice) || 0
         })
       });
       setShowWalkInForm(false);
@@ -160,12 +208,8 @@ function DashboardContent() {
     }
   }, [user]);
 
-  // Mock Orders State
-  const [orders, setOrders] = useState([
-    { id: 'ORD-8921', buyer: 'Rahul Sharma', item: 'iPhone 15 Pro Max 256GB', date: '2026-09-01', amount: '₹1,34,900', status: 'Pending' },
-    { id: 'ORD-8920', buyer: 'Priya Singh', item: 'boAt Airdopes 141', date: '2026-08-31', amount: '₹1,299', status: 'Shipped' },
-    { id: 'ORD-8854', buyer: 'Acme Corp (B2B)', item: 'Heavy Freight Transport', date: '2026-08-30', amount: '₹4,500', status: 'Completed' }
-  ]);
+  // Orders State (from real data)
+  const [orders, setOrders] = useState<any[]>([]);
 
   // Live Bookings State synced with Queue Tokens
   const [bookings, setBookings] = useState<any[]>([]);
@@ -289,6 +333,7 @@ function DashboardContent() {
     try {
       const payload = {
         ...productData,
+        image: productData.image || "/hero-left-logo.png",
         discount: productData.originalPrice && productData.originalPrice > productData.price ? `${Math.round(((productData.originalPrice - productData.price) / productData.originalPrice) * 100)}% OFF` : '',
         rating: 'New',
         reviews: '0',
@@ -389,6 +434,11 @@ function DashboardContent() {
           </button>
           <button 
             onClick={() => {
+              const maxAllowed = user?.business?.maxListings ?? 5;
+              if (myListings.length >= maxAllowed) {
+                alert(`You have reached the maximum allowed limit of ${maxAllowed} ${isServiceProvider ? 'services' : 'products'}. Please contact support to increase your limit.`);
+                return;
+              }
               setEditingProductId(null);
               setName('');
               setPrice('');
@@ -485,8 +535,8 @@ function DashboardContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-10">
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="text-slate-500 text-sm font-medium mb-2">{isB2B ? 'B2B Trade Volume' : 'Total Sales'}</div>
-                <div className="text-3xl font-bold text-slate-900">₹1,45,200</div>
-                <div className="text-emerald-600 text-sm font-medium mt-2 flex items-center gap-1">↑ 12% vs last month</div>
+                <div className="text-3xl font-bold text-slate-900">₹0</div>
+                <div className="text-slate-400 text-sm font-medium mt-2 flex items-center gap-1">No sales yet</div>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="text-slate-500 text-sm font-medium mb-2">{isServiceProvider ? 'Active Services' : (isB2B ? 'B2B Catalog' : 'Active Listings')}</div>
@@ -517,10 +567,10 @@ function DashboardContent() {
                 const quickActions = [
                   { label: isServiceProvider ? 'My Services' : (isB2B ? 'B2B Catalog' : 'My Listings'), icon: '🛍️', tab: 'listings' },
                 ];
-                if (isService) quickActions.push({ label: 'Queue & Tokens', icon: '🎟️', tab: 'queue' });
-                if (isB2C) quickActions.push({ label: 'Retail Orders', icon: '📦', tab: 'orders' });
+                if (isQueueFlow) quickActions.push({ label: 'Queue & Tokens', icon: '🎟️', tab: 'queue' });
+                if (isB2C || isCartFlow) quickActions.push({ label: 'Retail Orders', icon: '📦', tab: 'orders' });
                 if (isB2B) quickActions.push({ label: 'Leads / RFQ', icon: '💬', tab: 'leads' });
-                if (isService || isMeetingFlow) quickActions.push({ label: 'Bookings', icon: '📅', tab: 'bookings' });
+                if (isProjectFlow || isMeetingFlow || isService) quickActions.push({ label: 'Bookings', icon: '📅', tab: 'bookings' });
 
                 return quickActions.map(item => (
                   <button key={item.tab} onClick={() => setActiveTab(item.tab as any)}
@@ -556,7 +606,7 @@ function DashboardContent() {
                     {product.image ? (
                       <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <Store className="w-12 h-12 text-slate-300" />
+                      <img src="/hero-left-logo.png" alt={product.name} className="w-full h-full object-contain opacity-50 p-4 group-hover:scale-105 transition-transform duration-500" />
                     )}
                     <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-blue-700 text-xs font-bold px-2.5 py-1 rounded-md shadow-sm">
                       {product.category || 'Uncategorized'}
@@ -675,6 +725,20 @@ function DashboardContent() {
               <div>
                 <h1 className="text-3xl font-bold text-slate-900">Queue & Token Management</h1>
                 <p className="text-slate-500 mt-2">Manage your live walk-in customers and tokens.</p>
+                {availableQueues.length > 1 && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <span className="text-sm font-semibold text-slate-600">Select Shop/Branch:</span>
+                    <select 
+                      className="border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                      value={selectedQueueId || ''} 
+                      onChange={(e) => fetchQueue(e.target.value)}
+                    >
+                      {availableQueues.map(q => (
+                        <option key={q.id} value={q.id}>{q.shopName}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <div className="flex gap-3">
                 <button 
@@ -689,7 +753,7 @@ function DashboardContent() {
                 >
                   <PlusCircle className="w-4 h-4" /> Add Walk-in
                 </button>
-                <button onClick={fetchQueue} className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm">
+                <button onClick={() => fetchQueue()} className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm">
                   Refresh Status
                 </button>
               </div>
@@ -711,6 +775,10 @@ function DashboardContent() {
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-1">Service Requested</label>
                       <input type="text" required value={walkInService} onChange={e => setWalkInService(e.target.value)} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Haircut, Spa" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Price (₹)</label>
+                      <input type="number" required value={walkInPrice} onChange={e => setWalkInPrice(e.target.value)} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. 150" />
                     </div>
                     <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-slate-100">
                       <button type="button" onClick={() => setShowWalkInForm(false)} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg transition-colors">Cancel</button>
@@ -763,16 +831,11 @@ function DashboardContent() {
                               </div>
                             )}
                             <button 
-                              onClick={() => {
-                                fetch(`${API_URL}/service-queue/${queueData.queue.id}/next`, {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ resourceId: resource.id })
-                                }).then(() => fetchQueue());
-                              }}
-                              className="bg-white/20 hover:bg-white/30 text-white w-full py-2 rounded-lg font-bold text-sm shadow-sm transition-colors border border-white/20"
+                              disabled={actionLoading === `next-${resource.id}`}
+                              onClick={() => handleQueueAction(`next-${resource.id}`, `/service-queue/${queueData.queue.id}/next`, 'POST', { resourceId: resource.id })}
+                              className="bg-white/20 hover:bg-white/30 text-white w-full py-2 rounded-lg font-bold text-sm shadow-sm transition-colors border border-white/20 disabled:opacity-50"
                             >
-                              Call Next
+                              {actionLoading === `next-${resource.id}` ? 'Calling...' : 'Call Next'}
                             </button>
                           </div>
                         </div>
@@ -818,13 +881,11 @@ function DashboardContent() {
                     <h2 className="text-lg font-bold text-slate-900">Up Next</h2>
                     {(!queueData.resources || queueData.resources.length === 0) && (
                       <button 
-                        onClick={() => {
-                          fetch(`${API_URL}/service-queue/${queueData.queue.id}/next`, { method: 'POST' })
-                            .then(() => fetchQueue());
-                        }}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors"
+                        disabled={actionLoading === 'next-global'}
+                        onClick={() => handleQueueAction('next-global', `/service-queue/${queueData.queue.id}/next`)}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors disabled:opacity-50"
                       >
-                        Call Next Customer
+                        {actionLoading === 'next-global' ? 'Calling...' : 'Call Next Customer'}
                       </button>
                     )}
                   </div>
@@ -854,24 +915,46 @@ function DashboardContent() {
                                 {token.bookingMode === 'APPOINTMENT' && token.status === 'CHECKED_IN' && (
                                   <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Checked In</span>
                                 )}
+                                {token.status === 'ABSENT' && (
+                                  <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Absent (Late)</span>
+                                )}
                               </div>
                               <div className="text-xs text-slate-500 font-medium">{token.service}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 text-right">
-                            <div className="text-sm font-medium text-slate-700">
+                          <div className="flex items-center gap-2 text-right">
+                            <div className="text-sm font-medium text-slate-700 mr-2">
                               📞 {token.phone || 'No phone'}
                             </div>
+                            
+                            {token.status !== 'ABSENT' ? (
+                              <button 
+                                disabled={actionLoading === `absent-${token.id}`}
+                                onClick={() => handleQueueAction(`absent-${token.id}`, `/service-queue/token/${token.id}/absent`, 'PATCH')}
+                                className="text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-md text-xs font-bold transition-colors disabled:opacity-50"
+                              >
+                                {actionLoading === `absent-${token.id}` ? '...' : 'Absent'}
+                              </button>
+                            ) : (
+                              <button 
+                                disabled={actionLoading === `waiting-${token.id}`}
+                                onClick={() => handleQueueAction(`waiting-${token.id}`, `/service-queue/token/${token.id}/waiting`, 'PATCH')}
+                                className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-md text-xs font-bold transition-colors disabled:opacity-50"
+                              >
+                                {actionLoading === `waiting-${token.id}` ? '...' : 'Return to Queue'}
+                              </button>
+                            )}
+                            
                             <button 
+                              disabled={actionLoading === `noshow-${token.id}`}
                               onClick={() => {
-                                if(confirm('Mark this customer as No-Show?')) {
-                                  fetch(`${API_URL}/service-queue/token/${token.id}/no-show`, { method: 'PATCH' })
-                                    .then(() => fetchQueue());
+                                if(confirm('Mark this customer as No-Show? They will be removed from the list.')) {
+                                  handleQueueAction(`noshow-${token.id}`, `/service-queue/token/${token.id}/no-show`, 'PATCH');
                                 }
                               }}
-                              className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md text-xs font-bold transition-colors"
+                              className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md text-xs font-bold transition-colors disabled:opacity-50"
                             >
-                              No Show
+                              {actionLoading === `noshow-${token.id}` ? '...' : 'No Show'}
                             </button>
                           </div>
                         </div>
@@ -879,6 +962,94 @@ function DashboardContent() {
                     )}
                   </div>
                 </div>
+
+                {/* Performance Analytics Section */}
+                {queueAnalytics && (
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-4">
+                    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-emerald-500" />
+                          Shop Performance & Earnings
+                        </h2>
+                        <p className="text-sm text-slate-500 mt-1">Daily and monthly overview of staff collections.</p>
+                      </div>
+                      <div className="flex gap-4 text-right">
+                        <div>
+                          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Today's Collection</div>
+                          <div className="text-2xl font-black text-emerald-600">₹{queueAnalytics.totalTodayCollection.toLocaleString('en-IN')}</div>
+                        </div>
+                        <div className="w-px bg-slate-200 h-10 my-auto"></div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Month's Collection</div>
+                          <div className="text-2xl font-black text-blue-600">₹{queueAnalytics.totalMonthCollection.toLocaleString('en-IN')}</div>
+                        </div>
+                        {(user?.business?.wallet?.owedToPlatform ?? 0) > 0 && (
+                          <>
+                            <div className="w-px bg-slate-200 h-10 my-auto"></div>
+                            <div>
+                              <div className="text-xs font-bold text-orange-500 uppercase tracking-widest">Owed to Platform</div>
+                              <div className="text-2xl font-black text-orange-600 flex items-center gap-3">
+                                ₹{(user?.business?.wallet?.owedToPlatform || 0).toLocaleString('en-IN')}
+                                <button 
+                                  onClick={async () => {
+                                    if(confirm('Proceed to pay platform fees?')) {
+                                      try {
+                                        await fetch(`${API_URL}/wallet/business/${user?.business?.id}/pay-platform`, { method: 'POST' });
+                                        alert('Payment successful!');
+                                        window.location.reload();
+                                      } catch (e) {
+                                        console.error(e);
+                                      }
+                                    }
+                                  }}
+                                  className="text-xs bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-600 transition-colors"
+                                >
+                                  Pay Now
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-0 overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                            <th className="p-4 pl-6">Staff Member</th>
+                            <th className="p-4 text-center">Today's Customers</th>
+                            <th className="p-4 text-right">Today's Earnings</th>
+                            <th className="p-4 text-center">Month's Customers</th>
+                            <th className="p-4 text-right pr-6">Month's Earnings</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {queueAnalytics.staffPerformance.map((staff: any) => (
+                            <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-4 pl-6 font-bold text-slate-900 flex items-center gap-3">
+                                {staff.id === 'unassigned' ? (
+                                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
+                                    <Store className="w-4 h-4" />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+                                    {staff.name.charAt(0)}
+                                  </div>
+                                )}
+                                {staff.name}
+                              </td>
+                              <td className="p-4 text-center font-bold text-slate-700">{staff.todayCustomers}</td>
+                              <td className="p-4 text-right font-black text-emerald-600">₹{staff.todayEarnings.toLocaleString('en-IN')}</td>
+                              <td className="p-4 text-center font-bold text-slate-700">{staff.monthCustomers}</td>
+                              <td className="p-4 text-right pr-6 font-black text-blue-600">₹{staff.monthEarnings.toLocaleString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -934,13 +1105,11 @@ function DashboardContent() {
                         <td className="p-4 pr-6 text-right flex justify-end gap-2">
                           {booking.originalStatus === 'PENDING' && (
                             <button 
-                              className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors"
-                              onClick={() => {
-                                fetch(`${API_URL}/service-queue/token/${booking.rawId}/check-in`, { method: 'POST' })
-                                  .then(() => fetchQueue());
-                              }}
+                              disabled={actionLoading === `checkin-${booking.rawId}`}
+                              className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+                              onClick={() => handleQueueAction(`checkin-${booking.rawId}`, `/service-queue/token/${booking.rawId}/check-in`, 'POST')}
                             >
-                              Check-In Arrival
+                              {actionLoading === `checkin-${booking.rawId}` ? '...' : 'Check-In Arrival'}
                             </button>
                           )}
                           <button 
@@ -1156,7 +1325,8 @@ function DashboardContent() {
               </p>
               <button 
                 onClick={async () => {
-                  if(window.confirm('Are you absolutely sure you want to delete your seller account? All data will be lost forever.')) {
+                  const confirmText = window.prompt('Are you absolutely sure you want to delete your seller account? All data will be lost forever.\n\nType "delete" below to confirm:');
+                  if(confirmText === 'delete') {
                     try {
                       const res = await fetch(`${API_URL}/sellers/user/${user?.id}`, { method: 'DELETE' });
                       if(res.ok) {
@@ -1168,6 +1338,8 @@ function DashboardContent() {
                     } catch(err) {
                       alert('Error deleting account.');
                     }
+                  } else if (confirmText !== null) {
+                    alert('Deletion cancelled. You did not type "delete".');
                   }
                 }}
                 className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-6 py-3 rounded-xl font-bold transition-colors flex items-center gap-2"

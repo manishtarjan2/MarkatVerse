@@ -35,5 +35,11 @@ export class WalletController {
   ) {
     return this.walletService.requestWithdrawal(businessId, body.amount, body.bankAccountId);
   }
+  @Post('business/:businessId/pay-platform')
+  async payPlatform(
+    @Param('businessId') businessId: string,
+  ) {
+    return this.walletService.payPlatform(businessId);
+  }
 }
 

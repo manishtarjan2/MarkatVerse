@@ -110,7 +110,7 @@ export default function ServiceDetails() {
             {/* Service Image Premium Card */}
             <div className="w-full sm:w-[80%] lg:w-[320px] aspect-[4/3] lg:aspect-[3/4] bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/20 flex items-center justify-center shrink-0 relative shadow-2xl shadow-indigo-900/50 group">
               {service.image ? (
-                <img src={service.image} alt={service.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <img src={service.image || "/hero-left-logo.png"} alt={service.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               ) : (
                 <div className="flex flex-col items-center gap-3">
                   <span className="text-8xl drop-shadow-2xl">✂️</span>

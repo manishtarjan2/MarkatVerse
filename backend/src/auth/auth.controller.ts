@@ -20,6 +20,11 @@ export class AuthController {
     return this.authService.phoneLogin(data.phone);
   }
 
+  @Post('google')
+  googleLogin(@Body() data: { token: string; role?: string }) {
+    return this.authService.googleLogin(data.token, data.role);
+  }
+
   @Get('me')
   getMe(@Headers('authorization') authHeader: string) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

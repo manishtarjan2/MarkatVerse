@@ -2,10 +2,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  Scissors, Users, Clock, TrendingUp, ChevronRight, Plus, RefreshCw,
+  Scissors, Users, User, Clock, TrendingUp, ChevronRight, Plus, RefreshCw,
   PlayCircle, XCircle, CheckCircle2, Settings, Loader2, IndianRupee,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import StaffResourceManagementModal from "@/components/StaffResourceManagementModal";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
@@ -16,6 +17,7 @@ interface TokenItem {
   service: string;
   status: string;
   joinedAt: string;
+  resourceId?: string | number;
 }
 
 interface QueueStatus {
@@ -28,7 +30,9 @@ interface QueueStatus {
     pricePerHour: number;
     isOpen: boolean;
   };
-  serving: TokenItem | null;
+  staff: any[];
+  resources: any[];
+  serving: TokenItem[];
   waiting: TokenItem[];
   waitingCount: number;
   doneToday: number;
@@ -54,6 +58,7 @@ export default function SalonManagePage() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"queue" | "stats" | "settings">("queue");
+  const [showStaffModal, setShowStaffModal] = useState(false);
   const { user } = useAuth();
 
   // Create queue form
@@ -130,11 +135,27 @@ export default function SalonManagePage() {
     return () => clearInterval(interval);
   }, [fetchStatus]);
 
-  const callNext = async () => {
+  const callNext = async (resourceId?: string) => {
     if (!selectedQueueId) return;
-    setActionLoading("next");
+    setActionLoading(resourceId ? `next-${resourceId}` : "next");
     try {
-      await fetch(`${API}/service-queue/${selectedQueueId}/next`, { method: "POST" });
+      await fetch(`${API}/service-queue/${selectedQueueId}/next`, { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resourceId })
+      });
+      await fetchStatus();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const markAction = async (tokenId: string, action: string) => {
+    setActionLoading(tokenId);
+    try {
+      await fetch(`${API}/service-queue/token/${tokenId}/${action}`, { method: "PATCH" });
       await fetchStatus();
     } finally {
       setActionLoading(null);
@@ -142,23 +163,11 @@ export default function SalonManagePage() {
   };
 
   const markNoShow = async (tokenId: string) => {
-    setActionLoading(tokenId);
-    try {
-      await fetch(`${API}/service-queue/token/${tokenId}/no-show`, { method: "PATCH" });
-      await fetchStatus();
-    } finally {
-      setActionLoading(null);
-    }
+    return markAction(tokenId, "no-show");
   };
 
   const markDone = async (tokenId: string) => {
-    setActionLoading(tokenId);
-    try {
-      await fetch(`${API}/service-queue/token/${tokenId}/done`, { method: "PATCH" });
-      await fetchStatus();
-    } finally {
-      setActionLoading(null);
-    }
+    return markAction(tokenId, "done");
   };
 
   const resetQueue = async () => {
@@ -250,6 +259,14 @@ export default function SalonManagePage() {
           >
             + Join
           </Link>
+          {selectedQueueId && (
+            <button
+              onClick={() => setShowStaffModal(true)}
+              className="text-sm bg-white/10 hover:bg-white/20 border border-white/10 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Users className="w-4 h-4" /> Staff & Resources
+            </button>
+          )}
         </div>
       </header>
 
@@ -344,7 +361,7 @@ export default function SalonManagePage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               {[
                 { label: "Waiting", value: status.waitingCount, icon: <Users className="w-4 h-4" />, color: "text-amber-400" },
-                { label: "Serving", value: status.serving ? 1 : 0, icon: <PlayCircle className="w-4 h-4" />, color: "text-emerald-400" },
+                { label: "Serving", value: status.serving?.length ? status.serving.length : 0, icon: <PlayCircle className="w-4 h-4" />, color: "text-emerald-400" },
                 { label: "Done Today", value: status.doneToday, icon: <CheckCircle2 className="w-4 h-4" />, color: "text-blue-400" },
                 { label: "Est. Revenue", value: `₹${stats ? Math.round(stats.estimatedRevenue) : 0}`, icon: <IndianRupee className="w-4 h-4" />, color: "text-purple-400" },
               ].map((card) => (
@@ -394,58 +411,114 @@ export default function SalonManagePage() {
             {activeTab === "queue" && (
               <div className="space-y-4">
 
-                {/* Call Next Button */}
-                <button
-                  onClick={callNext}
-                  disabled={actionLoading === "next" || status.waitingCount === 0}
-                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-black text-xl py-5 rounded-2xl transition-all shadow-xl shadow-purple-600/20 flex items-center justify-center gap-3"
-                >
-                  {actionLoading === "next" ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                {/* Left Column: Serving Area */}
+                <div className="w-full">
+                  {status.resources && status.resources.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {status.resources.map(resource => {
+                        const servingToken = status.serving.find(t => t.resourceId === resource.id);
+                        return (
+                          <div key={resource.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+                            <div className="text-sm font-bold text-slate-700 mb-1 tracking-wider">
+                              {resource.name}
+                            </div>
+                            <div className="text-[10px] text-slate-400 mb-4 uppercase font-bold tracking-widest">{resource.type}</div>
+                            
+                            {servingToken ? (
+                              <>
+                                <div className="text-4xl font-black text-slate-800 mb-2 tracking-tighter">
+                                  {servingToken.tokenNumber ? `#${servingToken.tokenNumber}` : 'Appt'}
+                                </div>
+                                <div className="text-lg font-medium text-slate-600 mb-6 truncate w-full px-2">
+                                  {servingToken.customerName}
+                                </div>
+                                <div className="flex gap-2 w-full mt-auto">
+                                  <button
+                                    disabled={actionLoading === "done"}
+                                    onClick={() => markAction(servingToken.id, "done")}
+                                    className="flex-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold py-2 rounded-xl transition-colors flex items-center justify-center gap-1 text-sm"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4" /> Done
+                                  </button>
+                                  <button
+                                    disabled={actionLoading === "noshow"}
+                                    onClick={() => markAction(servingToken.id, "no-show")}
+                                    className="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold py-2 rounded-xl transition-colors flex items-center justify-center gap-1 text-sm"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="flex flex-col items-center py-4 w-full h-full justify-center">
+                                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                                  <User className="w-6 h-6 text-slate-300" />
+                                </div>
+                                <div className="text-slate-400 font-medium text-xs mb-4">Ready</div>
+                                <button
+                                  disabled={actionLoading === `next-${resource.id}` || status.waitingCount === 0}
+                                  onClick={() => callNext(resource.id)}
+                                  className="w-full mt-auto bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20 disabled:shadow-none text-sm"
+                                >
+                                  {actionLoading === `next-${resource.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+                                  Call Next
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
                   ) : (
-                    <ChevronRight className="w-6 h-6" />
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+                      <div className="text-sm font-semibold text-slate-500 mb-2 uppercase tracking-wider">
+                        Currently Serving
+                      </div>
+                      {status.serving && status.serving.length > 0 ? (
+                        <>
+                          <div className="text-6xl font-black text-slate-800 mb-4 tracking-tighter">
+                            {status.serving[0].tokenNumber ? `#${status.serving[0].tokenNumber}` : 'Appt'}
+                          </div>
+                          <div className="text-xl font-medium text-slate-600 mb-6">
+                            {status.serving[0].customerName}
+                          </div>
+                          <div className="flex gap-3 w-full max-w-xs">
+                            <button
+                              disabled={actionLoading === "done"}
+                              onClick={() => markAction(status.serving[0].id, "done")}
+                              className="flex-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                            >
+                              <CheckCircle2 className="w-5 h-5" /> Done
+                            </button>
+                            <button
+                              disabled={actionLoading === "noshow"}
+                              onClick={() => markAction(status.serving[0].id, "no-show")}
+                              className="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                            >
+                              <XCircle className="w-5 h-5" /> No Show
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center py-8">
+                          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                            <User className="w-8 h-8 text-slate-300" />
+                          </div>
+                          <div className="text-slate-400 font-medium">Ready for next customer</div>
+                        </div>
+                      )}
+                      <button
+                        disabled={actionLoading === "next" || status.waitingCount === 0}
+                        onClick={() => callNext()}
+                        className="w-full max-w-xs mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 disabled:shadow-none"
+                      >
+                        {actionLoading === "next" ? <Loader2 className="w-5 h-5 animate-spin" /> : <PlayCircle className="w-5 h-5" />}
+                        Call Next Customer
+                      </button>
+                    </div>
                   )}
-                  Call Next Customer
-                </button>
-
-                {/* Currently Serving */}
-                {status.serving && (
-                  <div className="bg-emerald-500/10 border border-emerald-400/20 rounded-2xl p-5">
-                    <div className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                      Currently Serving
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-emerald-600/30 border border-emerald-400/30 rounded-2xl flex items-center justify-center text-emerald-300 font-black text-xl">
-                          #{status.serving.tokenNumber}
-                        </div>
-                        <div>
-                          <div className="text-white font-bold">{status.serving.customerName}</div>
-                          <div className="text-slate-400 text-sm">{status.serving.service}</div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => markDone(status.serving!.id)}
-                          disabled={!!actionLoading}
-                          className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-400/30 p-2.5 rounded-xl transition-all"
-                          title="Mark Done"
-                        >
-                          {actionLoading === status.serving.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={() => markNoShow(status.serving!.id)}
-                          disabled={!!actionLoading}
-                          className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-400/30 p-2.5 rounded-xl transition-all"
-                          title="No Show"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
 
                 {/* Waiting list */}
                 <div>
@@ -481,7 +554,7 @@ export default function SalonManagePage() {
                               <span>{t.service}</span>
                               <span>·</span>
                               <Clock className="w-3 h-3" />
-                              <span>~{i * status.queue.avgMinutes + (status.serving ? status.queue.avgMinutes : 0)}m wait</span>
+                              <span>~{i * status.queue.avgMinutes + (status.serving?.length ? status.queue.avgMinutes : 0)}m wait</span>
                             </div>
                           </div>
                           {i === 0 && (
@@ -611,6 +684,15 @@ export default function SalonManagePage() {
               <Plus className="w-4 h-4" /> Create Your First Queue
             </button>
           </div>
+        )}
+
+        {showStaffModal && status && (
+          <StaffResourceManagementModal
+            queueId={selectedQueueId}
+            queueData={{ ...status.queue, staff: status.staff, resources: status.resources }}
+            onClose={() => setShowStaffModal(false)}
+            onUpdate={fetchStatus}
+          />
         )}
       </div>
     </div>

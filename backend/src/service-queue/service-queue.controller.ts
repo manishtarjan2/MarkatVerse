@@ -51,7 +51,7 @@ export class ServiceQueueController {
   @Post(':queueId/join')
   joinQueue(
     @Param('queueId') queueId: string,
-    @Body() body: { customerName: string; phone?: string; service?: string },
+    @Body() body: { customerName: string; phone?: string; service?: string; staffId?: string; staffName?: string; resourceId?: string; appointmentTime?: string; price?: number },
   ) {
     return this.serviceQueueService.joinQueue(queueId, body);
   }
@@ -69,6 +69,12 @@ export class ServiceQueueController {
   @Get(':queueId/stats')
   getTodayStats(@Param('queueId') queueId: string) {
     return this.serviceQueueService.getTodayStats(queueId);
+  }
+
+  /** Analytics for this queue */
+  @Get(':queueId/analytics')
+  getAnalytics(@Param('queueId') queueId: string) {
+    return this.serviceQueueService.getAnalytics(queueId);
   }
 
   /** Update queue settings (avgMinutes, pricePerHour, isOpen) */
@@ -90,6 +96,15 @@ export class ServiceQueueController {
   @Delete(':queueId/reset')
   resetQueue(@Param('queueId') queueId: string) {
     return this.serviceQueueService.resetQueue(queueId);
+  }
+
+  /** Admin override status */
+  @Patch(':queueId/admin-status')
+  updateAdminStatus(
+    @Param('queueId') queueId: string,
+    @Body('status') status: string
+  ) {
+    return this.serviceQueueService.updateAdminStatus(queueId, status);
   }
 
   // ─── Token Routes ─────────────────────────────────────────────────────────────
@@ -116,6 +131,18 @@ export class ServiceQueueController {
   @Post('token/:tokenId/check-in')
   checkIn(@Param('tokenId') tokenId: string) {
     return this.serviceQueueService.checkIn(tokenId);
+  }
+
+  /** Mark token as ABSENT */
+  @Patch('token/:tokenId/absent')
+  markAbsent(@Param('tokenId') tokenId: string) {
+    return this.serviceQueueService.markAbsent(tokenId);
+  }
+
+  /** Mark token as WAITING (Return to queue) */
+  @Patch('token/:tokenId/waiting')
+  markWaiting(@Param('tokenId') tokenId: string) {
+    return this.serviceQueueService.markWaiting(tokenId);
   }
 
   // ─── Staff & Resources ───────────────────────────────────────────────────

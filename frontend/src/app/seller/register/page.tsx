@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SellerRegistrationPage() {
   const router = useRouter();
@@ -13,7 +14,9 @@ export default function SellerRegistrationPage() {
   
   const [sectors, setSectors] = useState<any[]>([]);
   const [selectedSector, setSelectedSector] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
 
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   // Fetch Business Types when Model changes
@@ -210,15 +213,45 @@ export default function SellerRegistrationPage() {
               <div className="flex gap-4">
                 <button
                   onClick={handleBack}
-                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  disabled={submitting}
+                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Back
                 </button>
                 <button
-                  onClick={() => router.push('/seller/dashboard')}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                  onClick={async () => {
+                    setSubmitting(true);
+                    try {
+                      // Fetch sector details to pass name and type
+                      const sName = sectors.find(s => String(s.id) === String(selectedSector))?.name || 'My Business';
+                      
+                      const payload = {
+                        email: user?.email,
+                        phone: user?.phone,
+                        ownerName: user?.name,
+                        mainType: businessModel,
+                        businessType: selectedType, // e.g. WHOLESALER, DOCTOR, etc.
+                        businessName: sName,
+                      };
+
+                      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sellers`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                      });
+                      
+                      // Hard redirect to force AuthContext to re-fetch /auth/me and get new SELLER role and business data
+                      window.location.href = '/seller/dashboard';
+                    } catch (err) {
+                      console.error(err);
+                      alert('Registration failed. Please try again.');
+                      setSubmitting(false);
+                    }
+                  }}
+                  disabled={submitting}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  Complete Registration
+                  {submitting ? 'Registering...' : 'Complete Registration'}
                 </button>
               </div>
             </div>

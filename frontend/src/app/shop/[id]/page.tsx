@@ -10,18 +10,20 @@ export default function PublicShopPage({ params }: { params: Promise<{ id: strin
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3001/products')
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    fetch(`${API_URL}/products`)
       .then(res => res.json())
       .then(data => {
-        // Find products belonging to this shop
-        // If none found for exact name, just show some mock products for demonstration
         let shopProducts = data.filter((p: any) => (p.sellerName || 'Unknown').toLowerCase().includes(shopName.toLowerCase().split(' ')[0]));
         if (shopProducts.length === 0) {
           shopProducts = data.slice(0, 4);
         }
         setProducts(shopProducts);
-        setIsLoading(false);
-      });
+      })
+      .catch(err => {
+        console.error('Failed to load shop products:', err);
+      })
+      .finally(() => setIsLoading(false));
   }, [shopName]);
 
   return (
@@ -115,9 +117,11 @@ export default function PublicShopPage({ params }: { params: Promise<{ id: strin
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-300">
-                        <Shield className="w-12 h-12" />
-                      </div>
+                      <img 
+                        src="/hero-left-logo.png" 
+                        alt={product.name}
+                        className="w-full h-full object-contain opacity-50 p-4 group-hover:scale-105 transition-transform duration-500"
+                      />
                     )}
                     {product.badge && (
                       <div className={`absolute top-4 left-4 px-3 py-1 bg-${product.badgeColor || 'blue'}-500 text-white text-xs font-bold rounded-full shadow-sm`}>

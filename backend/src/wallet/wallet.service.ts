@@ -87,5 +87,21 @@ export class WalletService {
       return request;
     });
   }
+
+  async payPlatform(businessId: string) {
+    const wallet = await this.getWallet(businessId);
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    const amountOwed = wallet.owedToPlatform;
+    if (amountOwed <= 0) return wallet;
+
+    // Reset owedToPlatform
+    const updatedWallet = await this.prisma.wallet.update({
+      where: { id: wallet.id },
+      data: { owedToPlatform: 0 }
+    });
+
+    return updatedWallet;
+  }
 }
 

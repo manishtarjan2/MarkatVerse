@@ -38,11 +38,17 @@ let ServiceQueueController = class ServiceQueueController {
     getTodayStats(queueId) {
         return this.serviceQueueService.getTodayStats(queueId);
     }
+    getAnalytics(queueId) {
+        return this.serviceQueueService.getAnalytics(queueId);
+    }
     updateSettings(queueId, body) {
         return this.serviceQueueService.updateQueueSettings(queueId, body);
     }
     resetQueue(queueId) {
         return this.serviceQueueService.resetQueue(queueId);
+    }
+    updateAdminStatus(queueId, status) {
+        return this.serviceQueueService.updateAdminStatus(queueId, status);
     }
     getTokenStatus(tokenId) {
         return this.serviceQueueService.getTokenStatus(tokenId);
@@ -55,6 +61,12 @@ let ServiceQueueController = class ServiceQueueController {
     }
     checkIn(tokenId) {
         return this.serviceQueueService.checkIn(tokenId);
+    }
+    markAbsent(tokenId) {
+        return this.serviceQueueService.markAbsent(tokenId);
+    }
+    markWaiting(tokenId) {
+        return this.serviceQueueService.markWaiting(tokenId);
     }
     addStaff(queueId, body) {
         return this.serviceQueueService.addStaff(queueId, body);
@@ -120,6 +132,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ServiceQueueController.prototype, "getTodayStats", null);
 __decorate([
+    Get(':queueId/analytics'),
+    __param(0, Param('queueId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ServiceQueueController.prototype, "getAnalytics", null);
+__decorate([
     Patch(':queueId/settings'),
     __param(0, Param('queueId')),
     __param(1, Body()),
@@ -134,6 +153,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ServiceQueueController.prototype, "resetQueue", null);
+__decorate([
+    Patch(':queueId/admin-status'),
+    __param(0, Param('queueId')),
+    __param(1, Body('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], ServiceQueueController.prototype, "updateAdminStatus", null);
 __decorate([
     Get('token/:tokenId'),
     __param(0, Param('tokenId')),
@@ -162,6 +189,20 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], ServiceQueueController.prototype, "checkIn", null);
+__decorate([
+    Patch('token/:tokenId/absent'),
+    __param(0, Param('tokenId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ServiceQueueController.prototype, "markAbsent", null);
+__decorate([
+    Patch('token/:tokenId/waiting'),
+    __param(0, Param('tokenId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ServiceQueueController.prototype, "markWaiting", null);
 __decorate([
     Post(':queueId/staff'),
     __param(0, Param('queueId')),

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell, ChevronRight, LogOut, Edit3, Trash2, Plus, Star } from 'lucide-react';
+import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell, ChevronRight, LogOut, Edit3, Trash2, Plus, Star, Heart, ShoppingBag } from 'lucide-react';
 
 export default function ProfileSettings() {
   const [activeTab, setActiveTab] = useState('personal');
@@ -19,8 +19,9 @@ export default function ProfileSettings() {
     { id: 'payment', label: 'Payment Methods', icon: <CreditCard className="w-5 h-5" /> },
     { id: 'shipping', label: 'Shipping Addresses', icon: <MapPin className="w-5 h-5" /> },
     { id: 'orders', label: 'Order History', icon: <Package className="w-5 h-5" /> },
+    { id: 'wishlist', label: 'My Wishlist', icon: <Heart className="w-5 h-5" /> },
     { id: 'security', label: 'Security & Privacy', icon: <ShieldCheck className="w-5 h-5" /> },
-    { id: 'notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" /> },
+    { id: 'notifications', label: 'Notifications & Alerts', icon: <Bell className="w-5 h-5" /> },
   ];
 
   return (
@@ -350,6 +351,44 @@ export default function ProfileSettings() {
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 tracking-tight capitalize">{activeTab} Details</h3>
                 <p className="text-slate-400 max-w-sm">This section is currently being updated. Please check back later for your detailed {activeTab} information.</p>
+              </div>
+            )}
+
+            {/* WISHLIST TAB */}
+            {activeTab === 'wishlist' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                      <Heart className="w-7 h-7 text-red-500" /> My Wishlist
+                    </h2>
+                    <p className="text-slate-400 mt-1">Items you've saved for later.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex gap-4 hover:border-slate-600 transition-colors group">
+                      <div className="w-24 h-24 bg-slate-700 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
+                        <ShoppingBag className="w-8 h-8 text-slate-500" />
+                      </div>
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <h4 className="text-white font-bold text-sm line-clamp-2">Premium Wireless Noise-Cancelling Headphones</h4>
+                          <div className="text-blue-400 font-black mt-1">₹12,999</div>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <button className="text-xs font-bold text-slate-400 hover:text-red-400 transition-colors flex items-center gap-1">
+                            <Trash2 className="w-3.5 h-3.5" /> Remove
+                          </button>
+                          <button className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-lg shadow-blue-900/20">
+                            Move to Cart
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

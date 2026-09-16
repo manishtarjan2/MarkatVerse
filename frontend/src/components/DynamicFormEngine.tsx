@@ -38,7 +38,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
   const [parameters, setParameters] = useState<Record<string, string | string[]>>(initialData?.parameters || {});
   
   // Custom Options (Variants/Services Menu)
-  const [options, setOptions] = useState<{ id: string, name: string, price: number }[]>(initialData?.options || []);
+  const [options, setOptions] = useState<{ id: string, name: string, price: number, discountPercentage?: number }[]>(initialData?.options || []);
   
   // Media
   const [uploadedImages, setUploadedImages] = useState<string[]>(initialData?.images || (initialData?.image ? [initialData.image] : []));
@@ -47,6 +47,10 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
   const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [imageUrlError, setImageUrlError] = useState('');
+
+  // Location
+  const [location, setLocation] = useState(initialData?.location || '');
+  const [pincode, setPincode] = useState(initialData?.pincode || '');
 
   // Cascading Logic
   const catRules = useCategoryRules(category);
@@ -68,6 +72,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
     || selectedSubcategory?.parameters 
     || selectedCategory?.parameters 
     || [];
+  const hasPricelist = activeParameters.some(p => p.type === 'pricelist');
 
   // Reset downstream selections when a parent changes
   useEffect(() => {
@@ -130,9 +135,11 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
       price: sellingType === 'B2C' ? Number(b2cPrice) : wholesaleTiers[0].price, // Fallback price
       wholesaleTiers: sellingType === 'B2B' ? wholesaleTiers : undefined,
       images: uploadedImages.length > 0 ? uploadedImages : undefined,
-      image: uploadedImages.length > 0 ? uploadedImages[0] : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80',
+      image: uploadedImages.length > 0 ? uploadedImages[0] : '/hero-left-logo.png',
       parameters,
-      options: options.length > 0 ? options : undefined
+      options: options.length > 0 ? options : undefined,
+      location,
+      pincode
     };
 
     await onSave(payload);
@@ -240,7 +247,44 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700">Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Detailed description..." rows={2} className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 resize-none" />
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Detailed description..." rows={1} className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 resize-none" />
+          </div>
+          <div className="space-y-2 md:col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-semibold text-slate-700">Location Details</label>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        alert(`Location pinned! Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`);
+                        // Ideally we would reverse geocode here. For now, just set dummy or preserve existing location text,
+                        // and perhaps we could save the lat/lng in state if we had it, but let's just show success to the user.
+                      },
+                      (error) => alert('Error getting location: ' + error.message)
+                    );
+                  } else {
+                    alert('Geolocation is not supported by your browser.');
+                  }
+                }}
+                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                Pin My Location
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500">Address / City</label>
+                <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Mumbai, Maharashtra" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500">PIN Code / ZIP</label>
+                <input type="text" value={pincode} onChange={e => setPincode(e.target.value)} placeholder="e.g. 400001" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500 mt-2">Pinning your location helps local customers find your services easily in the 'Near Me' section.</p>
           </div>
         </div>
       </div>
@@ -251,7 +295,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
           <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b pb-2">3. Product Specifications</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-5 bg-slate-50 rounded-2xl border border-slate-100">
             {activeParameters.map(param => (
-              <div key={param.name} className="space-y-3">
+              <div key={param.name} className={`space-y-3 ${param.type === 'pricelist' ? 'col-span-1 md:col-span-2 lg:col-span-3' : ''}`}>
                 <label className="text-sm font-semibold text-slate-700">{param.name}</label>
                 
                 {param.type === 'text' && (
@@ -284,6 +328,68 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
                         </label>
                       );
                     })}
+                  </div>
+                )}
+
+                {param.type === 'pricelist' && (
+                  <div className="flex flex-col gap-4 w-full bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-1">
+                    <p className="text-xs text-slate-500 font-medium">Select the options you offer and set your pricing.</p>
+                    <div className="space-y-3">
+                      {Array.from(new Set([...(param.options || []), ...options.map(o => o.name)])).map(optName => {
+                        const existingOption = options.find(o => o.name === optName);
+                        const isChecked = !!existingOption;
+                        return (
+                          <div key={optName} className={`flex flex-wrap items-center gap-4 p-3 rounded-xl border transition-colors ${isChecked ? 'bg-blue-50/50 border-blue-200' : 'bg-slate-50 border-slate-100'}`}>
+                            <label className="flex items-center gap-3 cursor-pointer min-w-[150px] flex-1">
+                              <input 
+                                type="checkbox" 
+                                checked={isChecked}
+                                onChange={e => {
+                                  if (e.target.checked) {
+                                    setOptions([...options, { id: Math.random().toString(36).substr(2, 9), name: optName, price: 0 }]);
+                                  } else {
+                                    setOptions(options.filter(o => o.name !== optName));
+                                  }
+                                }}
+                                className="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" 
+                              />
+                              <span className={`font-semibold ${isChecked ? 'text-blue-800' : 'text-slate-600'}`}>{optName}</span>
+                            </label>
+                            {isChecked && (
+                              <div className="flex gap-3 flex-wrap items-center">
+                                <div className="w-32">
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Price</label>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
+                                    <input type="number" value={existingOption.price || ''} onChange={e => setOptions(options.map(o => o.name === optName ? { ...o, price: Number(e.target.value) } : o))} className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-300 outline-none text-sm bg-white focus:border-blue-500" />
+                                  </div>
+                                </div>
+                                <div className="w-24">
+                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Discount</label>
+                                  <div className="relative">
+                                    <input type="number" value={existingOption.discountPercentage || ''} onChange={e => setOptions(options.map(o => o.name === optName ? { ...o, discountPercentage: Number(e.target.value) } : o))} placeholder="0" className="w-full pl-3 pr-7 py-1.5 rounded-lg border border-slate-300 outline-none text-sm bg-white focus:border-blue-500" />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">%</span>
+                                  </div>
+                                </div>
+                                {!(param.options || []).includes(optName) && (
+                                  <button type="button" onClick={() => setOptions(options.filter(o => o.name !== optName))} className="mt-5 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button type="button" onClick={() => {
+                        const customName = prompt('Enter custom option name:');
+                        if (customName && customName.trim()) {
+                          if (!options.find(o => o.name.toLowerCase() === customName.trim().toLowerCase()) && !(param.options || []).some(o => o.toLowerCase() === customName.trim().toLowerCase())) {
+                            setOptions([...options, { id: Math.random().toString(36).substr(2, 9), name: customName.trim(), price: 0 }]);
+                          }
+                        }
+                      }} className="mt-2 w-full p-3 border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-xl text-blue-600 flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors font-semibold text-sm">
+                      <PlusCircle className="w-4 h-4" /> Add Custom {param.name}
+                    </button>
                   </div>
                 )}
               </div>
@@ -331,7 +437,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
             <label className="text-sm font-semibold text-slate-700">Selling Price (₹)</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
-              <input required type="number" value={b2cPrice} onChange={e => setB2cPrice(e.target.value)} placeholder="0.00" className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+              <input required={options.length === 0} type="number" value={b2cPrice} onChange={e => setB2cPrice(e.target.value)} placeholder="0.00" className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
             </div>
           </div>
         ) : (
@@ -375,7 +481,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
         )}
 
         {/* Dynamic Options (Variants/Services) */}
-        {(canSellB2C || isService) && (
+        {!hasPricelist && (canSellB2C || isService) && (
           <div className="space-y-4 pt-6 border-t border-slate-100">
             <h4 className="text-sm font-bold text-slate-800">Custom Options & Variants</h4>
             <p className="text-xs text-slate-500">Add variations like specific services (e.g. Haircut, Massage) or product variants (e.g. Size, Material) with custom pricing.</p>

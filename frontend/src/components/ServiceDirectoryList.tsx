@@ -7,7 +7,7 @@ import { Heart, Share2 } from 'lucide-react';
 
 export default function ServiceDirectoryList({ products }: { products: Product[] }) {
   const router = useRouter();
-  const { userLocation } = useProducts();
+  const { userLocation, userLat, userLng, radiusFilter, setRadiusFilter } = useProducts();
 
   if (products.length === 0) {
     return <div className="text-center p-10 text-slate-400">No service providers found.</div>;
@@ -23,8 +23,29 @@ export default function ServiceDirectoryList({ products }: { products: Product[]
   });
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
-      {sortedProducts.map(product => (
+    <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+        <h2 className="text-xl font-bold text-slate-800">Available Services</h2>
+        {userLat !== null && userLng !== null && (
+          <div className="flex items-center gap-2 text-sm bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
+            <span className="text-slate-500 font-medium whitespace-nowrap">Distance:</span>
+            <select 
+              value={radiusFilter || ''} 
+              onChange={(e) => setRadiusFilter(e.target.value ? Number(e.target.value) : null)}
+              className="bg-transparent border-none outline-none text-slate-800 font-medium cursor-pointer"
+            >
+              <option value="">Admin Default</option>
+              <option value="5">Within 5 km</option>
+              <option value="10">Within 10 km</option>
+              <option value="25">Within 25 km</option>
+              <option value="50">Within 50 km</option>
+              <option value="100">Within 100 km</option>
+            </select>
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
+        {sortedProducts.map(product => (
         <div 
           key={product.id} 
           onClick={() => router.push(`/service/${product.id}`)} 
@@ -120,6 +141,7 @@ export default function ServiceDirectoryList({ products }: { products: Product[]
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }

@@ -197,54 +197,11 @@ function QueueBoardContent() {
           <div className="flex-1 flex flex-col items-center justify-center p-8 lg:p-16 relative overflow-hidden">
 
             {/* Glow */}
-            <div className={`absolute w-[500px] h-[500px] rounded-full blur-3xl opacity-15 pointer-events-none transition-colors duration-1000 ${status.serving ? "bg-emerald-500" : "bg-violet-600"}`} />
+            <div className={`absolute w-[500px] h-[500px] rounded-full blur-3xl opacity-15 pointer-events-none transition-colors duration-1000 ${(Array.isArray(status.serving) ? status.serving[0] : status.serving) ? "bg-emerald-500" : "bg-violet-600"}`} />
 
             <div className="relative z-10 text-center w-full max-w-sm">
-              {/* Shop name */}
-              <div className="text-slate-500 text-xs font-black uppercase tracking-[0.3em] mb-4">
-                {status.queue.shopName}
-              </div>
-
-              {/* NOW SERVING — Big Number */}
-              <div className="text-slate-500 text-xs font-black uppercase tracking-widest mb-1">NOW SERVING</div>
-              {status.serving ? (
-                <div className="mb-6">
-                  <div className="text-[9rem] lg:text-[12rem] font-black leading-none text-emerald-400 drop-shadow-2xl" style={{ textShadow: "0 0 80px rgba(52,211,153,0.35)" }}>
-                    #{status.serving.tokenNumber}
-                  </div>
-                  <div className="text-emerald-200/80 text-xl font-bold">{status.serving.customerName}</div>
-                  <div className="text-slate-500 text-sm mt-1 flex items-center justify-center gap-2">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    ✂️ {status.serving.service} — In Progress
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-6">
-                  <div className="text-[9rem] lg:text-[12rem] font-black leading-none text-slate-700">—</div>
-                  <div className="text-slate-600 text-lg mt-2">Queue not started</div>
-                </div>
-              )}
-
-              {/* Stats row */}
-              <div className="flex items-center justify-center gap-8">
-                <div className="text-center">
-                  <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1 mb-1"><Users className="w-3 h-3" /> Waiting</div>
-                  <div className="text-white text-3xl font-black">{status.waitingCount}</div>
-                </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div className="text-center">
-                  <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1 mb-1"><Clock className="w-3 h-3" /> Avg Time</div>
-                  <div className="text-white text-3xl font-black">{status.queue.avgMinutes}m</div>
-                </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div className="text-center">
-                  <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1 mb-1"><CheckCircle2 className="w-3 h-3" /> Done</div>
-                  <div className="text-white text-3xl font-black">{status.doneToday}</div>
-                </div>
-              </div>
-
               {/* ── TRACK YOUR TOKEN ──────────────────────────────────── */}
-              <div className="mt-8 w-full">
+              <div className="mb-8 w-full">
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
                   <div className="text-slate-400 text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2">
                     <Search className="w-3.5 h-3.5 text-violet-400" /> Track Your Token Number
@@ -259,7 +216,7 @@ function QueueBoardContent() {
                         value={trackInput}
                         onChange={e => { setTrackInput(e.target.value); setTrackResult(null); }}
                         onKeyDown={e => e.key === 'Enter' && handleTrack()}
-                        className="flex-1 bg-transparent py-3 text-white font-bold text-lg outline-none placeholder-slate-600"
+                        className="flex-1 min-w-0 w-full bg-transparent py-3 text-white font-bold text-lg outline-none placeholder-slate-600"
                       />
                       {trackInput && (
                         <button onClick={() => { setTrackInput(''); setTrackResult(null); }}
@@ -344,6 +301,52 @@ function QueueBoardContent() {
                   )}
                 </div>
               </div>
+              {/* Shop name */}
+              <div className="text-slate-500 text-xs font-black uppercase tracking-[0.3em] mb-4">
+                {status.queue.shopName}
+              </div>
+
+              {/* NOW SERVING — Big Number */}
+              <div className="text-slate-500 text-xs font-black uppercase tracking-widest mb-1">NOW SERVING</div>
+              {(() => {
+                const servingToken = Array.isArray(status.serving) ? status.serving[0] : status.serving;
+                return servingToken ? (
+                  <div className="mb-6">
+                    <div className="text-[9rem] lg:text-[12rem] font-black leading-none text-emerald-400 drop-shadow-2xl" style={{ textShadow: "0 0 80px rgba(52,211,153,0.35)" }}>
+                      #{servingToken.tokenNumber}
+                    </div>
+                    <div className="text-emerald-200/80 text-xl font-bold">{servingToken.customerName}</div>
+                    <div className="text-slate-500 text-sm mt-1 flex items-center justify-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                      ✂️ {servingToken.service} — In Progress
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-6">
+                    <div className="text-[9rem] lg:text-[12rem] font-black leading-none text-slate-700">—</div>
+                    <div className="text-slate-600 text-lg mt-2">Waiting for next customer</div>
+                  </div>
+                );
+              })()}
+
+              {/* Stats row */}
+              <div className="flex items-center justify-center gap-8">
+                <div className="text-center">
+                  <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1 mb-1"><Users className="w-3 h-3" /> Waiting</div>
+                  <div className="text-white text-3xl font-black">{status.waitingCount}</div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="text-center">
+                  <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1 mb-1"><Clock className="w-3 h-3" /> Avg Time</div>
+                  <div className="text-white text-3xl font-black">{status.queue.avgMinutes}m</div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="text-center">
+                  <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1 mb-1"><CheckCircle2 className="w-3 h-3" /> Done</div>
+                  <div className="text-white text-3xl font-black">{status.doneToday}</div>
+                </div>
+              </div>
+
 
               {/* Last updated */}
               <div className="mt-4 text-slate-600 text-[10px]">

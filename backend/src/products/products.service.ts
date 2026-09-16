@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
+import { calculateDistance } from '../utils/geo.js';
 
 @Injectable()
 export class ProductsService {
@@ -35,11 +36,52 @@ export class ProductsService {
     return this.mapProduct(product);
   }
 
-  async findAll() {
-    const products = await this.prisma.product.findMany({
+  async findAll(location?: string, lat?: number, lng?: number, radius?: number) {
+    let products = await this.prisma.product.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return products.map(this.mapProduct);
+
+    if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
+      // 1. Get system default radius if not provided
+      let effectiveRadius = radius;
+      if (effectiveRadius === undefined || isNaN(effectiveRadius)) {
+        const settings = await this.prisma.configuration.findFirst({
+          where: { type: 'SYSTEM_SETTINGS', name: 'global' },
+        });
+        effectiveRadius = (settings?.data as any)?.searchRadius ?? 50; // fallback to 50km
+      }
+
+      // 2. Calculate distances and filter
+      const withDistances = products.map(p => {
+        let dist = Infinity;
+        if (p.latitude !== null && p.longitude !== null) {
+          dist = calculateDistance(lat, lng, p.latitude, p.longitude);
+        }
+        return { ...p, _distance: dist };
+      });
+
+      // Filter out products outside the radius (unless they have no coordinates)
+      const finalRadius = effectiveRadius ?? 50;
+      products = withDistances.filter(p => p._distance <= finalRadius || p._distance === Infinity);
+
+      // Sort by distance
+      products.sort((a: any, b: any) => a._distance - b._distance);
+      
+    } else if (location && location.trim() !== '') {
+      // Fallback to text matching if no coords
+      const loc = location.toLowerCase();
+      products.sort((a, b) => {
+        const aLoc = (a.location || '').toLowerCase();
+        const bLoc = (b.location || '').toLowerCase();
+        const aMatch = aLoc.includes(loc);
+        const bMatch = bLoc.includes(loc);
+        if (aMatch && !bMatch) return -1;
+        if (!aMatch && bMatch) return 1;
+        return 0;
+      });
+    }
+
+    return products.map(p => this.mapProduct(p));
   }
 
   async findOne(id: string) {
@@ -72,6 +114,32 @@ export class ProductsService {
       },
     });
     return this.mapProduct(p);
+  }
+
+  async updateAdminStatus(id: string, status: string) {
+    const p = await this.prisma.product.update({
+      where: { id },
+      data: { status }
+    });
+    return this.mapProduct(p);
+  }
+
+  async toggleDummyData(enable: boolean) {
+    const status = enable ? 'ACTIVE' : 'SUSPENDED';
+    
+    // Toggle Products
+    await this.prisma.product.updateMany({
+      where: { name: { contains: 'Dummy' } },
+      data: { status }
+    });
+
+    // Toggle Queues
+    await this.prisma.serviceQueue.updateMany({
+      where: { shopName: { contains: 'Dummy' } },
+      data: { status }
+    });
+
+    return { success: true, message: `Dummy data set to ${status}` };
   }
 
   async remove(id: string) {

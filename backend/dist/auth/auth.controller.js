@@ -26,6 +26,9 @@ let AuthController = class AuthController {
     phoneLogin(data) {
         return this.authService.phoneLogin(data.phone);
     }
+    googleLogin(data) {
+        return this.authService.googleLogin(data.token, data.role);
+    }
     getMe(authHeader) {
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             throw new UnauthorizedException('No token provided');
@@ -61,6 +64,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "phoneLogin", null);
+__decorate([
+    Post('google'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "googleLogin", null);
 __decorate([
     Get('me'),
     __param(0, Headers('authorization')),

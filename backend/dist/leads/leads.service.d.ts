@@ -6,8 +6,8 @@ export declare class LeadsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        sellerId: string;
         status: string;
+        sellerId: string;
         message: string;
         quantityRequested: number;
         buyerId: string;
@@ -28,8 +28,8 @@ export declare class LeadsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        sellerId: string;
         status: string;
+        sellerId: string;
         message: string;
         quantityRequested: number;
         buyerId: string;
@@ -51,8 +51,8 @@ export declare class LeadsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        sellerId: string;
         status: string;
+        sellerId: string;
         message: string;
         quantityRequested: number;
         buyerId: string;
@@ -62,8 +62,8 @@ export declare class LeadsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        sellerId: string;
         status: string;
+        sellerId: string;
         message: string;
         quantityRequested: number;
         buyerId: string;

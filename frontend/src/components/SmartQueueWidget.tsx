@@ -22,6 +22,8 @@ interface QueueSummary {
 }
 interface QueueStatus {
   queue: { id: string; shopName: string; currentToken: number; lastToken: number; avgMinutes: number; pricePerHour: number; isOpen: boolean; };
+  staff?: { id: string; name: string; role: string; isAvailable: boolean }[];
+  resources?: { id: string; name: string; type: string; isAvailable: boolean }[];
   serving: { tokenNumber: number; customerName: string } | null;
   waiting: { id: string; tokenNumber: number; customerName: string; service: string }[];
   waitingCount: number; doneToday: number;
@@ -46,14 +48,26 @@ export default function SmartQueueWidget({ service }: { service: any }) {
   const [bookingMode, setBookingMode] = useState<'TOKEN' | 'APPOINTMENT'>('TOKEN');
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
+  const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
+  const [selectedResource, setSelectedResource] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
   
-  interface ServiceItem { label: string; price: number; emoji: string; }
+  interface ServiceItem { label: string; price: number; originalPrice?: number; discount?: number; emoji: string; }
   const emoji = service.category?.toLowerCase().includes('doctor') || service.category?.toLowerCase().includes('clinic') ? '🩺' : 
                 service.category?.toLowerCase().includes('spa') ? '💆' : '✂️';
   let availableServices: ServiceItem[] = [];
   if (service.options && service.options.length > 0) {
-    availableServices = service.options.map((opt: { name: string; price: number }) => ({ label: opt.name, price: opt.price, emoji }));
+    availableServices = service.options.map((opt: { name: string; price: number; discountPercentage?: number }) => {
+      const discount = opt.discountPercentage || 0;
+      const effectivePrice = discount > 0 ? opt.price - Math.round((opt.price * discount) / 100) : opt.price;
+      return { 
+        label: opt.name, 
+        price: effectivePrice, 
+        originalPrice: opt.price,
+        discount: discount,
+        emoji 
+      };
+    });
   } else {
     let paramServices: string[] = [];
     if (service.parameters) {
@@ -69,7 +83,7 @@ export default function SmartQueueWidget({ service }: { service: any }) {
       availableServices = [{ label: service.name, price: service.price, emoji }];
     }
   }
-  const [selectedServices, setSelectedServices] = useState<ServiceItem[]>([]);
+  const [selectedServices, setSelectedServices] = useState<ServiceItem[]>(availableServices.length > 0 ? [availableServices[0]] : []);
   const totalPrice = selectedServices.reduce((sum: number, s: ServiceItem) => sum + s.price, 0);
   const [result, setResult] = useState<JoinResult | null>(null);
   const [err, setErr] = useState('');
@@ -84,7 +98,8 @@ export default function SmartQueueWidget({ service }: { service: any }) {
           const r = await fetch(`${API}/service-queue/seller/${service.sellerId}`);
           const text = await r.text();
           const d = text ? JSON.parse(text) : null;
-          if (d && d.id) list = [d];
+          if (Array.isArray(d) && d.length > 0) list = d;
+          else if (d && d.id) list = [d];
         }
 
         // If still no queue, search all queues filtered by shopName matching this seller
@@ -150,6 +165,7 @@ export default function SmartQueueWidget({ service }: { service: any }) {
         phone: phone.trim() || undefined,
         service: selectedServices.map(s => s.label).join(', '),
         bookingMode: bookingMode,
+        price: selectedServices.reduce((sum, s) => sum + s.price, 0)
       };
       
       if (bookingMode === 'APPOINTMENT') {
@@ -161,6 +177,9 @@ export default function SmartQueueWidget({ service }: { service: any }) {
         payload.appointmentTime = `${appointmentDate}T${appointmentTime}:00`;
       }
 
+      if (selectedStaff) payload.staffId = selectedStaff;
+      if (selectedResource) payload.resourceId = selectedResource;
+
       const r = await fetch(`${API}/service-queue/${selected.id}/join`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -168,6 +187,13 @@ export default function SmartQueueWidget({ service }: { service: any }) {
       const d = await r.json();
       if (!r.ok) throw new Error(d.message ?? 'Failed');
       setResult(d); setStep('done'); fetchStatus();
+      
+      // Save active token to local storage for global widget
+      if (d?.token?.id) {
+        localStorage.setItem('markatverse_active_token_id', d.token.id);
+        // Dispatch storage event manually for same-tab updates
+        window.dispatchEvent(new Event('storage'));
+      }
     } catch (e: unknown) { setErr(e instanceof Error ? e.message : 'Error'); }
     finally { setJoining(false); }
   };
@@ -214,10 +240,10 @@ export default function SmartQueueWidget({ service }: { service: any }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Link href={`/service-queue/token/${result.token.id}`} className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-sm transition-all shadow-lg">
+        <Link href={`/salon/token/${result.token.id}`} className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-sm transition-all shadow-lg">
           <Clock className="w-4 h-4" /> Track Live
         </Link>
-        <Link href="/service-queue/queue" className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm transition-all">
+        <Link href={`/salon/queue?queueId=${selected?.id || ''}`} className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl text-sm transition-all">
           <Users className="w-4 h-4" /> Queue Board
         </Link>
       </div>
@@ -255,11 +281,21 @@ export default function SmartQueueWidget({ service }: { service: any }) {
                     : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-violet-200 hover:bg-violet-50/50'
                 }`}>
                 {isChosen && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-violet-600 rounded-full flex items-center justify-center text-white text-[9px] font-black">✓</span>
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-violet-600 rounded-full flex items-center justify-center text-white text-[9px] font-black z-10">✓</span>
                 )}
+                {svc.discount ? (
+                  <span className="absolute -top-2 -left-2 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-sm transform -rotate-12">
+                    {svc.discount}% OFF
+                  </span>
+                ) : null}
                 <span className="text-xl">{svc.emoji}</span>
                 <span className="text-xs leading-tight text-center">{svc.label}</span>
-                <span className={`font-black text-xs ${isChosen ? 'text-violet-600' : 'text-slate-400'}`}>₹{svc.price}</span>
+                <div className="flex items-center gap-1">
+                  {svc.discount ? (
+                    <span className="text-[9px] text-slate-400 line-through">₹{svc.originalPrice}</span>
+                  ) : null}
+                  <span className={`font-black text-xs ${isChosen ? 'text-violet-600' : 'text-slate-400'}`}>₹{svc.price}</span>
+                </div>
               </button>
             );
           })}
@@ -286,6 +322,38 @@ export default function SmartQueueWidget({ service }: { service: any }) {
           </div>
         )}
       </div>
+
+      {/* Staff & Resource Selection */}
+      {((status?.resources && status.resources.length > 0) || (status?.staff && status.staff.length > 0)) && (
+        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-4">
+          {status.resources && status.resources.length > 0 && (
+            <div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Space / Chair <span className="normal-case font-medium text-slate-400">(Optional)</span></p>
+              <div className="flex flex-wrap gap-2">
+                {status.resources.map(r => (
+                  <button key={r.id} onClick={() => setSelectedResource(r.id === selectedResource ? null : r.id)}
+                    className={`px-3 py-2 rounded-xl text-sm font-bold border transition-colors ${selectedResource === r.id ? 'bg-violet-600 text-white border-violet-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
+                    {r.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {status.staff && status.staff.length > 0 && (
+            <div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Select Staff <span className="normal-case font-medium text-slate-400">(Optional)</span></p>
+              <div className="flex flex-wrap gap-2">
+                {status.staff.map(s => (
+                  <button key={s.id} onClick={() => setSelectedStaff(s.id === selectedStaff ? null : s.id)}
+                    className={`px-3 py-2 rounded-xl text-sm font-bold border transition-colors ${selectedStaff === s.id ? 'bg-violet-600 text-white border-violet-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
+                    {s.name} <span className="text-[10px] opacity-70 ml-1">({s.role})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {selected && (
         <div className="bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3">
@@ -359,7 +427,8 @@ export default function SmartQueueWidget({ service }: { service: any }) {
             if (service.sellerId) {
               const r = await fetch(`${API}/service-queue/seller/${service.sellerId}`);
               const d = await r.json().catch(() => null);
-              if (d && d.id) queueId = d.id;
+              if (Array.isArray(d) && d.length > 0) queueId = d[0].id;
+              else if (d && d.id) queueId = d.id;
             }
             if (!queueId) {
               const targetShopName = service.seller || service.name || 'Walk-in Service';

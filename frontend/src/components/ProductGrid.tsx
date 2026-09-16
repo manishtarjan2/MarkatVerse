@@ -7,8 +7,8 @@ import { MapPin, Heart, Share2 } from 'lucide-react';
 
 import { useUserTrends } from '@/hooks/useUserTrends';
 
-export default function ProductGrid({ products: propProducts, limit, category, personalized, recent }: { products?: Product[], limit?: number, category?: string, personalized?: boolean, recent?: boolean }) {
-  const { products: contextProducts, userLocation } = useProducts();
+export default function ProductGrid({ products: propProducts, limit, category, personalized, recent, serviceOnly }: { products?: Product[], limit?: number, category?: string, personalized?: boolean, recent?: boolean, serviceOnly?: boolean }) {
+  const { products: contextProducts, userLocation, userLat, userLng, radiusFilter, setRadiusFilter } = useProducts();
   const { getTopCategories, trends } = useUserTrends();
   const router = useRouter();
   const [showLocationToast, setShowLocationToast] = useState(false);
@@ -26,7 +26,14 @@ export default function ProductGrid({ products: propProducts, limit, category, p
     items.sort((a, b) => trends.recentlyViewed.indexOf(a.id) - trends.recentlyViewed.indexOf(b.id));
   }
   
-  const productsToRender = [...(items || [])].filter(p => category ? p.category === category : true);
+  const productsToRender = [...(items || [])].filter(p => {
+    if (category && p.category !== category) return false;
+    if (serviceOnly) {
+      const isService = ['Services', 'Home Services', 'Transport', 'Rentals', 'Organizers'].includes(p.category);
+      if (!isService) return false;
+    }
+    return true;
+  });
 
   if (!recent) {
     const topCategories = personalized ? getTopCategories() : [];
@@ -63,9 +70,29 @@ export default function ProductGrid({ products: propProducts, limit, category, p
   return (
     <div className="relative">
       {showLocationToast && (
-        <div className="absolute -top-12 right-0 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 shadow-sm z-10 border border-blue-200">
-          <MapPin className="w-4 h-4 text-blue-600" />
-          Showing nearest results to {userLocation}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+          <div className="bg-blue-50 text-blue-800 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 border border-blue-100">
+            <MapPin className="w-4 h-4 text-blue-600" />
+            Showing nearest results to {userLocation}
+          </div>
+          
+          {userLat !== null && userLng !== null && (
+            <div className="flex items-center gap-2 text-sm bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
+              <span className="text-slate-500 font-medium whitespace-nowrap">Distance:</span>
+              <select 
+                value={radiusFilter || ''} 
+                onChange={(e) => setRadiusFilter(e.target.value ? Number(e.target.value) : null)}
+                className="bg-transparent border-none outline-none text-slate-800 font-medium cursor-pointer"
+              >
+                <option value="">Admin Default</option>
+                <option value="5">Within 5 km</option>
+                <option value="10">Within 10 km</option>
+                <option value="25">Within 25 km</option>
+                <option value="50">Within 50 km</option>
+                <option value="100">Within 100 km</option>
+              </select>
+            </div>
+          )}
         </div>
       )}
       <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3 sm:gap-4">
@@ -112,17 +139,21 @@ export default function ProductGrid({ products: propProducts, limit, category, p
               {product.image ? (
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
               ) : (
-                <span className="text-[30px] sm:text-[40px] opacity-50">📸</span>
+                <img src="/hero-left-logo.png" alt={product.name} className="w-full h-full object-contain opacity-50 group-hover:scale-105 transition-transform duration-300 p-4" />
               )}
             </div>
             <div className="text-[9px] sm:text-[11px] text-blue-600 uppercase tracking-[0.5px] sm:tracking-[1px] font-medium flex items-center gap-1">
-              <Link href={`/shop/${encodeURIComponent(product.seller.toLowerCase().replace(/ /g, '-'))}`} onClick={(e) => e.stopPropagation()} className="hover:underline truncate">
-                <span>{product.seller}</span>
+              <Link href={`/shop/${encodeURIComponent((product.seller || 'unknown').toLowerCase().replace(/ /g, '-'))}`} onClick={(e) => e.stopPropagation()} className="hover:underline truncate">
+                <span>{product.seller || 'Unknown Seller'}</span>
               </Link>
-              <span className="text-[#10B981] text-[10px] shrink-0" title="TrustSEAL Verified">🛡️</span>
             </div>
-            <div className="font-medium text-xs sm:text-sm text-slate-800 mb-1 sm:mb-2 mt-1 line-clamp-2 h-8 sm:h-10 leading-tight">
+            <div className="font-medium text-xs sm:text-sm text-slate-800 mt-1 line-clamp-2 h-8 sm:h-10 leading-tight">
               {product.name}
+            </div>
+            <div className="mb-1 sm:mb-2">
+              <div className="text-[9px] sm:text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 uppercase tracking-wider px-1.5 py-0.5 rounded truncate max-w-full inline-block">
+                {product.category} {product.subcategory ? `› ${product.subcategory}` : ''}
+              </div>
             </div>
             <div className="mt-auto">
               <div className="font-bold text-sm sm:text-base text-slate-900 flex items-center gap-1 sm:gap-2 flex-wrap">

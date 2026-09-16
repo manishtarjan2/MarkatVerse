@@ -50,4 +50,14 @@ export class ConfigurationController {
   createWorkflow(@Body() data: { name: string; description?: string; steps: any }) {
     return this.configService.createWorkflow(data);
   }
+
+  @Get('system-settings')
+  getSystemSettings() {
+    return this.configService.getSystemSettings();
+  }
+
+  @Post('system-settings')
+  updateSystemSettings(@Body() data: any) {
+    return this.configService.updateSystemSettings(data);
+  }
 }

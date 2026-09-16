@@ -31,7 +31,7 @@ export class ServiceQueueService {
 
   /** Get queue by seller */
   async getQueueBySeller(sellerId: string) {
-    return this.prisma.serviceQueue.findUnique({
+    return this.prisma.serviceQueue.findFirst({
       where: { sellerId },
     });
   }
@@ -204,7 +204,7 @@ export class ServiceQueueService {
     });
 
     const waitingTokens = await this.prisma.serviceBooking.findMany({
-      where: { queueId: token.queueId, status: { in: ['WAITING', 'CHECKED_IN'] } },
+      where: { queueId: token.queueId, status: { in: ['WAITING', 'CHECKED_IN', 'ABSENT'] } },
       orderBy: [
         { appointmentTime: 'asc' },
         { tokenNumber: 'asc' }
@@ -249,13 +249,14 @@ export class ServiceQueueService {
         where: { id: currentlyServing.id },
         data: { status: 'DONE', doneAt: new Date() },
       });
+      await this.applyCommission(currentlyServing.id, queue.sellerId);
     }
 
-    // Get next WAITING or CHECKED_IN
+    // Get next WAITING, CHECKED_IN or ABSENT
     // For Mixed/Appointment priority, we prioritize checked-in appointments whose time has arrived/passed,
     // otherwise fallback to tokens. For simplicity, we order by appointmentTime ASC first, then tokenNumber ASC.
     const nextToken = await this.prisma.serviceBooking.findFirst({
-      where: { queueId, status: { in: ['WAITING', 'CHECKED_IN'] } },
+      where: { queueId, status: { in: ['WAITING', 'CHECKED_IN', 'ABSENT'] } },
       orderBy: [
         { appointmentTime: 'asc' },
         { tokenNumber: 'asc' }
@@ -306,12 +307,43 @@ export class ServiceQueueService {
     });
   }
 
+  /** Mark a token as ABSENT (late but stays in queue) */
+  async markAbsent(tokenId: string) {
+    const token = await this.prisma.serviceBooking.findUnique({
+      where: { id: tokenId },
+    });
+    if (!token) throw new NotFoundException('Booking not found');
+
+    return this.prisma.serviceBooking.update({
+      where: { id: tokenId },
+      data: { status: 'ABSENT' },
+    });
+  }
+
+  /** Mark a token as WAITING (Return to queue from absent) */
+  async markWaiting(tokenId: string) {
+    const token = await this.prisma.serviceBooking.findUnique({
+      where: { id: tokenId },
+    });
+    if (!token) throw new NotFoundException('Booking not found');
+
+    return this.prisma.serviceBooking.update({
+      where: { id: tokenId },
+      data: { status: 'WAITING' },
+    });
+  }
+
   /** Mark a token as DONE manually */
   async markDone(tokenId: string) {
-    return this.prisma.serviceBooking.update({
+    const booking = await this.prisma.serviceBooking.update({
       where: { id: tokenId },
       data: { status: 'DONE', doneAt: new Date() },
     });
+    const queue = await this.prisma.serviceQueue.findUnique({ where: { id: booking.queueId } });
+    if (queue) {
+      await this.applyCommission(booking.id, queue.sellerId);
+    }
+    return booking;
   }
 
   /** Get today's stats for a queue */
@@ -406,5 +438,103 @@ export class ServiceQueueService {
     return this.prisma.serviceResource.delete({
       where: { id: resourceId }
     });
+  }
+
+  /** Update admin status (ACTIVE | SUSPENDED) */
+  async updateAdminStatus(queueId: string, status: string) {
+    return this.prisma.serviceQueue.update({
+      where: { id: queueId },
+      data: { status },
+    });
+  }
+
+  // ─── Analytics ───────────────────────────────────────────────────────────────
+
+  async getAnalytics(queueId: string) {
+    const queue = await this.prisma.serviceQueue.findUnique({
+      where: { id: queueId },
+      include: { staff: true }
+    });
+    if (!queue) throw new NotFoundException('Queue not found');
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const [todayBookings, monthBookings] = await Promise.all([
+      this.prisma.serviceBooking.findMany({
+        where: { queueId, status: 'DONE', doneAt: { gte: todayStart } }
+      }),
+      this.prisma.serviceBooking.findMany({
+        where: { queueId, status: 'DONE', doneAt: { gte: monthStart } }
+      })
+    ]);
+
+    const todayEarnings = todayBookings.reduce((sum: number, b: any) => sum + (b.price || 0), 0);
+    const monthEarnings = monthBookings.reduce((sum: number, b: any) => sum + (b.price || 0), 0);
+
+    const staffStats = queue.staff.map((staff: any) => {
+      const staffToday = todayBookings.filter((b: any) => b.staffId === staff.id);
+      const staffMonth = monthBookings.filter((b: any) => b.staffId === staff.id);
+      
+      return {
+        id: staff.id,
+        name: staff.name,
+        todayCustomers: staffToday.length,
+        todayEarnings: staffToday.reduce((sum: number, b: any) => sum + (b.price || 0), 0),
+        monthCustomers: staffMonth.length,
+        monthEarnings: staffMonth.reduce((sum: number, b: any) => sum + (b.price || 0), 0)
+      };
+    });
+
+    return {
+      totalTodayCollection: todayEarnings,
+      totalMonthCollection: monthEarnings,
+      staffPerformance: staffStats
+    };
+  }
+
+  private async applyCommission(bookingId: string, sellerId: string | null) {
+    if (!sellerId) return;
+
+    try {
+      const booking = await this.prisma.serviceBooking.findUnique({ where: { id: bookingId } });
+      if (!booking || booking.price <= 0) return;
+
+      const business = await this.prisma.business.findUnique({
+        where: { userId: sellerId },
+        include: { wallet: true }
+      });
+      if (!business) return;
+
+      let amountOwed = 0;
+      if (business.commissionType === 'PERCENTAGE') {
+        amountOwed = booking.price * (business.commissionRate / 100);
+      } else if (business.commissionType === 'FIXED') {
+        // Fixed fee per transaction
+        amountOwed = business.commissionRate;
+      }
+
+      if (amountOwed > 0) {
+        if (business.wallet) {
+          await this.prisma.wallet.update({
+            where: { id: business.wallet.id },
+            data: { owedToPlatform: { increment: amountOwed } }
+          });
+        } else {
+          await this.prisma.wallet.create({
+            data: {
+              businessId: business.id,
+              owedToPlatform: amountOwed
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to apply commission', err);
+    }
   }
 }

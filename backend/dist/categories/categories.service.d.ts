@@ -3,8 +3,8 @@ export declare class CategoriesService {
     private prisma;
     constructor(prisma: PrismaService);
     create(data: any): import(".prisma/client").Prisma.Prisma__CategoryClient<{
-        id: string;
         workflow: string | null;
+        id: string;
         name: string;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
@@ -22,8 +22,8 @@ export declare class CategoriesService {
         sectorId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
-        id: string;
         workflow: string | null;
+        id: string;
         name: string;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
@@ -41,8 +41,8 @@ export declare class CategoriesService {
         sectorId: string | null;
     }[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__CategoryClient<{
-        id: string;
         workflow: string | null;
+        id: string;
         name: string;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
@@ -60,8 +60,8 @@ export declare class CategoriesService {
         sectorId: string | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, data: any): import(".prisma/client").Prisma.Prisma__CategoryClient<{
-        id: string;
         workflow: string | null;
+        id: string;
         name: string;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
@@ -79,8 +79,8 @@ export declare class CategoriesService {
         sectorId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__CategoryClient<{
-        id: string;
         workflow: string | null;
+        id: string;
         name: string;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;

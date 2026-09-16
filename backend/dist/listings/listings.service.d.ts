@@ -8,8 +8,8 @@ export declare class ListingsService {
         status?: string;
     }): Promise<({
         category: {
-            id: string;
             workflow: string | null;
+            id: string;
             name: string;
             parameters: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
@@ -53,9 +53,9 @@ export declare class ListingsService {
         description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         sellerId: string;
         categoryId: string | null;
-        status: string;
         businessTypeId: string;
         sectorId: string;
         title: string;
@@ -66,8 +66,8 @@ export declare class ListingsService {
     })[]>;
     getListingById(id: string): Promise<{
         category: {
-            id: string;
             workflow: string | null;
+            id: string;
             name: string;
             parameters: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
@@ -111,9 +111,9 @@ export declare class ListingsService {
         description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         sellerId: string;
         categoryId: string | null;
-        status: string;
         businessTypeId: string;
         sectorId: string;
         title: string;
@@ -127,9 +127,9 @@ export declare class ListingsService {
         description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         sellerId: string;
         categoryId: string | null;
-        status: string;
         businessTypeId: string;
         sectorId: string;
         title: string;
@@ -143,9 +143,9 @@ export declare class ListingsService {
         description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         sellerId: string;
         categoryId: string | null;
-        status: string;
         businessTypeId: string;
         sectorId: string;
         title: string;
@@ -159,9 +159,9 @@ export declare class ListingsService {
         description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        status: string;
         sellerId: string;
         categoryId: string | null;
-        status: string;
         businessTypeId: string;
         sectorId: string;
         title: string;

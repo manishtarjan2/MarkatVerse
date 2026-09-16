@@ -99,12 +99,47 @@ let AuthService = class AuthService {
         }
         return this.generateToken(user);
     }
+    async googleLogin(token, role = 'CONSUMER') {
+        if (!token) {
+            throw new BadRequestException('Google token is required');
+        }
+        try {
+            const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!response.ok) {
+                throw new BadRequestException('Invalid Google token');
+            }
+            const payload = await response.json();
+            if (!payload || !payload.email) {
+                throw new BadRequestException('Invalid Google token payload');
+            }
+            const email = payload.email;
+            const name = payload.name || 'Google User';
+            let user = await this.prisma.user.findFirst({ where: { email } });
+            if (!user) {
+                user = await this.prisma.user.create({
+                    data: {
+                        name: name,
+                        email: email,
+                        password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
+                        role: role.toUpperCase(),
+                    },
+                });
+            }
+            return this.generateToken(user);
+        }
+        catch (err) {
+            console.error(err);
+            throw new UnauthorizedException('Google authentication failed');
+        }
+    }
     async getMe(token) {
         try {
             const payload = this.jwtService.verify(token);
             const user = await this.prisma.user.findUnique({
                 where: { id: payload.sub },
-                select: { id: true, name: true, email: true, phone: true, role: true, business: true }
+                select: { id: true, name: true, email: true, phone: true, role: true, business: { include: { wallet: true } } }
             });
             if (!user)
                 throw new UnauthorizedException('User not found');

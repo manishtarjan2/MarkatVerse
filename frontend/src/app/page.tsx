@@ -3,16 +3,20 @@ import { ShieldCheck, Award, RefreshCw, Zap } from 'lucide-react';
 import ProductGrid from "@/components/ProductGrid";
 import UserWidget from "@/components/UserWidget";
 import JoinSellerButton from "@/components/JoinSellerButton";
+import LiveBookingWidget from "@/components/LiveBookingWidget";
 
 export default function Home() {
   return (
     <div className="w-full min-h-[calc(100vh-80px)] flex bg-slate-50">
       
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-8 overflow-hidden">
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col overflow-hidden">
         
+        {/* Live Token Status */}
+        <LiveBookingWidget />
+
         {/* Quick Shortcuts */}
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-5 flex items-center justify-between overflow-x-auto hide-scrollbar gap-4 lg:gap-8 w-full">
+        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-5 flex items-center justify-between overflow-x-auto hide-scrollbar gap-4 lg:gap-8 w-full mb-8">
           {[
             { name: "Top Deals", icon: "🔥", style: "bg-red-50 text-2xl", link: "/search?filter=top_deals" },
             { name: "Mobiles", icon: "📱", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Mobiles" },
@@ -212,6 +216,15 @@ export default function Home() {
             <Link href="/search?filter=top_picks" className="text-blue-600 font-bold hover:underline text-sm flex items-center gap-1">View All <span className="text-lg leading-none">›</span></Link>
           </div>
           <ProductGrid personalized={true} />
+        </section>
+
+        {/* Services For You */}
+        <section className="mt-4">
+          <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+            <h2 className="text-xl lg:text-2xl font-bold text-slate-900">Services For You</h2>
+            <Link href="/search?type=services" className="text-blue-600 font-bold hover:underline text-sm flex items-center gap-1">View All <span className="text-lg leading-none">›</span></Link>
+          </div>
+          <ProductGrid serviceOnly={true} personalized={true} />
         </section>
 
         {/* Recently Viewed */}

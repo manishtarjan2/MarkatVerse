@@ -37,8 +37,8 @@ export declare class ConfigurationService {
     }>;
     getSectors(businessTypeId?: string): Promise<({
         categories: {
-            id: string;
             workflow: string | null;
+            id: string;
             name: string;
             parameters: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
@@ -91,8 +91,8 @@ export declare class ConfigurationService {
         businessTypeId: string;
     }>;
     getCategories(sectorId?: string): Promise<{
-        id: string;
         workflow: string | null;
+        id: string;
         name: string;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
@@ -114,8 +114,8 @@ export declare class ConfigurationService {
         name: string;
         parentId?: string;
     }): Promise<{
-        id: string;
         workflow: string | null;
+        id: string;
         name: string;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
@@ -153,5 +153,14 @@ export declare class ConfigurationService {
         updatedAt: Date;
         version: number;
         steps: import("@prisma/client/runtime/library").JsonValue;
+    }>;
+    getSystemSettings(): Promise<import("@prisma/client/runtime/library").JsonValue>;
+    updateSystemSettings(data: any): Promise<{
+        data: import("@prisma/client/runtime/library").JsonValue;
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        type: string;
     }>;
 }

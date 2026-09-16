@@ -41,7 +41,7 @@ export default function CartPage() {
                   {/* Image Placeholder */}
                   <div className="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
                     {item.image ? (
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={item.image || "/hero-left-logo.png"} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
                       <Camera className="w-6 h-6 text-slate-300" />
                     )}

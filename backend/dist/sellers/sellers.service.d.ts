@@ -4,10 +4,13 @@ export declare class SellersService {
     constructor(prisma: PrismaService);
     create(seller: any): Promise<{
         status: string;
-        id: string;
         businessType: string;
+        id: string;
         name: string;
         description: string | null;
+        pincode: string | null;
+        latitude: number | null;
+        longitude: number | null;
         createdAt: Date;
         updatedAt: Date;
         userId: string;
@@ -16,15 +19,24 @@ export declare class SellersService {
         address: string | null;
         verified: boolean;
         capabilities: string[];
+        maxListings: number;
+        commissionType: string;
+        commissionRate: number;
+        subscriptionStatus: string;
+        subscriptionStartDate: Date | null;
+        subscriptionEndDate: Date | null;
     } | {
         ownerName: string;
         email: string | null;
         phone: string | null;
         status: string;
-        id: string;
         businessType: string;
+        id: string;
         name: string;
         description: string | null;
+        pincode: string | null;
+        latitude: number | null;
+        longitude: number | null;
         createdAt: Date;
         updatedAt: Date;
         userId: string;
@@ -33,9 +45,16 @@ export declare class SellersService {
         address: string | null;
         verified: boolean;
         capabilities: string[];
+        maxListings: number;
+        commissionType: string;
+        commissionRate: number;
+        subscriptionStatus: string;
+        subscriptionStartDate: Date | null;
+        subscriptionEndDate: Date | null;
     }>;
     findAll(): Promise<{
         id: string;
+        userId: string;
         businessName: string;
         ownerName: string;
         email: string | null;
@@ -44,13 +63,19 @@ export declare class SellersService {
         address: string | null;
         status: string;
         date: string;
+        maxListings: number;
+        commissionType: string;
+        commissionRate: number;
     }[]>;
     updateStatus(id: string, status: string): Promise<{
         status: string;
-        id: string;
         businessType: string;
+        id: string;
         name: string;
         description: string | null;
+        pincode: string | null;
+        latitude: number | null;
+        longitude: number | null;
         createdAt: Date;
         updatedAt: Date;
         userId: string;
@@ -59,12 +84,21 @@ export declare class SellersService {
         address: string | null;
         verified: boolean;
         capabilities: string[];
+        maxListings: number;
+        commissionType: string;
+        commissionRate: number;
+        subscriptionStatus: string;
+        subscriptionStartDate: Date | null;
+        subscriptionEndDate: Date | null;
     }>;
     updateUser(userId: string, data: any): Promise<{
-        id: string;
         businessType: string;
+        id: string;
         name: string;
         description: string | null;
+        pincode: string | null;
+        latitude: number | null;
+        longitude: number | null;
         createdAt: Date;
         updatedAt: Date;
         userId: string;
@@ -73,6 +107,12 @@ export declare class SellersService {
         address: string | null;
         verified: boolean;
         capabilities: string[];
+        maxListings: number;
+        commissionType: string;
+        commissionRate: number;
+        subscriptionStatus: string;
+        subscriptionStartDate: Date | null;
+        subscriptionEndDate: Date | null;
     }>;
     removeUser(userId: string): Promise<{
         id: string;

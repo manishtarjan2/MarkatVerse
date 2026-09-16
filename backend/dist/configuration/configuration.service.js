@@ -52,6 +52,41 @@ let ConfigurationService = class ConfigurationService {
     async createWorkflow(data) {
         return this.prisma.workflow.create({ data });
     }
+    async getSystemSettings() {
+        let settings = await this.prisma.configuration.findFirst({
+            where: { type: 'SYSTEM_SETTINGS', name: 'global' },
+        });
+        if (!settings) {
+            settings = await this.prisma.configuration.create({
+                data: {
+                    name: 'global',
+                    type: 'SYSTEM_SETTINGS',
+                    data: { searchRadius: 10 },
+                },
+            });
+        }
+        return settings.data;
+    }
+    async updateSystemSettings(data) {
+        let settings = await this.prisma.configuration.findFirst({
+            where: { type: 'SYSTEM_SETTINGS', name: 'global' },
+        });
+        if (!settings) {
+            return this.prisma.configuration.create({
+                data: {
+                    name: 'global',
+                    type: 'SYSTEM_SETTINGS',
+                    data,
+                },
+            });
+        }
+        else {
+            return this.prisma.configuration.update({
+                where: { id: settings.id },
+                data: { data },
+            });
+        }
+    }
 };
 ConfigurationService = __decorate([
     Injectable(),

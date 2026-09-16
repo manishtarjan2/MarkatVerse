@@ -4,17 +4,24 @@ import { CartProvider } from './CartContext';
 import { ProductProvider } from './ProductContext';
 import { AuthProvider } from './AuthContext';
 import { SettingsProvider } from './SettingsContext';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { AdminRoleProvider } from './AdminRoleContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE';
   return (
-    <SettingsProvider>
-      <AuthProvider>
-        <ProductProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
-        </ProductProvider>
-      </AuthProvider>
-    </SettingsProvider>
+    <GoogleOAuthProvider clientId={clientId}>
+      <AdminRoleProvider>
+        <SettingsProvider>
+          <AuthProvider>
+            <ProductProvider>
+              <CartProvider>
+                {children}
+              </CartProvider>
+            </ProductProvider>
+          </AuthProvider>
+        </SettingsProvider>
+      </AdminRoleProvider>
+    </GoogleOAuthProvider>
   );
 }

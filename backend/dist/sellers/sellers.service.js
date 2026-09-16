@@ -102,6 +102,7 @@ let SellersService = class SellersService {
         });
         return businesses.map(b => ({
             id: b.id,
+            userId: b.userId,
             businessName: b.name,
             ownerName: b.user.name,
             email: b.user.email,
@@ -110,6 +111,9 @@ let SellersService = class SellersService {
             address: b.address,
             status: b.verified ? 'Approved' : 'Pending',
             date: b.createdAt.toISOString().split('T')[0],
+            maxListings: b.maxListings,
+            commissionType: b.commissionType,
+            commissionRate: b.commissionRate,
         }));
     }
     async updateStatus(id, status) {
@@ -126,8 +130,11 @@ let SellersService = class SellersService {
         return this.prisma.business.update({
             where: { userId },
             data: {
-                name: data.businessName,
-                address: data.address,
+                name: data.businessName !== undefined ? data.businessName : undefined,
+                address: data.address !== undefined ? data.address : undefined,
+                maxListings: data.maxListings !== undefined ? Number(data.maxListings) : undefined,
+                commissionType: data.commissionType !== undefined ? data.commissionType : undefined,
+                commissionRate: data.commissionRate !== undefined ? Number(data.commissionRate) : undefined,
             }
         });
     }

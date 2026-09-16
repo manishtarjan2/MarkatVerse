@@ -89,6 +89,8 @@ export default function SellerLoginPage() {
     }
   };
 
+
+
   // ── Forgot Password ──────────────────────────────────────────
   const handleForgotSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -233,14 +235,13 @@ export default function SellerLoginPage() {
                     <input
                       required type="text" value={identifier}
                       onChange={e => setIdentifier(e.target.value)}
-                      placeholder="seller@example.com or 9876543210"
+                      placeholder="Enter your email or phone"
                       className={inputCls}
                     />
                   </div>
                 </div>
 
-                {identifier.includes('@') && (
-                  <div>
+                <div>
                     <div className="flex justify-between items-center mb-1.5">
                       <label className={labelCls} style={{ margin: 0 }}>Password</label>
                       <button type="button" onClick={() => { setView('forgot'); clearErrors(); }}
@@ -261,15 +262,16 @@ export default function SellerLoginPage() {
                       </button>
                     </div>
                   </div>
-                )}
 
                 <button type="submit" className={btnPrimary} disabled={isLoading || identifier.length < 5}>
                   {isLoading
                     ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Signing in...</>
-                    : <>{isPhone ? 'Continue with Phone' : 'Sign In to Seller Portal'} <ArrowRight className="w-4 h-4" /></>
+                    : <>Sign In to Seller Portal <ArrowRight className="w-4 h-4" /></>
                   }
                 </button>
               </form>
+
+
 
               <div className="mt-6 pt-6 border-t border-slate-100 space-y-3 text-center">
                 <p className="text-sm text-slate-500">

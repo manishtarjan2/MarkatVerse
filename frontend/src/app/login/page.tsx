@@ -46,26 +46,17 @@ export default function LoginPage() {
     clearErrors();
     setIsLoading(true);
     try {
-      const isPhone = !siIdentifier.includes('@') && siIdentifier.length >= 10;
-      let endpoint: string;
-      let payload: any;
-
-      if (isPhone) {
-        endpoint = '/auth/phone-login';
-        payload = { phone: siIdentifier };
-      } else {
-        endpoint = '/auth/login';
-        payload = { email: siIdentifier, password: siPassword };
-      }
-
-      const res = await fetch(`${API_URL}${endpoint}`, {
+      if (!siIdentifier) { setError("Email or Phone is required"); return; }
+      if (!siPassword) { setError("Password is required"); return; }
+      
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ email: siIdentifier, password: siPassword }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(Array.isArray(data.message) ? data.message[0] : data.message || 'Sign in failed');
+      if (!res.ok) throw new Error(data.message || 'Login failed');
 
       login(
         { id: data.user.id, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '' },
@@ -256,51 +247,42 @@ export default function LoginPage() {
 
               <form onSubmit={handleSignIn} className="space-y-5">
                 <div>
-                  <label className={labelCls}>Email or Phone</label>
+                  <label className={labelCls}>Email or Phone Number</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       required type="text" value={siIdentifier}
                       onChange={e => setSiIdentifier(e.target.value)}
-                      placeholder="john@example.com or 9876543210"
+                      placeholder="Enter email or phone"
                       className={inputCls}
                     />
                   </div>
                 </div>
 
-                {/* Only show password field if it looks like an email */}
-                {siIdentifier.includes('@') && (
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className={labelCls} style={{ margin: 0 }}>Password</label>
-                      <button
-                        type="button"
-                        onClick={() => { setView('forgot'); clearErrors(); }}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-semibold hover:underline"
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        required type={showPassword ? 'text' : 'password'} value={siPassword}
-                        onChange={e => setSiPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className={`${inputCls} pr-11`}
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">Password</label>
+                    <button type="button" onClick={() => { setView('forgot'); clearErrors(); }} className="text-xs font-semibold text-blue-600 hover:underline">Forgot?</button>
                   </div>
-                )}
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      required type={showPassword ? 'text' : 'password'} value={siPassword}
+                      onChange={e => setSiPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className={`${inputCls} pr-11`}
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
                 <button type="submit" className={btnPrimary} disabled={isLoading || siIdentifier.length < 5}>
                   {isLoading
                     ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Signing in...</>
-                    : <>{siIdentifier.includes('@') ? 'Sign In' : 'Continue with Phone'}<ArrowRight className="w-4 h-4" /></>
+                    : <>Sign In <ArrowRight className="w-4 h-4" /></>
                   }
                 </button>
               </form>

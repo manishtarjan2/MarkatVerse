@@ -22,7 +22,7 @@ model User {
   orders      Order[]
   buyerLeads  Lead[]    @relation("BuyerLeads")
   sellerLeads Lead[]    @relation("SellerLeads")
-  serviceQueue ServiceQueue?
+  serviceQueues ServiceQueue[]
 
   // V2 Relations
   listings    Listing[] @relation("UserListings")
@@ -37,11 +37,22 @@ model Business {
   businessModel MainType @default(B2C)
   businessType String // MANUFACTURER, WHOLESALER, etc
   address      String?
+  pincode      String?
+  latitude     Float?
+  longitude    Float?
   verified     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   capabilities String[] @default([]) // B2B, B2C, SERVICE, CONTRACTOR, etc.
+  maxListings  Int      @default(5)
+  commissionType String @default("PERCENTAGE") // PERCENTAGE or FIXED
+  commissionRate Float  @default(5.0)
+
+  // Subscription Fields
+  subscriptionStatus    String    @default("ACTIVE") // ACTIVE, EXPIRED
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
 
   user       User               @relation(fields: [userId], references: [id])
   wallet     Wallet?
@@ -96,6 +107,9 @@ model Product {
   reviews       String?  @default("0")
   sellerName    String?
   location      String?
+  pincode       String?
+  latitude      Float?
+  longitude     Float?
   categoryName  String?
   subcategory   String?
   parameters    Json?
@@ -112,6 +126,7 @@ model Product {
 
   isB2B         Boolean  @default(false)
   moq           Int?     @default(1)
+  status        String   @default("ACTIVE") // ACTIVE, SUSPENDED
 
   seller     User?       @relation(fields: [sellerId], references: [id])
   category   Category?   @relation(fields: [categoryId], references: [id])
@@ -163,7 +178,11 @@ model OrderItem {
 model ServiceQueue {
   id                 String       @id @default(auto()) @map("_id") @db.ObjectId
   shopName           String
-  sellerId           String?      @unique @db.ObjectId
+  location           String?
+  pincode            String?
+  latitude           Float?
+  longitude          Float?
+  sellerId           String?      @db.ObjectId
   currentToken       Int          @default(0)
   lastToken          Int          @default(0)
   avgMinutes         Int          @default(20)
@@ -174,6 +193,7 @@ model ServiceQueue {
   enableTokens       Boolean      @default(true)
   enableAppointments Boolean      @default(false)
   queuePolicy        String       @default("FIFO") // FIFO, APPOINTMENT_PRIORITY, MIXED
+  status             String       @default("ACTIVE") // ACTIVE, SUSPENDED
   
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
@@ -196,6 +216,7 @@ model ServiceBooking {
   customerName     String
   phone            String?
   service          String       @default("General")
+  price            Float        @default(0)
   staffName        String?
   
   // Status tracking
@@ -357,6 +378,7 @@ model Wallet {
   pendingBalance  Float    @default(0)
   availableBalance Float   @default(0)
   withdrawn       Float    @default(0)
+  owedToPlatform  Float    @default(0)
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -454,4 +476,12 @@ model BusinessFeature {
   feature         FeatureRegistry @relation(fields: [featureKey], references: [key])
 
   @@unique([businessId, featureKey])
+}
+
+model SystemConfig {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  key         String   @unique // e.g. HEXAGONAL_RADIUS
+  value       String   // e.g. "5"
+  description String?
+  updatedAt   DateTime @updatedAt
 }

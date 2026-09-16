@@ -34,13 +34,37 @@ export declare class AuthService {
             role: any;
         };
     }>;
+    googleLogin(token: string, role?: string): Promise<{
+        access_token: string;
+        user: {
+            id: any;
+            name: any;
+            email: any;
+            phone: any;
+            role: any;
+        };
+    }>;
     getMe(token: string): Promise<{
-        id: string;
-        business: {
-            id: string;
+        business: ({
+            wallet: {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                businessId: string;
+                totalEarnings: number;
+                pendingBalance: number;
+                availableBalance: number;
+                withdrawn: number;
+                owedToPlatform: number;
+            } | null;
+        } & {
             businessType: string;
+            id: string;
             name: string;
             description: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             createdAt: Date;
             updatedAt: Date;
             userId: string;
@@ -49,7 +73,14 @@ export declare class AuthService {
             address: string | null;
             verified: boolean;
             capabilities: string[];
-        } | null;
+            maxListings: number;
+            commissionType: string;
+            commissionRate: number;
+            subscriptionStatus: string;
+            subscriptionStartDate: Date | null;
+            subscriptionEndDate: Date | null;
+        }) | null;
+        id: string;
         name: string;
         email: string | null;
         phone: string | null;

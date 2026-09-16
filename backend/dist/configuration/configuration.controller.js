@@ -45,6 +45,12 @@ let ConfigurationController = class ConfigurationController {
     createWorkflow(data) {
         return this.configService.createWorkflow(data);
     }
+    getSystemSettings() {
+        return this.configService.getSystemSettings();
+    }
+    updateSystemSettings(data) {
+        return this.configService.updateSystemSettings(data);
+    }
 };
 __decorate([
     Get('business-types'),
@@ -109,6 +115,19 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ConfigurationController.prototype, "createWorkflow", null);
+__decorate([
+    Get('system-settings'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ConfigurationController.prototype, "getSystemSettings", null);
+__decorate([
+    Post('system-settings'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ConfigurationController.prototype, "updateSystemSettings", null);
 ConfigurationController = __decorate([
     Controller('configuration'),
     __metadata("design:paramtypes", [ConfigurationService])

@@ -37,9 +37,9 @@ export default function BottomNav() {
       </Link>
 
       {user ? (
-        <Link href="/profile" className={`flex flex-col items-center gap-1 p-2 ${pathname?.startsWith('/profile') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>
-          <User className="w-5 h-5" strokeWidth={pathname?.startsWith('/profile') ? 2 : 1.5} />
-          <span className="text-[10px] font-medium">Profile</span>
+        <Link href="/profile/settings" className={`flex flex-col items-center gap-1 p-2 ${pathname?.startsWith('/profile/settings') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>
+          <User className="w-5 h-5" strokeWidth={2} />
+          <span className="text-[10px] font-bold">Profile</span>
         </Link>
       ) : (
         <Link href="/login" className={`flex flex-col items-center gap-1 p-2 ${isActive('/login') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>

@@ -18,6 +18,10 @@ export default function StaffResourceManagementModal({
   // Staff Form
   const [staffName, setStaffName] = useState('');
   const [staffRole, setStaffRole] = useState('');
+  const [staffServices, setStaffServices] = useState('');
+  const [staffScheduleStart, setStaffScheduleStart] = useState('09:00');
+  const [staffScheduleEnd, setStaffScheduleEnd] = useState('18:00');
+  const [staffDays, setStaffDays] = useState<string[]>(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
   const [staffImage, setStaffImage] = useState<File | null>(null);
   const [staffImagePreview, setStaffImagePreview] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -62,11 +66,14 @@ export default function StaffResourceManagementModal({
           name: staffName,
           role: staffRole,
           imageUrl: imageUrl,
+          services: staffServices.split(',').map(s => s.trim()).filter(Boolean),
+          workingHours: { start: staffScheduleStart, end: staffScheduleEnd, days: staffDays },
         })
       });
       
       setStaffName('');
       setStaffRole('');
+      setStaffServices('');
       setStaffImage(null);
       setStaffImagePreview('');
       onUpdate();
@@ -181,6 +188,35 @@ export default function StaffResourceManagementModal({
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Role/Title</label>
                     <input type="text" required value={staffRole} onChange={e => setStaffRole(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="e.g. Senior Barber, Therapist" />
                   </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Assigned Services (comma-separated)</label>
+                    <input type="text" value={staffServices} onChange={e => setStaffServices(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500" placeholder="e.g. Haircut, Hair Color, Facial" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Working Schedule</label>
+                    <div className="flex gap-2 mb-2">
+                      <div className="flex-1">
+                        <label className="block text-xs text-slate-500 mb-1">Start Time</label>
+                        <input type="time" value={staffScheduleStart} onChange={e => setStaffScheduleStart(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-xs text-slate-500 mb-1">End Time</label>
+                        <input type="time" value={staffScheduleEnd} onChange={e => setStaffScheduleEnd(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                        <button 
+                          key={day} 
+                          type="button" 
+                          onClick={() => setStaffDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])}
+                          className={`px-2 py-1 text-xs rounded-md font-semibold transition-colors ${staffDays.includes(day) ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <button disabled={isUploading} type="submit" className="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
                     {isUploading ? 'Saving...' : 'Add Staff Member'}
                   </button>
@@ -206,7 +242,19 @@ export default function StaffResourceManagementModal({
                           )}
                           <div>
                             <div className="font-bold text-slate-800 text-sm">{s.name}</div>
-                            <div className="text-xs text-slate-500">{s.role}</div>
+                            <div className="text-xs text-slate-500 mb-1">{s.role}</div>
+                            {s.services && s.services.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-1">
+                                {s.services.map((srv: string) => (
+                                  <span key={srv} className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-bold">{srv}</span>
+                                ))}
+                              </div>
+                            )}
+                            {s.workingHours && (
+                              <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                                🕒 {s.workingHours.start} - {s.workingHours.end} | {s.workingHours.days?.join(', ')}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <button onClick={() => handleDeleteStaff(s.id)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">

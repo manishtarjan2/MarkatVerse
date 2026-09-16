@@ -14,26 +14,43 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    setTimeout(() => {
-      if (email === 'admin@markatverse.com' && password === 'admin123') {
-        login({
-          name: 'System Administrator',
-          phone: '0000000000',
-          email: email,
-          role: 'super_admin'
-        });
-        setIsLoading(false);
-        router.push('/admin');
-      } else {
-        setError('Invalid credentials. Please check your email and password.');
-        setIsLoading(false);
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Login failed');
+
+      if (data.user.role.toUpperCase() !== 'SUPER_ADMIN' && data.user.role.toUpperCase() !== 'ADMIN') {
+        throw new Error('Unauthorized. Admin access required.');
       }
-    }, 1000);
+
+      login(
+        { 
+          id: data.user.id, 
+          name: data.user.name, 
+          email: data.user.email, 
+          role: data.user.role.toLowerCase() as any, 
+          phone: data.user.phone || '' 
+        },
+        data.access_token
+      );
+      router.push('/admin');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -97,7 +114,7 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Right Side: Form Panel */}
-      <div className="flex-1 flex flex-col p-6 lg:p-10 overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-center p-6 lg:p-10 overflow-y-auto">
         <div className="w-full max-w-[600px] mx-auto">
           
           {/* Mobile Logo */}
@@ -133,7 +150,7 @@ export default function AdminLoginPage() {
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">📧</span>
                 <input 
                   required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@markatverse.com" 
+                  placeholder="admin@example.com" 
                   className="w-full p-3.5 pl-10 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all placeholder:text-slate-400 text-base" 
                 />
               </div>
@@ -169,15 +186,6 @@ export default function AdminLoginPage() {
               ) : 'Secure Login →'}
             </button>
           </form>
-
-          {/* Demo Hint */}
-          <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 max-w-[360px] mx-auto">
-            <div className="text-xs text-slate-500 text-center">
-              <span className="font-semibold text-slate-600">Demo Credentials</span><br/>
-              Email: <span className="font-mono text-slate-700">admin@markatverse.com</span><br/>
-              Password: <span className="font-mono text-slate-700">admin123</span>
-            </div>
-          </div>
 
           </div>
 

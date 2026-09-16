@@ -19,8 +19,9 @@ export default function SellerStorefront() {
   const isDoctor = sellerName.toLowerCase().includes('hospital') || sellerName.toLowerCase().includes('clinic') || sellerName.toLowerCase().includes('doctor');
   const isSpa = sellerName.toLowerCase().includes('spa');
   const isSalon = sellerName.toLowerCase().includes('salon');
+  const isCarWash = sellerName.toLowerCase().includes('wash') || sellerName.toLowerCase().includes('car');
   
-  const isService = isDoctor || isSpa || isSalon;
+  const isService = isDoctor || isSpa || isSalon || isCarWash;
 
   const [activeTab, setActiveTab] = useState('services');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -40,6 +41,14 @@ export default function SellerStorefront() {
         { id: 'sp2', name: 'Deep Tissue Massage', duration: '90 mins', price: 3500, category: 'Massage', description: 'Intensive muscle relaxation.', icon: '💆‍♂️' },
         { id: 'sp3', name: 'Facial Treatment', duration: '45 mins', price: 1500, category: 'Skin', description: 'Deep cleansing and glowing facial.', icon: '✨' },
         { id: 'sp4', name: 'Hot Stone Therapy', duration: '60 mins', price: 3000, category: 'Therapy', description: 'Therapeutic heated stones.', icon: '🪨' },
+      ];
+    } else if (isCarWash) {
+      return [
+        { id: 'cw1', name: 'Mini Car Wash', duration: '30 mins', price: 300, category: 'Wash', description: 'Exterior and interior cleaning for small cars.', icon: '🚗' },
+        { id: 'cw2', name: 'Car Wash', duration: '45 mins', price: 500, category: 'Wash', description: 'Standard exterior and interior cleaning.', icon: '🚙' },
+        { id: 'cw3', name: 'Bike Wash', duration: '20 mins', price: 150, category: 'Wash', description: 'Two-wheeler pressure wash and polish.', icon: '🏍️' },
+        { id: 'cw4', name: 'Bus Wash', duration: '90 mins', price: 1200, category: 'Wash', description: 'Heavy vehicle deep cleaning.', icon: '🚌' },
+        { id: 'cw5', name: 'Truck Wash', duration: '120 mins', price: 1500, category: 'Wash', description: 'Complete wash for commercial trucks.', icon: '🚛' },
       ];
     } else {
       // Default to Salon
@@ -72,7 +81,7 @@ export default function SellerStorefront() {
               </span>
             </h1>
             <div className="text-slate-400 text-sm flex flex-wrap justify-center md:justify-start gap-6 font-medium">
-              <span className="flex items-center gap-1">⭐ 4.9/5 Rating (120 reviews)</span>
+              <span className="flex items-center gap-1">⭐ New Seller</span>
               <span className="flex items-center gap-1">📍 New Delhi, India</span>
               {!isService && <span className="flex items-center gap-1">📦 {sellerProducts.length} Products</span>}
             </div>
@@ -105,7 +114,7 @@ export default function SellerStorefront() {
               <div className="flex flex-col md:flex-row gap-10 relative z-10">
                 {/* Left Image */}
                 <div className="w-full md:w-[320px] shrink-0 relative rounded-2xl overflow-hidden shadow-2xl h-[400px]">
-                  <img src={isDoctor ? "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80" : "https://images.unsplash.com/photo-1521590832167-7bfc17484d20?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"} alt="Service Image" className="w-full h-full object-cover" />
+                  <img src={isDoctor ? "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=800&q=80" : "/hero-left-logo.png"} alt="Service Image" className="w-full h-full object-cover" />
                   <div className="absolute top-4 left-4 bg-black/60 backdrop-blur px-3 py-1 rounded-full text-xs font-bold tracking-wider">SERVICES</div>
                   <div className="absolute bottom-4 left-4 right-4 bg-emerald-500 text-white font-bold text-sm py-3 px-4 rounded-xl text-center shadow-lg flex items-center justify-center gap-2">
                     <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
@@ -424,7 +433,7 @@ export default function SellerStorefront() {
                       {product.image ? (
                         <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
-                        <span className="text-5xl opacity-20 group-hover:scale-110 transition-transform">📸</span>
+                        <img src="/hero-left-logo.png" alt={product.name} className="w-full h-full object-contain opacity-50 p-4 group-hover:scale-105 transition-transform duration-500" />
                       )}
                       
                       {/* Floating Add to Cart Overlay */}
