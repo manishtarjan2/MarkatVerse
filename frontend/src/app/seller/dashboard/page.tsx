@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
-import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp } from 'lucide-react';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp, Ticket, Clock, Ban, Search, Filter, Phone, Mail, FileText, Share2, Printer, MapPin, ChevronDown, Activity, Scissors, User, Sparkles, Palette, Droplet } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 import StaffResourceManagementModal from '@/components/StaffResourceManagementModal';
@@ -23,6 +23,15 @@ function DashboardContent() {
   
   const { user } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
+  
+  // New State variables for Tokens & Bookings Dashboard
+  const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
+  const [searchBookingQuery, setSearchBookingQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [typeFilter, setTypeFilter] = useState('All Types');
+  const [staffFilter, setStaffFilter] = useState('All Staff');
+  const [dateFilter, setDateFilter] = useState('Today');
+  const [selectedServiceCategory, setSelectedServiceCategory] = useState('All Services');
 
   const myListings = products.filter(p => {
     // Only match strictly by sellerId to prevent generic names from claiming dummy data
@@ -32,19 +41,22 @@ function DashboardContent() {
 
   const activeSector = myListings.length > 0 ? myListings[0].category : (user?.business?.sector || 'Retail Product');
   
-  const CART_ORDER_FLOW = ['Retail Product'];
-  const RFQ_QUOTE_FLOW = ['B2B Product', 'Manufacturer', 'Transport'];
-  const QUEUE_TOKEN_FLOW = ['Doctor', 'Salon', 'Spa', 'Beauty Parlour', 'Repair', 'Services', 'Beauty', 'Car Wash'];
-  const PROJECT_MILESTONE_FLOW = ['Construction', 'Interior Designer'];
-  const MEETING_PROPOSAL_FLOW = ['Wedding Planner', 'Consultant', 'Photography'];
-  const ENQUIRY_ASSET_FLOW = ['Vehicle Sale', 'Vehicle Rental', 'Real Estate'];
+  // Find the exact category structure from Category Engine 2.0
+  const sellerCategory = categories.find(c => c.name === activeSector);
+  const allowedFeatures = sellerCategory?.allowedFeatures || [];
 
   const capabilities = user?.business?.capabilities || [];
   const isB2B = capabilities.includes('B2B');
   const isB2C = capabilities.includes('B2C');
   const isService = capabilities.includes('SERVICE');
 
-  const sellerSector = user?.business?.sector || '';
+  // Fallback lists in case category is not found in context yet
+  const CART_ORDER_FLOW = ['Retail Product', 'Electronics', 'Fashion', 'Home'];
+  const RFQ_QUOTE_FLOW = ['B2B Product', 'Manufacturer', 'Transport', 'Construction'];
+  const QUEUE_TOKEN_FLOW = ['Doctor', 'Salon', 'Spa', 'Beauty Parlour', 'Repair', 'Services', 'Beauty', 'Car Wash', 'Healthcare'];
+  const PROJECT_MILESTONE_FLOW = ['Construction', 'Interior Designer'];
+  const MEETING_PROPOSAL_FLOW = ['Wedding Planner', 'Consultant', 'Photography', 'Professional', 'Lawyer'];
+  const ENQUIRY_ASSET_FLOW = ['Vehicle Sale', 'Vehicle Rental', 'Real Estate', 'Sales & Rentals'];
 
   const hasCartProducts = myListings.some(p => CART_ORDER_FLOW.includes(p.category));
   const hasRfqProducts = myListings.some(p => RFQ_QUOTE_FLOW.includes(p.category));
@@ -53,15 +65,18 @@ function DashboardContent() {
   const hasMeetingServices = myListings.some(p => MEETING_PROPOSAL_FLOW.includes(p.category));
   const hasAssetListings = myListings.some(p => ENQUIRY_ASSET_FLOW.includes(p.category));
 
-  const isCartFlow = hasCartProducts || CART_ORDER_FLOW.includes(sellerSector) || isB2C || sellerSector === 'Retail Product';
-  const isRfqFlow = hasRfqProducts || RFQ_QUOTE_FLOW.includes(sellerSector) || isB2B;
-  const isQueueFlow = hasQueueServices || QUEUE_TOKEN_FLOW.includes(sellerSector) || isService || QUEUE_TOKEN_FLOW.includes(sellerSector);
+  const sellerSector = user?.business?.sector || '';
+
+  // Dynamic Flow Resolution (Reads from Category Engine FIRST, falls back to hardcoded strings)
+  const isCartFlow = allowedFeatures.includes('Product Stock') || allowedFeatures.includes('B2C') || hasCartProducts || CART_ORDER_FLOW.includes(sellerSector) || isB2C;
+  const isRfqFlow = allowedFeatures.includes('RFQ') || allowedFeatures.includes('Quote') || allowedFeatures.includes('B2B') || hasRfqProducts || RFQ_QUOTE_FLOW.includes(sellerSector) || isB2B;
+  const isQueueFlow = allowedFeatures.includes('Token') || hasQueueServices || QUEUE_TOKEN_FLOW.includes(sellerSector) || isService;
   const isProjectFlow = hasProjectServices || PROJECT_MILESTONE_FLOW.includes(sellerSector);
-  const isMeetingFlow = hasMeetingServices || MEETING_PROPOSAL_FLOW.includes(sellerSector);
-  const isAssetFlow = hasAssetListings || ENQUIRY_ASSET_FLOW.includes(sellerSector);
+  const isMeetingFlow = allowedFeatures.includes('Appointment') || allowedFeatures.includes('Meeting') || hasMeetingServices || MEETING_PROPOSAL_FLOW.includes(sellerSector);
+  const isAssetFlow = allowedFeatures.includes('Vehicle Test Drive') || hasAssetListings || ENQUIRY_ASSET_FLOW.includes(sellerSector);
 
   // For backward compatibility in some places
-  const isServiceProvider = isQueueFlow || isProjectFlow || isMeetingFlow || isService;
+  const isServiceProvider = isQueueFlow || isProjectFlow || isMeetingFlow || isService || sellerCategory?.primaryType === 'SERVICE';
   const [queueData, setQueueData] = useState<any>(null);
   const [isQueueLoading, setIsQueueLoading] = useState(false);
   const [queueAnalytics, setQueueAnalytics] = useState<any>(null);
@@ -211,6 +226,17 @@ function DashboardContent() {
   // Orders State (from real data)
   const [orders, setOrders] = useState<any[]>([]);
 
+  React.useEffect(() => {
+    if (user?.id) {
+      fetch(`${API_URL}/orders/seller/${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setOrders(data);
+        })
+        .catch(err => console.error('Failed to load seller orders', err));
+    }
+  }, [user]);
+
   // Live Bookings State synced with Queue Tokens
   const [bookings, setBookings] = useState<any[]>([]);
 
@@ -266,6 +292,35 @@ function DashboardContent() {
   const [location, setLocation] = useState('New Delhi, Delhi');
   const [imageUrl, setImageUrl] = useState('');
 
+  // Settings Location States
+  const [settingsPin, setSettingsPin] = useState('');
+  const [settingsAreas, setSettingsAreas] = useState<string[]>([]);
+  const [settingsIsFetching, setSettingsIsFetching] = useState(false);
+
+  React.useEffect(() => {
+    if (settingsPin.length === 6) {
+      setSettingsIsFetching(true);
+      fetch(`https://api.postalpincode.in/pincode/${settingsPin}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === 'Success') {
+            const fetchedAreas = data[0].PostOffice.map((po: any) => po.Name);
+            setSettingsAreas(fetchedAreas);
+            const state = data[0].PostOffice[0].State;
+            const district = data[0].PostOffice[0].District;
+            if (user?.business?.address && !user.business.address.includes(district)) {
+              // Ignore if there's no way to smartly update, or just use it as hint
+            }
+          } else {
+            setSettingsAreas([]);
+          }
+        })
+        .catch(() => setSettingsAreas([]))
+        .finally(() => setSettingsIsFetching(false));
+    } else {
+      setSettingsAreas([]);
+    }
+  }, [settingsPin, user]);
   React.useEffect(() => {
     if (user) {
       if (user.business?.address) {
@@ -523,7 +578,7 @@ function DashboardContent() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 lg:p-10">
+      <main className="flex-1 min-w-0 overflow-y-auto p-4 lg:p-10">
         
         {activeTab === 'overview' && (
           <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
@@ -581,6 +636,94 @@ function DashboardContent() {
                 ));
               })()}
             </div>
+
+            {/* Performance Analytics Section */}
+            {queueAnalytics && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8 lg:mb-10">
+                <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-slate-50/30">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-emerald-500 shrink-0" />
+                      Shop Performance & Earnings
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">Daily and monthly overview of staff collections.</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-4 text-left xl:text-right w-full xl:w-auto">
+                    <div>
+                      <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Today's Collection</div>
+                      <div className="text-2xl font-black text-emerald-600">₹{queueAnalytics.totalTodayCollection.toLocaleString('en-IN')}</div>
+                    </div>
+                    <div className="w-px bg-slate-200 h-10 my-auto"></div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Month's Collection</div>
+                      <div className="text-2xl font-black text-blue-600">₹{queueAnalytics.totalMonthCollection.toLocaleString('en-IN')}</div>
+                    </div>
+                    {(user?.business?.wallet?.owedToPlatform ?? 0) > 0 && (
+                      <>
+                        <div className="w-px bg-slate-200 h-10 my-auto"></div>
+                        <div>
+                          <div className="text-xs font-bold text-orange-500 uppercase tracking-widest">Owed to Platform</div>
+                          <div className="text-2xl font-black text-orange-600 flex items-center gap-3">
+                            ₹{(user?.business?.wallet?.owedToPlatform || 0).toLocaleString('en-IN')}
+                            <button 
+                              onClick={async () => {
+                                if(confirm('Proceed to pay platform fees?')) {
+                                  try {
+                                    await fetch(`${API_URL}/wallet/business/${user?.business?.id}/pay-platform`, { method: 'POST' });
+                                    alert('Payment successful!');
+                                    window.location.reload();
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                }
+                              }}
+                              className="text-xs bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-600 transition-colors"
+                            >
+                              Pay Now
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="p-0 overflow-x-auto w-full">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                        <th className="p-4 pl-6">Staff Member</th>
+                        <th className="p-4 text-center">Today's Customers</th>
+                        <th className="p-4 text-right">Today's Earnings</th>
+                        <th className="p-4 text-center">Month's Customers</th>
+                        <th className="p-4 text-right pr-6">Month's Earnings</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {queueAnalytics.staffPerformance.map((staff: any) => (
+                        <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-4 pl-6 font-bold text-slate-900 flex items-center gap-3">
+                            {staff.id === 'unassigned' ? (
+                              <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
+                                <Store className="w-4 h-4" />
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+                                {staff.name.charAt(0)}
+                              </div>
+                            )}
+                            {staff.name}
+                          </td>
+                          <td className="p-4 text-center font-bold text-slate-700">{staff.todayCustomers}</td>
+                          <td className="p-4 text-right font-black text-emerald-600">₹{staff.todayEarnings.toLocaleString('en-IN')}</td>
+                          <td className="p-4 text-center font-bold text-slate-700">{staff.monthCustomers}</td>
+                          <td className="p-4 text-right pr-6 font-black text-blue-600">₹{staff.monthEarnings.toLocaleString('en-IN')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -721,15 +864,15 @@ function DashboardContent() {
 
         {activeTab === 'queue' && (
           <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
-            <div className="mb-8 flex justify-between items-end">
-              <div>
+            <div className="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
+              <div className="w-full">
                 <h1 className="text-3xl font-bold text-slate-900">Queue & Token Management</h1>
                 <p className="text-slate-500 mt-2">Manage your live walk-in customers and tokens.</p>
                 {availableQueues.length > 1 && (
-                  <div className="mt-4 flex items-center gap-3">
+                  <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
                     <span className="text-sm font-semibold text-slate-600">Select Shop/Branch:</span>
                     <select 
-                      className="border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                      className="border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 text-sm font-medium w-full sm:w-auto"
                       value={selectedQueueId || ''} 
                       onChange={(e) => fetchQueue(e.target.value)}
                     >
@@ -740,21 +883,24 @@ function DashboardContent() {
                   </div>
                 )}
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3 w-full lg:w-auto">
                 <button 
                   onClick={() => setShowStaffModal(true)} 
-                  className="bg-indigo-50 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors shadow-sm flex items-center gap-2"
+                  className="bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-2 sm:px-4 rounded-lg font-medium hover:bg-indigo-100 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none whitespace-nowrap"
                 >
-                  <Users className="w-4 h-4" /> Manage Staff & Stations
+                  <Users className="w-4 h-4 shrink-0" /> <span>Manage Staff</span>
                 </button>
                 <button 
                   onClick={() => setShowWalkInForm(true)} 
-                  className="bg-blue-600 border border-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2"
+                  className="bg-blue-600 border border-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm flex-1 sm:flex-none whitespace-nowrap"
                 >
-                  <PlusCircle className="w-4 h-4" /> Add Walk-in
+                  <PlusCircle className="w-4 h-4 shrink-0" /> <span>Add Walk-in</span>
                 </button>
-                <button onClick={() => fetchQueue()} className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm">
-                  Refresh Status
+                <button 
+                  onClick={() => fetchQueue()} 
+                  className="bg-white border border-slate-200 text-slate-700 px-3 py-2 sm:px-4 rounded-lg font-medium hover:bg-slate-50 transition-colors shadow-sm text-sm flex items-center justify-center gap-2 flex-1 sm:flex-none whitespace-nowrap"
+                >
+                  <span>Refresh Status</span>
                 </button>
               </div>
             </div>
@@ -843,10 +989,10 @@ function DashboardContent() {
                     })}
                   </div>
                 ) : (
-                  <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-8 text-white shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
+                  <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
                     <div className="relative z-10 text-center w-full">
-                      <div className="text-indigo-200 text-sm font-bold tracking-widest uppercase mb-2">NOW SERVING</div>
+                      <div className="text-indigo-200 text-xs sm:text-sm font-bold tracking-widest uppercase mb-2">NOW SERVING</div>
                       {queueData.serving && queueData.serving.length > 0 ? (
                         <>
                           <div className="text-8xl font-black mb-2 text-white drop-shadow-md">
@@ -856,12 +1002,12 @@ function DashboardContent() {
                           <div className="text-indigo-200 text-sm mt-1">{queueData.serving[0].service}</div>
                         </>
                       ) : (
-                        <div className="py-10">
-                          <div className="text-6xl font-black text-indigo-300/50 mb-4">—</div>
-                          <div className="text-indigo-200">No one currently serving</div>
+                        <div className="py-6 sm:py-10">
+                          <div className="text-5xl sm:text-6xl font-black text-indigo-300/50 mb-4">—</div>
+                          <div className="text-indigo-200 text-sm sm:text-base">No one currently serving</div>
                         </div>
                       )}
-                      <div className="mt-8 pt-8 border-t border-indigo-500/30 w-full flex justify-between">
+                      <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-indigo-500/30 w-full flex justify-between">
                         <div className="text-center">
                           <div className="text-3xl font-black">{queueData.waitingCount}</div>
                           <div className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Waiting</div>
@@ -877,7 +1023,7 @@ function DashboardContent() {
 
                 {/* Waiting List */}
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-                  <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                  <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <h2 className="text-lg font-bold text-slate-900">Up Next</h2>
                     {(!queueData.resources || queueData.resources.length === 0) && (
                       <button 
@@ -897,8 +1043,8 @@ function DashboardContent() {
                       </div>
                     ) : (
                       queueData.waiting?.map((token: any, i: number) => (
-                        <div key={token.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-sm transition-all">
-                          <div className="flex items-center gap-4">
+                        <div key={token.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-sm transition-all">
+                          <div className="flex items-center gap-4 w-full">
                             <div className={`w-14 h-12 rounded-xl flex flex-col items-center justify-center font-black text-sm ${i === 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>
                               {token.bookingMode === 'APPOINTMENT' ? (
                                 <><span>Apt</span><span className="text-[10px] font-bold">{new Date(token.appointmentTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></>
@@ -922,8 +1068,8 @@ function DashboardContent() {
                               <div className="text-xs text-slate-500 font-medium">{token.service}</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 text-right">
-                            <div className="text-sm font-medium text-slate-700 mr-2">
+                          <div className="flex flex-wrap items-center gap-2 text-left sm:text-right w-full sm:w-auto mt-2 sm:mt-0">
+                            <div className="text-sm font-medium text-slate-700 mr-2 flex-1 sm:flex-none whitespace-nowrap">
                               📞 {token.phone || 'No phone'}
                             </div>
                             
@@ -963,168 +1109,456 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                {/* Performance Analytics Section */}
-                {queueAnalytics && (
-                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-4">
-                    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
-                      <div>
-                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                          <TrendingUp className="w-5 h-5 text-emerald-500" />
-                          Shop Performance & Earnings
-                        </h2>
-                        <p className="text-sm text-slate-500 mt-1">Daily and monthly overview of staff collections.</p>
-                      </div>
-                      <div className="flex gap-4 text-right">
-                        <div>
-                          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Today's Collection</div>
-                          <div className="text-2xl font-black text-emerald-600">₹{queueAnalytics.totalTodayCollection.toLocaleString('en-IN')}</div>
-                        </div>
-                        <div className="w-px bg-slate-200 h-10 my-auto"></div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Month's Collection</div>
-                          <div className="text-2xl font-black text-blue-600">₹{queueAnalytics.totalMonthCollection.toLocaleString('en-IN')}</div>
-                        </div>
-                        {(user?.business?.wallet?.owedToPlatform ?? 0) > 0 && (
-                          <>
-                            <div className="w-px bg-slate-200 h-10 my-auto"></div>
-                            <div>
-                              <div className="text-xs font-bold text-orange-500 uppercase tracking-widest">Owed to Platform</div>
-                              <div className="text-2xl font-black text-orange-600 flex items-center gap-3">
-                                ₹{(user?.business?.wallet?.owedToPlatform || 0).toLocaleString('en-IN')}
-                                <button 
-                                  onClick={async () => {
-                                    if(confirm('Proceed to pay platform fees?')) {
-                                      try {
-                                        await fetch(`${API_URL}/wallet/business/${user?.business?.id}/pay-platform`, { method: 'POST' });
-                                        alert('Payment successful!');
-                                        window.location.reload();
-                                      } catch (e) {
-                                        console.error(e);
-                                      }
-                                    }
-                                  }}
-                                  className="text-xs bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-600 transition-colors"
-                                >
-                                  Pay Now
-                                </button>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div className="p-0 overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                            <th className="p-4 pl-6">Staff Member</th>
-                            <th className="p-4 text-center">Today's Customers</th>
-                            <th className="p-4 text-right">Today's Earnings</th>
-                            <th className="p-4 text-center">Month's Customers</th>
-                            <th className="p-4 text-right pr-6">Month's Earnings</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {queueAnalytics.staffPerformance.map((staff: any) => (
-                            <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-4 pl-6 font-bold text-slate-900 flex items-center gap-3">
-                                {staff.id === 'unassigned' ? (
-                                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
-                                    <Store className="w-4 h-4" />
-                                  </div>
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
-                                    {staff.name.charAt(0)}
-                                  </div>
-                                )}
-                                {staff.name}
-                              </td>
-                              <td className="p-4 text-center font-bold text-slate-700">{staff.todayCustomers}</td>
-                              <td className="p-4 text-right font-black text-emerald-600">₹{staff.todayEarnings.toLocaleString('en-IN')}</td>
-                              <td className="p-4 text-center font-bold text-slate-700">{staff.monthCustomers}</td>
-                              <td className="p-4 text-right pr-6 font-black text-blue-600">₹{staff.monthEarnings.toLocaleString('en-IN')}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+
               </div>
             )}
           </div>
         )}
 
         {activeTab === 'bookings' && (
-          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-slate-900">Bookings & Appointments</h1>
-              <p className="text-slate-500 mt-2">Track and manage your live tokens and upcoming appointments.</p>
+          <div className="max-w-[1600px] mx-auto animate-in fade-in duration-300 h-full flex flex-col">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">Tokens & Bookings</h1>
+                <p className="text-slate-500 mt-1">Manage all your service tokens, appointments and bookings in one place.</p>
+              </div>
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
+                <PlusCircle className="w-5 h-5" /> Create Booking
+              </button>
             </div>
             
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                    <th className="p-4 pl-6">ID / Token</th>
-                    <th className="p-4">Customer</th>
-                    <th className="p-4">Service</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 pr-6 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {bookings.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-slate-500">
-                        No active bookings or tokens in queue right now.
-                      </td>
-                    </tr>
-                  ) : (
-                    bookings.map((booking, index) => (
-                      <tr key={index} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-4 pl-6 font-bold text-indigo-700">
-                          {booking.id.startsWith('Token') ? booking.id : (booking.id.includes('Apt') ? booking.id : (booking.bookingMode === 'APPOINTMENT' ? 'Appointment' : `Token #${booking.tokenNumber || '?'}`))}
-                        </td>
-                        <td className="p-4 text-slate-900 font-medium">
-                          {booking.customer}
-                          {booking.appointmentTime && <div className="text-xs text-slate-500">{new Date(booking.appointmentTime).toLocaleString()}</div>}
-                        </td>
-                        <td className="p-4 text-slate-600">{booking.service}</td>
-                        <td className="p-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            booking.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
-                            booking.status === 'Upcoming' ? 'bg-amber-100 text-amber-700' :
-                            booking.status === 'Pending' ? 'bg-slate-100 text-slate-700' :
-                            booking.status === 'Checked In' ? 'bg-emerald-100 text-emerald-700' :
-                            'bg-emerald-100 text-emerald-700'
-                          }`}>
-                            {booking.status}
-                          </span>
-                        </td>
-                        <td className="p-4 pr-6 text-right flex justify-end gap-2">
-                          {booking.originalStatus === 'PENDING' && (
-                            <button 
-                              disabled={actionLoading === `checkin-${booking.rawId}`}
-                              className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
-                              onClick={() => handleQueueAction(`checkin-${booking.rawId}`, `/service-queue/token/${booking.rawId}/check-in`, 'POST')}
-                            >
-                              {actionLoading === `checkin-${booking.rawId}` ? '...' : 'Check-In Arrival'}
-                            </button>
-                          )}
-                          <button 
-                            className="text-slate-400 hover:text-blue-600 font-medium text-sm transition-colors px-3 py-1.5"
-                            onClick={() => setActiveTab('queue')}
-                          >
-                            Manage in Queue
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            {/* Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <Ticket className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900">{bookings.length}</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Bookings</div>
+                </div>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900">{bookings.filter(b => b.status === 'Waiting' || b.status === 'Pending').length}</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Waiting</div>
+                </div>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900">{bookings.filter(b => b.status === 'In Progress').length}</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">In Progress</div>
+                </div>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900">{bookings.filter(b => b.status === 'Done').length}</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Completed</div>
+                </div>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center shrink-0">
+                  <Ban className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900">{bookings.filter(b => b.status === 'No Show' || b.status === 'Cancelled').length}</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cancelled</div>
+                </div>
+              </div>
             </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+              {['All Services', 'Haircut', 'Beard', 'Facial', 'Hair Color', 'Massage'].map((cat, i) => (
+                <button 
+                  key={cat}
+                  onClick={() => setSelectedServiceCategory(cat)}
+                  className={`px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-colors flex items-center gap-2 border ${selectedServiceCategory === cat || (cat === 'All Services' && selectedServiceCategory === 'All Services') ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                >
+                  {cat === 'Haircut' ? <span className="text-lg leading-none">✂</span> : ''}
+                  {cat === 'Beard' ? <span className="text-lg leading-none">🧔</span> : ''}
+                  {cat} {i === 0 ? `(${bookings.length})` : ''}
+                </button>
+              ))}
+              <button className="px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-colors bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 flex items-center gap-1 ml-auto">
+                More <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Sub Filters Row */}
+            <div className="flex flex-col md:flex-row gap-3 mb-6 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="relative flex-1">
+                <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input 
+                  type="text" 
+                  placeholder="Search by customer, token number, or service..." 
+                  value={searchBookingQuery}
+                  onChange={e => setSearchBookingQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-blue-100 text-sm font-medium"
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                <select className="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 outline-none cursor-pointer focus:ring-2 focus:ring-blue-100">
+                  <option>All Types</option>
+                  <option>Tokens</option>
+                  <option>Appointments</option>
+                </select>
+                <select className="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 outline-none cursor-pointer focus:ring-2 focus:ring-blue-100">
+                  <option>All Status</option>
+                  <option>Waiting</option>
+                  <option>In Progress</option>
+                  <option>Completed</option>
+                </select>
+                <select className="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 outline-none cursor-pointer focus:ring-2 focus:ring-blue-100">
+                  <option>All Staff</option>
+                </select>
+                <select className="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 outline-none cursor-pointer focus:ring-2 focus:ring-blue-100 flex items-center gap-2">
+                  <option>📅 Today</option>
+                  <option>📅 Tomorrow</option>
+                  <option>📅 This Week</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="flex-1 grid grid-cols-1 xl:grid-cols-3 gap-6 relative">
+              {/* Left side: Table */}
+              <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[600px]">
+                <div className="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50/50">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    Showing {bookings.length} bookings
+                  </div>
+                  <button className="text-xs font-bold text-slate-600 flex items-center gap-1 hover:text-slate-900">
+                    Sort: Time <ChevronDown className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto flex-1 custom-scrollbar">
+                  {/* Desktop Table */}
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead className="sticky top-0 bg-white shadow-sm z-10">
+                      <tr className="border-b border-slate-200 text-slate-500 text-xs font-semibold">
+                        <th className="p-4 pl-6 font-medium">Token / Booking</th>
+                        <th className="p-4 font-medium">Customer</th>
+                        <th className="p-4 font-medium">Service</th>
+                        <th className="p-4 font-medium">Time</th>
+                        <th className="p-4 font-medium">Staff / Resource</th>
+                        <th className="p-4 font-medium">Status</th>
+                        <th className="p-4 pr-6 text-right font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {bookings.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-12 text-center text-slate-500">
+                            <div className="flex flex-col items-center justify-center gap-3">
+                              <Ticket className="w-12 h-12 text-slate-200" />
+                              <p className="font-semibold text-slate-600">No bookings found</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        bookings.map((booking, index) => {
+                          const isSelected = selectedBookingDetails?.rawId === booking.rawId;
+                          const idLabel = booking.id.startsWith('Token') ? booking.id.replace('Token ', '') : (booking.bookingMode === 'APPOINTMENT' ? booking.id : `#${booking.tokenNumber || '?'}`);
+                          const isToken = !booking.id.includes('Apt') && booking.bookingMode !== 'APPOINTMENT';
+                          
+                          const badgeColor = isToken 
+                            ? (booking.status === 'In Progress' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700')
+                            : 'bg-fuchsia-100 text-fuchsia-700';
+
+                          return (
+                          <tr 
+                            key={index} 
+                            onClick={() => setSelectedBookingDetails(booking)}
+                            className={`cursor-pointer transition-colors ${isSelected ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}
+                          >
+                            <td className="p-4 pl-6">
+                              <div className={`inline-flex px-3 py-1.5 rounded-lg text-sm font-black tracking-wide ${badgeColor}`}>
+                                {isToken ? '' : <CalendarClock className="w-4 h-4 mr-1 inline" />}{idLabel}
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="font-bold text-slate-900">{booking.customer}</div>
+                              <div className="text-xs font-medium text-slate-500">+91 98765 432{10 + (index % 90)}</div>
+                            </td>
+                            <td className="p-4">
+                              <div className="font-semibold text-slate-700 flex items-center gap-2 whitespace-nowrap">
+                                {booking.service.includes('Haircut') ? <Scissors className="w-5 h-5 text-slate-500" /> :
+                                 booking.service.includes('Beard') ? <User className="w-5 h-5 text-slate-500" /> :
+                                 booking.service.includes('Facial') ? <Sparkles className="w-5 h-5 text-slate-500" /> :
+                                 booking.service.includes('Color') ? <Palette className="w-5 h-5 text-slate-500" /> :
+                                 booking.service.includes('Massage') ? <Activity className="w-5 h-5 text-slate-500" /> :
+                                 booking.service.includes('Spa') ? <Droplet className="w-5 h-5 text-slate-500" /> :
+                                 <Ticket className="w-5 h-5 text-slate-500" />}
+                                {booking.service}
+                              </div>
+                            </td>
+                            <td className="p-4 font-bold text-slate-700 whitespace-nowrap">
+                              {booking.appointmentTime ? new Date(booking.appointmentTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '10:40 AM'}
+                            </td>
+                            <td className="p-4">
+                              <div className="font-medium text-slate-900 whitespace-nowrap">{booking.staffName || 'Amit'}</div>
+                              <div className="text-xs font-medium text-slate-400 whitespace-nowrap">Chair {1 + (index % 4)}</div>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                booking.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                                booking.status === 'Waiting' || booking.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                                booking.status === 'Checked In' || booking.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-700' :
+                                'bg-slate-100 text-slate-700'
+                              }`}>
+                                {booking.status === 'Pending' ? 'Waiting' : booking.status}
+                              </span>
+                            </td>
+                            <td className="p-4 pr-6 text-right">
+                              <button className="px-4 py-1.5 rounded-lg border border-slate-200 text-blue-600 font-semibold text-sm hover:bg-blue-50 hover:border-blue-200 transition-colors bg-white">
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        )})
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between">
+                  <div className="text-sm font-medium text-slate-500">
+                    Showing 1-10 of {bookings.length} bookings
+                  </div>
+                  <div className="flex gap-1">
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white font-bold shadow-sm">1</button>
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 font-medium hover:bg-slate-50">2</button>
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 font-medium hover:bg-slate-50">3</button>
+                    <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 font-medium hover:bg-slate-50">&gt;</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side: Details Pane (Desktop) */}
+              <div className="hidden xl:flex flex-col h-[600px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-6">
+                {selectedBookingDetails ? (
+                  <div className="flex flex-col h-full">
+                    {/* Pane Header */}
+                    <div className="p-5 border-b border-slate-100 relative">
+                      <button onClick={() => setSelectedBookingDetails(null)} className="absolute right-4 top-4 p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors">
+                        <X className="w-5 h-5" />
+                      </button>
+                      <div className="flex items-center justify-between mb-2 pr-8">
+                        <h2 className="text-xl font-black text-slate-900">
+                          {selectedBookingDetails.id.startsWith('Token') ? selectedBookingDetails.id.replace('Token ', 'Token #') : (selectedBookingDetails.bookingMode === 'APPOINTMENT' ? selectedBookingDetails.id : `Token #${selectedBookingDetails.tokenNumber || '?'}`)}
+                        </h2>
+                        <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                                selectedBookingDetails.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                                selectedBookingDetails.status === 'Waiting' || selectedBookingDetails.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
+                                'bg-emerald-100 text-emerald-700'
+                              }`}>
+                          {selectedBookingDetails.status === 'Pending' ? 'Waiting' : selectedBookingDetails.status}
+                        </span>
+                      </div>
+                      <div className="text-xs font-medium text-slate-500">Created on 18 Sep 2026 • 10:38 AM</div>
+                      
+                      {/* Tabs */}
+                      <div className="flex items-center gap-6 mt-6 border-b border-slate-100">
+                        <button className="pb-3 text-sm font-bold text-blue-600 border-b-2 border-blue-600">Details</button>
+                        <button className="pb-3 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">Timeline</button>
+                        <button className="pb-3 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">Payment</button>
+                      </div>
+                    </div>
+
+                    {/* Pane Content */}
+                    <div className="p-5 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+                      
+                      {/* Customer Block */}
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><User className="w-4 h-4 text-slate-400" /> Customer</h3>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-slate-400" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900">{selectedBookingDetails.customer}</div>
+                            <div className="flex flex-col gap-0.5 mt-1">
+                              <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Phone className="w-3 h-3" /> +91 98765 43210</span>
+                              <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5"><Mail className="w-3 h-3" /> customer@gmail.com</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <hr className="border-slate-100" />
+
+                      {/* Service Block */}
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-slate-400" /> Service</h3>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xl">{selectedBookingDetails.service.includes('Hair') ? '✂' : (selectedBookingDetails.service.includes('Beard') ? '🧔' : '💆')}</span>
+                          <span className="font-bold text-slate-800">{selectedBookingDetails.service}</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm font-medium text-slate-600">
+                          <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-slate-400" /> 20 minutes</span>
+                          <span className="flex items-center gap-1 text-slate-900 font-bold">💸 ₹{selectedBookingDetails.price || 200}</span>
+                        </div>
+                        <div className="text-sm text-slate-500 mt-2 font-medium">
+                          Booking Type: <span className="text-slate-800">{selectedBookingDetails.bookingMode === 'APPOINTMENT' ? 'Appointment' : 'Token'}</span>
+                        </div>
+                      </div>
+
+                      <hr className="border-slate-100" />
+
+                      {/* Assignment */}
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2"><MapPin className="w-4 h-4 text-slate-400" /> Assignment</h3>
+                        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                          <div>
+                            <div className="text-sm font-medium text-slate-600 flex items-center gap-2 mb-1">
+                              <Users className="w-4 h-4 text-slate-400" /> Staff: <span className="font-bold text-slate-900">{selectedBookingDetails.staffName || 'Rahul'}</span>
+                            </div>
+                            <div className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                              <Store className="w-4 h-4 text-slate-400" /> Resource: <span className="font-bold text-slate-900">Chair 1</span>
+                            </div>
+                          </div>
+                          <button className="px-3 py-1.5 bg-white border border-slate-200 text-blue-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+                            Assign / Change
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Status / Time */}
+                      <div className="flex items-start gap-6">
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2"><Activity className="w-4 h-4 text-slate-400" /> Status</h3>
+                          <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">Waiting</span>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-900 mb-2 invisible">Time</h3>
+                          <div className="text-xs font-semibold text-slate-600 flex items-center gap-1.5 p-1.5 bg-slate-50 rounded-lg"><Clock className="w-4 h-4 text-slate-400" /> Est: 10:40 AM</div>
+                        </div>
+                      </div>
+
+                      {/* Notes */}
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-1.5"><FileText className="w-4 h-4 text-slate-400" /> Notes</h3>
+                        <div className="text-sm text-slate-600 bg-yellow-50 p-3 rounded-xl border border-yellow-100">
+                          Regular customer. Prefers Chair 1.
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 text-sm">
+                          <CheckCircle2 className="w-4 h-4" /> Start Service
+                        </button>
+                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 text-sm">
+                          <Phone className="w-4 h-4" /> Call Customer
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="flex-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2 rounded-xl transition-colors text-sm">Transfer</button>
+                        <button className="flex-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2 rounded-xl transition-colors text-sm">Edit</button>
+                        <button className="flex-1 bg-white border border-red-200 hover:bg-red-50 text-red-600 font-bold py-2 rounded-xl transition-colors text-sm">Cancel</button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8 text-center bg-slate-50/30">
+                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-4">
+                      <Ticket className="w-10 h-10 text-slate-300" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-700 mb-2">No Booking Selected</h3>
+                    <p className="text-sm font-medium max-w-[200px] mx-auto">Select a booking from the list to view its complete details and manage actions.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile Bottom Sheet for Details */}
+            <div className={`xl:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${selectedBookingDetails ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+              <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-h-[90vh] flex flex-col transition-transform duration-300 transform ${selectedBookingDetails ? 'translate-y-0' : 'translate-y-full'}`}>
+                {/* Drag Handle */}
+                <div className="w-full flex justify-center pt-3 pb-2" onClick={() => setSelectedBookingDetails(null)}>
+                  <div className="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+                </div>
+                
+                {selectedBookingDetails && (
+                  <div className="flex flex-col flex-1 overflow-hidden">
+                    <div className="px-5 pb-4 border-b border-slate-100 flex items-center justify-between">
+                      <h2 className="text-xl font-black text-slate-900">
+                        {selectedBookingDetails.id.startsWith('Token') ? selectedBookingDetails.id.replace('Token ', 'Token #') : (selectedBookingDetails.bookingMode === 'APPOINTMENT' ? selectedBookingDetails.id : `Token #${selectedBookingDetails.tokenNumber || '?'}`)}
+                      </h2>
+                      <button onClick={() => setSelectedBookingDetails(null)} className="p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full text-slate-500">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    
+                    <div className="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-6 pb-32">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
+                          <User className="w-6 h-6 text-slate-400" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900 text-lg">{selectedBookingDetails.customer}</div>
+                          <div className="text-sm font-medium text-slate-500 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5"/> +91 98765 43210</div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-slate-400" /> Service</h3>
+                        <div className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                           <span className="text-xl">{selectedBookingDetails.service.includes('Hair') ? '✂' : (selectedBookingDetails.service.includes('Beard') ? '🧔' : '💆')}</span>
+                           {selectedBookingDetails.service}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm font-medium text-slate-600 mt-2">
+                          <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-slate-400" /> 20 mins</span>
+                          <span className="flex items-center gap-1 font-bold text-slate-900">💸 ₹{selectedBookingDetails.price || 200}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                        <div>
+                          <div className="text-sm font-medium text-slate-600 mb-1 flex items-center gap-1.5"><Users className="w-3.5 h-3.5"/> Staff: <strong className="text-slate-900">{selectedBookingDetails.staffName || 'Rahul'}</strong></div>
+                          <div className="text-sm font-medium text-slate-600 flex items-center gap-1.5"><Store className="w-3.5 h-3.5"/> Resource: <strong className="text-slate-900">Chair 1</strong></div>
+                        </div>
+                        <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 shadow-sm border border-amber-200">Waiting</span>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-1.5"><FileText className="w-4 h-4 text-slate-400" /> Notes</h3>
+                        <div className="text-sm text-slate-600 bg-yellow-50 p-4 rounded-xl border border-yellow-100 shadow-sm">
+                          Regular customer. Prefers Chair 1.
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Sticky Mobile Actions */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+                      <div className="flex gap-3">
+                        <button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
+                          <CheckCircle2 className="w-5 h-5"/> Start
+                        </button>
+                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
+                          <Phone className="w-5 h-5"/> Call
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -1307,8 +1741,30 @@ function DashboardContent() {
                   <input type="text" defaultValue={user?.business?.gstNumber} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Business PIN Code</label>
+                  <div className="relative">
+                    <input type="text" maxLength={6} value={settingsPin} onChange={e => setSettingsPin(e.target.value.replace(/\D/g, ''))} placeholder="e.g. 560001" className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" />
+                    {settingsIsFetching && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>}
+                  </div>
+                </div>
+                {settingsAreas.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Select Area / Locality</label>
+                    <select className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none" onChange={e => {
+                      const area = e.target.value;
+                      const addrEl = document.getElementById('settingsAddress') as HTMLTextAreaElement;
+                      if (addrEl) {
+                        addrEl.value = `${area}, ${addrEl.value}`;
+                      }
+                    }}>
+                      <option value="">Select an area to prepend to address...</option>
+                      {settingsAreas.map(a => <option key={a} value={a}>{a}</option>)}
+                    </select>
+                  </div>
+                )}
+                <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Business Address</label>
-                  <textarea defaultValue={user?.business?.address} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-24" />
+                  <textarea id="settingsAddress" defaultValue={user?.business?.address} className="w-full border border-slate-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-24" />
                 </div>
                 <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-colors">
                   Save Changes

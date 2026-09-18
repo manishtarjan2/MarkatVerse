@@ -30,6 +30,12 @@ let AdminBusinessService = class AdminBusinessService {
             data
         });
     }
+    async updateBilling(id, data) {
+        return this.prisma.business.update({
+            where: { id },
+            data
+        });
+    }
 };
 AdminBusinessService = __decorate([
     Injectable(),

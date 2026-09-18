@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, ShoppingCart, User, Grid, Store } from 'lucide-react';
+import { Home, Search, ShoppingCart, User, Grid, Store, Ticket } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -24,6 +24,11 @@ export default function BottomNav() {
       <Link href="/explore" className={`flex flex-col items-center gap-1 p-2 ${pathname?.startsWith('/explore') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>
         <Grid className="w-5 h-5" strokeWidth={pathname?.startsWith('/explore') ? 2 : 1.5} />
         <span className="text-[10px] font-medium">Explore</span>
+      </Link>
+
+      <Link href="/salon/token/active" className={`flex flex-col items-center gap-1 p-2 ${pathname?.includes('/token') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>
+        <Ticket className="w-5 h-5" strokeWidth={pathname?.includes('/token') ? 2 : 1.5} />
+        <span className="text-[10px] font-medium">Tokens</span>
       </Link>
 
       <Link href="/cart" className={`flex flex-col items-center gap-1 p-2 relative ${isActive('/cart') ? 'text-blue-600' : 'text-slate-500 hover:text-blue-500'}`}>

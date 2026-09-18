@@ -43,7 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
-        if (!res.ok) throw new Error('Token invalid');
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('token');
+          }
+          throw new Error('Token invalid or network error');
+        }
         return res.json();
       })
       .then(data => {
@@ -57,12 +62,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           business: data.business,
         });
       })
-      .catch(() => {
-        // Token expired or invalid — clear it
-        localStorage.removeItem('token');
+      .catch((e) => {
+        console.error('Auth verification failed:', e);
+        // We no longer unconditionally remove the token here to prevent 
+        // temporary network errors from logging the user out.
       })
       .finally(() => setIsLoading(false));
   }, []);
+
+  // Fetch all users for admin panels
+  useEffect(() => {
+    if (user && user.role.includes('admin')) {
+      const token = localStorage.getItem('token');
+      fetch(`${API_URL}/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setAllUsers(data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [user]);
 
   const login = (userData: User, token?: string) => {
     if (token) {

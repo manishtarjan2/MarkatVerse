@@ -19,7 +19,9 @@ export class CategoriesService {
         notApplicable: data.notApplicable || [],
         optionalFeatures: data.optionalFeatures || [],
         parameters: data.parameters || [],
-        subcategories: data.subcategories || []
+        subcategories: data.subcategories || [],
+        defaultCommissionRate: data.defaultCommissionRate ?? 5.0,
+        defaultFlatRate: data.defaultFlatRate ?? 999.0
       }
     });
   }
@@ -47,12 +49,54 @@ export class CategoriesService {
         notApplicable: data.notApplicable,
         optionalFeatures: data.optionalFeatures,
         parameters: data.parameters,
-        subcategories: data.subcategories
+        subcategories: data.subcategories,
+        defaultCommissionRate: data.defaultCommissionRate,
+        defaultFlatRate: data.defaultFlatRate
       }
     });
   }
 
   remove(id: string) {
     return this.prisma.category.delete({ where: { id } });
+  }
+
+  async applyBillingDefaults(id: string) {
+    const category = await this.prisma.category.findUnique({ where: { id } });
+    if (!category) throw new Error('Category not found');
+
+    const products = await this.prisma.product.findMany({
+      where: { categoryId: id },
+      select: { sellerId: true }
+    });
+    
+    const sellerIds = [...new Set(products.map(p => p.sellerId).filter(Boolean))] as string[];
+    
+    if (sellerIds.length === 0) return { updatedCount: 0 };
+
+    // Businesses on PERCENTAGE
+    const updatedCommission = await this.prisma.business.updateMany({
+      where: { 
+        userId: { in: sellerIds },
+        commissionType: 'PERCENTAGE'
+      },
+      data: {
+        commissionRate: category.defaultCommissionRate ?? 5.0
+      }
+    });
+
+    // Businesses on FIXED
+    const updatedFlat = await this.prisma.business.updateMany({
+      where: {
+        userId: { in: sellerIds },
+        commissionType: 'FIXED'
+      },
+      data: {
+        commissionRate: category.defaultFlatRate ?? 999.0
+      }
+    });
+
+    return { 
+      updatedCount: updatedCommission.count + updatedFlat.count 
+    };
   }
 }

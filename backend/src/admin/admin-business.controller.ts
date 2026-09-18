@@ -22,4 +22,19 @@ export class AdminBusinessController {
     };
     return this.adminBusinessService.updateSubscription(id, data);
   }
+
+  @Patch(':id/billing')
+  updateBilling(
+    @Param('id') id: string,
+    @Body() body: { commissionType: string, commissionRate: number, subscriptionStatus: string, subscriptionStartDate: string | null, subscriptionEndDate: string | null }
+  ) {
+    const data = {
+      commissionType: body.commissionType,
+      commissionRate: Number(body.commissionRate),
+      subscriptionStatus: body.subscriptionStatus,
+      subscriptionStartDate: body.subscriptionStartDate ? new Date(body.subscriptionStartDate) : null,
+      subscriptionEndDate: body.subscriptionEndDate ? new Date(body.subscriptionEndDate) : null,
+    };
+    return this.adminBusinessService.updateBilling(id, data);
+  }
 }

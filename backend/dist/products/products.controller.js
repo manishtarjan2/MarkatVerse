@@ -23,6 +23,9 @@ let ProductsController = class ProductsController {
     findAll(location, lat, lng, radius) {
         return this.productsService.findAll(location, lat ? parseFloat(lat) : undefined, lng ? parseFloat(lng) : undefined, radius ? parseFloat(radius) : undefined);
     }
+    getDummyStatus() {
+        return this.productsService.getDummyStatus();
+    }
     findOne(id) {
         return this.productsService.findOne(id);
     }
@@ -56,6 +59,12 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findAll", null);
+__decorate([
+    Get('dummy-status'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ProductsController.prototype, "getDummyStatus", null);
 __decorate([
     Get(':id'),
     __param(0, Param('id')),

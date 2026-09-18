@@ -4,13 +4,51 @@ import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import { MapPin, CreditCard, CheckCircle2, ChevronRight, Lock, Package, ArrowRight, Smartphone, Banknote, Building2 } from 'lucide-react';
 import MockPaymentGateway from '@/components/MockPaymentGateway';
+import { useAuth } from '@/context/AuthContext';
 
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'cod'>('card');
   const [showGateway, setShowGateway] = useState(false);
+
+  // Form States
+  const [firstName, setFirstName] = useState('Amit');
+  const [lastName, setLastName] = useState('Verma');
+  const [street, setStreet] = useState('');
+  const [city, setCity] = useState('');
+  const [pinCode, setPinCode] = useState('');
+  const [phone, setPhone] = useState('');
+  const [areas, setAreas] = useState<string[]>([]);
+  const [isFetchingPin, setIsFetchingPin] = useState(false);
+
+  React.useEffect(() => {
+    if (pinCode.length === 6) {
+      setIsFetchingPin(true);
+      fetch(`https://api.postalpincode.in/pincode/${pinCode}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === 'Success') {
+            const fetchedAreas = data[0].PostOffice.map((po: any) => po.Name);
+            setAreas(fetchedAreas);
+            const state = data[0].PostOffice[0].State;
+            const district = data[0].PostOffice[0].District;
+            setCity(`${district}, ${state}`);
+          } else {
+            setAreas([]);
+          }
+        })
+        .catch(() => setAreas([]))
+        .finally(() => setIsFetchingPin(false));
+    } else {
+      setAreas([]);
+    }
+  }, [pinCode]);
+
+  const isPhoneValid = phone.length === 10;
+  const isFormValid = firstName && lastName && street && city && pinCode.length === 6 && isPhoneValid;
 
   if (items.length === 0 && step !== 3) {
     return (
@@ -31,7 +69,26 @@ export default function CheckoutPage() {
     );
   }
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buyerId: user?.id || 'guest',
+          total: total,
+          items: items.map(item => ({
+            productId: String(item.id),
+            productName: item.name,
+            sellerId: item.sellerId || 'guest-seller',
+            quantity: item.quantity,
+            price: item.price
+          }))
+        })
+      });
+    } catch (e) {
+      console.error('Failed to create order', e);
+    }
     setShowGateway(false);
     clearCart();
     setStep(3); // Success step
@@ -92,40 +149,65 @@ export default function CheckoutPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">First Name</label>
-                        <input type="text" defaultValue="Amit" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
+                        <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Last Name</label>
-                        <input type="text" defaultValue="Verma" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
+                        <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
                       </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Street Address</label>
-                      <input type="text" defaultValue="123 Tech Park, Phase 2, Electronic City" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">City</label>
-                        <input type="text" defaultValue="Bengaluru" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
-                      </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Postal Code</label>
-                        <input type="text" defaultValue="560001" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Postal Code (PIN)</label>
+                        <div className="relative">
+                          <input type="text" maxLength={6} value={pinCode} onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))} placeholder="e.g. 560001" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
+                          {isFetchingPin && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>}
+                        </div>
                       </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">City & State</label>
+                        <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. Bengaluru, Karnataka" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
+                      </div>
+                    </div>
+
+                    {areas.length > 0 && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Area / Locality</label>
+                        <select className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" onChange={e => {
+                          const area = e.target.value;
+                          setStreet(`${area}, ${street}`);
+                        }}>
+                          {areas.map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Street Address</label>
+                      <input type="text" value={street} onChange={e => setStreet(e.target.value)} placeholder="e.g. 123 Tech Park, Phase 2" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
                     </div>
 
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
-                      <input type="tel" defaultValue="+91 98765 43210" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                          <span className="text-slate-500 font-medium">+91</span>
+                          <div className="w-px h-5 bg-slate-200 mx-1"></div>
+                        </div>
+                        <input type="tel" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="9876543210" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pl-[4.5rem] text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
+                      </div>
+                      {phone && phone.length > 0 && phone.length < 10 && (
+                        <p className="text-xs text-red-500 mt-1">Phone number must be 10 digits</p>
+                      )}
                     </div>
                   </div>
 
                   <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
                     <button 
                       onClick={() => setStep(2)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                      disabled={!isFormValid}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Continue to Payment <ArrowRight className="w-5 h-5" />
                     </button>
@@ -279,9 +361,9 @@ export default function CheckoutPage() {
             <div className="bg-slate-50 rounded-2xl p-6 mb-10 text-left border border-slate-100 flex flex-col md:flex-row gap-6">
               <div className="flex-1">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Delivering To</h4>
-                <div className="font-bold text-slate-800">Amit Verma</div>
-                <div className="text-sm text-slate-600">123 Tech Park, Phase 2</div>
-                <div className="text-sm text-slate-600">Bengaluru, 560001</div>
+                <div className="font-bold text-slate-800">{firstName} {lastName}</div>
+                <div className="text-sm text-slate-600">{street || "123 Tech Park, Phase 2"}</div>
+                <div className="text-sm text-slate-600">{city || "Bengaluru"}, {pinCode || "560001"}</div>
               </div>
               <div className="hidden md:block w-px bg-slate-200"></div>
               <div className="flex-1">

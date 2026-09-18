@@ -29,6 +29,9 @@ let CategoriesController = class CategoriesController {
     update(id, data) {
         return this.categoriesService.update(id, data);
     }
+    applyBillingDefaults(id) {
+        return this.categoriesService.applyBillingDefaults(id);
+    }
     remove(id) {
         return this.categoriesService.remove(id);
     }
@@ -61,6 +64,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], CategoriesController.prototype, "update", null);
+__decorate([
+    Post(':id/apply-billing-defaults'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], CategoriesController.prototype, "applyBillingDefaults", null);
 __decorate([
     Delete(':id'),
     __param(0, Param('id')),

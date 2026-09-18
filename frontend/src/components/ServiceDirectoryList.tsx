@@ -3,11 +3,13 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Product, useProducts } from '@/context/ProductContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { Heart, Share2 } from 'lucide-react';
 
 export default function ServiceDirectoryList({ products }: { products: Product[] }) {
   const router = useRouter();
   const { userLocation, userLat, userLng, radiusFilter, setRadiusFilter } = useProducts();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   if (products.length === 0) {
     return <div className="text-center p-10 text-slate-400">No service providers found.</div>;
@@ -61,12 +63,14 @@ export default function ServiceDirectoryList({ products }: { products: Product[]
             <button 
               onClick={(e) => { 
                 e.stopPropagation(); 
-                alert('Added to Wishlist!'); 
+                toggleWishlist(product.id);
               }} 
-              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors border border-slate-100"
-              title="Add to Wishlist"
+              className={`w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm transition-colors border border-slate-100 ${
+                isInWishlist(product.id) ? 'text-red-500 bg-red-50' : 'text-slate-500 hover:text-red-500 hover:bg-red-50'
+              }`}
+              title={isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
             >
-              <Heart className="w-4 h-4" />
+              <Heart className="w-4 h-4" fill={isInWishlist(product.id) ? "currentColor" : "none"} />
             </button>
             <button 
               onClick={(e) => { 

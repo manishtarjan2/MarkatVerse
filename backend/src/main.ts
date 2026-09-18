@@ -18,6 +18,11 @@ async function bootstrap() {
       new ExpressAdapter(expressApp),
     );
     app.enableCors();
+    
+    // Increase JSON body payload size for Base64 image uploads
+    app.use(express.json({ limit: '50mb' }));
+    app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
     await app.init();
     cachedServer = expressApp;
   }

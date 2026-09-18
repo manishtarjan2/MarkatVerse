@@ -96,15 +96,26 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
     if (!hasB2C && hasB2B) setSellingType('B2B');
   }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle Image Upload Mock
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Image Upload
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     setIsUploadingFiles(true);
-    setTimeout(() => {
-      const newImages = Array.from(e.target.files || []).map(f => URL.createObjectURL(f));
-      setUploadedImages(prev => [...prev, ...newImages]);
-      setIsUploadingFiles(false);
-    }, 1500);
+    
+    const files = Array.from(e.target.files);
+    const base64Images: string[] = [];
+
+    for (const file of files) {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+      base64Images.push(base64);
+    }
+
+    setUploadedImages(prev => [...prev, ...base64Images]);
+    setIsUploadingFiles(false);
   };
 
   const removeImage = (index: number) => {

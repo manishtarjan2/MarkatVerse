@@ -22,4 +22,11 @@ export class AdminBusinessService {
       data
     });
   }
+
+  async updateBilling(id: string, data: { commissionType: string, commissionRate: number, subscriptionStatus: string, subscriptionStartDate: Date | null, subscriptionEndDate: Date | null }) {
+    return this.prisma.business.update({
+      where: { id },
+      data
+    });
+  }
 }

@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProducts, Product } from '@/context/ProductContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { MapPin, Heart, Share2 } from 'lucide-react';
 
 import { useUserTrends } from '@/hooks/useUserTrends';
 
 export default function ProductGrid({ products: propProducts, limit, category, personalized, recent, serviceOnly }: { products?: Product[], limit?: number, category?: string, personalized?: boolean, recent?: boolean, serviceOnly?: boolean }) {
   const { products: contextProducts, userLocation, userLat, userLng, radiusFilter, setRadiusFilter } = useProducts();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const { getTopCategories, trends } = useUserTrends();
   const router = useRouter();
   const [showLocationToast, setShowLocationToast] = useState(false);
@@ -115,13 +117,14 @@ export default function ProductGrid({ products: propProducts, limit, category, p
                 <button 
                   onClick={(e) => { 
                     e.stopPropagation(); 
-                    // Add toast or state logic for wishlist here in the future
-                    alert('Added to Wishlist!'); 
+                    toggleWishlist(product.id);
                   }} 
-                  className="w-7 h-7 sm:w-8 sm:h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors"
-                  title="Add to Wishlist"
+                  className={`w-7 h-7 sm:w-8 sm:h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm transition-colors ${
+                    isInWishlist(product.id) ? 'text-red-500 bg-red-50' : 'text-slate-500 hover:text-red-500 hover:bg-red-50'
+                  }`}
+                  title={isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
                 >
-                  <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <Heart className="w-3 h-3 sm:w-4 sm:h-4" fill={isInWishlist(product.id) ? "currentColor" : "none"} />
                 </button>
                 <button 
                   onClick={(e) => { 

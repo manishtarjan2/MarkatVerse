@@ -70,6 +70,8 @@ export type Category = {
   allowedFeatures?: FeatureRule[];
   notApplicable?: FeatureRule[];
   optionalFeatures?: FeatureRule[];
+  defaultCommissionRate?: number;
+  defaultFlatRate?: number;
 };
 
 type ProductContextType = {
@@ -654,8 +656,8 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 export function ProductProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { isSectorActive } = useSettings();
-  const [products, setProducts] = useState<Product[]>(defaultProducts);
-  const [categories, setCategories] = useState<Category[]>(defaultCategories);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [userLocation, setUserLocation] = useState<string>('Mumbai'); // Default mock location
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
@@ -688,18 +690,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             moq: item.moq,
             status: item.status
           }));
-          const isDummyActive = mappedData.some(p => p.name.includes('Dummy') && p.status !== 'SUSPENDED');
-
-          if (isDummyActive) {
-            const userLinkedDefaults = defaultProducts.map(p => ({
-              ...p,
-              sellerId: user && user.role !== 'buyer' ? user.id : p.sellerId,
-              seller: user && user.role !== 'buyer' ? (user.business?.name || user.name || p.seller) : (p.seller + ' (Dummy)')
-            }));
-            setProducts([...mappedData, ...userLinkedDefaults]);
-          } else {
-            setProducts(mappedData);
-          }
+          setProducts(mappedData);
         } else {
           setProducts([]);
         }
@@ -715,14 +706,14 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          setCategories([...data, ...defaultCategories.filter(dc => !data.find((d: any) => d.name === dc.name))]);
+          setCategories(data);
         } else {
           setCategories(defaultCategories);
         }
       })
       .catch(err => {
         console.error('Failed to fetch categories:', err);
-        setCategories(defaultCategories);
+        setCategories([]);
       });
   }, [user?.id, userLocation, userLat, userLng, radiusFilter]);
 

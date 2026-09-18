@@ -19,7 +19,6 @@ model User {
 
   business    Business?
   products    Product[]
-  orders      Order[]
   buyerLeads  Lead[]    @relation("BuyerLeads")
   sellerLeads Lead[]    @relation("SellerLeads")
   serviceQueues ServiceQueue[]
@@ -78,6 +77,9 @@ model Category {
   parameters Json?
   subcategories Json?
 
+  defaultCommissionRate Float? @default(5.0)
+  defaultFlatRate       Float? @default(999.0)
+
   parentId  String?    @db.ObjectId
   parent    Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children  Category[] @relation("CategoryToCategory")
@@ -130,7 +132,6 @@ model Product {
 
   seller     User?       @relation(fields: [sellerId], references: [id])
   category   Category?   @relation(fields: [categoryId], references: [id])
-  orderItems OrderItem[]
   leads      Lead[]
 }
 
@@ -152,27 +153,27 @@ model Lead {
 
 model Order {
   id        String      @id @default(auto()) @map("_id") @db.ObjectId
-  buyerId   String      @db.ObjectId
+  buyerId   String?     // Removed @db.ObjectId to allow "guest" or any string, or just make optional
   total     Float
   status    String      @default("PENDING") // PENDING, SHIPPED, etc
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
-  buyer User        @relation(fields: [buyerId], references: [id])
   items OrderItem[]
 }
 
 model OrderItem {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  orderId   String   @db.ObjectId
-  productId String   @db.ObjectId
-  quantity  Int
-  price     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String   @db.ObjectId
+  productId   String   
+  productName String?
+  sellerId    String?
+  quantity    Int
+  price       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
 }
 
 model ServiceQueue {

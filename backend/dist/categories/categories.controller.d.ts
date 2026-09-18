@@ -6,9 +6,9 @@ export declare class CategoriesController {
         workflow: string | null;
         id: string;
         name: string;
-        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
+        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         theme: string | null;
         icon: string | null;
         primaryType: string | null;
@@ -18,6 +18,8 @@ export declare class CategoriesController {
         notApplicable: string[];
         optionalFeatures: string[];
         subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+        defaultCommissionRate: number | null;
+        defaultFlatRate: number | null;
         parentId: string | null;
         sectorId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
@@ -25,9 +27,9 @@ export declare class CategoriesController {
         workflow: string | null;
         id: string;
         name: string;
-        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
+        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         theme: string | null;
         icon: string | null;
         primaryType: string | null;
@@ -37,6 +39,8 @@ export declare class CategoriesController {
         notApplicable: string[];
         optionalFeatures: string[];
         subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+        defaultCommissionRate: number | null;
+        defaultFlatRate: number | null;
         parentId: string | null;
         sectorId: string | null;
     }[]>;
@@ -44,9 +48,9 @@ export declare class CategoriesController {
         workflow: string | null;
         id: string;
         name: string;
-        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
+        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         theme: string | null;
         icon: string | null;
         primaryType: string | null;
@@ -56,6 +60,8 @@ export declare class CategoriesController {
         notApplicable: string[];
         optionalFeatures: string[];
         subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+        defaultCommissionRate: number | null;
+        defaultFlatRate: number | null;
         parentId: string | null;
         sectorId: string | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
@@ -63,9 +69,9 @@ export declare class CategoriesController {
         workflow: string | null;
         id: string;
         name: string;
-        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
+        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         theme: string | null;
         icon: string | null;
         primaryType: string | null;
@@ -75,16 +81,21 @@ export declare class CategoriesController {
         notApplicable: string[];
         optionalFeatures: string[];
         subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+        defaultCommissionRate: number | null;
+        defaultFlatRate: number | null;
         parentId: string | null;
         sectorId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    applyBillingDefaults(id: string): Promise<{
+        updatedCount: number;
+    }>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__CategoryClient<{
         workflow: string | null;
         id: string;
         name: string;
-        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
+        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         theme: string | null;
         icon: string | null;
         primaryType: string | null;
@@ -94,6 +105,8 @@ export declare class CategoriesController {
         notApplicable: string[];
         optionalFeatures: string[];
         subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+        defaultCommissionRate: number | null;
+        defaultFlatRate: number | null;
         parentId: string | null;
         sectorId: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;

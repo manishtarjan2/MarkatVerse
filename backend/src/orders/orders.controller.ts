@@ -17,18 +17,23 @@ export class OrdersController {
     return this.ordersService.findAll();
   }
 
+  @Get('seller/:sellerId')
+  findBySeller(@Param('sellerId') sellerId: string) {
+    return this.ordersService.findBySeller(sellerId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(+id);
+    return this.ordersService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.ordersService.update(+id, updateOrderDto);
+    return this.ordersService.update(id, updateOrderDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.ordersService.remove(+id);
+    return this.ordersService.remove(id);
   }
 }

@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import {
   MapPin, Star, ShieldCheck, Clock, Calendar, CheckCircle2, PhoneCall,
   Info, Camera, Users, Ticket, ChevronRight, Loader2, RefreshCw,
-  Scissors, ArrowLeft, Share2, Heart, Zap, TrendingUp, CalendarClock
+  Scissors, ArrowLeft, Share2, Heart, Zap, TrendingUp, CalendarClock, Sparkles
 } from 'lucide-react';
 
 // ─── Dynamic Walk-in Services ───────────────────────────────────────────────────
@@ -53,8 +53,12 @@ export default function SmartQueueWidget({ service }: { service: any }) {
   const [joining, setJoining] = useState(false);
   
   interface ServiceItem { label: string; price: number; originalPrice?: number; discount?: number; emoji: string; }
-  const emoji = service.category?.toLowerCase().includes('doctor') || service.category?.toLowerCase().includes('clinic') ? '🩺' : 
-                service.category?.toLowerCase().includes('spa') ? '💆' : '✂️';
+  const cat = service.category?.toLowerCase() || '';
+  const emoji = 
+    cat.includes('doctor') || cat.includes('clinic') || cat.includes('medical') || cat.includes('hospital') || cat.includes('dentist') ? '🩺' : 
+    cat.includes('spa') || cat.includes('massage') ? '💆‍♀️' : 
+    cat.includes('salon') || cat.includes('saloon') || cat.includes('beauty') || cat.includes('parlor') || cat.includes('parlour') ? '💇‍♀️' :
+    cat.includes('nail') || cat.includes('pedicure') ? '💅' : '✂️';
   let availableServices: ServiceItem[] = [];
   if (service.options && service.options.length > 0) {
     availableServices = service.options.map((opt: { name: string; price: number; discountPercentage?: number }) => {
@@ -89,6 +93,7 @@ export default function SmartQueueWidget({ service }: { service: any }) {
   const [err, setErr] = useState('');
 
   useEffect(() => {
+    let isMounted = true;
     const fetchQ = async () => {
       try {
         let list: QueueSummary[] = [];
@@ -109,7 +114,7 @@ export default function SmartQueueWidget({ service }: { service: any }) {
           const all: QueueSummary[] = text ? JSON.parse(text) : [];
           const targetShopName = service.seller || service.name || 'Walk-in Service';
           const scoped = Array.isArray(all)
-            ? all.filter(q => q.shopName === targetShopName)
+            ? all.filter((q: any) => q.shopName === targetShopName)
             : [];
           if (scoped.length > 0) list = scoped;
         }
@@ -128,8 +133,10 @@ export default function SmartQueueWidget({ service }: { service: any }) {
           if (newQueue && newQueue.id) list = [newQueue];
         }
 
-        setQueues(list);
-        if (list.length > 0) setSelected(list[0]);
+        if (isMounted) {
+          setQueues(list);
+          if (list.length > 0) setSelected(list[0]);
+        }
       } catch (e) {
         console.error(e);
       } finally {
@@ -139,19 +146,28 @@ export default function SmartQueueWidget({ service }: { service: any }) {
     fetchQ();
   }, [service.sellerId, service.seller]);
 
-  const fetchStatus = useCallback(async (showRefresh = false) => {
+  const fetchStatus = useCallback(async (showRefresh = false, isMounted = { current: true }) => {
     if (!selected) return;
-    if (showRefresh) setRefreshing(true);
+    if (showRefresh && isMounted.current) setRefreshing(true);
     try {
       const r = await fetch(`${API}/service-queue/${selected.id}/status`);
-      setStatus(await r.json());
-    } catch {/* ignore */} finally { setRefreshing(false); }
+      if (r.ok) {
+        const st = await r.json();
+        if (isMounted.current) setStatus(st);
+      }
+    } catch (e) {} finally {
+      if (showRefresh && isMounted.current) setRefreshing(false);
+    }
   }, [selected]);
 
   useEffect(() => {
-    fetchStatus();
-    const i = setInterval(() => fetchStatus(), 12000);
-    return () => clearInterval(i);
+    let isMounted = { current: true };
+    fetchStatus(false, isMounted);
+    const i = setInterval(() => fetchStatus(false, isMounted), 12000);
+    return () => {
+      isMounted.current = false;
+      clearInterval(i);
+    };
   }, [fetchStatus]);
 
   const join = async () => {
@@ -191,6 +207,27 @@ export default function SmartQueueWidget({ service }: { service: any }) {
       // Save active token to local storage for global widget
       if (d?.token?.id) {
         localStorage.setItem('markatverse_active_token_id', d.token.id);
+        
+        // Also save to a list of tokens
+        try {
+          const existing = localStorage.getItem('markatverse_active_tokens');
+          const tokens = existing ? JSON.parse(existing) : [];
+          // Avoid duplicates
+          if (!tokens.find((t: any) => t.id === d.token.id)) {
+            tokens.push({
+              id: d.token.id,
+              serviceName: service.name || 'Service',
+              shopName: service.sellerName || selected?.shopName || 'Store',
+              category: service.category || '',
+              tokenNumber: d.token.tokenNumber,
+              timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('markatverse_active_tokens', JSON.stringify(tokens));
+          }
+        } catch (err) {
+          console.error('Error saving tokens to local storage', err);
+        }
+        
         // Dispatch storage event manually for same-tab updates
         window.dispatchEvent(new Event('storage'));
       }
@@ -203,6 +240,27 @@ export default function SmartQueueWidget({ service }: { service: any }) {
     <div className="space-y-4">
       <div className="relative bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-3xl p-6 overflow-hidden text-center shadow-2xl shadow-purple-300">
         <div className="absolute inset-0 opacity-10" style={{backgroundImage:'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize:'30px 30px'}} />
+        
+        {/* Header Information added for the booked token */}
+        <div className="relative z-10 mb-6 pb-4 border-b border-white/20">
+          <div className="flex justify-center mb-2">
+            <span className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> Booked Successfully
+            </span>
+          </div>
+          <div className="text-white font-bold text-xl flex items-center justify-center gap-2">
+            <span className="text-2xl">{emoji}</span> {service.seller || selected?.shopName || service.name}
+          </div>
+          <div className="text-purple-200 text-sm font-medium mt-1">
+            {selectedServices.map(s => s.label).join(', ')}
+          </div>
+          {bookingMode === 'APPOINTMENT' && (
+            <div className="text-emerald-300 text-xs font-bold mt-2 bg-emerald-900/40 inline-block px-3 py-1 rounded-full border border-emerald-500/30">
+              📅 {appointmentDate} at {appointmentTime}
+            </div>
+          )}
+        </div>
+
         <div className="relative z-10">
           <div className="text-white/60 text-xs font-black uppercase tracking-widest mb-1">Your Token Number</div>
           <div className="text-[5rem] font-black text-white leading-none drop-shadow-2xl">#{result.token.tokenNumber}</div>
@@ -477,7 +535,7 @@ export default function SmartQueueWidget({ service }: { service: any }) {
   const openQueue = selected;
   const waiting = status?.waitingCount ?? 0;
   const isOpen = status?.queue.isOpen ?? openQueue?.isOpen ?? false;
-  const serving = status?.serving;
+  const serving = Array.isArray(status?.serving) ? status?.serving[0] : status?.serving;
   const etaIfJoinNow = (waiting + 1) * (status?.queue.avgMinutes ?? selected?.avgMinutes ?? 20);
 
   return (

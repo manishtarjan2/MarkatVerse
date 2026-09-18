@@ -25,6 +25,11 @@ export class CategoriesController {
     return this.categoriesService.update(id, data);
   }
 
+  @Post(':id/apply-billing-defaults')
+  applyBillingDefaults(@Param('id') id: string) {
+    return this.categoriesService.applyBillingDefaults(id);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.categoriesService.remove(id);

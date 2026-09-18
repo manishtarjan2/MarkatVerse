@@ -7,9 +7,9 @@ export declare class ListingsController {
             workflow: string | null;
             id: string;
             name: string;
-            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
+            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             theme: string | null;
             icon: string | null;
             primaryType: string | null;
@@ -19,24 +19,26 @@ export declare class ListingsController {
             notApplicable: string[];
             optionalFeatures: string[];
             subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+            defaultCommissionRate: number | null;
+            defaultFlatRate: number | null;
             parentId: string | null;
             sectorId: string | null;
         } | null;
         businessType: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             mainType: import(".prisma/client").$Enums.MainType;
             isActive: boolean;
         };
         sector: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             isActive: boolean;
             businessTypeId: string;
         };
@@ -46,9 +48,9 @@ export declare class ListingsController {
         };
     } & {
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;
@@ -65,9 +67,9 @@ export declare class ListingsController {
             workflow: string | null;
             id: string;
             name: string;
-            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
+            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             theme: string | null;
             icon: string | null;
             primaryType: string | null;
@@ -77,24 +79,26 @@ export declare class ListingsController {
             notApplicable: string[];
             optionalFeatures: string[];
             subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+            defaultCommissionRate: number | null;
+            defaultFlatRate: number | null;
             parentId: string | null;
             sectorId: string | null;
         } | null;
         businessType: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             mainType: import(".prisma/client").$Enums.MainType;
             isActive: boolean;
         };
         sector: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             isActive: boolean;
             businessTypeId: string;
         };
@@ -104,9 +108,9 @@ export declare class ListingsController {
         };
     } & {
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;
@@ -120,9 +124,9 @@ export declare class ListingsController {
     }>;
     createListing(data: any): Promise<{
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;
@@ -136,9 +140,9 @@ export declare class ListingsController {
     }>;
     updateListing(id: string, data: any): Promise<{
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;
@@ -152,9 +156,9 @@ export declare class ListingsController {
     }>;
     deleteListing(id: string): Promise<{
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;

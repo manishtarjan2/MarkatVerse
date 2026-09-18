@@ -7,18 +7,18 @@ export declare class ConfigurationService {
         sectors: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             isActive: boolean;
             businessTypeId: string;
         }[];
     } & {
         id: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         mainType: import(".prisma/client").$Enums.MainType;
         isActive: boolean;
     })[]>;
@@ -29,9 +29,9 @@ export declare class ConfigurationService {
     }): Promise<{
         id: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         mainType: import(".prisma/client").$Enums.MainType;
         isActive: boolean;
     }>;
@@ -40,9 +40,9 @@ export declare class ConfigurationService {
             workflow: string | null;
             id: string;
             name: string;
-            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
+            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             theme: string | null;
             icon: string | null;
             primaryType: string | null;
@@ -52,15 +52,17 @@ export declare class ConfigurationService {
             notApplicable: string[];
             optionalFeatures: string[];
             subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+            defaultCommissionRate: number | null;
+            defaultFlatRate: number | null;
             parentId: string | null;
             sectorId: string | null;
         }[];
     } & {
         id: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         businessTypeId: string;
     })[]>;
@@ -71,9 +73,9 @@ export declare class ConfigurationService {
     }): Promise<{
         id: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         businessTypeId: string;
     }>;
@@ -84,9 +86,9 @@ export declare class ConfigurationService {
     }): Promise<{
         id: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         isActive: boolean;
         businessTypeId: string;
     }>;
@@ -94,9 +96,9 @@ export declare class ConfigurationService {
         workflow: string | null;
         id: string;
         name: string;
-        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
+        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         theme: string | null;
         icon: string | null;
         primaryType: string | null;
@@ -106,6 +108,8 @@ export declare class ConfigurationService {
         notApplicable: string[];
         optionalFeatures: string[];
         subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+        defaultCommissionRate: number | null;
+        defaultFlatRate: number | null;
         parentId: string | null;
         sectorId: string | null;
     }[]>;
@@ -117,9 +121,9 @@ export declare class ConfigurationService {
         workflow: string | null;
         id: string;
         name: string;
-        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
+        parameters: import("@prisma/client/runtime/library").JsonValue | null;
         theme: string | null;
         icon: string | null;
         primaryType: string | null;
@@ -129,15 +133,17 @@ export declare class ConfigurationService {
         notApplicable: string[];
         optionalFeatures: string[];
         subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+        defaultCommissionRate: number | null;
+        defaultFlatRate: number | null;
         parentId: string | null;
         sectorId: string | null;
     }>;
     getWorkflows(): Promise<{
         id: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         version: number;
         steps: import("@prisma/client/runtime/library").JsonValue;
     }[]>;
@@ -148,9 +154,9 @@ export declare class ConfigurationService {
     }): Promise<{
         id: string;
         name: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         version: number;
         steps: import("@prisma/client/runtime/library").JsonValue;
     }>;

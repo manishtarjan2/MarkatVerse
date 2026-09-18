@@ -42,14 +42,12 @@ export default function StaffResourceManagementModal({
 
   const uploadImage = async () => {
     if (!staffImage) return null;
-    const formData = new FormData();
-    formData.append('files', staffImage);
-    const res = await fetch(`${API_URL}/upload`, {
-      method: 'POST',
-      body: formData,
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(staffImage);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
     });
-    const data = await res.json();
-    return data.urls[0];
   };
 
   const handleAddStaff = async (e: React.FormEvent) => {

@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useProducts, useCategoryRules } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
+import { useWishlist } from '@/context/WishlistContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useUserTrends } from '@/hooks/useUserTrends';
-import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin, PhoneCall, CalendarClock } from 'lucide-react';
+import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin, PhoneCall, CalendarClock, Heart } from 'lucide-react';
 import SmartQueueWidget from '@/components/SmartQueueWidget';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -18,6 +19,7 @@ export default function ProductDetails() {
   const { addToCart } = useCart();
   const { products } = useProducts();
   const { user, updateUserRole, login } = useAuth();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const [activeImage, setActiveImage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rfqQuantity, setRfqQuantity] = useState(1);
@@ -81,6 +83,9 @@ export default function ProductDetails() {
   }
   
   const isElite = user?.role === 'elite';
+  const WALK_IN_CATEGORIES = ['salon', 'saloon', 'beauty', 'hair', 'barber', 'spa', 'nail', 'massage', 'pedicure', 'doctor', 'clinic', 'medical', 'hospital', 'dentist'];
+  const isServiceQueue = product ? WALK_IN_CATEGORIES.some(c => product.category?.toLowerCase().includes(c) || product.subcategory?.toLowerCase().includes(c)) : false;
+
   const isRetail = noRulesDefined
     ? !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product?.category || '')
     : hasProductStock;
@@ -195,86 +200,81 @@ export default function ProductDetails() {
           </div>
           
           {/* Thumbnails */}
-          <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
-            {productImages.map((img, index) => (
-              <div 
-                key={index} 
-                onClick={() => setActiveImage(index)}
-                className={`w-20 h-20 shrink-0 bg-slate-50 rounded-xl cursor-pointer flex flex-col items-center justify-center border-2 transition-all overflow-hidden shadow-sm
-                  ${activeImage === index ? 'border-blue-600 ring-2 ring-blue-100' : 'border-slate-200 hover:border-blue-300 opacity-70 hover:opacity-100'}
-                `}
-              >
-                {img.url ? (
-                  <img src={img.url} alt="thumbnail" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="scale-50 text-slate-400">{img.icon}</div>
-                )}
-              </div>
-            ))}
-          </div>
+          {productImages.length > 1 && (
+            <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
+              {productImages.map((img, index) => (
+                <div 
+                  key={index} 
+                  onClick={() => setActiveImage(index)}
+                  className={`w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-slate-50 rounded-xl cursor-pointer flex flex-col items-center justify-center border-2 transition-all overflow-hidden shadow-sm
+                    ${activeImage === index ? 'border-blue-600 ring-2 ring-blue-100' : 'border-slate-200 hover:border-blue-300 opacity-70 hover:opacity-100'}
+                  `}
+                >
+                  {img.url ? (
+                    <img src={img.url} alt="thumbnail" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="scale-50 text-slate-400">{img.icon}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           
           {/* Sold By - Company Details Card */}
-          <div className="mt-8 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Sold by Company</div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0 border border-blue-100">
-                  <Building2 className="w-6 h-6" />
+          <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 sm:mb-4">Sold by</div>
+            <div className="flex flex-row items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0 border border-blue-100">
+                  <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
                   <Link href={`/seller/${encodeURIComponent(product.seller)}`} className="no-underline">
-                    <div className="font-bold text-lg text-slate-900 hover:text-blue-600 transition-colors flex items-center gap-2">
+                    <div className="font-bold text-base sm:text-lg text-slate-900 hover:text-blue-600 transition-colors flex items-center gap-1.5 flex-wrap">
                       {product.seller}
-                      <span className="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-bold tracking-tight">
-                        <ShieldCheck className="w-3 h-3" /> TrustSEAL Verified
+                      <span className="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 font-bold tracking-tight">
+                        <ShieldCheck className="w-2.5 h-2.5" /> Verified
                       </span>
                     </div>
                   </Link>
-                  <div className="text-sm text-slate-500 mt-1 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5" /> {product.location}
+                  <div className="text-xs sm:text-sm text-slate-500 mt-0.5 sm:mt-1 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> {product.location}
                   </div>
                 </div>
               </div>
-              <button className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold text-sm transition-colors border border-slate-200 shrink-0">
+              <button className="hidden sm:block px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold text-sm transition-colors border border-slate-200 shrink-0">
                 + Follow
               </button>
             </div>
             
-            <div className="flex gap-10 mt-6 pt-6 border-t border-slate-100">
+            <div className="flex gap-6 sm:gap-10 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-100">
               <div>
-                <div className="text-xs text-slate-500 font-medium mb-1">Seller Rating</div>
-                <div className="font-bold text-amber-500 flex items-center gap-1">
-                  {product.rating || 'New'} <span className="text-slate-400 font-normal text-xs ml-1">({product.reviews || '0'} Reviews)</span>
+                <div className="text-[10px] sm:text-xs text-slate-500 font-medium mb-0.5 sm:mb-1">Seller Rating</div>
+                <div className="font-bold text-amber-500 flex items-center gap-1 text-sm sm:text-base">
+                  {product.rating || 'New'} <span className="text-slate-400 font-normal text-[10px] sm:text-xs ml-0.5 sm:ml-1">({product.reviews || '0'} Reviews)</span>
                 </div>
               </div>
               <div>
-                <div className="text-xs text-slate-500 font-medium mb-1">Active Since</div>
-                <div className="font-bold text-slate-900">{new Date().getFullYear()}</div>
+                <div className="text-[10px] sm:text-xs text-slate-500 font-medium mb-0.5 sm:mb-1">Active Since</div>
+                <div className="font-bold text-slate-900 text-sm sm:text-base">{new Date().getFullYear()}</div>
               </div>
             </div>
 
             {isElite && (
-              <div className="mt-6 pt-6 border-t border-slate-100">
-                <div className="w-full bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-amber-900 font-bold text-sm flex items-center gap-2">
-                      <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      Elite Member Privilege: Direct Seller Contact
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-100">
+                <div className="w-full bg-gradient-to-r from-amber-50 to-orange-50 p-3 sm:p-4 rounded-xl border border-amber-200 shadow-sm">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <div className="text-amber-900 font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2">
+                      <Star className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500 fill-amber-500" />
+                      Elite Privilege: Direct Contact
                     </div>
-                    <span className="bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">Verified</span>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-6">
-                    <div className="flex items-center gap-3 text-slate-800 font-medium">
-                      <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                        <PhoneCall className="w-4 h-4" />
+                  <div className="flex flex-col gap-2 sm:gap-6">
+                    <div className="flex items-center gap-2 sm:gap-3 text-slate-800 font-medium text-xs sm:text-sm">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                        <PhoneCall className="w-3 h-3 sm:w-4 sm:h-4" />
                       </div>
                       +91-9876543210
-                    </div>
-                    <div className="flex items-center gap-3 text-slate-800 font-medium">
-                      <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-lg">
-                        @
-                      </div>
-                      contact@{product.seller.toLowerCase().replace(/[^a-z0-9]/g, '')}.com
                     </div>
                   </div>
                 </div>
@@ -297,10 +297,23 @@ export default function ProductDetails() {
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 leading-tight">{product.name}</h1>
           
-          <div className="flex flex-wrap items-center gap-4 mb-6">
-            <span className="text-amber-500 font-medium flex items-center gap-1">
-              <Star className="w-4 h-4 fill-amber-500" /> {product.rating} <span className="text-slate-500 font-normal">({product.reviews} ratings)</span>
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-amber-500 font-medium flex items-center gap-1">
+                <Star className="w-4 h-4 fill-amber-500" /> {product.rating} <span className="text-slate-500 font-normal">({product.reviews} ratings)</span>
+              </span>
+            </div>
+            <button 
+              onClick={() => toggleWishlist(product.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors shadow-sm ${
+                isInWishlist(product.id) 
+                  ? 'border-red-200 bg-red-50 text-red-600' 
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-500'
+              }`}
+            >
+              <Heart className="w-5 h-5" fill={isInWishlist(product.id) ? "currentColor" : "none"} />
+              <span className="text-sm font-bold">{isInWishlist(product.id) ? 'Saved' : 'Save'}</span>
+            </button>
           </div>
 
           <div className="p-6 bg-slate-50 rounded-2xl mb-8 border border-slate-200 shadow-sm">
@@ -466,25 +479,29 @@ export default function ProductDetails() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-bold text-slate-800 text-sm uppercase tracking-wider">
-                      Selected Option: <span className="text-blue-600 font-extrabold">{activeOption?.name}</span>
+                      {isServiceQueue ? (
+                        'Available Services'
+                      ) : (
+                        <>Selected Option: <span className="text-blue-600 font-extrabold">{activeOption?.name}</span></>
+                      )}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {product.options.map(option => {
                       const isSelected = selectedOptionId === option.id;
                       return (
-                        <button 
+                        <div 
                           key={option.id}
-                          onClick={() => setSelectedOptionId(option.id)}
-                          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all border-2 flex flex-col items-start gap-1 ${isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20' : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'}`}
+                          onClick={() => { if (!isServiceQueue) setSelectedOptionId(option.id); }}
+                          className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all border-2 flex flex-col items-start gap-1 ${isServiceQueue ? 'bg-slate-50 text-slate-700 border-slate-200 cursor-default' : (isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20 cursor-pointer' : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 cursor-pointer')}`}
                         >
                           <span>{option.name}</span>
                           {option.discountPercentage && option.discountPercentage > 0 && (
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-green-100 text-green-700'}`}>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${(!isServiceQueue && isSelected) ? 'bg-white/20 text-white' : 'bg-green-100 text-green-700'}`}>
                               {option.discountPercentage}% OFF
                             </span>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -777,11 +794,23 @@ export default function ProductDetails() {
           <div className="mb-10">
             <h3 className="text-lg font-bold text-slate-900 mb-4">Important Details</h3>
             <ul className="pl-5 text-slate-600 leading-loose list-disc">
-              <li>Premium build quality with durable materials</li>
-              <li>1 Year International Warranty included</li>
-              <li>7 Days Replacement Policy available</li>
-              <li>Free Express Shipping for Prime Members</li>
-              <li>Cash on Delivery eligible in your location</li>
+              {isServiceQueue ? (
+                <>
+                  <li>Please arrive 5 minutes prior to your booking.</li>
+                  <li>Rescheduling is allowed up to 1 hour before the time.</li>
+                  <li>Cancellations are subject to standard policies.</li>
+                  <li>You can track your live queue status directly on your dashboard.</li>
+                  <li>Ensure you provide the correct contact details while booking.</li>
+                </>
+              ) : (
+                <>
+                  <li>Premium build quality with durable materials</li>
+                  <li>1 Year International Warranty included</li>
+                  <li>7 Days Replacement Policy available</li>
+                  <li>Free Express Shipping for Prime Members</li>
+                  <li>Cash on Delivery eligible in your location</li>
+                </>
+              )}
             </ul>
           </div>
         </div>

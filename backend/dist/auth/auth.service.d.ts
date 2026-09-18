@@ -61,12 +61,12 @@ export declare class AuthService {
             businessType: string;
             id: string;
             name: string;
+            createdAt: Date;
+            updatedAt: Date;
             description: string | null;
             pincode: string | null;
             latitude: number | null;
             longitude: number | null;
-            createdAt: Date;
-            updatedAt: Date;
             userId: string;
             logo: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
@@ -81,9 +81,9 @@ export declare class AuthService {
             subscriptionEndDate: Date | null;
         }) | null;
         id: string;
-        name: string;
         email: string | null;
         phone: string | null;
+        name: string;
         role: string;
     }>;
     forgotPassword(identifier: string): Promise<{

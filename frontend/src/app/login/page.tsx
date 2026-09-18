@@ -77,6 +77,7 @@ export default function LoginPage() {
     if (regPassword !== regConfirmPassword) { setError("Passwords do not match"); return; }
     if (regPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
     if (!regEmail && !regPhone) { setError("Email or Phone is required"); return; }
+    if (regPhone && !/^\d{10}$/.test(regPhone.replace(/\D/g, ''))) { setError("Phone number must be exactly 10 digits"); return; }
 
     setIsLoading(true);
     try {
@@ -351,10 +352,23 @@ export default function LoginPage() {
                 <div>
                   <label className={labelCls}>Phone Number <span className="normal-case font-normal text-slate-400">(optional if email given)</span></label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="tel" value={regPhone} onChange={e => setRegPhone(e.target.value)}
-                      placeholder="9876543210" className={inputCls} />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <Phone className="w-4 h-4 text-slate-400" />
+                      <span className="text-slate-500 font-medium">+91</span>
+                      <div className="w-px h-4 bg-slate-200 ml-1"></div>
+                    </div>
+                    <input type="tel" maxLength={10} value={regPhone} onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setRegPhone(val);
+                      }}
+                      placeholder="9876543210" className={`${inputCls} pl-[5.5rem]`} />
                   </div>
+                  {regPhone && regPhone.length > 0 && regPhone.length < 10 && (
+                    <p className="text-xs text-red-500 mt-1">Phone number must be 10 digits</p>
+                  )}
+                  {regPhone && regPhone.length === 10 && (
+                    <p className="text-xs text-emerald-500 mt-1 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Valid phone number</p>
+                  )}
                 </div>
 
                 <div>

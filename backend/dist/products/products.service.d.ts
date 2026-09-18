@@ -11,6 +11,9 @@ export declare class ProductsService {
         success: boolean;
         message: string;
     }>;
+    getDummyStatus(): Promise<{
+        enabled: boolean;
+    }>;
     remove(id: string): Promise<{
         success: boolean;
     }>;

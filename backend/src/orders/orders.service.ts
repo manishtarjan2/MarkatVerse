@@ -1,26 +1,89 @@
 import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { UpdateOrderDto } from './dto/update-order.dto.js';
+import { PrismaService } from '../prisma.service.js';
 
 @Injectable()
 export class OrdersService {
-  create(createOrderDto: CreateOrderDto) {
-    return { message: 'This action adds a new order' };
+  constructor(private prisma: PrismaService) {}
+
+  async create(createOrderDto: CreateOrderDto) {
+    return this.prisma.order.create({
+      data: {
+        buyerId: createOrderDto.buyerId,
+        total: createOrderDto.total,
+        status: createOrderDto.status || 'PENDING',
+        items: {
+          create: createOrderDto.items.map(item => ({
+            productId: item.productId,
+            productName: item.productName || 'Unknown Product',
+            sellerId: item.sellerId || 'unknown-seller',
+            quantity: item.quantity,
+            price: item.price
+          }))
+        }
+      },
+      include: {
+        items: true
+      }
+    });
   }
 
-  findAll() {
-    return [];
+  async findAll() {
+    const orders = await this.prisma.order.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    // Map to match frontend expectations
+    return orders.map(o => ({
+      id: o.id,
+      customerId: o.buyerId,
+      customerName: o.buyerId || 'Guest',
+      totalAmount: o.total,
+      status: o.status,
+      createdAt: o.createdAt
+    }));
   }
 
-  findOne(id: number) {
-    return { message: `This action returns a #${id} order` };
+  async findBySeller(sellerId: string) {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        items: {
+          some: {
+            sellerId: sellerId
+          }
+        }
+      },
+      include: {
+        items: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return orders.map(o => ({
+      id: o.id,
+      buyer: o.buyerId || 'Guest User',
+      item: o.items.map(i => i.productName || 'Unknown Item').join(', '),
+      amount: `₹${o.total}`,
+      date: new Date(o.createdAt).toLocaleDateString(),
+      status: o.status,
+      customerId: o.buyerId
+    }));
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return { message: `This action updates a #${id} order` };
+  findOne(id: string) {
+    return this.prisma.order.findUnique({ where: { id } });
   }
 
-  remove(id: number) {
-    return { message: `This action removes a #${id} order` };
+  async update(id: string, updateOrderDto: UpdateOrderDto) {
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: { status: updateOrderDto.status }
+    });
+    return updated;
+  }
+
+  remove(id: string) {
+    return this.prisma.order.delete({ where: { id } });
   }
 }

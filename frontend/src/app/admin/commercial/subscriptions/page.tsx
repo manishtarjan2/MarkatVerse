@@ -6,7 +6,6 @@ import { useAdminRole } from '@/context/AdminRoleContext';
 import { ShieldAlert, Receipt, DollarSign, Search, Activity, FileText, Settings, X, Calendar, Percent } from 'lucide-react';
 
 export default function AdminCommercialSubscriptionsPage() {
-  const { allUsers } = useAuth();
   const { canEdit } = useAdminRole();
   const hasEditPermission = canEdit('commercial') || canEdit('super_admin');
   
@@ -23,34 +22,23 @@ export default function AdminCommercialSubscriptionsPage() {
     const fetchBillingData = async () => {
       setIsLoading(true);
       try {
-        const sellers = allUsers.filter(u => u.role === 'business' || u.role === 'seller' || u.role === 'SELLER');
+        const res = await fetch(`${API_URL}/admin/businesses`);
+        if (!res.ok) throw new Error('Failed to fetch businesses');
+        const businesses = await res.json();
+        
         let data = [];
-        const storedPlans = JSON.parse(localStorage.getItem('commercial_plans') || '{}');
+        
+        for (const business of businesses) {
+          const seller = business.user;
+          const walletBal = business.wallet?.balance || 0;
+          const walletId = business.wallet?.id || '';
 
-        for (const seller of sellers) {
-          const wRes = await fetch(`${API_URL}/wallet/business/${seller.id}`);
-          let walletBal = 0;
-          let walletId = '';
-          if (wRes.ok) {
-            const wData = await wRes.json();
-            walletBal = wData.balance || 0;
-            walletId = wData.id;
-          }
-
-          // Use stored plans, or fallback to mock defaults if first time
-          const isCommission = seller.name?.length % 2 === 0;
-          
-          let subStart = new Date();
-          subStart.setDate(subStart.getDate() - (Math.random() * 30));
-          let subNext = new Date(subStart);
-          subNext.setMonth(subNext.getMonth() + 1);
-
-          const planConfig = storedPlans[seller.id] || {
-            planType: isCommission ? 'commission' : 'subscription',
-            commissionRate: isCommission ? 5 + (seller.name?.length % 5) : 5, 
-            flatRate: isCommission ? 999 : 999,
-            subStart: subStart.toISOString(),
-            subNext: subNext.toISOString()
+          const planConfig = {
+            planType: business.commissionType === 'PERCENTAGE' ? 'commission' : 'subscription',
+            commissionRate: business.commissionRate || 5, 
+            flatRate: business.commissionType === 'FIXED' ? business.commissionRate : 999,
+            subStart: business.subscriptionStartDate || new Date().toISOString(),
+            subNext: business.subscriptionEndDate || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
           };
 
           let owedToPlatform = 0;
@@ -65,10 +53,11 @@ export default function AdminCommercialSubscriptionsPage() {
           }
 
           data.push({
-            id: seller.id,
-            name: seller.name,
-            email: seller.email,
-            phone: seller.phone,
+            id: business.id, // we use business id for billing updates
+            userId: business.userId,
+            name: business.name || seller?.name || 'Unknown',
+            email: seller?.email || 'N/A',
+            phone: seller?.phone || 'N/A',
             walletId,
             walletBalance: walletBal,
             ...planConfig,
@@ -76,7 +65,7 @@ export default function AdminCommercialSubscriptionsPage() {
             totalEarnedFromShop,
           });
         }
-        setBillingData(data);
+        setBillingData(data.filter((d: any) => d.planType === 'subscription'));
       } catch (e) {
         console.error("Failed to fetch billing data", e);
       } finally {
@@ -84,12 +73,8 @@ export default function AdminCommercialSubscriptionsPage() {
       }
     };
 
-    if (allUsers.length > 0) {
-      fetchBillingData();
-    } else {
-      setIsLoading(false);
-    }
-  }, [allUsers]);
+    fetchBillingData();
+  }, []);
 
   const handleChargePlatformFee = async (sellerId: string) => {
     if (!hasEditPermission) return;
@@ -108,7 +93,7 @@ export default function AdminCommercialSubscriptionsPage() {
     }
   };
 
-  const handleSavePlan = (e: React.FormEvent) => {
+  const handleSavePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Recalculate
@@ -120,20 +105,32 @@ export default function AdminCommercialSubscriptionsPage() {
     }
     const updatedSeller = { ...editingSeller, owedToPlatform: newOwed };
 
-    // Save to localStorage so Dashboard can see it
-    const storedPlans = JSON.parse(localStorage.getItem('commercial_plans') || '{}');
-    storedPlans[editingSeller.id] = {
-      planType: editingSeller.planType,
-      commissionRate: editingSeller.commissionRate,
-      flatRate: editingSeller.flatRate,
-      subStart: editingSeller.subStart,
-      subNext: editingSeller.subNext
-    };
-    localStorage.setItem('commercial_plans', JSON.stringify(storedPlans));
+    try {
+      const res = await fetch(`${API_URL}/admin/businesses/${editingSeller.id}/billing`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commissionType: editingSeller.planType === 'commission' ? 'PERCENTAGE' : 'FIXED',
+          commissionRate: editingSeller.planType === 'commission' ? editingSeller.commissionRate : editingSeller.flatRate,
+          subscriptionStatus: 'ACTIVE',
+          subscriptionStartDate: editingSeller.subStart,
+          subscriptionEndDate: editingSeller.subNext,
+        })
+      });
 
-    // Update local state 
-    setBillingData(prev => prev.map(s => s.id === editingSeller.id ? updatedSeller : s));
-    setEditingSeller(null);
+      if (!res.ok) throw new Error('Failed to update billing details');
+
+      // Update local state 
+      if (editingSeller.planType !== 'subscription') {
+        setBillingData(prev => prev.filter(s => s.id !== editingSeller.id));
+      } else {
+        setBillingData(prev => prev.map(s => s.id === editingSeller.id ? updatedSeller : s));
+      }
+      setEditingSeller(null);
+    } catch (error) {
+      console.error(error);
+      alert('Error updating billing plan');
+    }
   };
 
   const filteredData = billingData.filter(s => s.name?.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -143,8 +140,8 @@ export default function AdminCommercialSubscriptionsPage() {
       
       {/* Header */}
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Seller Billing & Plans</h1>
-        <p className="text-slate-400 mt-2 text-sm">Monitor business subscription types, adjust custom commission rates, and view historical platform earnings per shop.</p>
+        <h1 className="text-3xl font-bold text-white tracking-tight">Seller Subscriptions</h1>
+        <p className="text-slate-400 mt-2 text-sm">Monitor business subscription types, manage flat rates, and view next billing dates.</p>
       </header>
 
       {!hasEditPermission && (
@@ -155,7 +152,7 @@ export default function AdminCommercialSubscriptionsPage() {
       )}
 
       {/* Top Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg relative overflow-hidden">
           <div className="text-slate-400 font-bold text-sm mb-4">Total Pending Collection</div>
           <div className="text-3xl font-black text-emerald-400 mb-1">
@@ -165,17 +162,9 @@ export default function AdminCommercialSubscriptionsPage() {
         </div>
         
         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg relative overflow-hidden">
-          <div className="text-slate-400 font-bold text-sm mb-4">Commission-based Sellers</div>
-          <div className="text-3xl font-black text-white mb-1">
-            {billingData.filter(s => s.planType === 'commission').length}
-          </div>
-          <div className="text-xs text-slate-500 mt-2">Custom % per transaction</div>
-        </div>
-
-        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg relative overflow-hidden">
           <div className="text-slate-400 font-bold text-sm mb-4">Subscription Sellers</div>
           <div className="text-3xl font-black text-white mb-1">
-            {billingData.filter(s => s.planType === 'subscription').length}
+            {billingData.length}
           </div>
           <div className="text-xs text-slate-500 mt-2">Paying flat monthly fees</div>
         </div>
@@ -228,18 +217,12 @@ export default function AdminCommercialSubscriptionsPage() {
                       <div className="text-xs text-indigo-400 font-medium mt-0.5">Total Earned from Shop: ₹{seller.totalEarnedFromShop.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
                     </td>
                     <td className="p-4">
-                      {seller.planType === 'commission' ? (
-                        <div className="inline-flex items-center gap-1.5 bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded border border-indigo-500/20 text-xs font-bold uppercase tracking-wider">
-                          <Percent className="w-3 h-3" /> Pay-As-You-Go ({seller.commissionRate}%)
-                        </div>
-                      ) : (
                         <div className="inline-flex flex-col gap-1 text-xs">
                           <div className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-400 px-2 py-1 rounded border border-amber-500/20 font-bold uppercase tracking-wider w-fit">
                             <FileText className="w-3 h-3" /> Subs (₹{seller.flatRate}/mo)
                           </div>
                           <div className="text-slate-500 font-mono">Next: {new Date(seller.subNext).toLocaleDateString()}</div>
                         </div>
-                      )}
                     </td>
                     <td className="p-4 text-right">
                       <div className="font-black text-emerald-400 bg-emerald-500/5 inline-block px-3 py-1 rounded-lg border border-emerald-500/10">
@@ -293,15 +276,15 @@ export default function AdminCommercialSubscriptionsPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="mb-4">
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Plan Type</label>
-                <select 
+                <select
                   value={editingSeller.planType}
-                  onChange={(e) => setEditingSeller({...editingSeller, planType: e.target.value})}
+                  onChange={(e) => setEditingSeller({ ...editingSeller, planType: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="commission">Commission (Pay-As-You-Go)</option>
-                  <option value="subscription">Flat Subscription</option>
+                  <option value="commission">Pay-As-You-Go (Commission)</option>
+                  <option value="subscription">Monthly Subscription</option>
                 </select>
               </div>
 
@@ -313,7 +296,7 @@ export default function AdminCommercialSubscriptionsPage() {
                     <input 
                       type="number" 
                       min="0" max="100" step="0.1"
-                      value={editingSeller.commissionRate}
+                      value={isNaN(editingSeller.commissionRate) ? '' : editingSeller.commissionRate}
                       onChange={(e) => setEditingSeller({...editingSeller, commissionRate: parseFloat(e.target.value)})}
                       className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                     />
@@ -328,7 +311,7 @@ export default function AdminCommercialSubscriptionsPage() {
                       <DollarSign className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input 
                         type="number" 
-                        value={editingSeller.flatRate}
+                        value={isNaN(editingSeller.flatRate) ? '' : editingSeller.flatRate}
                         onChange={(e) => setEditingSeller({...editingSeller, flatRate: parseFloat(e.target.value)})}
                         className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                       />

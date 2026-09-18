@@ -142,6 +142,13 @@ export class ProductsService {
     return { success: true, message: `Dummy data set to ${status}` };
   }
 
+  async getDummyStatus() {
+    const dummyProduct = await this.prisma.product.findFirst({
+      where: { name: { contains: 'Dummy' }, status: 'ACTIVE' }
+    });
+    return { enabled: !!dummyProduct };
+  }
+
   async remove(id: string) {
     await this.prisma.product.delete({ where: { id } });
     return { success: true };

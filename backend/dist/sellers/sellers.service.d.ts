@@ -7,12 +7,12 @@ export declare class SellersService {
         businessType: string;
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
-        createdAt: Date;
-        updatedAt: Date;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -33,12 +33,12 @@ export declare class SellersService {
         businessType: string;
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
-        createdAt: Date;
-        updatedAt: Date;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -72,12 +72,12 @@ export declare class SellersService {
         businessType: string;
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
-        createdAt: Date;
-        updatedAt: Date;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -95,12 +95,12 @@ export declare class SellersService {
         businessType: string;
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
-        createdAt: Date;
-        updatedAt: Date;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -116,12 +116,12 @@ export declare class SellersService {
     }>;
     removeUser(userId: string): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

@@ -28,7 +28,9 @@ let CategoriesService = class CategoriesService {
                 notApplicable: data.notApplicable || [],
                 optionalFeatures: data.optionalFeatures || [],
                 parameters: data.parameters || [],
-                subcategories: data.subcategories || []
+                subcategories: data.subcategories || [],
+                defaultCommissionRate: data.defaultCommissionRate ?? 5.0,
+                defaultFlatRate: data.defaultFlatRate ?? 999.0
             }
         });
     }
@@ -53,12 +55,47 @@ let CategoriesService = class CategoriesService {
                 notApplicable: data.notApplicable,
                 optionalFeatures: data.optionalFeatures,
                 parameters: data.parameters,
-                subcategories: data.subcategories
+                subcategories: data.subcategories,
+                defaultCommissionRate: data.defaultCommissionRate,
+                defaultFlatRate: data.defaultFlatRate
             }
         });
     }
     remove(id) {
         return this.prisma.category.delete({ where: { id } });
+    }
+    async applyBillingDefaults(id) {
+        const category = await this.prisma.category.findUnique({ where: { id } });
+        if (!category)
+            throw new Error('Category not found');
+        const products = await this.prisma.product.findMany({
+            where: { categoryId: id },
+            select: { sellerId: true }
+        });
+        const sellerIds = [...new Set(products.map(p => p.sellerId).filter(Boolean))];
+        if (sellerIds.length === 0)
+            return { updatedCount: 0 };
+        const updatedCommission = await this.prisma.business.updateMany({
+            where: {
+                userId: { in: sellerIds },
+                commissionType: 'PERCENTAGE'
+            },
+            data: {
+                commissionRate: category.defaultCommissionRate ?? 5.0
+            }
+        });
+        const updatedFlat = await this.prisma.business.updateMany({
+            where: {
+                userId: { in: sellerIds },
+                commissionType: 'FIXED'
+            },
+            data: {
+                commissionRate: category.defaultFlatRate ?? 999.0
+            }
+        });
+        return {
+            updatedCount: updatedCommission.count + updatedFlat.count
+        };
     }
 };
 CategoriesService = __decorate([

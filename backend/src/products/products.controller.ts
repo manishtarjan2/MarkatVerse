@@ -20,6 +20,11 @@ export class ProductsController {
     return this.productsService.findAll(location, lat ? parseFloat(lat) : undefined, lng ? parseFloat(lng) : undefined, radius ? parseFloat(radius) : undefined);
   }
 
+  @Get('dummy-status')
+  getDummyStatus() {
+    return this.productsService.getDummyStatus();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);

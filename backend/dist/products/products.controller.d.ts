@@ -4,6 +4,9 @@ export declare class ProductsController {
     constructor(productsService: ProductsService);
     create(data: any): Promise<any>;
     findAll(location?: string, lat?: string, lng?: string, radius?: string): Promise<any[]>;
+    getDummyStatus(): Promise<{
+        enabled: boolean;
+    }>;
     findOne(id: string): Promise<any>;
     toggleDummy(enable: boolean): Promise<{
         success: boolean;

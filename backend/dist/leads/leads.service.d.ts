@@ -8,10 +8,10 @@ export declare class LeadsService {
         updatedAt: Date;
         status: string;
         sellerId: string;
-        message: string;
-        quantityRequested: number;
         buyerId: string;
         productId: string;
+        message: string;
+        quantityRequested: number;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     findAllForSeller(sellerId: string): import(".prisma/client").Prisma.PrismaPromise<({
         product: {
@@ -21,8 +21,8 @@ export declare class LeadsService {
         };
         buyer: {
             id: string;
-            name: string;
             email: string | null;
+            name: string;
         };
     } & {
         id: string;
@@ -30,10 +30,10 @@ export declare class LeadsService {
         updatedAt: Date;
         status: string;
         sellerId: string;
-        message: string;
-        quantityRequested: number;
         buyerId: string;
         productId: string;
+        message: string;
+        quantityRequested: number;
     })[]>;
     findAllForBuyer(buyerId: string): import(".prisma/client").Prisma.PrismaPromise<({
         product: {
@@ -44,8 +44,8 @@ export declare class LeadsService {
         };
         seller: {
             id: string;
-            name: string;
             email: string | null;
+            name: string;
         };
     } & {
         id: string;
@@ -53,10 +53,10 @@ export declare class LeadsService {
         updatedAt: Date;
         status: string;
         sellerId: string;
-        message: string;
-        quantityRequested: number;
         buyerId: string;
         productId: string;
+        message: string;
+        quantityRequested: number;
     })[]>;
     updateStatus(id: string, status: string): import(".prisma/client").Prisma.Prisma__LeadClient<{
         id: string;
@@ -64,9 +64,9 @@ export declare class LeadsService {
         updatedAt: Date;
         status: string;
         sellerId: string;
-        message: string;
-        quantityRequested: number;
         buyerId: string;
         productId: string;
+        message: string;
+        quantityRequested: number;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

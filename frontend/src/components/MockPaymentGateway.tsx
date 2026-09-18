@@ -44,10 +44,10 @@ export default function MockPaymentGateway({ amount, onSuccess, onCancel }: Mock
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-[850px] h-[600px] max-h-[90vh] flex flex-col md:flex-row overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
+      <div className="bg-white rounded-2xl w-full max-w-[850px] h-[90vh] md:h-[600px] max-h-[90vh] flex flex-col md:flex-row overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-300">
         
         {/* Left Side: Summary */}
-        <div className="w-full md:w-[300px] bg-slate-900 text-white p-6 md:p-8 flex flex-col">
+        <div className="hidden md:flex w-full md:w-[300px] bg-slate-900 text-white p-6 md:p-8 flex-col">
           <div className="flex items-center gap-2 mb-12">
             <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-black text-lg">M</div>
             <span className="font-bold tracking-wide">MarkatVerse</span>

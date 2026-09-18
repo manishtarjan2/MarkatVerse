@@ -5,11 +5,13 @@ import Footer from './Footer';
 export default function ConditionalFooter() {
   const pathname = usePathname();
   
-  // Hide footer on seller dashboard, admin portals, and all standalone salon pages
+  // Hide footer on seller dashboard, admin portals, and standalone kiosk pages
   if (
     pathname?.startsWith('/seller/dashboard') || 
     pathname?.startsWith('/admin') ||
-    pathname?.startsWith('/salon/')
+    pathname === '/salon/join' ||
+    pathname === '/salon/queue' ||
+    (pathname?.startsWith('/salon/token/') && pathname !== '/salon/token/active')
   ) {
     return null;
   }

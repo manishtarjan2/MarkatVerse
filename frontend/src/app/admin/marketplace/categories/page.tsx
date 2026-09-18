@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { useProducts, Category } from '@/context/ProductContext';
 import { useAdminRole } from '@/context/AdminRoleContext';
-import { ShieldAlert, Search, Trash2, Edit2, Plus, ListTree, Check, X } from 'lucide-react';
+import { ShieldAlert, Search, Trash2, Edit2, Plus, ListTree, Check, X, RefreshCw } from 'lucide-react';
 
 export default function AdminCategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory } = useProducts();
   const { canEdit } = useAdminRole();
   const hasEditPermission = canEdit('categories');
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -19,7 +20,13 @@ export default function AdminCategoriesPage() {
     name: '',
     theme: 'slate',
     icon: '',
-    primaryType: 'PRODUCT'
+    primaryType: 'PRODUCT',
+    defaultCommissionRate: 5.0,
+    defaultFlatRate: 999.0,
+    allowedListingTypes: [],
+    businessModels: [],
+    workflow: '',
+    allowedFeatures: []
   });
 
   const filteredCategories = categories.filter(c => 
@@ -28,7 +35,7 @@ export default function AdminCategoriesPage() {
 
   const handleStartAdd = () => {
     if (!hasEditPermission) return;
-    setDraft({ name: '', theme: 'slate', icon: '', primaryType: 'PRODUCT' });
+    setDraft({ name: '', theme: 'slate', icon: '', primaryType: 'PRODUCT', defaultCommissionRate: 5.0, defaultFlatRate: 999.0 });
     setIsAdding(true);
     setEditingId(null);
   };
@@ -62,6 +69,26 @@ export default function AdminCategoriesPage() {
     if (!hasEditPermission) return;
     if (window.confirm("Are you sure you want to delete this category?")) {
       deleteCategory(id);
+    }
+  };
+
+  const handleSyncBilling = async (id: string) => {
+    if (!hasEditPermission) return;
+    if (id.length < 20) {
+      alert("This is a placeholder category. Please Edit and Save it first to register it in the live database before syncing.");
+      return;
+    }
+    if (!window.confirm("This will overwrite the billing rates of all businesses selling in this category. Are you sure?")) return;
+    try {
+      const res = await fetch(`${API_URL}/categories/${id}/apply-billing-defaults`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error('Failed to sync billing defaults');
+      const data = await res.json();
+      alert(`Successfully updated billing rates for ${data.updatedCount} businesses.`);
+    } catch (err) {
+      console.error(err);
+      alert('Error syncing billing defaults');
     }
   };
 
@@ -131,7 +158,75 @@ export default function AdminCategoriesPage() {
                 <option value="cyan">Cyan</option>
               </select>
             </div>
-            <div className="flex items-end gap-2">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Default Commission (%)</label>
+              <input 
+                type="number" 
+                min="0" max="100" step="0.1"
+                value={draft.defaultCommissionRate ?? 5.0}
+                onChange={e => setDraft(d => ({ ...d, defaultCommissionRate: parseFloat(e.target.value) || 0 }))}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Default Flat Rate (₹)</label>
+              <input 
+                type="number" 
+                min="0"
+                value={draft.defaultFlatRate ?? 999.0}
+                onChange={e => setDraft(d => ({ ...d, defaultFlatRate: parseFloat(e.target.value) || 0 }))}
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
+              />
+            </div>
+            
+            {/* Relationship Manager Fields */}
+            <div className="col-span-1 sm:col-span-2 lg:col-span-4 border-t border-slate-700 pt-4 mt-2">
+              <h4 className="text-sm font-bold text-slate-300 mb-3">Relationship Rules</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Business Models (comma separated)</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. B2C, B2B, Appointment"
+                    value={draft.businessModels?.join(', ') || ''}
+                    onChange={e => setDraft(d => ({ ...d, businessModels: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) as any }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Workflow</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Standard Delivery, Booking"
+                    value={draft.workflow || ''}
+                    onChange={e => setDraft(d => ({ ...d, workflow: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Allowed Features (comma separated)</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Service, Token"
+                    value={draft.allowedFeatures?.join(', ') || ''}
+                    onChange={e => setDraft(d => ({ ...d, allowedFeatures: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) as any }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Listing Types (comma separated)</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Product, Service"
+                    value={draft.allowedListingTypes?.join(', ') || ''}
+                    onChange={e => setDraft(d => ({ ...d, allowedListingTypes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) as any }))}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-end gap-2 col-span-1 sm:col-span-2 lg:col-span-4 mt-4">
               <button onClick={handleSave} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
                 <Check className="w-4 h-4" /> Save
               </button>
@@ -195,6 +290,13 @@ export default function AdminCategoriesPage() {
                   <td className="p-4 pr-6 text-right">
                     {hasEditPermission && (
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => handleSyncBilling(cat.id)}
+                          title="Apply Billing Defaults to Sellers"
+                          className="p-1.5 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
                         <button 
                           onClick={() => handleStartEdit(cat)}
                           className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"

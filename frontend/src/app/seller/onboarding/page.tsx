@@ -36,10 +36,38 @@ export default function SellerOnboarding() {
   const [sellerRole, setSellerRole] = useState('Manufacturer');
   const [businessSector, setBusinessSector] = useState('');
   const [businessName, setBusinessName] = useState('');
+  const [pinCode, setPinCode] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
+  const [areas, setAreas] = useState<string[]>([]);
+  const [isFetchingPin, setIsFetchingPin] = useState(false);
   const [gstNumber, setGstNumber] = useState('');
 
   const [otpArray, setOtpArray] = useState(['', '', '', '']);
+
+  React.useEffect(() => {
+    if (pinCode.length === 6) {
+      setIsFetchingPin(true);
+      fetch(`https://api.postalpincode.in/pincode/${pinCode}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === 'Success') {
+            const fetchedAreas = data[0].PostOffice.map((po: any) => po.Name);
+            setAreas(fetchedAreas);
+            const state = data[0].PostOffice[0].State;
+            const district = data[0].PostOffice[0].District;
+            if (!businessLocation.includes(district)) {
+              setBusinessLocation(`${fetchedAreas[0]}, ${district}, ${state}`);
+            }
+          } else {
+            setAreas([]);
+          }
+        })
+        .catch(() => setAreas([]))
+        .finally(() => setIsFetchingPin(false));
+    } else {
+      setAreas([]);
+    }
+  }, [pinCode]);
 
   // Structured taxonomy mapping according to V2 architecture
   const mainTypeMapping: Record<string, string[]> = {
@@ -91,6 +119,7 @@ export default function SellerOnboarding() {
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
     if (!email && !phone) { setError('Email or phone is required'); return; }
+    if (phone && !/^\d{10}$/.test(phone.replace(/\D/g, ''))) { setError('Phone number must be exactly 10 digits'); return; }
     setIsSubmitting(true);
     try {
       // Register as SELLER role
@@ -342,8 +371,23 @@ export default function SellerOnboarding() {
 
                 <div>
                   <label className={labelClasses}>Phone Number <span className="normal-case font-normal text-slate-400">(optional if email given)</span></label>
-                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                    placeholder="9876543210" className={inputClasses} />
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <span className="text-slate-500 font-medium ml-1">+91</span>
+                      <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                    </div>
+                    <input type="tel" maxLength={10} value={phone} onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setPhone(val);
+                      }}
+                      placeholder="9876543210" className={`${inputClasses} pl-16`} />
+                  </div>
+                  {phone && phone.length > 0 && phone.length < 10 && (
+                    <p className="text-xs text-red-500 mt-1">Phone number must be 10 digits</p>
+                  )}
+                  {phone && phone.length === 10 && (
+                    <p className="text-xs text-emerald-500 mt-1">✅ Valid phone number</p>
+                  )}
                 </div>
 
                 <div>
@@ -444,9 +488,34 @@ export default function SellerOnboarding() {
                     <input required type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="e.g. Global Exports LLC" className={inputClasses} />
                   </div>
                   <div>
-                    <label className={labelClasses}>Business Location</label>
-                    <input required type="text" value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Mumbai, Maharashtra" className={inputClasses} />
+                    <label className={labelClasses}>PIN Code</label>
+                    <div className="relative">
+                      <input required type="text" maxLength={6} value={pinCode} onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))} placeholder="e.g. 110001" className={inputClasses} />
+                      {isFetchingPin && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>}
+                    </div>
                   </div>
+                </div>
+
+                {areas.length > 0 && (
+                  <div>
+                    <label className={labelClasses}>Select Area / Locality</label>
+                    <select className={selectClasses} onChange={e => {
+                      const area = e.target.value;
+                      const parts = businessLocation.split(', ');
+                      if (parts.length >= 3) {
+                        setBusinessLocation(`${area}, ${parts[1]}, ${parts[2]}`);
+                      } else {
+                        setBusinessLocation(`${area}, ${businessLocation}`);
+                      }
+                    }}>
+                      {areas.map(a => <option key={a} value={a}>{a}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className={labelClasses}>Full Business Address</label>
+                  <textarea required rows={2} value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Shop No 1, Connaught Place, New Delhi, Delhi" className={inputClasses} />
                 </div>
 
                 <div>

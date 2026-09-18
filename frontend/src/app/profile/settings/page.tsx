@@ -2,11 +2,17 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { useWishlist } from '@/context/WishlistContext';
+import { useProducts } from '@/context/ProductContext';
+import { useCart } from '@/context/CartContext';
 import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell, ChevronRight, LogOut, Edit3, Trash2, Plus, Star, Heart, ShoppingBag } from 'lucide-react';
 
 export default function ProfileSettings() {
   const [activeTab, setActiveTab] = useState('personal');
   const { user, logout } = useAuth();
+  const { wishlistIds, removeFromWishlist } = useWishlist();
+  const { products } = useProducts();
+  const { addToCart } = useCart();
   
   // Fallbacks if user is null
   const [firstName, lastName] = user?.name ? user.name.split(' ') : ['Amit', 'Verma'];
@@ -367,27 +373,66 @@ export default function ProfileSettings() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex gap-4 hover:border-slate-600 transition-colors group">
-                      <div className="w-24 h-24 bg-slate-700 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
-                        <ShoppingBag className="w-8 h-8 text-slate-500" />
+                  {wishlistIds.length === 0 ? (
+                    <div className="col-span-1 md:col-span-2 text-center py-12">
+                      <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700">
+                        <Heart className="w-8 h-8 text-slate-500" />
                       </div>
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div>
-                          <h4 className="text-white font-bold text-sm line-clamp-2">Premium Wireless Noise-Cancelling Headphones</h4>
-                          <div className="text-blue-400 font-black mt-1">₹12,999</div>
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <button className="text-xs font-bold text-slate-400 hover:text-red-400 transition-colors flex items-center gap-1">
-                            <Trash2 className="w-3.5 h-3.5" /> Remove
-                          </button>
-                          <button className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-lg shadow-blue-900/20">
-                            Move to Cart
-                          </button>
-                        </div>
-                      </div>
+                      <h3 className="text-white font-bold text-lg mb-1">Your wishlist is empty</h3>
+                      <p className="text-slate-400 text-sm">Explore products and services to save them here.</p>
+                      <Link href="/explore" className="inline-block mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold transition-colors">
+                        Explore Now
+                      </Link>
                     </div>
-                  ))}
+                  ) : (
+                    wishlistIds.map((id) => {
+                      const product = products.find(p => p.id === id);
+                      if (!product) return null;
+                      return (
+                        <div key={id} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex gap-4 hover:border-slate-600 transition-colors group">
+                          <div className="w-24 h-24 bg-slate-700 rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative">
+                            {product.image ? (
+                              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <ShoppingBag className="w-8 h-8 text-slate-500" />
+                            )}
+                          </div>
+                          <div className="flex-1 flex flex-col justify-between">
+                            <div>
+                              <div className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">{product.category}</div>
+                              <h4 className="text-white font-bold text-sm line-clamp-2">{product.name}</h4>
+                              <div className="text-white font-black mt-1">₹{product.price?.toLocaleString('en-IN') || '0'}</div>
+                            </div>
+                            <div className="flex items-center justify-between mt-2">
+                              <button 
+                                onClick={() => removeFromWishlist(id)}
+                                className="text-xs font-bold text-slate-400 hover:text-red-400 transition-colors flex items-center gap-1"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Remove
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  addToCart({
+                                    id: product.id,
+                                    name: product.name,
+                                    price: product.price || 0,
+                                    quantity: 1,
+                                    image: product.image,
+                                    sellerId: product.sellerId || product.seller
+                                  });
+                                  removeFromWishlist(id);
+                                  alert('Moved to cart!');
+                                }}
+                                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-lg shadow-blue-900/20"
+                              >
+                                Move to Cart
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}

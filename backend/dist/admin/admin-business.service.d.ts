@@ -4,9 +4,9 @@ export declare class AdminBusinessService {
     constructor(prisma: PrismaService);
     getAllBusinesses(): Promise<({
         user: {
-            name: string;
             email: string | null;
             phone: string | null;
+            name: string;
         };
         wallet: {
             id: string;
@@ -23,12 +23,12 @@ export declare class AdminBusinessService {
         businessType: string;
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
-        createdAt: Date;
-        updatedAt: Date;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -50,12 +50,41 @@ export declare class AdminBusinessService {
         businessType: string;
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
+        userId: string;
+        logo: string | null;
+        businessModel: import(".prisma/client").$Enums.MainType;
+        address: string | null;
+        verified: boolean;
+        capabilities: string[];
+        maxListings: number;
+        commissionType: string;
+        commissionRate: number;
+        subscriptionStatus: string;
+        subscriptionStartDate: Date | null;
+        subscriptionEndDate: Date | null;
+    }>;
+    updateBilling(id: string, data: {
+        commissionType: string;
+        commissionRate: number;
+        subscriptionStatus: string;
+        subscriptionStartDate: Date | null;
+        subscriptionEndDate: Date | null;
+    }): Promise<{
+        businessType: string;
+        id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        pincode: string | null;
+        latitude: number | null;
+        longitude: number | null;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;

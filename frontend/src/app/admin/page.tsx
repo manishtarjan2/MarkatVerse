@@ -19,6 +19,7 @@ export default function AdminDashboardPage() {
   const { currentAdminRole, canEdit, canToggleSector } = useAdminRole();
   const [settings, setSettings] = useState(defaultSettings);
   const [isSandboxMode, setIsSandboxMode] = useState(false);
+  const [dummyStatus, setDummyStatus] = useState<boolean | null>(null);
   
   // States for real data aggregation
   const [totalVolume, setTotalVolume] = useState(0);
@@ -42,29 +43,28 @@ export default function AdminDashboardPage() {
         let totalRev = 0;
         let allTx: any[] = [];
         
-        const storedPlans = JSON.parse(localStorage.getItem('commercial_plans') || '{}');
-
-        // Fetch wallet for each seller to aggregate
-        for (const seller of sellers) {
-          const wRes = await fetch(`${API_URL}/wallet/business/${seller.id}`);
-          if (wRes.ok) {
-            const walletData = await wRes.json();
-            const bal = walletData.balance || 0;
+        // Fetch all businesses from the backend directly
+        const bRes = await fetch(`${API_URL}/admin/businesses`);
+        if (bRes.ok) {
+          const businesses = await bRes.json();
+          for (const business of businesses) {
+            const bal = business.wallet?.balance || 0;
             totalVol += bal;
             
-            // Get their actual configured rate
-            const planConfig = storedPlans[seller.id];
-            if (planConfig && planConfig.planType === 'subscription') {
-              totalRev += planConfig.flatRate; 
+            // Calculate revenue based on live database values
+            if (business.commissionType === 'FIXED') {
+              totalRev += business.commissionRate || 999;
             } else {
-              const rate = planConfig ? planConfig.commissionRate / 100 : 0.05; // Fallback to 5%
-              totalRev += bal * rate; 
+              const rate = (business.commissionRate || 5) / 100;
+              totalRev += bal * rate;
             }
-
-            const tRes = await fetch(`${API_URL}/wallet/${walletData.id}/transactions`);
-            if (tRes.ok) {
-              const txs = await tRes.json();
-              allTx = [...allTx, ...txs.map((t: any) => ({ ...t, sellerName: seller.name }))];
+            
+            if (business.wallet?.id) {
+              const tRes = await fetch(`${API_URL}/wallet/${business.wallet.id}/transactions`);
+              if (tRes.ok) {
+                const txs = await tRes.json();
+                allTx = [...allTx, ...txs.map((t: any) => ({ ...t, sellerName: business.name || business.user?.name || 'Unknown' }))];
+              }
             }
           }
         }
@@ -82,11 +82,24 @@ export default function AdminDashboardPage() {
       }
     };
 
+    const fetchDummyStatus = async () => {
+      try {
+        const res = await fetch(`${API_URL}/products/dummy-status`);
+        if (res.ok) {
+          const data = await res.json();
+          setDummyStatus(data.enabled);
+        }
+      } catch (e) {
+        console.error("Failed to fetch dummy status", e);
+      }
+    };
+
     if (allUsers.length > 0 && !isSandboxMode) {
       fetchGlobalData();
     } else {
       setIsLoading(false);
     }
+    fetchDummyStatus();
   }, [allUsers, isSandboxMode]);
 
   const toggleSector = (id: string) => {
@@ -100,6 +113,24 @@ export default function AdminDashboardPage() {
   const handleSandboxToggle = () => {
     if (!canToggleSector()) return;
     setIsSandboxMode(!isSandboxMode);
+  };
+
+  const handleDummyToggle = async (enable: boolean) => {
+    setDummyStatus(enable); // optimistic UI update
+    try {
+      const res = await fetch(`${API_URL}/products/toggle-dummy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enable })
+      });
+      if (!res.ok) {
+        setDummyStatus(!enable); // revert on failure
+        alert('Failed to toggle dummy data.');
+      }
+    } catch(err) {
+      setDummyStatus(!enable);
+      alert('Error toggling dummy data.');
+    }
   };
 
   return (
@@ -318,6 +349,35 @@ export default function AdminDashboardPage() {
                   </label>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Database className="w-4 h-4" /> Database Controls
+            </h3>
+            
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🧪</span>
+                <div>
+                  <div className="text-sm font-bold text-white">Dummy Data</div>
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${dummyStatus === true ? 'text-emerald-400' : dummyStatus === false ? 'text-rose-400' : 'text-slate-500'}`}>
+                    {dummyStatus === true ? 'ENABLED' : dummyStatus === false ? 'DISABLED' : 'LOADING...'}
+                  </div>
+                </div>
+              </div>
+              
+              <label className={`relative inline-flex items-center cursor-pointer ${dummyStatus === null ? 'opacity-50' : ''}`}>
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={dummyStatus || false} 
+                  onChange={(e) => handleDummyToggle(e.target.checked)}
+                  disabled={dummyStatus === null}
+                />
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
             </div>
           </div>
 

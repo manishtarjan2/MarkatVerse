@@ -11,9 +11,9 @@ export declare class ListingsService {
             workflow: string | null;
             id: string;
             name: string;
-            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
+            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             theme: string | null;
             icon: string | null;
             primaryType: string | null;
@@ -23,24 +23,26 @@ export declare class ListingsService {
             notApplicable: string[];
             optionalFeatures: string[];
             subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+            defaultCommissionRate: number | null;
+            defaultFlatRate: number | null;
             parentId: string | null;
             sectorId: string | null;
         } | null;
         businessType: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             mainType: import(".prisma/client").$Enums.MainType;
             isActive: boolean;
         };
         sector: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             isActive: boolean;
             businessTypeId: string;
         };
@@ -50,9 +52,9 @@ export declare class ListingsService {
         };
     } & {
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;
@@ -69,9 +71,9 @@ export declare class ListingsService {
             workflow: string | null;
             id: string;
             name: string;
-            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             createdAt: Date;
             updatedAt: Date;
+            parameters: import("@prisma/client/runtime/library").JsonValue | null;
             theme: string | null;
             icon: string | null;
             primaryType: string | null;
@@ -81,24 +83,26 @@ export declare class ListingsService {
             notApplicable: string[];
             optionalFeatures: string[];
             subcategories: import("@prisma/client/runtime/library").JsonValue | null;
+            defaultCommissionRate: number | null;
+            defaultFlatRate: number | null;
             parentId: string | null;
             sectorId: string | null;
         } | null;
         businessType: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             mainType: import(".prisma/client").$Enums.MainType;
             isActive: boolean;
         };
         sector: {
             id: string;
             name: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
             isActive: boolean;
             businessTypeId: string;
         };
@@ -108,9 +112,9 @@ export declare class ListingsService {
         };
     } & {
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;
@@ -124,9 +128,9 @@ export declare class ListingsService {
     }>;
     createListing(data: any): Promise<{
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;
@@ -140,9 +144,9 @@ export declare class ListingsService {
     }>;
     updateListing(id: string, data: any): Promise<{
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;
@@ -156,9 +160,9 @@ export declare class ListingsService {
     }>;
     deleteListing(id: string): Promise<{
         id: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
         status: string;
         sellerId: string;
         categoryId: string | null;

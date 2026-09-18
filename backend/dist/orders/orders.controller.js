@@ -25,14 +25,17 @@ let OrdersController = class OrdersController {
     findAll() {
         return this.ordersService.findAll();
     }
+    findBySeller(sellerId) {
+        return this.ordersService.findBySeller(sellerId);
+    }
     findOne(id) {
-        return this.ordersService.findOne(+id);
+        return this.ordersService.findOne(id);
     }
     update(id, updateOrderDto) {
-        return this.ordersService.update(+id, updateOrderDto);
+        return this.ordersService.update(id, updateOrderDto);
     }
     remove(id) {
-        return this.ordersService.remove(+id);
+        return this.ordersService.remove(id);
     }
 };
 __decorate([
@@ -48,6 +51,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findAll", null);
+__decorate([
+    Get('seller/:sellerId'),
+    __param(0, Param('sellerId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "findBySeller", null);
 __decorate([
     Get(':id'),
     __param(0, Param('id')),

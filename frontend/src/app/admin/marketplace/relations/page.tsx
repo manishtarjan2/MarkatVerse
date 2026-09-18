@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useProducts, Category, ListingType, BusinessModel, FeatureRule } from '@/context/ProductContext';
+import { useProducts, Category, ListingType, BusinessModel, FeatureRule, FormField } from '@/context/ProductContext';
 import { useAdminRole } from '@/context/AdminRoleContext';
-import { ShieldAlert, ChevronRight, Check, X, Circle, Plus } from 'lucide-react';
+import { ShieldAlert, ChevronRight, Check, X, Circle, Plus, Trash2, Settings, List, Tags, Shield, CreditCard, Maximize2, Minimize2, CheckCircle2, MinusCircle, XCircle } from 'lucide-react';
 
 export default function CategoryRelationsPage() {
   const { canEdit } = useAdminRole();
@@ -30,13 +30,22 @@ export default function CategoryRelationsPage() {
   const selectedCat = categories.find(c => c.id === selectedCatId);
 
   const [draft, setDraft] = useState<Partial<Category>>(selectedCat || {});
-  const [attrInput, setAttrInput] = useState('');
   const [saved, setSaved] = useState(false);
+  const [activeTab, setActiveTab] = useState<'general' | 'features' | 'subcategories' | 'attributes' | 'billing'>('general');
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  // Auto-select first category when categories load
+  useEffect(() => {
+    if (!selectedCatId && categories.length > 0) {
+      setSelectedCatId(categories[0].id);
+    }
+  }, [categories, selectedCatId]);
 
   // Sync draft when user picks different category
   useEffect(() => {
     if (selectedCat) setDraft({ ...selectedCat });
     setSaved(false);
+    setActiveTab('general');
   }, [selectedCatId, selectedCat]);
 
   const toggleArray = <T,>(arr: T[] | undefined, item: T): T[] => {
@@ -51,31 +60,19 @@ export default function CategoryRelationsPage() {
     return 'none';
   };
 
-  const cycleFeature = (feature: FeatureRule) => {
+  const setFeatureState = (feature: FeatureRule, state: 'allowed' | 'optional' | 'notApplicable' | 'none') => {
     if (!hasEditPermission) return;
-    const state = getFeatureState(feature);
-    // Remove from all three
     const remove = (arr: FeatureRule[] | undefined) => (arr || []).filter(f => f !== feature);
     let next = {
       allowedFeatures: remove(draft.allowedFeatures) as FeatureRule[],
       notApplicable: remove(draft.notApplicable) as FeatureRule[],
       optionalFeatures: remove(draft.optionalFeatures) as FeatureRule[],
     };
-    // Cycle: none→allowed→optional→notApplicable→none
-    if (state === 'none') next.allowedFeatures.push(feature);
-    else if (state === 'allowed') next.optionalFeatures.push(feature);
-    else if (state === 'optional') next.notApplicable.push(feature);
-    // notApplicable → none (do nothing extra)
+    if (state === 'allowed') next.allowedFeatures.push(feature);
+    if (state === 'optional') next.optionalFeatures.push(feature);
+    if (state === 'notApplicable') next.notApplicable.push(feature);
+    
     setDraft(d => ({ ...d, ...next }));
-  };
-
-  const handleAddAttr = () => {
-    if (!hasEditPermission) return;
-    const val = attrInput.trim();
-    if (!val) return;
-    const newParam = { name: val, type: 'text' as const };
-    setDraft(d => ({ ...d, parameters: [...(d.parameters || []), newParam] }));
-    setAttrInput('');
   };
 
   const handleSave = () => {
@@ -93,39 +90,68 @@ export default function CategoryRelationsPage() {
     { label: '🚗 Vehicle', type: 'VEHICLE' },
   ];
 
-  const FeatureChip = ({ feature }: { feature: FeatureRule }) => {
-    const state = getFeatureState(feature);
-    const styles: Record<string, string> = {
-      allowed: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25',
-      optional: 'bg-amber-500/15 text-amber-300 border-amber-500/30 hover:bg-amber-500/25',
-      notApplicable: 'bg-rose-500/15 text-rose-300 border-rose-500/30 hover:bg-rose-500/25',
-      none: 'bg-slate-700/50 text-slate-500 border-slate-700 hover:bg-slate-700',
-    };
-    const icons: Record<string, React.ReactNode> = {
-      allowed: <Check className="w-3 h-3" />,
-      optional: <Circle className="w-3 h-3" />,
-      notApplicable: <X className="w-3 h-3" />,
-      none: <span className="w-3 h-3 inline-block" />,
-    };
-    return (
-      <button
-        type="button"
-        onClick={() => cycleFeature(feature)}
-        disabled={!hasEditPermission}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer select-none ${styles[state]} ${!hasEditPermission && 'opacity-50 cursor-not-allowed'}`}
-        title="Click to cycle: Allowed → Optional → Not Applicable → Unset"
-      >
-        {icons[state]}
-        {feature}
-      </button>
-    );
+  const addSubcategory = () => {
+    if (!hasEditPermission) return;
+    const newName = window.prompt("Enter new subcategory name:");
+    if (!newName) return;
+    setDraft(d => ({
+      ...d,
+      subcategories: [...(d.subcategories || []), { name: newName }]
+    }));
+  };
+
+  const removeSubcategory = (idx: number) => {
+    if (!hasEditPermission) return;
+    setDraft(d => ({
+      ...d,
+      subcategories: (d.subcategories || []).filter((_, i) => i !== idx)
+    }));
+  };
+
+  const addAttribute = () => {
+    if (!hasEditPermission) return;
+    const newParam: FormField = { name: 'New Attribute', type: 'text' };
+    setDraft(d => ({
+      ...d,
+      parameters: [...(d.parameters || []), newParam]
+    }));
+  };
+
+  const updateAttribute = (idx: number, field: keyof FormField, value: any) => {
+    if (!hasEditPermission) return;
+    setDraft(d => {
+      const params = [...(d.parameters || [])];
+      if (field === 'options') {
+        params[idx] = { ...params[idx], options: value.split(',').map((s: string) => s.trim()).filter(Boolean) };
+      } else {
+        params[idx] = { ...params[idx], [field]: value };
+      }
+      return { ...d, parameters: params };
+    });
+  };
+
+  const removeAttribute = (idx: number) => {
+    if (!hasEditPermission) return;
+    setDraft(d => ({
+      ...d,
+      parameters: (d.parameters || []).filter((_, i) => i !== idx)
+    }));
   };
 
   return (
-    <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Category Relationship Manager</h1>
-        <p className="text-slate-400 mt-2 text-sm">Define listing types, business models, workflows, attributes, and access rules for each category.</p>
+    <div className={`animate-in fade-in duration-300 transition-all ${isFullScreen ? 'fixed inset-0 z-50 bg-slate-950 p-6 overflow-hidden flex flex-col' : 'max-w-7xl mx-auto'}`}>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Category Engine 2.0</h1>
+          <p className="text-slate-400 mt-2 text-sm">Advanced granular control over category features, attributes, and structures.</p>
+        </div>
+        <button 
+          onClick={() => setIsFullScreen(!isFullScreen)}
+          className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700 hover:border-slate-500"
+          title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"}
+        >
+          {isFullScreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+        </button>
       </div>
 
       {!hasEditPermission && (
@@ -135,28 +161,30 @@ export default function CategoryRelationsPage() {
         </div>
       )}
 
-      <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[calc(100vh-220px)] lg:min-h-[600px]">
+      <div className={`flex flex-col lg:flex-row gap-6 ${isFullScreen ? 'flex-1 min-h-0' : 'h-auto lg:h-[calc(100vh-220px)] lg:min-h-[700px]'}`}>
         {/* LEFT - Category List */}
-        <div className="w-full lg:w-[240px] shrink-0 bg-slate-800 rounded-2xl border border-slate-700 overflow-y-auto flex flex-col h-[300px] lg:h-full">
+        <div className={`w-full lg:w-[260px] shrink-0 bg-slate-900/50 rounded-2xl border border-slate-700 overflow-y-auto flex flex-col backdrop-blur-xl ${isFullScreen ? 'h-full' : 'h-[300px] lg:h-full'}`}>
           {grouped.map(group => {
             const cats = categories.filter(c => c.primaryType === group.type);
             if (cats.length === 0) return null;
             return (
-              <div key={group.type}>
-                <div className="px-4 pt-4 pb-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">{group.label}</div>
-                {cats.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCatId(cat.id)}
-                    className={`w-full flex items-center justify-between px-4 py-2.5 text-sm font-semibold transition-colors ${selectedCatId === cat.id
-                        ? 'bg-slate-700 text-white'
-                        : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
-                      }`}
-                  >
-                    <span>{cat.name}</span>
-                    <ChevronRight className="w-4 h-4 opacity-40" />
-                  </button>
-                ))}
+              <div key={group.type} className="mb-2">
+                <div className="px-5 pt-5 pb-2 text-[10px] font-black text-slate-500 uppercase tracking-widest sticky top-0 bg-slate-900/90 backdrop-blur-md z-10 border-b border-slate-800/50">{group.label}</div>
+                <div className="p-2 space-y-1">
+                  {cats.map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCatId(cat.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${selectedCatId === cat.id
+                          ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shadow-lg shadow-indigo-900/20'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent'
+                        }`}
+                    >
+                      <span className="truncate pr-2">{cat.name}</span>
+                      {selectedCatId === cat.id && <ChevronRight className="w-4 h-4 shrink-0" />}
+                    </button>
+                  ))}
+                </div>
               </div>
             );
           })}
@@ -164,180 +192,399 @@ export default function CategoryRelationsPage() {
 
         {/* RIGHT — Detail Editor */}
         {selectedCat ? (
-          <div className="flex-1 overflow-y-auto space-y-6">
-            {/* Breadcrumb */}
-            <div className="bg-slate-800 rounded-2xl border border-slate-700 px-6 py-4 flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{selectedCat.primaryType}</span>
-              <ChevronRight className="w-4 h-4 text-slate-600" />
-              <span className="text-lg font-black text-white">{selectedCat.name}</span>
-              {draft.workflow && (
-                <span className="ml-auto text-xs bg-violet-500/15 text-violet-300 border border-violet-500/30 px-3 py-1 rounded-full font-semibold">
-                  {draft.workflow}
-                </span>
+          <div className="flex-1 flex flex-col bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-slate-700 overflow-hidden shadow-2xl">
+            {/* Header / Breadcrumb */}
+            <div className="bg-slate-800/50 border-b border-slate-700 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest px-2 py-0.5 bg-indigo-500/10 rounded-full border border-indigo-500/20">{selectedCat.primaryType}</span>
+                </div>
+                <h2 className="text-2xl font-black text-white">{selectedCat.name}</h2>
+              </div>
+              {hasEditPermission && (
+                <button
+                  onClick={handleSave}
+                  className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${saved
+                      ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                      : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)]'
+                    }`}
+                >
+                  {saved ? <><Check className="w-4 h-4" /> Saved!</> : 'Save Configuration'}
+                </button>
               )}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Allowed Listing Types */}
-              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 space-y-4">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Allowed Listing Types</h3>
-                <div className="flex flex-wrap gap-3">
-                  {ALL_LISTING_TYPES.map(lt => {
-                    const on = (draft.allowedListingTypes || []).includes(lt);
-                    return (
-                      <label key={lt} className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border-2 cursor-pointer transition-all font-semibold text-sm ${on ? 'border-blue-500 bg-blue-500/10 text-blue-300' : 'border-slate-700 text-slate-500 hover:border-slate-600'
-                        } ${!hasEditPermission && 'opacity-50 cursor-not-allowed'}`}>
-                        <input type="checkbox" className="hidden" disabled={!hasEditPermission} checked={on} onChange={() => setDraft(d => ({ ...d, allowedListingTypes: toggleArray(d.allowedListingTypes, lt) }))} />
-                        {on ? <Check className="w-4 h-4" /> : <span className="w-4 h-4" />}
-                        {lt}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Business Models */}
-              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 space-y-4">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Business Models</h3>
-                <div className="flex flex-wrap gap-2">
-                  {ALL_BUSINESS_MODELS.map(bm => {
-                    const on = (draft.businessModels || []).includes(bm);
-                    return (
-                      <label key={bm} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs font-bold ${on ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300' : 'border-slate-700 text-slate-500 hover:border-slate-600'
-                        } ${!hasEditPermission && 'opacity-50 cursor-not-allowed'}`}>
-                        <input type="checkbox" className="hidden" disabled={!hasEditPermission} checked={on} onChange={() => setDraft(d => ({ ...d, businessModels: toggleArray(d.businessModels, bm) }))} />
-                        {on ? <Check className="w-3 h-3" /> : <span className="w-3 h-3" />}
-                        {bm}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Workflow */}
-              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 space-y-4">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Workflow</h3>
-                <select
-                  value={draft.workflow || ''}
-                  onChange={e => setDraft(d => ({ ...d, workflow: e.target.value }))}
-                  disabled={!hasEditPermission}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-violet-500 font-medium disabled:opacity-50"
+            {/* Tabs */}
+            <div className="flex overflow-x-auto border-b border-slate-700 bg-slate-800/30 hide-scrollbar">
+              {[
+                { id: 'general', icon: Settings, label: 'General' },
+                { id: 'features', icon: Shield, label: 'Access Rules Matrix' },
+                { id: 'subcategories', icon: List, label: 'Subcategories' },
+                { id: 'attributes', icon: Tags, label: 'Attributes Builder' },
+                { id: 'billing', icon: CreditCard, label: 'Billing & Commercials' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-colors whitespace-nowrap border-b-2 ${
+                    activeTab === tab.id 
+                      ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5' 
+                      : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  }`}
                 >
-                  <option value="">— Select a workflow —</option>
-                  {WORKFLOWS.map(w => <option key={w} value={w}>{w}</option>)}
-                </select>
-              </div>
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-              {/* Attributes */}
-              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 space-y-4">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Attributes</h3>
-                <div className="flex gap-2">
-                  <input
-                    value={attrInput}
-                    onChange={e => setAttrInput(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddAttr())}
-                    disabled={!hasEditPermission}
-                    placeholder="Type attribute name + Enter"
-                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50"
-                  />
-                  <button onClick={handleAddAttr} disabled={!hasEditPermission} className="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg transition-colors disabled:opacity-50">
-                    <Plus className="w-4 h-4" />
-                  </button>
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto p-6">
+              
+              {/* TAB: GENERAL */}
+              {activeTab === 'general' && (
+                <div className="grid grid-cols-1 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 p-6 space-y-4">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Settings className="w-4 h-4"/> Allowed Listing Types</h3>
+                    <div className="flex flex-wrap gap-3">
+                      {ALL_LISTING_TYPES.map(lt => {
+                        const on = (draft.allowedListingTypes || []).includes(lt);
+                        return (
+                          <label key={lt} className={`flex items-center gap-2.5 px-5 py-3 rounded-xl border-2 cursor-pointer transition-all font-bold text-sm ${on ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300 shadow-[0_0_15px_rgba(79,70,229,0.15)]' : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-600 hover:bg-slate-800'
+                            } ${!hasEditPermission && 'opacity-50 cursor-not-allowed'}`}>
+                            <input type="checkbox" className="hidden" disabled={!hasEditPermission} checked={on} onChange={() => setDraft(d => ({ ...d, allowedListingTypes: toggleArray(d.allowedListingTypes, lt) }))} />
+                            {on ? <Check className="w-4 h-4" /> : <div className="w-4 h-4 rounded border border-slate-500 opacity-30" />}
+                            {lt}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 p-6 space-y-4">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Business Models</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                      {ALL_BUSINESS_MODELS.map(bm => {
+                        const on = (draft.businessModels || []).includes(bm);
+                        return (
+                          <label key={bm} className={`flex items-center justify-between px-4 py-3 rounded-xl border cursor-pointer transition-all text-xs font-bold ${on ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300' : 'border-slate-700/50 bg-slate-800/30 text-slate-400 hover:border-slate-600 hover:bg-slate-800'
+                            } ${!hasEditPermission && 'opacity-50 cursor-not-allowed'}`}>
+                            <input type="checkbox" className="hidden" disabled={!hasEditPermission} checked={on} onChange={() => setDraft(d => ({ ...d, businessModels: toggleArray(d.businessModels, bm) }))} />
+                            {bm}
+                            {on && <Check className="w-3 h-3 text-indigo-400" />}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 p-6 space-y-4">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Primary Workflow</h3>
+                    <select
+                      value={draft.workflow || ''}
+                      onChange={e => setDraft(d => ({ ...d, workflow: e.target.value }))}
+                      disabled={!hasEditPermission}
+                      className="w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-all shadow-inner"
+                    >
+                      <option value="">— Select a workflow —</option>
+                      {WORKFLOWS.map(w => <option key={w} value={w}>{w}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {(draft.parameters || []).map((p, i) => (
-                    <span key={i} className="inline-flex items-center gap-1.5 bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-600">
-                      {p.name}
-                      {hasEditPermission && (
-                        <button
-                          onClick={() => setDraft(d => ({ ...d, parameters: (d.parameters || []).filter((_, j) => j !== i) }))}
-                          className="text-slate-400 hover:text-rose-400 transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                    </span>
+              )}
+
+              {/* TAB: FEATURES MATRIX */}
+              {activeTab === 'features' && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {[
+                    {
+                      title: 'Sales & Pricing',
+                      icon: CreditCard,
+                      features: ['B2C', 'B2B', 'Bulk Pricing', 'MOQ', 'Quote', 'RFQ'] as FeatureRule[]
+                    },
+                    {
+                      title: 'Booking & Services',
+                      icon: Shield,
+                      features: ['Service', 'Appointment', 'Token', 'Meeting'] as FeatureRule[]
+                    },
+                    {
+                      title: 'Specialized Features',
+                      icon: Tags,
+                      features: ['Product Stock', 'Sample', 'Vehicle Test Drive'] as FeatureRule[]
+                    }
+                  ].map(group => (
+                    <div key={group.title} className={`bg-slate-800/40 rounded-xl border border-slate-700/50 overflow-hidden shadow-sm ${group.title === 'Sales & Pricing' ? 'lg:row-span-2' : ''}`}>
+                      <div className="bg-slate-900/50 px-4 py-3 border-b border-slate-700/50 flex items-center gap-2.5">
+                        <div className="w-6 h-6 rounded-md bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                          <group.icon className="w-3 h-3 text-indigo-400" />
+                        </div>
+                        <h3 className="font-bold text-slate-200 text-xs">{group.title}</h3>
+                      </div>
+                      
+                      <div className="divide-y divide-slate-700/30">
+                        {group.features.map(feature => {
+                          const state = getFeatureState(feature);
+                          return (
+                            <div key={feature} className="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-800/20 transition-colors">
+                              <div className="font-semibold text-xs text-slate-300">{feature}</div>
+                              
+                              <div className="flex bg-slate-900/80 rounded-lg p-0.5 border border-slate-800 shrink-0">
+                                <button
+                                  onClick={() => setFeatureState(feature, 'allowed')}
+                                  disabled={!hasEditPermission}
+                                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                                    state === 'allowed' ? 'bg-emerald-500/20 text-emerald-400 shadow-sm border border-emerald-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800 border border-transparent'
+                                  }`}
+                                >
+                                  {state === 'allowed' && <CheckCircle2 className="w-3 h-3" />}
+                                  Req
+                                </button>
+                                
+                                <button
+                                  onClick={() => setFeatureState(feature, 'optional')}
+                                  disabled={!hasEditPermission}
+                                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                                    state === 'optional' ? 'bg-amber-500/20 text-amber-400 shadow-sm border border-amber-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800 border border-transparent'
+                                  }`}
+                                >
+                                  {state === 'optional' && <MinusCircle className="w-3 h-3" />}
+                                  Opt
+                                </button>
+                                
+                                <button
+                                  onClick={() => setFeatureState(feature, 'notApplicable')}
+                                  disabled={!hasEditPermission}
+                                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                                    state === 'notApplicable' ? 'bg-rose-500/20 text-rose-400 shadow-sm border border-rose-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800 border border-transparent'
+                                  }`}
+                                >
+                                  {state === 'notApplicable' && <XCircle className="w-3 h-3" />}
+                                  Off
+                                </button>
+
+                                <button
+                                  onClick={() => setFeatureState(feature, 'none')}
+                                  disabled={!hasEditPermission}
+                                  className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                                    state === 'none' ? 'bg-slate-700 text-slate-300 shadow-sm border border-slate-600' : 'text-slate-600 hover:text-slate-400 hover:bg-slate-800 border border-transparent'
+                                  }`}
+                                >
+                                  -
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   ))}
-                  {(!draft.parameters || draft.parameters.length === 0) && (
-                    <span className="text-slate-600 text-xs italic">No attributes yet</span>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: SUBCATEGORIES */}
+              {activeTab === 'subcategories' && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black text-slate-300">Manage Category Hierarchy</h3>
+                    {hasEditPermission && (
+                      <button onClick={addSubcategory} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2">
+                        <Plus className="w-4 h-4" /> Add Subcategory
+                      </button>
+                    )}
+                  </div>
+                  
+                  {(!draft.subcategories || draft.subcategories.length === 0) ? (
+                    <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-12 flex flex-col items-center justify-center text-slate-500 border-dashed">
+                      <List className="w-12 h-12 mb-4 opacity-50" />
+                      <p className="font-bold">No subcategories defined.</p>
+                      <p className="text-sm">Add a subcategory to organize listings more effectively.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {draft.subcategories.map((sub, idx) => (
+                        <div key={idx} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex items-center justify-between group hover:border-indigo-500/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                              <List className="w-4 h-4" />
+                            </div>
+                            <span className="font-bold text-slate-200">{sub.name}</span>
+                          </div>
+                          {hasEditPermission && (
+                            <button onClick={() => removeSubcategory(idx)} className="text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all p-2 bg-slate-900 rounded-lg">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              </div>
+              )}
+
+              {/* TAB: ATTRIBUTES */}
+              {activeTab === 'attributes' && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-black text-slate-300">Dynamic Attributes Builder</h3>
+                      <p className="text-xs text-slate-500 mt-1">Define custom fields that sellers must fill out when creating a listing in this category.</p>
+                    </div>
+                    {hasEditPermission && (
+                      <button onClick={addAttribute} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2">
+                        <Plus className="w-4 h-4" /> Add Attribute
+                      </button>
+                    )}
+                  </div>
+
+                  {(!draft.parameters || draft.parameters.length === 0) ? (
+                    <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-12 flex flex-col items-center justify-center text-slate-500 border-dashed">
+                      <Tags className="w-12 h-12 mb-4 opacity-50" />
+                      <p className="font-bold">No custom attributes.</p>
+                      <p className="text-sm">Click "Add Attribute" to build dynamic forms for this category.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {draft.parameters.map((param, idx) => (
+                        <div key={idx} className="bg-slate-800/40 border border-slate-700 rounded-xl p-5 flex flex-col md:flex-row gap-4 md:items-start group">
+                          <div className="flex-1 space-y-4 w-full">
+                            <div className="flex flex-col md:flex-row gap-4">
+                              <div className="flex-1">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Attribute Name</label>
+                                <input 
+                                  type="text" 
+                                  value={param.name}
+                                  onChange={e => updateAttribute(idx, 'name', e.target.value)}
+                                  disabled={!hasEditPermission}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-bold focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                                />
+                              </div>
+                              <div className="w-full md:w-48">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Input Type</label>
+                                <select 
+                                  value={param.type}
+                                  onChange={e => updateAttribute(idx, 'type', e.target.value)}
+                                  disabled={!hasEditPermission}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm font-bold focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                                >
+                                  <option value="text">Text Input</option>
+                                  <option value="number">Number</option>
+                                  <option value="radio">Radio Buttons</option>
+                                  <option value="checkbox">Checkboxes</option>
+                                  <option value="pricelist">Price List Options</option>
+                                </select>
+                              </div>
+                            </div>
+                            
+                            {/* Options field for multi-choice types */}
+                            {['radio', 'checkbox', 'pricelist'].includes(param.type) && (
+                              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                <label className="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Options (Comma Separated)</label>
+                                <input 
+                                  type="text" 
+                                  value={param.options?.join(', ') || ''}
+                                  onChange={e => updateAttribute(idx, 'options', e.target.value)}
+                                  placeholder="e.g. Red, Blue, Green"
+                                  disabled={!hasEditPermission}
+                                  className="w-full bg-slate-900 border border-indigo-500/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-50 placeholder-slate-600"
+                                />
+                                {param.options && param.options.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {param.options.map((opt, i) => (
+                                      <span key={i} className="px-2 py-0.5 bg-indigo-500/10 text-indigo-300 rounded text-[10px] font-bold border border-indigo-500/20">{opt}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {['text', 'number'].includes(param.type) && (
+                              <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Placeholder Text (Optional)</label>
+                                <input 
+                                  type="text" 
+                                  value={param.placeholder || ''}
+                                  onChange={e => updateAttribute(idx, 'placeholder', e.target.value)}
+                                  placeholder="e.g. Enter product warranty in months"
+                                  disabled={!hasEditPermission}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-50 placeholder-slate-600"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          
+                          {hasEditPermission && (
+                            <div className="pt-6">
+                              <button onClick={() => removeAttribute(idx)} className="text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 p-2 rounded-lg transition-colors border border-transparent hover:border-rose-500/20">
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB: BILLING & COMMERCIALS */}
+              {activeTab === 'billing' && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
+                  <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 p-6 space-y-6">
+                    <div>
+                      <h3 className="text-sm font-black text-slate-300">Commercial Settings</h3>
+                      <p className="text-xs text-slate-500 mt-1">Set the default commission percentage or flat subscription rate for businesses operating in this category.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          Default Commission Rate (%)
+                        </label>
+                        <div className="relative">
+                          <input 
+                            type="number" 
+                            min="0" max="100" step="0.1"
+                            value={draft.defaultCommissionRate ?? 5.0}
+                            onChange={e => setDraft(d => ({ ...d, defaultCommissionRate: parseFloat(e.target.value) }))}
+                            disabled={!hasEditPermission}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-10 py-3 text-white font-bold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50 shadow-inner"
+                          />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">%</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500">The percentage taken from each sale.</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          Default Subscription / Flat Rate (₹)
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₹</span>
+                          <input 
+                            type="number" 
+                            min="0" step="100"
+                            value={draft.defaultFlatRate ?? 999.0}
+                            onChange={e => setDraft(d => ({ ...d, defaultFlatRate: parseFloat(e.target.value) }))}
+                            disabled={!hasEditPermission}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-8 pr-4 py-3 text-white font-bold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50 shadow-inner"
+                          />
+                        </div>
+                        <p className="text-[10px] text-slate-500">The fixed monthly/yearly fee if not using percentage.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
-
-            {/* Access Rules */}
-            <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Access Rules</h3>
-                <div className="flex items-center gap-4 text-xs font-semibold">
-                  <span className="flex items-center gap-1.5 text-emerald-400"><Check className="w-3 h-3" /> Allowed</span>
-                  <span className="flex items-center gap-1.5 text-amber-400"><Circle className="w-3 h-3" /> Optional</span>
-                  <span className="flex items-center gap-1.5 text-rose-400"><X className="w-3 h-3" /> Not Applicable</span>
-                  <span className="text-slate-500">(click to cycle)</span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {ALL_FEATURE_RULES.map(feature => (
-                  <FeatureChip key={feature} feature={feature} />
-                ))}
-              </div>
-
-              {/* Legend summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-700/50">
-                <div className="space-y-1">
-                  <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2">✓ Allowed</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(draft.allowedFeatures || []).length === 0
-                      ? <span className="text-xs text-slate-600 italic">None set</span>
-                      : (draft.allowedFeatures || []).map(f => (
-                        <span key={f} className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-semibold border border-emerald-500/20">{f}</span>
-                      ))
-                    }
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">○ Optional</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(draft.optionalFeatures || []).length === 0
-                      ? <span className="text-xs text-slate-600 italic">None set</span>
-                      : (draft.optionalFeatures || []).map(f => (
-                        <span key={f} className="text-xs bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded font-semibold border border-amber-500/20">{f}</span>
-                      ))
-                    }
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">✕ Not Applicable</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(draft.notApplicable || []).length === 0
-                      ? <span className="text-xs text-slate-600 italic">None set</span>
-                      : (draft.notApplicable || []).map(f => (
-                        <span key={f} className="text-xs bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded font-semibold border border-rose-500/20">{f}</span>
-                      ))
-                    }
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Save */}
-            {hasEditPermission && (
-              <div className="flex justify-end pb-6">
-                <button
-                  onClick={handleSave}
-                  className={`px-8 py-3 rounded-xl font-black text-sm transition-all shadow-lg ${saved
-                      ? 'bg-emerald-600 text-white shadow-emerald-900/30'
-                      : 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-900/30'
-                    }`}
-                >
-                  {saved ? '✓ Saved!' : 'Save Changes'}
-                </button>
-              </div>
-            )}
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-slate-600">
-            Select a category from the left panel
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-500 bg-slate-900/30 rounded-2xl border border-slate-700/50 border-dashed backdrop-blur-sm">
+            <List className="w-16 h-16 mb-4 opacity-20" />
+            <span className="text-lg font-bold text-slate-400">Select a category</span>
+            <span className="text-sm mt-1">Choose a category from the left panel to begin configuring</span>
           </div>
         )}
       </div>

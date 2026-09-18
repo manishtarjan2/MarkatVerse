@@ -28,6 +28,16 @@ let AdminBusinessController = class AdminBusinessController {
         };
         return this.adminBusinessService.updateSubscription(id, data);
     }
+    updateBilling(id, body) {
+        const data = {
+            commissionType: body.commissionType,
+            commissionRate: Number(body.commissionRate),
+            subscriptionStatus: body.subscriptionStatus,
+            subscriptionStartDate: body.subscriptionStartDate ? new Date(body.subscriptionStartDate) : null,
+            subscriptionEndDate: body.subscriptionEndDate ? new Date(body.subscriptionEndDate) : null,
+        };
+        return this.adminBusinessService.updateBilling(id, data);
+    }
 };
 __decorate([
     Get(),
@@ -43,6 +53,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], AdminBusinessController.prototype, "updateSubscription", null);
+__decorate([
+    Patch(':id/billing'),
+    __param(0, Param('id')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], AdminBusinessController.prototype, "updateBilling", null);
 AdminBusinessController = __decorate([
     Controller('admin/businesses'),
     __metadata("design:paramtypes", [AdminBusinessService])

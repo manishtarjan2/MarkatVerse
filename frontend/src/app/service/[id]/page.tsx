@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProducts } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
+import { useWishlist } from '@/context/WishlistContext';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -42,7 +43,7 @@ export default function ServiceDetails() {
   const { trackCategory, trackProductView } = useUserTrends();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [liked, setLiked] = useState(false);
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const [activeTab, setActiveTab] = useState<'about' | 'included' | 'gallery'>('about');
 
   const service = products.find(p => p.id === id);
@@ -97,8 +98,11 @@ export default function ServiceDetails() {
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
             </Link>
             <div className="flex items-center gap-2">
-              <button onClick={() => setLiked(l => !l)} className={`w-10 h-10 rounded-full flex items-center justify-center transition-all border backdrop-blur-md ${liked ? 'bg-rose-500 border-rose-400 text-white shadow-lg shadow-rose-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/20 hover:text-white hover:border-white/30'}`}>
-                <Heart className={`w-4 h-4 ${liked ? 'fill-white' : ''}`} />
+              <button 
+                onClick={() => toggleWishlist(service.id)} 
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all border backdrop-blur-md ${isInWishlist(service.id) ? 'bg-rose-500 border-rose-400 text-white shadow-lg shadow-rose-500/30' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/20 hover:text-white hover:border-white/30'}`}
+              >
+                <Heart className={`w-4 h-4 ${isInWishlist(service.id) ? 'fill-white' : ''}`} />
               </button>
               <button className="w-10 h-10 bg-white/5 border border-white/10 hover:bg-white/20 hover:border-white/30 text-white/70 hover:text-white rounded-full flex items-center justify-center transition-all backdrop-blur-md">
                 <Share2 className="w-4 h-4" />

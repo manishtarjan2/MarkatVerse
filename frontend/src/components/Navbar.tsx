@@ -10,7 +10,7 @@ import LiveTokenToggle from "@/components/LiveTokenToggle";
 
 export default function Navbar() {
   const { items } = useCart();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { userLocation, setUserLocation, setUserLat, setUserLng } = useProducts();
   const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -167,7 +167,7 @@ export default function Navbar() {
               <span className="text-[11px] font-medium">Help</span>
             </Link>
 
-            {!user && (
+            {!isLoading && !user && (
               // Not logged in: show Become a Seller
               <Link href="/seller/login" className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
                 <Store className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
@@ -201,7 +201,15 @@ export default function Navbar() {
         )}
 
         <div className="ml-2 pl-4 border-l border-slate-200">
-          {user ? (
+          {isLoading ? (
+            <div className="flex items-center gap-3 opacity-50">
+              <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse"></div>
+              <div className="hidden lg:flex flex-col gap-1">
+                <div className="w-20 h-4 bg-slate-200 rounded animate-pulse"></div>
+                <div className="w-16 h-3 bg-slate-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          ) : user ? (
             <Link href="/profile/settings" className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-sm border-2 border-white ring-2 ring-slate-100">
                 {user.name.charAt(0)}
