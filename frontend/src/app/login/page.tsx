@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -11,7 +11,13 @@ type View = 'signin' | 'register' | 'forgot' | 'otp' | 'reset-password' | 'succe
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { user, login, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.replace('/');
+    }
+  }, [user, authLoading, router]);
 
   const [view, setView] = useState<View>('signin');
   const [showPassword, setShowPassword] = useState(false);

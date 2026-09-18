@@ -5,7 +5,7 @@ import { useProducts, useCategoryRules } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useUserTrends } from '@/hooks/useUserTrends';
 import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin, PhoneCall, CalendarClock, Heart } from 'lucide-react';
 import SmartQueueWidget from '@/components/SmartQueueWidget';
@@ -14,6 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function ProductDetails() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
   const { trackCategory, trackProductView } = useUserTrends();
   const { addToCart } = useCart();
@@ -333,7 +334,7 @@ export default function ProductDetails() {
             </div>
             
             {isWholesaleConfig && (() => {
-              const printRate = product.originalPrice > product.price ? product.originalPrice : product.price;
+              const basePrice = product.price;
               
               return (
                 <div className="mt-5 border border-blue-200 rounded-xl overflow-hidden shadow-sm">
@@ -354,8 +355,8 @@ export default function ProductDetails() {
                         className={`p-3 flex flex-col transition-colors cursor-pointer hover:bg-blue-50 ${rfqQuantity === 1 ? 'bg-blue-50/50 ring-2 ring-blue-500 ring-inset' : ''}`}
                       >
                         <span className="text-xs text-slate-500 font-bold mb-1">1 Unit (Retail)</span>
-                        <span className="font-bold text-slate-800">₹{Math.round(product.price * 0.7).toLocaleString('en-IN')}</span>
-                        <span className="text-[10px] text-amber-600 font-bold mt-1">30% Elite Discount</span>
+                        <span className="font-bold text-slate-800">₹{Math.round(basePrice * 0.9).toLocaleString('en-IN')}</span>
+                        <span className="text-[10px] text-amber-600 font-bold mt-1">10% Elite Discount</span>
                       </div>
                     )}
                     {product.wholesaleTiers && product.wholesaleTiers.length > 0 ? (
@@ -375,10 +376,10 @@ export default function ProductDetails() {
                               {tier.minQty}-Pack Bundle
                             </span>
                             <span className="font-bold text-slate-800">
-                              ₹{Math.round(printRate * (1 - tier.margin / 100)).toLocaleString('en-IN')}
+                              ₹{Math.round(basePrice * (1 - tier.margin / 100)).toLocaleString('en-IN')}
                             </span>
                             <span className="text-[10px] text-emerald-600 font-bold mt-1">
-                              {tier.margin}% Margin on MRP
+                              {tier.margin}% Margin
                             </span>
                           </div>
                         );
@@ -393,8 +394,8 @@ export default function ProductDetails() {
                           className={`p-3 flex flex-col transition-colors cursor-pointer hover:bg-blue-50 ${rfqQuantity === 12 ? 'bg-blue-50/50 ring-2 ring-blue-500 ring-inset' : ''}`}
                         >
                           <span className="text-xs text-slate-500 font-bold mb-1">12-Pack Bundle</span>
-                          <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.80).toLocaleString('en-IN')}</span>
-                          <span className="text-[10px] text-emerald-600 font-bold mt-1">20% Margin on MRP</span>
+                          <span className="font-bold text-slate-800">₹{Math.round(basePrice * 0.80).toLocaleString('en-IN')}</span>
+                          <span className="text-[10px] text-emerald-600 font-bold mt-1">20% Wholesale Margin</span>
                         </div>
                         <div 
                           onClick={() => {
@@ -404,8 +405,8 @@ export default function ProductDetails() {
                           className={`p-3 flex flex-col transition-colors cursor-pointer hover:bg-blue-50 ${rfqQuantity === 100 ? 'bg-blue-50/50 ring-2 ring-blue-500 ring-inset' : ''}`}
                         >
                           <span className="text-xs text-slate-500 font-bold mb-1">100-Pack Bundle</span>
-                          <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.70).toLocaleString('en-IN')}</span>
-                          <span className="text-[10px] text-emerald-600 font-bold mt-1">30% Margin on MRP</span>
+                          <span className="font-bold text-slate-800">₹{Math.round(basePrice * 0.70).toLocaleString('en-IN')}</span>
+                          <span className="text-[10px] text-emerald-600 font-bold mt-1">30% Wholesale Margin</span>
                         </div>
                         <div 
                           onClick={() => {
@@ -415,8 +416,8 @@ export default function ProductDetails() {
                           className={`p-3 flex flex-col transition-colors cursor-pointer hover:bg-blue-50 ${rfqQuantity === 150 ? 'bg-blue-50/50 ring-2 ring-blue-500 ring-inset' : ''}`}
                         >
                           <span className="text-xs text-slate-500 font-bold mb-1">150-Pack Bundle</span>
-                          <span className="font-bold text-slate-800">₹{Math.round(printRate * 0.60).toLocaleString('en-IN')}</span>
-                          <span className="text-[10px] text-emerald-600 font-bold mt-1">40% Margin on MRP</span>
+                          <span className="font-bold text-slate-800">₹{Math.round(basePrice * 0.60).toLocaleString('en-IN')}</span>
+                          <span className="text-[10px] text-emerald-600 font-bold mt-1">40% Wholesale Margin</span>
                         </div>
                       </>
                     )}
@@ -763,7 +764,10 @@ export default function ProductDetails() {
                 <div className="flex flex-col sm:flex-row gap-4 w-full">
                   <button
                     className="flex-1 px-6 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-amber-500/20"
-                    onClick={() => alert(`Redirecting to checkout for ${product.name}!`)}
+                    onClick={() => {
+                      addToCart(product);
+                      router.push('/checkout');
+                    }}
                   >
                     Buy Now
                   </button>

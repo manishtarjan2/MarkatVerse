@@ -6,6 +6,16 @@ import { MapPin, CreditCard, CheckCircle2, ChevronRight, Lock, Package, ArrowRig
 import MockPaymentGateway from '@/components/MockPaymentGateway';
 import { useAuth } from '@/context/AuthContext';
 
+type Address = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  street: string;
+  city: string;
+  pinCode: string;
+  phone: string;
+};
+
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
   const { user } = useAuth();
@@ -23,6 +33,50 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('');
   const [areas, setAreas] = useState<string[]>([]);
   const [isFetchingPin, setIsFetchingPin] = useState(false);
+
+  // Address Selection States
+  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+  const [editAddressId, setEditAddressId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    try {
+      const savedArr = localStorage.getItem('markatverse_saved_addresses');
+      const legacySaved = localStorage.getItem('markatverse_checkout_details');
+      
+      let addressesToLoad: Address[] = [];
+      
+      if (savedArr) {
+        addressesToLoad = JSON.parse(savedArr);
+      } else if (legacySaved) {
+        const details = JSON.parse(legacySaved);
+        if (details.firstName) {
+          addressesToLoad = [{ ...details, id: '1' }];
+          localStorage.setItem('markatverse_saved_addresses', JSON.stringify(addressesToLoad));
+        }
+      }
+
+      if (addressesToLoad.length > 0) {
+        setSavedAddresses(addressesToLoad);
+        setSelectedAddressId(addressesToLoad[0].id);
+        setShowAddressForm(false);
+      } else {
+        setShowAddressForm(true);
+        if (user) {
+          if (user.name) {
+            const names = user.name.split(' ');
+            setFirstName(names[0] || '');
+            setLastName(names.slice(1).join(' ') || '');
+          }
+          if (user.phone) setPhone(user.phone);
+        }
+      }
+    } catch (e) {
+      console.error('Could not load checkout details', e);
+      setShowAddressForm(true);
+    }
+  }, [user]);
 
   React.useEffect(() => {
     if (pinCode.length === 6) {
@@ -145,8 +199,84 @@ export default function CheckoutPage() {
                     <MapPin className="w-5 h-5 text-blue-600" /> Delivery Address
                   </h2>
                   
-                  <div className="space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {!showAddressForm && savedAddresses.length > 0 && (
+                    <div className="space-y-4">
+                      {savedAddresses.map(addr => (
+                        <label key={addr.id} className={`block cursor-pointer border-2 rounded-2xl p-4 transition-all ${selectedAddressId === addr.id ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 hover:border-blue-200'}`}>
+                          <div className="flex items-start gap-4">
+                            <input type="radio" checked={selectedAddressId === addr.id} onChange={() => setSelectedAddressId(addr.id)} className="mt-1 w-5 h-5 text-blue-600 focus:ring-blue-500" />
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start">
+                                <div className="font-bold text-slate-800">{addr.firstName} {addr.lastName}</div>
+                                {selectedAddressId === addr.id && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setFirstName(addr.firstName);
+                                      setLastName(addr.lastName);
+                                      setStreet(addr.street);
+                                      setCity(addr.city);
+                                      setPinCode(addr.pinCode);
+                                      setPhone(addr.phone);
+                                      setEditAddressId(addr.id);
+                                      setShowAddressForm(true);
+                                    }}
+                                    className="text-blue-600 font-semibold text-sm hover:underline"
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                              </div>
+                              <div className="text-sm text-slate-600 mt-1 leading-relaxed">{addr.street},<br/>{addr.city} - <span className="font-bold">{addr.pinCode}</span></div>
+                              <div className="text-sm font-medium text-slate-700 mt-2">Mobile: <span className="font-bold">{addr.phone}</span></div>
+                              
+                              {selectedAddressId === addr.id && (
+                                <button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setFirstName(addr.firstName);
+                                    setLastName(addr.lastName);
+                                    setStreet(addr.street);
+                                    setCity(addr.city);
+                                    setPinCode(addr.pinCode);
+                                    setPhone(addr.phone);
+                                    setStep(2);
+                                  }} 
+                                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"
+                                >
+                                  Deliver Here <ArrowRight className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                      <button 
+                        onClick={() => {
+                          setFirstName('');
+                          setLastName('');
+                          setStreet('');
+                          setCity('');
+                          setPinCode('');
+                          setPhone('');
+                          setEditAddressId(null);
+                          setShowAddressForm(true);
+                        }} 
+                        className="w-full border-2 border-dashed border-slate-300 text-blue-600 font-bold py-4 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all"
+                      >
+                        + Add a New Address
+                      </button>
+                    </div>
+                  )}
+                  
+                  {(showAddressForm || savedAddresses.length === 0) && (
+                    <div className="space-y-5 animate-in fade-in duration-300">
+                      {savedAddresses.length > 0 && (
+                        <button onClick={() => setShowAddressForm(false)} className="text-slate-500 hover:text-slate-800 font-bold text-sm mb-2 flex items-center gap-1 transition-colors">
+                          ← Back to saved addresses
+                        </button>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">First Name</label>
                         <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
@@ -197,19 +327,36 @@ export default function CheckoutPage() {
                         </div>
                         <input type="tel" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="9876543210" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pl-[4.5rem] text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
                       </div>
-                      {phone && phone.length > 0 && phone.length < 10 && (
+                      {phone && phone.length > 0 && phone.length !== 10 && (
                         <p className="text-xs text-red-500 mt-1">Phone number must be 10 digits</p>
                       )}
                     </div>
                   </div>
+                  )}
 
                   <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
                     <button 
-                      onClick={() => setStep(2)}
+                      onClick={() => {
+                        let newAddresses = [...savedAddresses];
+                        if (editAddressId) {
+                          newAddresses = newAddresses.map(a => 
+                            a.id === editAddressId ? { ...a, firstName, lastName, street, city, pinCode, phone } : a
+                          );
+                        } else {
+                          const newAddr: Address = { id: Date.now().toString(), firstName, lastName, street, city, pinCode, phone };
+                          newAddresses.push(newAddr);
+                        }
+                        
+                        setSavedAddresses(newAddresses);
+                        localStorage.setItem('markatverse_saved_addresses', JSON.stringify(newAddresses));
+                        setStep(2);
+                        setEditAddressId(null);
+                        setShowAddressForm(false);
+                      }}
                       disabled={!isFormValid}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Continue to Payment <ArrowRight className="w-5 h-5" />
+                      Save and Deliver Here <ArrowRight className="w-5 h-5" />
                     </button>
                   </div>
                 </div>

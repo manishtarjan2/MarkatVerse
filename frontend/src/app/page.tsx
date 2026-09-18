@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { ShieldCheck, Award, RefreshCw, Zap } from 'lucide-react';
-import ProductGrid from "@/components/ProductGrid";
 import UserWidget from "@/components/UserWidget";
 import JoinSellerButton from "@/components/JoinSellerButton";
 import LiveBookingWidget from "@/components/LiveBookingWidget";
+import dynamic from 'next/dynamic';
+import ScrollReveal from "@/components/ScrollReveal";
+
+const ProductGrid = dynamic(() => import('@/components/ProductGrid'));
 
 export default function Home() {
   return (
@@ -138,6 +141,7 @@ export default function Home() {
         </section>
         
         {/* Browse Categories & Services */}
+        <ScrollReveal delay={100}>
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-2">
           
           {/* Categories Panel */}
@@ -206,10 +210,11 @@ export default function Home() {
               ))}
             </div>
           </div>
-          
         </section>
+        </ScrollReveal>
 
         {/* Top Picks For You (Product Grid) */}
+        <ScrollReveal delay={200}>
         <section className="mt-4">
           <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
             <h2 className="text-xl lg:text-2xl font-bold text-slate-900">Top Picks For You</h2>
@@ -217,8 +222,10 @@ export default function Home() {
           </div>
           <ProductGrid personalized={true} />
         </section>
+        </ScrollReveal>
 
         {/* Services For You */}
+        <ScrollReveal delay={300}>
         <section className="mt-4">
           <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
             <h2 className="text-xl lg:text-2xl font-bold text-slate-900">Services For You</h2>
@@ -226,16 +233,20 @@ export default function Home() {
           </div>
           <ProductGrid serviceOnly={true} personalized={true} />
         </section>
+        </ScrollReveal>
 
         {/* Recently Viewed */}
+        <ScrollReveal delay={400}>
         <section className="mt-4">
           <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
             <h2 className="text-xl lg:text-2xl font-bold text-slate-900">Recently Viewed</h2>
           </div>
           <ProductGrid recent={true} />
         </section>
+        </ScrollReveal>
 
         {/* Global Markets & Hubs (Grid Layout replacing the long scrolling lists) */}
+        <ScrollReveal delay={500}>
         <section className="mt-8">
           <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
             <div>
@@ -313,15 +324,16 @@ export default function Home() {
                 <div className="text-white/80 text-[10px] uppercase tracking-widest font-bold mb-1">Mobility & Freight</div>
                 <h3 className="text-xl font-bold text-white leading-tight">Transport Services</h3>
               </div>
-              <div className="p-5 text-sm text-slate-600 font-medium bg-white group-hover:bg-cyan-50 transition-colors flex justify-between items-center">
-                Autos, cabs, buses, & logistics <span className="w-8 h-8 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-colors">›</span>
+              <div className="p-5 text-sm text-slate-600 font-medium bg-white group-hover:bg-emerald-50 transition-colors flex justify-between items-center">
+                Plumbers, electricians & more <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">›</span>
               </div>
             </Link>
 
           </div>
         </section>
+        </ScrollReveal>
 
-        {/* Premium Trust Footer */}
+        {/* Call to Action Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 mb-6">
           <div className="group relative bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex items-center gap-4">
             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3 group-hover:bg-blue-500/20 transition-all"></div>
