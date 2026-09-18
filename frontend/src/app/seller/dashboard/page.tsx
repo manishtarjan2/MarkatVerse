@@ -462,13 +462,28 @@ function DashboardContent() {
           </Link>
         </div>
         
-        <div className="p-6 text-center">
+        <div className="p-6 text-center border-b border-slate-100">
           <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-black text-xl shadow-md mx-auto mb-4">
             {(user?.name || user?.business?.name || 'S').charAt(0).toUpperCase()}
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">{user?.name || user?.business?.name || 'Seller'}</h3>
-            <div className="text-xs font-mono text-slate-500 mt-0.5">{user?.business?.businessCode || user?.markatId || 'BUS-XXXX'}</div>
+            <h3 className="text-lg font-bold text-slate-900">{user?.business?.name || user?.name || 'Seller'}</h3>
+            
+            <div className="flex flex-col gap-1 mt-3 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
+              {user?.business?.id && (
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Shop ID</span>
+                  <span className="text-xs font-mono font-bold text-slate-700">{user.business.id}</span>
+                </div>
+              )}
+              {user?.id && (
+                <div className="flex justify-between items-center px-1">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Owner ID</span>
+                  <span className="text-xs font-mono font-bold text-slate-700">{user.id}</span>
+                </div>
+              )}
+            </div>
+
           </div>
           <div className="flex items-center justify-center gap-1 text-emerald-600 text-sm font-medium mt-2">
             <CheckCircle2 className="w-4 h-4" /> Verified Seller

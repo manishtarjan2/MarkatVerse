@@ -61,6 +61,12 @@ export default function ProfileSettings() {
               </div>
               <h3 className="text-xl font-bold text-white mb-1">{user?.name || 'Amit Verma'}</h3>
               <div className="text-blue-400 text-sm font-medium">{email}</div>
+              {user?.id && (
+                <div className="mt-3 px-3 py-2 bg-slate-950/50 rounded-lg border border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-900 transition-colors" onClick={() => { navigator.clipboard.writeText(user.id); alert('ID Copied!'); }}>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Account ID</span>
+                  <span className="text-xs font-mono text-slate-300 font-bold">{user.id}</span>
+                </div>
+              )}
               <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-semibold text-slate-300">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Fully Verified
               </div>
