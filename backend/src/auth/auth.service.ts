@@ -1,13 +1,15 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private idGenerator: IdGeneratorService
   ) {}
 
   async signup(data: any) {
@@ -45,8 +47,10 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
+    const markatId = await this.idGenerator.generateUserId();
     const user = await this.prisma.user.create({
       data: {
+        markatId,
         name: data.name,
         email: data.email || null,
         phone: data.phone || null,
@@ -68,7 +72,8 @@ export class AuthService {
       where: {
         OR: [
           { email: identifier },
-          { phone: identifier }
+          { phone: identifier },
+          { markatId: identifier }
         ]
       }
     });
@@ -93,8 +98,10 @@ export class AuthService {
     let user = await this.prisma.user.findUnique({ where: { phone } });
 
     if (!user) {
+      const markatId = await this.idGenerator.generateUserId();
       user = await this.prisma.user.create({
         data: {
+          markatId,
           name: 'New User',
           phone: phone,
           email: `${phone}@temporary.markatverse.com`,
@@ -133,8 +140,10 @@ export class AuthService {
       let user = await this.prisma.user.findFirst({ where: { email } });
 
       if (!user) {
+        const markatId = await this.idGenerator.generateUserId();
         user = await this.prisma.user.create({
           data: {
+            markatId,
             name: name,
             email: email,
             password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
@@ -155,7 +164,7 @@ export class AuthService {
       const payload = this.jwtService.verify(token);
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
-        select: { id: true, name: true, email: true, phone: true, role: true, business: { include: { wallet: true } } }
+        select: { id: true, markatId: true, name: true, email: true, phone: true, role: true, business: { include: { wallet: true } } }
       });
       if (!user) throw new UnauthorizedException('User not found');
       return user;
@@ -214,6 +223,7 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
+        markatId: user.markatId,
         name: user.name,
         email: user.email,
         phone: user.phone,

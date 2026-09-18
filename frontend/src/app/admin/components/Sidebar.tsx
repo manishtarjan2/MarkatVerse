@@ -187,11 +187,11 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
       )}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-50
-        w-[280px] lg:h-screen bg-slate-950 border-r border-slate-800 flex flex-col shrink-0
-        transform transition-transform duration-300 ease-in-out overflow-y-auto
+        w-[280px] lg:h-screen bg-slate-950/80 backdrop-blur-xl border-r border-white/5 flex flex-col shrink-0
+        transform transition-transform duration-300 ease-in-out overflow-y-auto shadow-2xl
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-6 border-b border-slate-800 flex flex-col gap-4 sticky top-0 bg-slate-950 z-10">
+        <div className="p-6 border-b border-white/5 flex flex-col gap-4 sticky top-0 bg-slate-950/80 backdrop-blur-md z-10">
           <Link href="/" className="flex items-center no-underline hover:opacity-90 transition-opacity">
             <img src="/logo.png" alt="MarkatVerse" className="h-10 object-contain scale-[2.5] origin-left brightness-0 invert" />
           </Link>
@@ -215,17 +215,17 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
           {filteredNavItems.map((item) => (
             <div key={item.name} className="mb-2">
               {item.href ? (
-                <Link href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-                  <div className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${pathname === item.href ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 border border-transparent'}`}>
+                <Link href={item.href} onClick={() => setIsMobileMenuOpen(false)} className="block group">
+                  <div className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 transform group-hover:translate-x-1 ${pathname === item.href ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent'}`}>
                     {item.icon}
                     <span>{item.name}</span>
                   </div>
                 </Link>
               ) : (
-                <div>
+                <div className="group">
                   <div 
                     onClick={() => toggleMenu(item.name)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 cursor-pointer ${openMenus[item.name] ? 'bg-slate-800/50 text-white' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 transform group-hover:translate-x-1 cursor-pointer ${openMenus[item.name] ? 'bg-white/5 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
                   >
                     <div className="flex items-center gap-3">
                       {item.icon}
@@ -237,8 +237,8 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
                     <ul className="list-none pl-11 pr-2 mt-2 space-y-1">
                       {item.subItems.map((sub) => (
                         <li key={sub.name}>
-                          <Link href={sub.href} onClick={() => setIsMobileMenuOpen(false)}>
-                            <div className={`w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${pathname === sub.href ? 'bg-slate-700/50 text-emerald-400 shadow-sm' : 'text-slate-400 hover:bg-slate-700/30 hover:text-slate-200'}`}>
+                          <Link href={sub.href} onClick={() => setIsMobileMenuOpen(false)} className="block group/sub">
+                            <div className={`w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 transform group-hover/sub:translate-x-1 ${pathname === sub.href ? 'bg-white/10 text-emerald-400 shadow-sm border-l-2 border-emerald-400' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border-l-2 border-transparent'}`}>
                               {sub.name}
                             </div>
                           </Link>

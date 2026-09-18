@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 
 @Injectable()
 export class ServiceQueueService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerator: IdGeneratorService
+  ) {}
 
   // ─── Queue Management ────────────────────────────────────────────────────────
 
@@ -132,9 +136,11 @@ export class ServiceQueueService {
     });
 
     const estimatedWaitMin = mode === 'TOKEN' ? ahead * queue.avgMinutes : 0;
+    const bookingNumber = await this.idGenerator.generateBookingId(mode === 'TOKEN');
 
     const token = await this.prisma.serviceBooking.create({
       data: {
+        bookingNumber,
         queueId,
         tokenNumber,
         bookingMode: mode,

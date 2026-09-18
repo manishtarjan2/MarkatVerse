@@ -51,6 +51,7 @@ export default function AdminOrdersPage() {
 
   const filteredOrders = orders.filter(o => 
     o.id?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    o.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.customerId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -135,7 +136,7 @@ export default function AdminOrdersPage() {
                         <ShoppingBag className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm font-mono">{order.id.slice(0,8)}...</div>
+                        <div className="font-bold text-white text-sm font-mono">{order.orderNumber || `${order.id.slice(0,8)}...`}</div>
                         <div className="text-xs text-slate-500 mt-0.5">{new Date(order.createdAt || Date.now()).toLocaleDateString()}</div>
                       </div>
                     </div>

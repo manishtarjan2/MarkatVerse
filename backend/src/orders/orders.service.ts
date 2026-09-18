@@ -2,14 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { UpdateOrderDto } from './dto/update-order.dto.js';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerator: IdGeneratorService
+  ) {}
 
   async create(createOrderDto: CreateOrderDto) {
+    const orderNumber = await this.idGenerator.generateOrderId();
     return this.prisma.order.create({
       data: {
+        orderNumber,
         buyerId: createOrderDto.buyerId,
         total: createOrderDto.total,
         status: createOrderDto.status || 'PENDING',
@@ -37,6 +43,7 @@ export class OrdersService {
     // Map to match frontend expectations
     return orders.map(o => ({
       id: o.id,
+      orderNumber: o.orderNumber,
       customerId: o.buyerId,
       customerName: o.buyerId || 'Guest',
       totalAmount: o.total,
@@ -62,6 +69,7 @@ export class OrdersService {
 
     return orders.map(o => ({
       id: o.id,
+      orderNumber: o.orderNumber,
       buyer: o.buyerId || 'Guest User',
       item: o.items.map(i => i.productName || 'Unknown Item').join(', '),
       amount: `₹${o.total}`,

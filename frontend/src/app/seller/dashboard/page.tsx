@@ -468,8 +468,9 @@ function DashboardContent() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-900">{user?.name || user?.business?.name || 'Seller'}</h3>
+            <div className="text-xs font-mono text-slate-500 mt-0.5">{user?.business?.businessCode || user?.markatId || 'BUS-XXXX'}</div>
           </div>
-          <div className="flex items-center justify-center gap-1 text-emerald-600 text-sm font-medium mt-1">
+          <div className="flex items-center justify-center gap-1 text-emerald-600 text-sm font-medium mt-2">
             <CheckCircle2 className="w-4 h-4" /> Verified Seller
           </div>
         </div>

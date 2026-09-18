@@ -3,13 +3,20 @@ import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerator: IdGeneratorService
+  ) {}
 
-  create(createUserDto: any) {
-    return this.prisma.user.create({ data: createUserDto });
+  async create(createUserDto: any) {
+    const markatId = await this.idGenerator.generateUserId();
+    return this.prisma.user.create({ 
+      data: { ...createUserDto, markatId } 
+    });
   }
 
   findAll() {

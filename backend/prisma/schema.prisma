@@ -9,6 +9,7 @@ generator client {
 
 model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  markatId  String?  @unique
   email     String?  @unique
   phone     String?  @unique
   password  String
@@ -29,6 +30,7 @@ model User {
 
 model Business {
   id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  businessCode String? @unique
   userId       String  @unique @db.ObjectId
   name         String
   logo         String?
@@ -152,8 +154,9 @@ model Lead {
 }
 
 model Order {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
-  buyerId   String?     // Removed @db.ObjectId to allow "guest" or any string, or just make optional
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber String?     @unique
+  buyerId     String?     // Removed @db.ObjectId to allow "guest" or any string, or just make optional
   total     Float
   status    String      @default("PENDING") // PENDING, SHIPPED, etc
   createdAt DateTime    @default(now())
@@ -207,6 +210,7 @@ model ServiceQueue {
 
 model ServiceBooking {
   id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  bookingNumber    String?      @unique
   queueId          String       @db.ObjectId
   
   // Unified Booking Identity
@@ -238,6 +242,7 @@ model ServiceBooking {
 
 model ServiceStaff {
   id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  staffCode        String?      @unique
   queueId          String       @db.ObjectId
   name             String
   imageUrl         String?
@@ -485,4 +490,9 @@ model SystemConfig {
   value       String   // e.g. "5"
   description String?
   updatedAt   DateTime @updatedAt
+}
+
+model Counter {
+  id  String @id @map("_id") // "User", "Business", "Order", "Booking", "Staff"
+  seq Int    @default(0)
 }

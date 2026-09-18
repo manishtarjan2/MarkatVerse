@@ -91,7 +91,9 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
                       </div>
                       <div>
                         <div className="font-bold text-white text-sm">{user.name}</div>
-                        <div className="text-xs text-slate-500 mt-0.5 font-mono">{user.id.slice(0,8)}...</div>
+                        <div className="text-xs text-slate-500 mt-0.5 font-mono">
+                          {user.markatId || `${user.id.slice(0,8)}...`}
+                        </div>
                       </div>
                     </div>
                   </td>

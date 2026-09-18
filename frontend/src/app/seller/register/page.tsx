@@ -14,6 +14,9 @@ export default function SellerRegistrationPage() {
   
   const [sectors, setSectors] = useState<any[]>([]);
   const [selectedSector, setSelectedSector] = useState<string>('');
+  
+  const [businessName, setBusinessName] = useState<string>('');
+  const [businessPhone, setBusinessPhone] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
 
   const { user } = useAuth();
@@ -23,6 +26,8 @@ export default function SellerRegistrationPage() {
   useEffect(() => {
     if (businessModel) {
       setLoading(true);
+      setSelectedType('');
+      setSelectedSector('');
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/configuration/business-types?mainType=${businessModel}`)
         .then(res => res.json())
         .then(data => setBusinessTypes(data))
@@ -34,10 +39,14 @@ export default function SellerRegistrationPage() {
   useEffect(() => {
     if (selectedType) {
       setLoading(true);
+      setSelectedSector('');
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/configuration/sectors?businessTypeId=${selectedType}`)
         .then(res => res.json())
         .then(data => setSectors(data))
         .finally(() => setLoading(false));
+    } else {
+      setSectors([]);
+      setSelectedSector('');
     }
   }, [selectedType]);
 
@@ -60,7 +69,7 @@ export default function SellerRegistrationPage() {
           
           {step === 1 && (
             <div className="space-y-6">
-              <h3 className="text-lg font-medium">Select Business Model</h3>
+              <h3 className="text-lg font-medium">Select Business Model <span className="text-red-500">*</span></h3>
               <div className="grid grid-cols-2 gap-4">
                 {['B2B', 'B2C', 'BOTH', 'SERVICE'].map((model) => (
                   <button
@@ -88,35 +97,66 @@ export default function SellerRegistrationPage() {
             <div className="space-y-6">
               <h3 className="text-lg font-medium">Business Configuration</h3>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Business Type</label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md border"
-                >
-                  <option value="">Select a type...</option>
-                  {businessTypes.map((t: any) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {selectedType && (
+              <div className="bg-indigo-50 border border-indigo-200 p-5 rounded-xl space-y-4 shadow-sm mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Sector</label>
+                  <h4 className="text-sm font-bold text-indigo-900 flex items-center gap-2">
+                    <span>🎯</span> Core Business Categorization
+                  </h4>
+                  <p className="text-xs text-indigo-700 mt-1">Please accurately select your business category to enable the right dashboard features.</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-indigo-900">Business Type <span className="text-red-500">*</span></label>
                   <select
-                    value={selectedSector}
-                    onChange={(e) => setSelectedSector(e.target.value)}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md border"
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-indigo-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border bg-white shadow-sm transition-shadow"
                   >
-                    <option value="">Select a sector...</option>
-                    {sectors.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                    <option value="">Select a type...</option>
+                    {businessTypes.map((t: any) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
                   </select>
                 </div>
-              )}
+
+                {selectedType && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="block text-sm font-medium text-indigo-900">Sector <span className="text-red-500">*</span></label>
+                    <select
+                      value={selectedSector}
+                      onChange={(e) => setSelectedSector(e.target.value)}
+                      className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-indigo-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-lg border bg-white shadow-sm transition-shadow"
+                    >
+                      <option value="">Select a sector...</option>
+                      {sectors.map((s: any) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Business Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="e.g. Acme Corp"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md border"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Business Phone (Optional)</label>
+                <input
+                  type="text"
+                  value={businessPhone}
+                  onChange={(e) => setBusinessPhone(e.target.value)}
+                  placeholder="e.g. +91-9876543210"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md border"
+                />
+              </div>
 
               <div className="flex gap-4">
                 <button
@@ -127,7 +167,7 @@ export default function SellerRegistrationPage() {
                 </button>
                 <button
                   onClick={handleNext}
-                  disabled={!selectedSector}
+                  disabled={!selectedSector || !businessName.trim()}
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
                 >
                   Next
@@ -227,11 +267,11 @@ export default function SellerRegistrationPage() {
                       
                       const payload = {
                         email: user?.email,
-                        phone: user?.phone,
+                        phone: businessPhone || user?.phone,
                         ownerName: user?.name,
                         mainType: businessModel,
                         businessType: selectedType, // e.g. WHOLESALER, DOCTOR, etc.
-                        businessName: sName,
+                        businessName: businessName,
                       };
 
                       await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sellers`, {

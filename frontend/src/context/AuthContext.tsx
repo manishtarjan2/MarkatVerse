@@ -5,6 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 type User = {
   id?: string;
+  markatId?: string;
   name: string;
   phone: string;
   email?: string;
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(data => {
         setUser({
           id: data.id,
+          markatId: data.markatId,
           name: data.name,
           email: data.email,
           phone: data.phone || '',

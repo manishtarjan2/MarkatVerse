@@ -22,25 +22,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 text-slate-100 flex flex-col lg:flex-row font-sans relative overflow-x-hidden">
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col lg:flex-row font-sans relative overflow-x-hidden">
+      {/* Ambient Premium Glows */}
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/2"></div>
+      <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[150px] pointer-events-none translate-y-1/3"></div>
+
       
-      {/* Top right role simulator */}
-      <div className="hidden lg:flex absolute top-4 right-10 z-50 items-center gap-3 bg-slate-800 p-2 rounded-xl border border-slate-700 shadow-lg">
-        <span className="text-xs font-bold text-slate-400 uppercase">Simulate Login As:</span>
-        <select
-          value={currentAdminRole}
-          onChange={(e) => setCurrentAdminRole(e.target.value as AdminRole)}
-          className="bg-slate-900 text-emerald-400 text-sm font-bold rounded-lg px-3 py-1 border border-slate-700 focus:outline-none focus:border-emerald-500"
-        >
-          <option value="super_admin">Super Admin</option>
-          <option value="catalog_admin">Catalog Admin (Products/Cats)</option>
-          <option value="onboarding_admin">Onboarding Admin (Approvals)</option>
-          <option value="support_admin">Support Admin (Users/Overview)</option>
-        </select>
-      </div>
+
 
       {/* Mobile Header */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-slate-950 border-b border-slate-800 shrink-0 sticky top-0 z-40">
+      <div className="lg:hidden flex items-center justify-between p-4 bg-slate-950/80 backdrop-blur-md border-b border-white/5 shrink-0 sticky top-0 z-40">
         <Link href="/" className="flex items-center no-underline">
           <img src="/logo.png" alt="MarkatVerse" className="h-8 object-contain scale-[2] origin-left brightness-0 invert" />
         </Link>
@@ -69,6 +60,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-[calc(100vh-65px)] lg:h-screen overflow-y-auto p-4 lg:p-10 relative">
+        {/* Top right role simulator */}
+        <div className="hidden lg:flex absolute top-4 right-10 z-50 items-center gap-3 bg-slate-900/60 backdrop-blur-md p-2 rounded-xl border border-white/10 shadow-2xl">
+          <span className="text-xs font-bold text-slate-400 uppercase">Simulate Login As:</span>
+          <select
+            value={currentAdminRole}
+            onChange={(e) => setCurrentAdminRole(e.target.value as AdminRole)}
+            className="bg-slate-900 text-emerald-400 text-sm font-bold rounded-lg px-3 py-1 border border-slate-700 focus:outline-none focus:border-emerald-500"
+          >
+            <option value="super_admin">Super Admin</option>
+            <option value="catalog_admin">Catalog Admin (Products/Cats)</option>
+            <option value="onboarding_admin">Onboarding Admin (Approvals)</option>
+            <option value="support_admin">Support Admin (Users/Overview)</option>
+          </select>
+        </div>
+
         {/* Pass the role via context or cloneElement if needed, but since we are migrating, pages should fetch their own context. 
             For now, we can render children directly. */}
         {children}

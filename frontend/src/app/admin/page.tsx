@@ -18,7 +18,6 @@ export default function AdminDashboardPage() {
   const { allUsers } = useAuth();
   const { currentAdminRole, canEdit, canToggleSector } = useAdminRole();
   const [settings, setSettings] = useState(defaultSettings);
-  const [isSandboxMode, setIsSandboxMode] = useState(false);
   const [dummyStatus, setDummyStatus] = useState<boolean | null>(null);
   
   // States for real data aggregation
@@ -94,13 +93,13 @@ export default function AdminDashboardPage() {
       }
     };
 
-    if (allUsers.length > 0 && !isSandboxMode) {
+    if (allUsers.length > 0) {
       fetchGlobalData();
     } else {
       setIsLoading(false);
     }
     fetchDummyStatus();
-  }, [allUsers, isSandboxMode]);
+  }, [allUsers]);
 
   const toggleSector = (id: string) => {
     if (!canToggleSector()) return;
@@ -108,11 +107,6 @@ export default function AdminDashboardPage() {
       ...prev,
       sectors: prev.sectors.map(s => s.id === id ? { ...s, isActive: !s.isActive } : s)
     }));
-  };
-
-  const handleSandboxToggle = () => {
-    if (!canToggleSector()) return;
-    setIsSandboxMode(!isSandboxMode);
   };
 
   const handleDummyToggle = async (enable: boolean) => {
@@ -137,104 +131,82 @@ export default function AdminDashboardPage() {
     <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full relative pb-10">
       
       {/* Header */}
-      <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Platform Health</h1>
-          <p className="text-slate-400 mt-2 text-sm">Real-time metrics for MarkatVerse ecosystem.</p>
-        </div>
-
-        {/* Global Sandbox Toggle */}
-        <div className="bg-slate-800 p-1.5 rounded-xl border border-slate-700 flex items-center shadow-lg w-fit">
-          <button 
-            onClick={handleSandboxToggle}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${!isSandboxMode ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:text-white'}`}
-          >
-            <Activity className="w-4 h-4" /> Live Data
-          </button>
-          <button 
-            onClick={handleSandboxToggle}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${isSandboxMode ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-white'}`}
-          >
-            <Database className="w-4 h-4" /> Sandbox
-          </button>
+          <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">Platform Health</h1>
+          <p className="text-slate-400 mt-2 text-sm font-medium">Real-time metrics for MarkatVerse ecosystem.</p>
         </div>
       </header>
 
-      {isSandboxMode && (
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-4 rounded-xl flex items-center gap-3 mb-8">
-          <Database className="w-5 h-5" />
-          <p className="text-sm font-medium">Sandbox Mode Active. Data shown below is dummy data for preview purposes only.</p>
-        </div>
-      )}
-
       {/* Top Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 p-6 rounded-2xl border border-indigo-500/20 shadow-lg relative overflow-hidden">
-          <div className="flex justify-between items-start mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
+        <div className="group bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 hover:from-indigo-500/20 hover:to-indigo-600/10 p-6 rounded-3xl border border-indigo-500/20 hover:border-indigo-500/40 shadow-xl hover:shadow-indigo-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/30 transition-colors"></div>
+          <div className="flex justify-between items-start mb-4 relative z-10">
             <div className="text-indigo-400 font-bold text-sm flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" /> Total Gross Volume
+              <TrendingUp className="w-5 h-5" /> Total Gross Volume
             </div>
-            {isSandboxMode && <div className="text-indigo-400 text-xs font-bold bg-indigo-500/20 px-2 py-1 rounded">+12.5%</div>}
           </div>
-          <div className="text-3xl font-black text-white mb-2">₹{isSandboxMode ? '24,500,000' : totalVolume.toLocaleString()}</div>
-          <div className="text-xs font-bold bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded w-fit flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span> {isSandboxMode ? 'Dummy Data' : 'Live Data'}
+          <div className="text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">₹{totalVolume.toLocaleString()}</div>
+          <div className="text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-400 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_8px_rgba(129,140,248,0.8)]"></span> Live Data
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-6 rounded-2xl border border-emerald-500/20 shadow-lg relative overflow-hidden">
-          <div className="flex justify-between items-start mb-4">
+        <div className="group bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 hover:from-emerald-500/20 hover:to-emerald-600/10 p-6 rounded-3xl border border-emerald-500/20 hover:border-emerald-500/40 shadow-xl hover:shadow-emerald-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-500/30 transition-colors"></div>
+          <div className="flex justify-between items-start mb-4 relative z-10">
             <div className="text-emerald-400 font-bold text-sm flex items-center gap-2">
-              <DollarSign className="w-4 h-4" /> Est. Platform Revenue
+              <DollarSign className="w-5 h-5" /> Est. Platform Revenue
             </div>
           </div>
-          <div className="text-3xl font-black text-white mb-2">₹{isSandboxMode ? '1,225,000' : totalPlatformRevenue.toLocaleString()}</div>
-          <div className="text-xs font-bold bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded w-fit flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> @ 5% Commission
+          <div className="text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">₹{totalPlatformRevenue.toLocaleString()}</div>
+          <div className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span> @ 5% Commission
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-6 rounded-2xl border border-amber-500/20 shadow-lg">
-          <div className="flex justify-between items-start mb-4">
+        <div className="group bg-gradient-to-br from-amber-500/10 to-amber-600/5 hover:from-amber-500/20 hover:to-amber-600/10 p-6 rounded-3xl border border-amber-500/20 hover:border-amber-500/40 shadow-xl hover:shadow-amber-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl group-hover:bg-amber-500/30 transition-colors"></div>
+          <div className="flex justify-between items-start mb-4 relative z-10">
             <div className="text-amber-400 font-bold text-sm flex items-center gap-2">
-              <Store className="w-4 h-4" /> Active Sellers
+              <Store className="w-5 h-5" /> Active Sellers
             </div>
-            {isSandboxMode && <div className="text-amber-400 text-xs font-bold bg-amber-500/20 px-2 py-1 rounded">+4.2%</div>}
           </div>
-          <div className="text-3xl font-black text-white mb-2">{isSandboxMode ? '1,420' : activeSellers}</div>
-          <div className="text-xs font-bold bg-amber-500/20 text-amber-400 px-2 py-1 rounded w-fit flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> {isSandboxMode ? 'Dummy Data' : 'Live Data'}
+          <div className="text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">{activeSellers}</div>
+          <div className="text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]"></span> Live Data
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 p-6 rounded-2xl border border-cyan-500/20 shadow-lg">
-          <div className="flex justify-between items-start mb-4">
+        <div className="group bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 hover:from-cyan-500/20 hover:to-cyan-600/10 p-6 rounded-3xl border border-cyan-500/20 hover:border-cyan-500/40 shadow-xl hover:shadow-cyan-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/30 transition-colors"></div>
+          <div className="flex justify-between items-start mb-4 relative z-10">
             <div className="text-cyan-400 font-bold text-sm flex items-center gap-2">
-              <Users className="w-4 h-4" /> Total Buyers
+              <Users className="w-5 h-5" /> Total Buyers
             </div>
-            {isSandboxMode && <div className="text-cyan-400 text-xs font-bold bg-cyan-500/20 px-2 py-1 rounded">+18.1%</div>}
           </div>
-          <div className="text-3xl font-black text-white mb-2">{isSandboxMode ? '45,200' : activeBuyers}</div>
-          <div className="text-xs font-bold bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded w-fit flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> {isSandboxMode ? 'Dummy Data' : 'Live Data'}
+          <div className="text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">{activeBuyers}</div>
+          <div className="text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span> Live Data
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
         
         {/* Main Feed: Recent Transactions */}
-        <div className="lg:col-span-2 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden flex flex-col relative min-h-[400px]">
+        <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col relative min-h-[400px]">
           <div className="absolute inset-0 opacity-[0.03] z-0" style={{
             backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
             backgroundSize: '40px 40px'
           }}></div>
           
-          <div className="p-6 border-b border-slate-700 bg-slate-900/50 relative z-10 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white flex items-center gap-3">
+          <div className="p-6 border-b border-white/5 bg-slate-900/50 relative z-10 flex items-center justify-between">
+            <h3 className="text-xl font-bold text-white flex items-center gap-3">
               Recent Transactions 
-              <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+              <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(52,211,153,0.15)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span> LIVE
               </span>
             </h3>
           </div>
@@ -245,7 +217,7 @@ export default function AdminDashboardPage() {
                 <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <div className="font-bold text-white">Aggregating live ledgers...</div>
               </div>
-            ) : recentTransactions.length === 0 && !isSandboxMode ? (
+            ) : recentTransactions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full opacity-50 py-20">
                 <Activity className="w-12 h-12 mb-4 text-slate-500" />
                 <div className="font-bold text-white">Waiting for transactions</div>
@@ -261,18 +233,19 @@ export default function AdminDashboardPage() {
                     <th className="p-4 pr-6 text-right">Time</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700/50">
+                <tbody className="divide-y divide-white/5">
                   {recentTransactions.map(tx => (
-                    <tr key={tx.id} className="hover:bg-slate-700/30 transition-all">
-                      <td className="p-4 pl-6">
-                        <div className="font-bold text-white text-sm">{tx.sellerName}</div>
+                    <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors group">
+                      <td className="p-4 pl-6 relative">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-indigo-500 transition-colors"></div>
+                        <div className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">{tx.sellerName}</div>
                         <div className="text-xs text-slate-500 font-mono mt-0.5">TX: {tx.id.slice(0, 8)}...</div>
                       </td>
                       <td className="p-4">
-                        <div className={`text-xs font-bold px-2 py-1 rounded inline-flex ${
-                          tx.type === 'EARNING' ? 'bg-emerald-500/10 text-emerald-400' :
-                          tx.type === 'PAYOUT' ? 'bg-blue-500/10 text-blue-400' :
-                          'bg-amber-500/10 text-amber-400'
+                        <div className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md inline-flex ${
+                          tx.type === 'EARNING' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                          tx.type === 'PAYOUT' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                          'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                         }`}>
                           {tx.type}
                         </div>
@@ -284,24 +257,9 @@ export default function AdminDashboardPage() {
                           {tx.type === 'EARNING' ? '+' : '-'}₹{tx.amount}
                         </div>
                       </td>
-                      <td className="p-4 pr-6 text-right text-xs text-slate-500">
+                      <td className="p-4 pr-6 text-right text-xs font-medium text-slate-500">
                         {new Date(tx.createdAt).toLocaleTimeString()}
                       </td>
-                    </tr>
-                  ))}
-                  {isSandboxMode && Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="hover:bg-slate-700/30 transition-all">
-                      <td className="p-4 pl-6">
-                        <div className="font-bold text-white text-sm">Dummy Seller {i+1}</div>
-                        <div className="text-xs text-slate-500 font-mono mt-0.5">TX: dummy_id_{i}</div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-xs font-bold px-2 py-1 rounded inline-flex bg-emerald-500/10 text-emerald-400">EARNING</div>
-                      </td>
-                      <td className="p-4">
-                        <div className="font-black text-sm text-emerald-400">+₹{(Math.random() * 5000 + 500).toFixed(2)}</div>
-                      </td>
-                      <td className="p-4 pr-6 text-right text-xs text-slate-500">Just now</td>
                     </tr>
                   ))}
                 </tbody>
@@ -312,22 +270,22 @@ export default function AdminDashboardPage() {
 
         {/* Right Sidebar: Sector Controls & Status */}
         <div className="space-y-6">
-          <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Zap className="w-4 h-4" /> Quick Sector Controls
+          <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-2xl">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-indigo-400" /> Quick Sector Controls
             </h3>
             
             {!canToggleSector() && (
-              <div className="mb-4 text-xs font-medium text-rose-400 bg-rose-500/10 p-2 rounded border border-rose-500/20">
+              <div className="mb-4 text-xs font-medium text-rose-400 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20">
                 You do not have permission to toggle global sectors.
               </div>
             )}
 
             <div className="space-y-3">
               {settings.sectors.map(sector => (
-                <div key={sector.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700">
+                <div key={sector.id} className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-colors shadow-inner">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{sector.icon}</span>
+                    <span className="text-xl drop-shadow-md">{sector.icon}</span>
                     <div>
                       <div className="text-sm font-bold text-white">{sector.name}</div>
                       <div className={`text-[10px] font-black uppercase tracking-wider ${sector.isActive ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -337,7 +295,7 @@ export default function AdminDashboardPage() {
                   </div>
                   
                   {/* Master Toggle Switch */}
-                  <label className={`relative inline-flex items-center ${canToggleSector() ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                  <label className={`relative inline-flex items-center ${canToggleSector() ? 'cursor-pointer hover:scale-105 transition-transform' : 'cursor-not-allowed opacity-50'}`}>
                     <input 
                       type="checkbox" 
                       className="sr-only peer" 
@@ -352,14 +310,14 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Database className="w-4 h-4" /> Database Controls
+          <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-2xl">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Database className="w-4 h-4 text-blue-400" /> Database Controls
             </h3>
             
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-700">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-colors shadow-inner">
               <div className="flex items-center gap-3">
-                <span className="text-xl">🧪</span>
+                <span className="text-xl drop-shadow-md">🧪</span>
                 <div>
                   <div className="text-sm font-bold text-white">Dummy Data</div>
                   <div className={`text-[10px] font-black uppercase tracking-wider ${dummyStatus === true ? 'text-emerald-400' : dummyStatus === false ? 'text-rose-400' : 'text-slate-500'}`}>
@@ -368,7 +326,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
               
-              <label className={`relative inline-flex items-center cursor-pointer ${dummyStatus === null ? 'opacity-50' : ''}`}>
+              <label className={`relative inline-flex items-center cursor-pointer hover:scale-105 transition-transform ${dummyStatus === null ? 'opacity-50' : ''}`}>
                 <input 
                   type="checkbox" 
                   className="sr-only peer" 
@@ -381,13 +339,13 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl"></div>
-            <h3 className="text-sm font-bold text-emerald-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> System Health
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-8 rounded-3xl shadow-[0_0_30px_rgba(16,185,129,0.15)] relative overflow-hidden backdrop-blur-md">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/20 rounded-full blur-[50px]"></div>
+            <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2 relative z-10">
+              <ShieldCheck className="w-5 h-5" /> System Health
             </h3>
-            <div className="text-3xl font-black text-white mb-1">99.9%</div>
-            <p className="text-emerald-400/80 text-sm">All core services are operating normally. Database cluster stable.</p>
+            <div className="text-4xl font-black text-white mb-2 relative z-10 drop-shadow-md">99.9%</div>
+            <p className="text-emerald-400/90 text-sm font-medium relative z-10">All core services are operating normally. Database cluster stable.</p>
           </div>
         </div>
 

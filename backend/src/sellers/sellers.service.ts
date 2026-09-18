@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 
 @Injectable()
 export class SellersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerator: IdGeneratorService
+  ) {}
 
   async create(seller: any) {
     // Find user by email or phone to link business to user
@@ -22,8 +26,10 @@ export class SellersService {
     // If no user found, create one
     if (!user) {
       const bcrypt = await import('bcryptjs');
+      const markatId = await this.idGenerator.generateUserId();
       user = await this.prisma.user.create({
         data: {
+          markatId,
           name: seller.ownerName || seller.name || 'Seller',
           email: seller.email || null,
           phone: seller.phone || null,
@@ -48,8 +54,10 @@ export class SellersService {
       return { ...existingBusiness, status: 'Pending' };
     }
 
+    const businessCode = await this.idGenerator.generateBusinessId();
     const business = await this.prisma.business.create({
       data: {
+        businessCode,
         userId: user.id,
         name: seller.businessName || seller.name || 'My Business',
         description: seller.description || null,
@@ -69,12 +77,15 @@ export class SellersService {
         },
       });
       if (seller.staff && seller.staff.length > 0) {
+        // Must do sequentially or use Promise.all to generate staff codes
+        const staffData = await Promise.all(seller.staff.map(async (s: any) => ({
+          queueId: queue.id,
+          name: s.name,
+          role: s.role,
+          staffCode: await this.idGenerator.generateStaffId(),
+        })));
         await this.prisma.serviceStaff.createMany({
-          data: seller.staff.map((s: any) => ({
-            queueId: queue.id,
-            name: s.name,
-            role: s.role,
-          })),
+          data: staffData,
         });
       }
       if (seller.resources && seller.resources.length > 0) {
@@ -104,6 +115,7 @@ export class SellersService {
 
     return businesses.map(b => ({
       id: b.id,
+      businessCode: b.businessCode,
       userId: b.userId,
       businessName: b.name,
       ownerName: b.user.name,

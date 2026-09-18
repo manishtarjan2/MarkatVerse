@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -11,7 +12,6 @@ export default function SellerOnboarding() {
   const { user, login } = useAuth();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
 
   // Auto-skip step 1 if already logged in as a consumer
   React.useEffect(() => {
@@ -32,8 +32,8 @@ export default function SellerOnboarding() {
   const [showPassword, setShowPassword] = useState(false);
   const [registeredToken, setRegisteredToken] = useState('');
 
-  const [mainType, setMainType] = useState('B2B');
-  const [sellerRole, setSellerRole] = useState('Manufacturer');
+  const [mainType, setMainType] = useState('');
+  const [sellerRole, setSellerRole] = useState('');
   const [businessSector, setBusinessSector] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [pinCode, setPinCode] = useState('');
@@ -115,11 +115,10 @@ export default function SellerOnboarding() {
   // Step 1: Create seller account
   const handleAccountSetup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    if (password !== confirmPassword) { setError('Passwords do not match'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
-    if (!email && !phone) { setError('Email or phone is required'); return; }
-    if (phone && !/^\d{10}$/.test(phone.replace(/\D/g, ''))) { setError('Phone number must be exactly 10 digits'); return; }
+    if (password !== confirmPassword) { toast.error('Passwords do not match'); return; }
+    if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+    if (!email && !phone) { toast.error('Email or phone is required'); return; }
+    if (phone && !/^\d{10}$/.test(phone.replace(/\D/g, ''))) { toast.error('Phone number must be exactly 10 digits'); return; }
     setIsSubmitting(true);
     try {
       // Register as SELLER role
@@ -144,7 +143,7 @@ export default function SellerOnboarding() {
       );
       setStep(2);
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,10 +182,9 @@ export default function SellerOnboarding() {
   const handleBusinessDetails = (e: React.FormEvent) => {
     e.preventDefault();
     if (!businessSector) {
-      setError('Please select Sector');
+      toast.error('Please select Sector');
       return;
     }
-    setError('');
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
@@ -197,7 +195,6 @@ export default function SellerOnboarding() {
   const handleDocumentUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError('');
     try {
       const res = await fetch(`${API_URL}/sellers`, {
         method: 'POST',
@@ -225,7 +222,7 @@ export default function SellerOnboarding() {
         throw new Error(data.message || 'Failed to register. Please try again.');
       }
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
       setIsSubmitting(false);
     }
   };
@@ -350,12 +347,6 @@ export default function SellerOnboarding() {
                 </div>
               </div>
 
-              {error && (
-                <div className="mb-5 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 flex items-start gap-2">
-                  <span className="mt-0.5">⚠️</span> {error}
-                </div>
-              )}
-
               <form onSubmit={handleAccountSetup} className="flex flex-col gap-4">
                 <div>
                   <label className={labelClasses}>Full Name (Owner)</label>
@@ -440,43 +431,38 @@ export default function SellerOnboarding() {
               <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Business Details</h2>
               <p className="text-slate-500 text-base text-center mb-8">Tell us about your business so we can set up your store</p>
 
-              {error && (
-                <div className="mb-5 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 flex items-start gap-2">
-                  <span className="mt-0.5">⚠️</span> {error}
-                </div>
-              )}
-
               <form onSubmit={handleBusinessDetails} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className={labelClasses}>Main Business Model</label>
-                    <select value={mainType} onChange={e => {
+                    <select required value={mainType} onChange={e => {
                         setMainType(e.target.value);
                         const roles = mainTypeMapping[e.target.value] || [];
-                        setSellerRole(roles[0] || '');
+                        setSellerRole('');
                         setBusinessSector('');
-                      }} className={selectClasses}>
-                      <option value="B2B">B2B (Business to Business)</option>
-                      <option value="B2C">B2C (Business to Consumer)</option>
-                      <option value="BOTH">Both B2B & B2C</option>
-                      <option value="SERVICE">Service & Booking</option>
+                      }} className={`${selectClasses} ${!mainType ? '!text-slate-400' : ''}`}>
+                      <option className="text-slate-400" value="" disabled>Select Model...</option>
+                      <option className="text-slate-900" value="B2B">B2B (Business to Business)</option>
+                      <option className="text-slate-900" value="B2C">B2C (Business to Consumer)</option>
+                      <option className="text-slate-900" value="BOTH">Both B2B & B2C</option>
+                      <option className="text-slate-900" value="SERVICE">Service & Booking</option>
                     </select>
                   </div>
                   <div>
                     <label className={labelClasses}>Business Type</label>
-                    <select required value={sellerRole} onChange={e => { setSellerRole(e.target.value); setBusinessSector(''); }} className={selectClasses}>
-                      <option value="" disabled>Select Type...</option>
+                    <select required value={sellerRole} onChange={e => { setSellerRole(e.target.value); setBusinessSector(''); }} className={`${selectClasses} ${!sellerRole ? '!text-slate-400' : ''}`}>
+                      <option className="text-slate-400" value="" disabled>Select Type...</option>
                       {currentRoles.map(role => (
-                        <option key={role} value={role}>{role}</option>
+                        <option className="text-slate-900" key={role} value={role}>{role}</option>
                       ))}
                     </select>
                   </div>
                   <div>
                     <label className={labelClasses}>Business Sector</label>
-                    <select required value={businessSector} onChange={e => { setBusinessSector(e.target.value); }} className={selectClasses}>
-                      <option value="" disabled>Select sector...</option>
+                    <select required value={businessSector} onChange={e => { setBusinessSector(e.target.value); }} className={`${selectClasses} ${!businessSector ? '!text-slate-400' : ''}`}>
+                      <option className="text-slate-400" value="" disabled>Select sector...</option>
                       {currentSectors.map(sec => (
-                        <option key={sec} value={sec}>{sec}</option>
+                        <option className="text-slate-900" key={sec} value={sec}>{sec}</option>
                       ))}
                     </select>
                   </div>
@@ -552,12 +538,6 @@ export default function SellerOnboarding() {
               </div>
               <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Upload Documents</h2>
               <p className="text-slate-500 text-base text-center mb-8">Required for verification — your data is encrypted and secure</p>
-
-              {error && (
-                <div className="mb-5 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 flex items-start gap-2">
-                  <span className="mt-0.5">⚠️</span> {error}
-                </div>
-              )}
 
               <form onSubmit={handleDocumentUpload} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
