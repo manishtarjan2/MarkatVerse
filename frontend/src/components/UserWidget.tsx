@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
 export default function UserWidget() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   if (!user) {
     return (
@@ -95,6 +95,17 @@ export default function UserWidget() {
             </Link>
           </>
         )}
+        <div 
+          className="action-btn" 
+          onClick={() => {
+            logout();
+            window.location.href = '/login';
+          }}
+          style={{ cursor: 'pointer', borderTop: '1px solid #f1f5f9', marginTop: '8px', paddingTop: '8px' }}
+        >
+          <div className="action-icon" style={{ color: '#ef4444' }}>🚪</div>
+          <span style={{ color: '#ef4444' }}>Logout</span>
+        </div>
       </div>
     </div>
   );
