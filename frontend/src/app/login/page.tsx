@@ -15,7 +15,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user && !authLoading) {
-      router.replace('/');
+      const role = user.role?.toUpperCase();
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+        router.replace('/admin');
+      } else if (role === 'SELLER' || role === 'BUSINESS') {
+        router.replace('/seller/dashboard');
+      } else {
+        router.replace('/');
+      }
     }
   }, [user, authLoading, router]);
 

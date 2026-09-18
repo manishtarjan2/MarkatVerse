@@ -6,13 +6,26 @@ import Link from 'next/link';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const role = user.role?.toUpperCase();
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+        router.replace('/admin');
+      } else if (['SELLER', 'BUSINESS'].includes(role)) {
+        router.replace('/seller/dashboard');
+      } else {
+        router.replace('/');
+      }
+    }
+  }, [user, router]);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

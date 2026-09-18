@@ -23,10 +23,15 @@ export default function SellerLoginPage() {
   const router = useRouter();
   const { login, user } = useAuth();
 
-  // If already logged in as a seller, redirect straight to dashboard
+  // If already logged in, redirect accordingly
   useEffect(() => {
-    if (user && ['seller', 'SELLER', 'business'].includes(user.role)) {
-      router.replace('/seller/dashboard');
+    if (user) {
+      const role = user.role?.toUpperCase();
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+        router.replace('/admin');
+      } else if (['SELLER', 'BUSINESS'].includes(role)) {
+        router.replace('/seller/dashboard');
+      }
     }
   }, [user, router]);
 
