@@ -247,7 +247,7 @@ function DashboardContent() {
         queueData.serving.forEach((s: any) => {
           liveBookings.push({
             rawId: s.id,
-            id: s.bookingMode === 'APPOINTMENT' ? `Apt #${s.id.slice(-4).toUpperCase()}` : `Token #${s.tokenNumber}`,
+            id: s.bookingNumber || (s.bookingMode === 'APPOINTMENT' ? `BOOK-${s.id.slice(-4).toUpperCase()}` : `TOKEN-${s.tokenNumber || s.id.slice(-4).toUpperCase()}`),
             customer: s.customerName,
             service: s.service,
             date: 'Live Now',
@@ -265,7 +265,7 @@ function DashboardContent() {
         queueData.waiting.forEach((t: any) => {
           liveBookings.push({
             rawId: t.id,
-            id: t.bookingMode === 'APPOINTMENT' ? `Apt #${t.id.slice(-4).toUpperCase()}` : `Token #${t.tokenNumber}`,
+            id: t.bookingNumber || (t.bookingMode === 'APPOINTMENT' ? `BOOK-${t.id.slice(-4).toUpperCase()}` : `TOKEN-${t.tokenNumber || t.id.slice(-4).toUpperCase()}`),
             customer: t.customerName,
             service: t.service,
             date: t.bookingMode === 'APPOINTMENT' ? 'Scheduled Appointment' : 'Waiting in Queue',
@@ -470,16 +470,16 @@ function DashboardContent() {
             <h3 className="text-lg font-bold text-slate-900">{user?.business?.name || user?.name || 'Seller'}</h3>
             
             <div className="flex flex-col gap-1 mt-3 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
-              {user?.business?.id && (
+              {user?.business && (
                 <div className="flex justify-between items-center px-1">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Business ID</span>
-                  <span className="text-xs font-mono font-bold text-slate-700">{user.business.id}</span>
+                  <span className="text-xs font-mono font-bold text-slate-700">{user.business.businessCode || user.business.id}</span>
                 </div>
               )}
-              {user?.id && (
+              {user && (
                 <div className="flex justify-between items-center px-1">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">MV Account ID</span>
-                  <span className="text-xs font-mono font-bold text-slate-700">{user.id}</span>
+                  <span className="text-xs font-mono font-bold text-slate-700">{user.markatId || user.id}</span>
                 </div>
               )}
             </div>
@@ -1285,8 +1285,8 @@ function DashboardContent() {
                       ) : (
                         bookings.map((booking, index) => {
                           const isSelected = selectedBookingDetails?.rawId === booking.rawId;
-                          const idLabel = booking.id.startsWith('Token') ? booking.id.replace('Token ', '') : (booking.bookingMode === 'APPOINTMENT' ? booking.id : `#${booking.tokenNumber || '?'}`);
-                          const isToken = !booking.id.includes('Apt') && booking.bookingMode !== 'APPOINTMENT';
+                          const idLabel = booking.id;
+                          const isToken = booking.id.startsWith('TOKEN') || booking.bookingMode === 'TOKEN';
                           
                           const badgeColor = isToken 
                             ? (booking.status === 'In Progress' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700')
@@ -1601,7 +1601,7 @@ function DashboardContent() {
                 <tbody className="divide-y divide-slate-100">
                   {orders.map((order) => (
                     <tr key={order.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-4 pl-6 font-medium text-slate-900">{order.id}</td>
+                      <td className="p-4 pl-6 font-medium text-slate-900">{order.orderNumber || order.id}</td>
                       <td className="p-4 text-slate-700">{order.buyer}</td>
                       <td className="p-4 text-slate-600 truncate max-w-[200px]">{order.item}</td>
                       <td className="p-4 text-slate-500 text-sm">{order.date}</td>
