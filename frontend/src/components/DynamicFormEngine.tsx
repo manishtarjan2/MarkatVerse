@@ -50,7 +50,9 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
 
   // Location
   const [location, setLocation] = useState(initialData?.location || '');
+  const [localAddress, setLocalAddress] = useState('');
   const [pincode, setPincode] = useState(initialData?.pincode || '');
+  const [isLocating, setIsLocating] = useState(false);
 
   // Cascading Logic
   const catRules = useCategoryRules(category);
@@ -149,7 +151,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
       image: uploadedImages.length > 0 ? uploadedImages[0] : '/hero-left-logo.png',
       parameters,
       options: options.length > 0 ? options : undefined,
-      location,
+      location: localAddress ? `${localAddress}, ${location}` : location,
       pincode
     };
 
@@ -265,30 +267,145 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
               <label className="text-sm font-semibold text-slate-700">Location Details</label>
               <button 
                 type="button" 
+                disabled={isLocating}
                 onClick={() => {
                   if (navigator.geolocation) {
+                    setIsLocating(true);
                     navigator.geolocation.getCurrentPosition(
-                      (position) => {
-                        alert(`Location pinned! Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`);
-                        // Ideally we would reverse geocode here. For now, just set dummy or preserve existing location text,
-                        // and perhaps we could save the lat/lng in state if we had it, but let's just show success to the user.
+                      async (position) => {
+                        try {
+                          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+                          const data = await res.json();
+                          const addr = data.address || {};
+                          const city = addr.city || addr.town || addr.village || addr.county || '';
+                          const state = addr.state || '';
+                          const postcode = addr.postcode || '';
+                          
+                          // Build precise local address from all available granular fields
+                          const localParts = [
+                            addr.house_number,
+                            addr.building,
+                            addr.amenity,
+                            addr.shop,
+                            addr.road || addr.pedestrian || addr.residential || addr.cycleway,
+                            addr.neighbourhood,
+                            addr.suburb || addr.quarter
+                          ].filter(Boolean);
+                          
+                          // Fallback: if no road/local parts found, extract from display_name
+                          let local = localParts.join(', ');
+                          if (!local && data.display_name) {
+                            // display_name is "Part1, Part2, City, State, PIN, Country" — take first 2-3 parts as local
+                            const parts = data.display_name.split(', ');
+                            local = parts.slice(0, Math.min(3, parts.length - 3)).join(', ');
+                          }
+                          
+                          if (local) setLocalAddress(local);
+                          
+                          if (city && state) {
+                            setLocation(`${city}, ${state}`);
+                          } else if (state) {
+                            setLocation(state);
+                          }
+                          if (postcode) setPincode(postcode);
+                          
+                          alert(`Location found! Auto-filled: ${local ? local + ', ' : ''}${city ? city + ', ' + state : state}`);
+                        } catch (err) {
+                          alert('Location pinned, but failed to fetch address details automatically.');
+                        } finally {
+                          setIsLocating(false);
+                        }
                       },
-                      (error) => alert('Error getting location: ' + error.message)
+                      (error) => {
+                        alert('Error getting location: ' + error.message);
+                        setIsLocating(false);
+                      }
                     );
                   } else {
                     alert('Geolocation is not supported by your browser.');
                   }
                 }}
-                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+                className={`text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 shadow-sm ${isLocating ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                Pin My Location
+                {isLocating ? (
+                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                )}
+                {isLocating ? 'Locating...' : 'Pin My Location'}
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Street / Area / Landmark</label>
+                <input 
+                  type="text" 
+                  value={localAddress} 
+                  onChange={e => setLocalAddress(e.target.value)} 
+                  placeholder="e.g. Shop No 5, MG Road, Near City Mall" 
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" 
+                />
+              </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500">Address / City</label>
-                <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Mumbai, Maharashtra" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
+                <input 
+                  type="text" 
+                  list="city-options" 
+                  value={location} 
+                  onChange={e => setLocation(e.target.value)} 
+                  placeholder="e.g. Mumbai, Maharashtra" 
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" 
+                />
+                <datalist id="city-options">
+                  <option value="Mumbai, Maharashtra" />
+                  <option value="Delhi, NCR" />
+                  <option value="Bangalore, Karnataka" />
+                  <option value="Hyderabad, Telangana" />
+                  <option value="Ahmedabad, Gujarat" />
+                  <option value="Chennai, Tamil Nadu" />
+                  <option value="Kolkata, West Bengal" />
+                  <option value="Pune, Maharashtra" />
+                  <option value="Jaipur, Rajasthan" />
+                  <option value="Surat, Gujarat" />
+                  <option value="Lucknow, Uttar Pradesh" />
+                  <option value="Kanpur, Uttar Pradesh" />
+                  <option value="Nagpur, Maharashtra" />
+                  <option value="Indore, Madhya Pradesh" />
+                  <option value="Thane, Maharashtra" />
+                  <option value="Bhopal, Madhya Pradesh" />
+                  <option value="Visakhapatnam, Andhra Pradesh" />
+                  <option value="Pimpri-Chinchwad, Maharashtra" />
+                  <option value="Patna, Bihar" />
+                  <option value="Vadodara, Gujarat" />
+                  <option value="Ludhiana, Punjab" />
+                  <option value="Agra, Uttar Pradesh" />
+                  <option value="Nashik, Maharashtra" />
+                  <option value="Ranchi, Jharkhand" />
+                  <option value="Faridabad, Haryana" />
+                  <option value="Meerut, Uttar Pradesh" />
+                  <option value="Rajkot, Gujarat" />
+                  <option value="Kalyan-Dombivli, Maharashtra" />
+                  <option value="Vasai-Virar, Maharashtra" />
+                  <option value="Varanasi, Uttar Pradesh" />
+                  <option value="Srinagar, Jammu and Kashmir" />
+                  <option value="Aurangabad, Maharashtra" />
+                  <option value="Dhanbad, Jharkhand" />
+                  <option value="Amritsar, Punjab" />
+                  <option value="Navi Mumbai, Maharashtra" />
+                  <option value="Allahabad, Uttar Pradesh" />
+                  <option value="Howrah, West Bengal" />
+                  <option value="Gwalior, Madhya Pradesh" />
+                  <option value="Jabalpur, Madhya Pradesh" />
+                  <option value="Coimbatore, Tamil Nadu" />
+                  <option value="Vijayawada, Andhra Pradesh" />
+                  <option value="Jodhpur, Rajasthan" />
+                  <option value="Madurai, Tamil Nadu" />
+                  <option value="Raipur, Chhattisgarh" />
+                  <option value="Kota, Rajasthan" />
+                  <option value="Guwahati, Assam" />
+                  <option value="Chandigarh, Chandigarh" />
+                  <option value="Solapur, Maharashtra" />
+                </datalist>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500">PIN Code / ZIP</label>

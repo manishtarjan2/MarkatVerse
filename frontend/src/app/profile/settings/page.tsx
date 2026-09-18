@@ -403,7 +403,7 @@ export default function ProfileSettings() {
                               <h4 className="text-white font-bold text-sm line-clamp-2">{product.name}</h4>
                               <div className="text-white font-black mt-1">₹{product.price?.toLocaleString('en-IN') || '0'}</div>
                             </div>
-                            <div className="flex items-center justify-between mt-2">
+                            <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t border-slate-700/50">
                               <button 
                                 onClick={() => removeFromWishlist(id)}
                                 className="text-xs font-bold text-slate-400 hover:text-red-400 transition-colors flex items-center gap-1"
