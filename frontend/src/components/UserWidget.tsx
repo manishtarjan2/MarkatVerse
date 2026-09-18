@@ -21,9 +21,11 @@ export default function UserWidget() {
     );
   }
 
+  const isAdmin = user.role.includes('admin') || user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+
   return (
     <div className="user-widget">
-      <Link href="/profile/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link href={isAdmin ? "/admin" : "/profile/settings"} style={{ textDecoration: 'none', color: 'inherit' }}>
         <div className="user-header" style={{ cursor: 'pointer' }}>
           <div className="avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
             {user.name.charAt(0)}
@@ -32,46 +34,67 @@ export default function UserWidget() {
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Welcome back,</div>
             <div style={{ fontWeight: '600' }}>{user.name}</div>
             <div style={{ fontSize: '12px', color: 'var(--accent-blue)' }}>
-              {user.role === 'business' ? 'Business Account ✓' : 'Verified Buyer ✓'}
+              {isAdmin ? 'Admin Account ✓' : user.role === 'business' || user.role === 'seller' || user.role === 'SELLER' ? 'Business Account ✓' : 'Verified Buyer ✓'}
             </div>
           </div>
         </div>
       </Link>
       
-      <div className="balance">
-        <div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Account Balance</div>
-          <div style={{ fontSize: '20px', fontWeight: '700' }}>₹ 48,750.00</div>
+      {!isAdmin && (
+        <div className="balance">
+          <div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Account Balance</div>
+            <div style={{ fontSize: '20px', fontWeight: '700' }}>₹ 48,750.00</div>
+          </div>
+          <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }}>My Wallet</button>
         </div>
-        <button className="btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }}>My Wallet</button>
-      </div>
+      )}
       
       <div style={{ fontSize: '14px', fontWeight: '600', margin: '20px 0 12px 0' }}>Quick Actions</div>
       <div className="quick-actions">
-        <Link href="/profile/settings" style={{textDecoration: 'none', color: 'inherit'}}>
-          <div className="action-btn">
-            <div className="action-icon">📦</div>
-            <span>My Orders</span>
-          </div>
-        </Link>
-        <Link href="/seller/dashboard" style={{textDecoration: 'none', color: 'inherit'}}>
-          <div className="action-btn">
-            <div className="action-icon">📋</div>
-            <span>My Listings</span>
-          </div>
-        </Link>
-        <Link href="/seller/dashboard?action=add" style={{textDecoration: 'none', color: 'inherit'}}>
-          <div className="action-btn">
-            <div className="action-icon">➕</div>
-            <span>Add Product</span>
-          </div>
-        </Link>
-        <Link href="/profile/settings" style={{textDecoration: 'none', color: 'inherit'}}>
-          <div className="action-btn">
-            <div className="action-icon">💸</div>
-            <span>Wallet</span>
-          </div>
-        </Link>
+        {isAdmin ? (
+          <>
+            <Link href="/admin" style={{textDecoration: 'none', color: 'inherit'}}>
+              <div className="action-btn">
+                <div className="action-icon">🛡️</div>
+                <span>Dashboard</span>
+              </div>
+            </Link>
+            <Link href="/admin/users" style={{textDecoration: 'none', color: 'inherit'}}>
+              <div className="action-btn">
+                <div className="action-icon">👥</div>
+                <span>Manage Users</span>
+              </div>
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link href="/profile/settings" style={{textDecoration: 'none', color: 'inherit'}}>
+              <div className="action-btn">
+                <div className="action-icon">📦</div>
+                <span>My Orders</span>
+              </div>
+            </Link>
+            <Link href="/seller/dashboard" style={{textDecoration: 'none', color: 'inherit'}}>
+              <div className="action-btn">
+                <div className="action-icon">📋</div>
+                <span>My Listings</span>
+              </div>
+            </Link>
+            <Link href="/seller/dashboard?action=add" style={{textDecoration: 'none', color: 'inherit'}}>
+              <div className="action-btn">
+                <div className="action-icon">➕</div>
+                <span>Add Product</span>
+              </div>
+            </Link>
+            <Link href="/profile/settings" style={{textDecoration: 'none', color: 'inherit'}}>
+              <div className="action-btn">
+                <div className="action-icon">💸</div>
+                <span>Wallet</span>
+              </div>
+            </Link>
+          </>
+        )}
       </div>
     </div>
   );
