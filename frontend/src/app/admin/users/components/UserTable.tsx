@@ -125,33 +125,48 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
                     )}
                   </td>
                   <td className="p-4 pr-6 text-right">
-                    {hasEditPermission && (
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {editingUserId === user.id ? (
-                          <>
-                            <button onClick={() => setEditingUserId(null)} className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors">
-                              <X className="w-4 h-4" />
+                    {(() => {
+                      const isRegularUser = ['seller', 'business', 'consumer', 'buyer', 'user'].includes(user.role?.toLowerCase() || '');
+                      const canEditThisUser = hasEditPermission && !isRegularUser;
+                      
+                      if (isRegularUser) {
+                        return (
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Active
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      return canEditThisUser && (
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {editingUserId === user.id ? (
+                            <>
+                              <button onClick={() => setEditingUserId(null)} className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors">
+                                <X className="w-4 h-4" />
+                              </button>
+                              <button onClick={() => handleSaveEdit(user.id)} className="p-1.5 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors">
+                                <Check className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <button 
+                              onClick={() => handleEditClick(user)}
+                              className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
+                            >
+                              <Edit2 className="w-4 h-4" />
                             </button>
-                            <button onClick={() => handleSaveEdit(user.id)} className="p-1.5 text-emerald-400 hover:text-emerald-300 rounded-lg transition-colors">
-                              <Check className="w-4 h-4" />
-                            </button>
-                          </>
-                        ) : (
+                          )}
                           <button 
-                            onClick={() => handleEditClick(user)}
-                            className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
+                            onClick={() => handleDelete(user.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
-                        )}
-                        <button 
-                          onClick={() => handleDelete(user.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
