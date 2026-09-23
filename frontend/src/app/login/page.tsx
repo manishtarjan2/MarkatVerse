@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Phone, Lock, User, ArrowRight, ArrowLeft, CheckCircle, ShieldCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -157,7 +158,8 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
       // Store reset token returned from backend (in prod this would come via email/SMS)
-      setSuccessMsg(`Code sent to your email! (Check backend console for dev)`);
+      setSuccessMsg(`Code sent to your email!`);
+      toast('Please check your spam folder if you don\'t see the email.', { icon: '📧', duration: 6000 });
       setOtpTimer(300); // Reset timer to 5 mins
       setView('otp');
     } catch (err: any) {
