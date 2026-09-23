@@ -448,7 +448,7 @@ function DashboardContent() {
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-50
-        w-[280px] bg-white border-r border-slate-200 flex flex-col shrink-0
+        w-[85vw] max-w-[320px] lg:w-[280px] bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
@@ -604,30 +604,30 @@ function DashboardContent() {
               <p className="text-slate-500 mt-2">Welcome back, {user?.name || user?.business?.name || 'Seller'}. Here's what's happening today.</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-10">
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-slate-500 text-sm font-medium mb-2">{isB2B ? 'B2B Trade Volume' : 'Total Sales'}</div>
-                <div className="text-3xl font-bold text-slate-900">₹0</div>
-                <div className="text-slate-400 text-sm font-medium mt-2 flex items-center gap-1">No sales yet</div>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6 mb-6 lg:mb-10">
+              <div className="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="text-slate-500 text-xs lg:text-sm font-medium mb-1 lg:mb-2">{isB2B ? 'B2B Trade Volume' : 'Total Sales'}</div>
+                <div className="text-2xl lg:text-3xl font-bold text-slate-900">₹0</div>
+                <div className="text-slate-400 text-xs lg:text-sm font-medium mt-1 lg:mt-2 flex items-center gap-1">No sales yet</div>
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-slate-500 text-sm font-medium mb-2">{isServiceProvider ? 'Active Services' : (isB2B ? 'B2B Catalog' : 'Active Listings')}</div>
-                <div className="text-3xl font-bold text-slate-900">{myListings.length}</div>
-                <button onClick={() => setActiveTab('listings')} className="text-blue-600 text-sm font-medium mt-2 hover:underline">
+              <div className="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="text-slate-500 text-xs lg:text-sm font-medium mb-1 lg:mb-2">{isServiceProvider ? 'Active Services' : (isB2B ? 'B2B Catalog' : 'Active Listings')}</div>
+                <div className="text-2xl lg:text-3xl font-bold text-slate-900">{myListings.length}</div>
+                <button onClick={() => { setActiveTab('listings'); setIsMobileMenuOpen(false); }} className="text-blue-600 text-xs lg:text-sm font-medium mt-1 lg:mt-2 hover:underline">
                   {isServiceProvider ? 'View services →' : 'View catalog →'}
                 </button>
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-slate-500 text-sm font-medium mb-2">
+              <div className="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm col-span-2 lg:col-span-1">
+                <div className="text-slate-500 text-xs lg:text-sm font-medium mb-1 lg:mb-2">
                   {isServiceProvider ? 'Queue / Tokens' : (isB2B ? 'Pending RFQs' : 'Pending Orders')}
                 </div>
-                <div className="text-3xl font-bold text-amber-500">
+                <div className="text-2xl lg:text-3xl font-bold text-amber-500">
                   {isServiceProvider
                     ? (queueData ? `${queueData.waitingCount ?? 0} waiting` : 'No queue')
                     : (isB2B ? leads.length.toString() : orders.length.toString())}
                 </div>
-                <button onClick={() => setActiveTab(isServiceProvider ? 'queue' : (isB2B ? 'leads' : 'orders'))}
-                  className="text-slate-400 text-sm font-medium mt-2 cursor-pointer hover:text-blue-600 transition-colors">
+                <button onClick={() => { setActiveTab(isServiceProvider ? 'queue' : (isB2B ? 'leads' : 'orders')); setIsMobileMenuOpen(false); }}
+                  className="text-slate-400 text-xs lg:text-sm font-medium mt-1 lg:mt-2 cursor-pointer hover:text-blue-600 transition-colors">
                   View details →
                 </button>
               </div>
@@ -645,10 +645,10 @@ function DashboardContent() {
                 if (isProjectFlow || isMeetingFlow || isService) quickActions.push({ label: 'Bookings', icon: '📅', tab: 'bookings' });
 
                 return quickActions.map(item => (
-                  <button key={item.tab} onClick={() => setActiveTab(item.tab as any)}
-                    className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3 hover:border-blue-300 hover:shadow-md transition-all group">
-                    <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                    <span className="text-sm font-bold text-slate-700">{item.label}</span>
+                  <button key={item.tab} onClick={() => { setActiveTab(item.tab as any); setIsMobileMenuOpen(false); }}
+                    className="bg-white border border-slate-200 rounded-xl lg:rounded-2xl p-3 lg:p-5 flex flex-col items-center gap-2 lg:gap-3 hover:border-blue-300 hover:shadow-md transition-all group">
+                    <span className="text-2xl lg:text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                    <span className="text-xs lg:text-sm font-bold text-slate-700 text-center leading-tight">{item.label}</span>
                   </button>
                 ));
               })()}
