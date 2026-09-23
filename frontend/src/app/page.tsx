@@ -112,11 +112,6 @@ export default async function Home() {
         {/* Live Token Status */}
         <LiveBookingWidget />
 
-        {/* Recommendations */}
-        <ScrollReveal delay={50}>
-          <Recommendations />
-        </ScrollReveal>
-
         {/* Quick Shortcuts */}
         <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-5 flex items-center justify-between overflow-x-auto hide-scrollbar gap-4 lg:gap-8 w-full mb-8">
           {[
@@ -312,8 +307,13 @@ export default async function Home() {
         </section>
         </ScrollReveal>
 
-        {/* Top Picks For You (Product Grid) */}
+        {/* Recommendations */}
         <ScrollReveal delay={200}>
+          <Recommendations />
+        </ScrollReveal>
+
+        {/* Top Picks For You (Product Grid) */}
+        <ScrollReveal delay={250}>
         <section className="mt-4">
           <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
             <h2 className="text-xl lg:text-2xl font-bold text-slate-900">Top Picks For You</h2>
