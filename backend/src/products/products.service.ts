@@ -97,7 +97,7 @@ export class ProductsService {
         
         if (p._distance > radiusToUse) {
           if (showOutOfRange) {
-            p._outOfRange = true; // Tag it for UI
+            (p as any)._outOfRange = true; // Tag it for UI
             return true;
           }
           return false;
