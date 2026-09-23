@@ -42,6 +42,9 @@ let AuthController = class AuthController {
     resetPassword(data) {
         return this.authService.resetPasswordWithCode(data.identifier, data.code, data.new_password);
     }
+    verifyResetCode(data) {
+        return this.authService.verifyResetCode(data.identifier, data.code);
+    }
 };
 __decorate([
     Post('signup'),
@@ -92,6 +95,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "resetPassword", null);
+__decorate([
+    Post('verify-reset-code'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyResetCode", null);
 AuthController = __decorate([
     Controller('auth'),
     __metadata("design:paramtypes", [AuthService])

@@ -104,4 +104,10 @@ export declare class AuthController {
     }): Promise<{
         message: string;
     }>;
+    verifyResetCode(data: {
+        identifier: string;
+        code: string;
+    }): Promise<{
+        message: string;
+    }>;
 }

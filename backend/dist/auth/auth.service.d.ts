@@ -100,6 +100,9 @@ export declare class AuthService {
         user_name: string;
     }>;
     resetPassword(resetToken: string, newPassword: string): Promise<void>;
+    verifyResetCode(identifier: string, code: string): Promise<{
+        message: string;
+    }>;
     resetPasswordWithCode(identifier: string, code: string, newPassword: string): Promise<{
         message: string;
     }>;

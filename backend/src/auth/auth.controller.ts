@@ -43,4 +43,9 @@ export class AuthController {
   resetPassword(@Body() data: { identifier: string; code: string; new_password: string }) {
     return this.authService.resetPasswordWithCode(data.identifier, data.code, data.new_password);
   }
+
+  @Post('verify-reset-code')
+  verifyResetCode(@Body() data: { identifier: string; code: string }) {
+    return this.authService.verifyResetCode(data.identifier, data.code);
+  }
 }

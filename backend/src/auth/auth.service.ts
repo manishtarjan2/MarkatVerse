@@ -261,7 +261,7 @@ export class AuthService {
     throw new BadRequestException('Method signature changed, use resetPasswordWithCode instead');
   }
 
-  async resetPasswordWithCode(identifier: string, code: string, newPassword: string) {
+  async verifyResetCode(identifier: string, code: string) {
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: identifier }, { phone: identifier }]
@@ -279,6 +279,19 @@ export class AuthService {
     if (!user.resetCodeExpires || new Date() > new Date(user.resetCodeExpires)) {
       throw new BadRequestException('Reset code has expired (valid for 5 minutes)');
     }
+
+    return { message: 'Code verified successfully' };
+  }
+
+  async resetPasswordWithCode(identifier: string, code: string, newPassword: string) {
+    // Re-verify before saving new password
+    await this.verifyResetCode(identifier, code);
+    
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: identifier }, { phone: identifier }]
+      }
+    }) as any;
 
     // Code is valid! Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);

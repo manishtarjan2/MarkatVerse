@@ -149,11 +149,27 @@ export default function LoginPage() {
   };
 
   // ── Forgot Password Step 2: verify OTP ───────────────────────
-  const handleOtpVerify = (e: React.FormEvent) => {
+  const handleOtpVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
     if (fpOtp.length !== 6) { setError("Please enter a valid 6-character code"); return; }
-    setView('reset-password');
+    
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/verify-reset-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: fpIdentifier, code: fpOtp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Invalid or expired code');
+      setView('reset-password');
+      setSuccessMsg('');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ── Forgot Password Step 3: new password ─────────────────────
