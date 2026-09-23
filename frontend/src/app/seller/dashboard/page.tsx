@@ -492,13 +492,13 @@ function DashboardContent() {
         
         <nav className="flex-1 px-4 py-2 space-y-1">
           <button 
-            onClick={() => setActiveTab('overview')} 
+            onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'overview' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
             <BarChart3 className="w-5 h-5" /> Overview
           </button>
           <button 
-            onClick={() => setActiveTab('listings')} 
+            onClick={() => { setActiveTab('listings'); setIsMobileMenuOpen(false); }} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'listings' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
             <Store className="w-5 h-5" /> {isServiceProvider ? 'My Services' : 'My Listings'}
@@ -518,6 +518,7 @@ function DashboardContent() {
               setImageUrl('');
               setUploadedImages([]);
               setActiveTab('add');
+              setIsMobileMenuOpen(false);
             }} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'add' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
@@ -526,7 +527,7 @@ function DashboardContent() {
           {/* Dynamic Workflow Tabs */}
           {(isCartFlow || isRfqFlow) && (
             <button 
-              onClick={() => setActiveTab('orders')} 
+              onClick={() => { setActiveTab('orders'); setIsMobileMenuOpen(false); }} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'orders' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               <Package className="w-5 h-5" /> Orders
@@ -535,7 +536,7 @@ function DashboardContent() {
 
           {isQueueFlow && (
             <button 
-              onClick={() => setActiveTab('queue')} 
+              onClick={() => { setActiveTab('queue'); setIsMobileMenuOpen(false); }} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'queue' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               <span className="w-5 h-5 flex items-center justify-center text-lg">🎟️</span> Queue & Tokens
@@ -544,7 +545,7 @@ function DashboardContent() {
 
           {isRfqFlow && (
             <button 
-              onClick={() => setActiveTab('leads')} 
+              onClick={() => { setActiveTab('leads'); setIsMobileMenuOpen(false); }} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'leads' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               <span className="w-5 h-5 flex items-center justify-center text-lg">💬</span> Leads / RFQ
@@ -553,7 +554,7 @@ function DashboardContent() {
 
           {(isQueueFlow || isMeetingFlow) && (
             <button 
-              onClick={() => setActiveTab('bookings')} 
+              onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} 
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'bookings' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
               <div className="flex items-center gap-3">
@@ -566,7 +567,7 @@ function DashboardContent() {
           {isProjectFlow && (
             <>
               <button 
-                onClick={() => setActiveTab('projects')} 
+                onClick={() => { setActiveTab('projects'); setIsMobileMenuOpen(false); }} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'projects' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
               >
                 <span className="w-5 h-5 flex items-center justify-center text-lg">🏗️</span> Projects
@@ -577,7 +578,7 @@ function DashboardContent() {
           {isAssetFlow && (
             <>
               <button 
-                onClick={() => setActiveTab('enquiries')} 
+                onClick={() => { setActiveTab('enquiries'); setIsMobileMenuOpen(false); }} 
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'enquiries' ? 'bg-rose-50 text-rose-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
               >
                 <span className="w-5 h-5 flex items-center justify-center text-lg">🔑</span> Enquiries
@@ -585,7 +586,7 @@ function DashboardContent() {
             </>
           )}
           <button 
-            onClick={() => setActiveTab('settings')} 
+            onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'settings' ? 'bg-red-50 text-red-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
             <Settings className="w-5 h-5" /> Settings
