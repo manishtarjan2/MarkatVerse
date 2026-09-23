@@ -749,7 +749,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       })
       .catch(err => {
         console.error('Failed to fetch categories:', err);
-        setCategories([]);
+        setCategories(defaultCategories);
       });
   }, [user?.id, userLocation, userLat, userLng, radiusFilter]);
 
