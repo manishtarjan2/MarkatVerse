@@ -23,6 +23,8 @@ model User {
   buyerLeads  Lead[]    @relation("BuyerLeads")
   sellerLeads Lead[]    @relation("SellerLeads")
   serviceQueues ServiceQueue[]
+  resetCode     String?
+  resetCodeExpires DateTime?
 
   // V2 Relations
   listings    Listing[] @relation("UserListings")

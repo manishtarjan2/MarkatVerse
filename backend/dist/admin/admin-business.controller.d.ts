@@ -4,9 +4,9 @@ export declare class AdminBusinessController {
     constructor(adminBusinessService: AdminBusinessService);
     getAllBusinesses(): Promise<({
         user: {
+            name: string;
             email: string | null;
             phone: string | null;
-            name: string;
         };
         wallet: {
             id: string;

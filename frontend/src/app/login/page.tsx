@@ -139,8 +139,7 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
       // Store reset token returned from backend (in prod this would come via email/SMS)
-      setFpResetToken(data.reset_token);
-      setSuccessMsg(`OTP sent! For demo, use any 4-digit code.`);
+      setSuccessMsg(`Code sent to your email! (Check backend console for dev)`);
       setView('otp');
     } catch (err: any) {
       setError(err.message);
@@ -153,7 +152,7 @@ export default function LoginPage() {
   const handleOtpVerify = (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
-    if (fpOtp.length < 4) { setError("Please enter a valid 4-digit OTP"); return; }
+    if (fpOtp.length !== 6) { setError("Please enter a valid 6-character code"); return; }
     setView('reset-password');
   };
 
@@ -169,7 +168,7 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reset_token: fpResetToken, new_password: fpNewPassword }),
+        body: JSON.stringify({ identifier: fpIdentifier, code: fpOtp, new_password: fpNewPassword }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to reset password');
@@ -497,9 +496,9 @@ export default function LoginPage() {
                 <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
                   <Mail className="w-7 h-7 text-emerald-600" />
                 </div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-1">Enter OTP</h2>
+                <h2 className="text-3xl font-bold text-slate-900 mb-1">Enter Code</h2>
                 <p className="text-slate-500 text-sm">
-                  A 4-digit OTP was sent to <span className="font-semibold text-slate-700">{fpIdentifier}</span>
+                  A 6-character code was sent to <span className="font-semibold text-slate-700">{fpIdentifier}</span>
                 </p>
               </div>
 
@@ -516,16 +515,16 @@ export default function LoginPage() {
 
               <form onSubmit={handleOtpVerify} className="space-y-5">
                 <div>
-                  <label className={labelCls}>4-Digit OTP</label>
+                  <label className={labelCls}>6-Character Code</label>
                   <input
-                    required type="text" value={fpOtp} onChange={e => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    placeholder="● ● ● ●" maxLength={4}
-                    className="w-full py-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-center tracking-[16px] text-2xl font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all"
+                    required type="text" value={fpOtp} onChange={e => setFpOtp(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6))}
+                    placeholder="● ● ● ● ● ●" maxLength={6}
+                    className="w-full py-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-center tracking-[12px] text-2xl font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all uppercase"
                   />
                 </div>
 
-                <button type="submit" className={btnPrimary} disabled={fpOtp.length < 4}>
-                  Verify OTP <ArrowRight className="w-4 h-4" />
+                <button type="submit" className={btnPrimary} disabled={fpOtp.length !== 6}>
+                  Verify Code <ArrowRight className="w-4 h-4" />
                 </button>
 
                 <p className="text-center text-sm text-slate-500">

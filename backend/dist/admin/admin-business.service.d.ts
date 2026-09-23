@@ -4,9 +4,9 @@ export declare class AdminBusinessService {
     constructor(prisma: PrismaService);
     getAllBusinesses(): Promise<({
         user: {
+            name: string;
             email: string | null;
             phone: string | null;
-            name: string;
         };
         wallet: {
             id: string;

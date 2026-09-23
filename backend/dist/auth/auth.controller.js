@@ -40,7 +40,7 @@ let AuthController = class AuthController {
         return this.authService.forgotPassword(identifier);
     }
     resetPassword(data) {
-        return this.authService.resetPassword(data.reset_token, data.new_password);
+        return this.authService.resetPasswordWithCode(data.identifier, data.code, data.new_password);
     }
 };
 __decorate([

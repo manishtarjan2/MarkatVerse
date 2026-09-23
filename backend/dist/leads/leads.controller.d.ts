@@ -21,8 +21,8 @@ export declare class LeadsController {
         };
         buyer: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
         };
     } & {
         id: string;
@@ -44,8 +44,8 @@ export declare class LeadsController {
         };
         seller: {
             id: string;
-            email: string | null;
             name: string;
+            email: string | null;
         };
     } & {
         id: string;

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
@@ -6,6 +6,8 @@ import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -185,36 +187,113 @@ export class AuthService {
       throw new BadRequestException('No account found with this email or phone');
     }
 
-    // In production, send OTP/email. For now, return a reset token.
-    const resetToken = this.jwtService.sign(
-      { sub: user.id, purpose: 'password_reset' },
-      { expiresIn: '15m' }
-    );
+    // Generate 6-character alphanumeric code
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let resetCode = '';
+    for (let i = 0; i < 6; i++) {
+      resetCode += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // Set expiry to 5 minutes from now
+    const resetCodeExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+    // Save code to database
+    await (this.prisma.user as any).update({
+      where: { id: user.id },
+      data: { resetCode, resetCodeExpires }
+    });
+
+    // Send email using nodemailer (or fallback to console for dev)
+    try {
+      const nodemailer = await import('nodemailer');
+      // If we have SMTP credentials, send a real email
+      if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        await transporter.sendMail({
+          from: `"MarkatVerse Security" <${process.env.SMTP_USER}>`,
+          to: user.email || undefined,
+          subject: 'Password Reset Code - MarkatVerse',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Password Reset Request</h2>
+              <p>Hi ${user.name},</p>
+              <p>You requested to reset your password. Please use the 6-character code below. This code will expire in 5 minutes.</p>
+              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e3a8a;">${resetCode}</span>
+              </div>
+              <p>If you did not request this, you can safely ignore this email.</p>
+            </div>
+          `
+        });
+        this.logger.log(`Password reset email sent to ${user.email}`);
+      } else {
+        // Fallback for development if no SMTP is configured
+        this.logger.warn(`No SMTP configuration found. Development mode reset code for ${identifier}: ${resetCode}`);
+      }
+    } catch (error) {
+      this.logger.error('Failed to send reset email', error);
+      // We don't throw here so the frontend can still proceed in dev mode
+    }
 
     return {
-      message: 'OTP sent successfully',
-      reset_token: resetToken, // In production, send this via email/SMS
+      message: 'Password reset code sent to your email',
       user_name: user.name,
     };
   }
 
   async resetPassword(resetToken: string, newPassword: string) {
-    try {
-      const payload = this.jwtService.verify(resetToken);
-      if (payload.purpose !== 'password_reset') {
-        throw new UnauthorizedException('Invalid reset token');
+    // Note: Since we updated the controller to accept an email and code,
+    // the frontend might still send data in a different shape.
+    // The previous implementation used a JWT resetToken.
+    // We will assume `resetToken` here is the 6-digit code.
+    // However, we need to know WHICH user is resetting the password!
+    // Since the original signature was resetPassword(resetToken, newPassword),
+    // we'll update it to accept (email, code, newPassword).
+    throw new BadRequestException('Method signature changed, use resetPasswordWithCode instead');
+  }
+
+  async resetPasswordWithCode(identifier: string, code: string, newPassword: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: identifier }, { phone: identifier }]
       }
+    }) as any;
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await this.prisma.user.update({
-        where: { id: payload.sub },
-        data: { password: hashedPassword },
-      });
-
-      return { message: 'Password updated successfully' };
-    } catch {
-      throw new UnauthorizedException('Reset link is invalid or has expired');
+    if (!user) {
+      throw new BadRequestException('No account found with this email or phone');
     }
+
+    if (!user.resetCode || user.resetCode !== code.toUpperCase()) {
+      throw new BadRequestException('Invalid or incorrect reset code');
+    }
+
+    if (!user.resetCodeExpires || new Date() > new Date(user.resetCodeExpires)) {
+      throw new BadRequestException('Reset code has expired (valid for 5 minutes)');
+    }
+
+    // Code is valid! Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update password and invalidate code
+    await (this.prisma.user as any).update({
+      where: { id: user.id },
+      data: { 
+        password: hashedPassword,
+        resetCode: null,
+        resetCodeExpires: null
+      },
+    });
+
+    return { message: 'Password updated successfully' };
   }
 
   private generateToken(user: any) {

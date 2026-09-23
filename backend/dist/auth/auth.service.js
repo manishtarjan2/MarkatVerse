@@ -7,15 +7,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+var AuthService_1;
+import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 import * as bcrypt from 'bcryptjs';
-let AuthService = class AuthService {
+let AuthService = AuthService_1 = class AuthService {
     prisma;
     jwtService;
     idGenerator;
+    logger = new Logger(AuthService_1.name);
     constructor(prisma, jwtService, idGenerator) {
         this.prisma = prisma;
         this.jwtService = jwtService;
@@ -168,29 +170,86 @@ let AuthService = class AuthService {
         if (!user) {
             throw new BadRequestException('No account found with this email or phone');
         }
-        const resetToken = this.jwtService.sign({ sub: user.id, purpose: 'password_reset' }, { expiresIn: '15m' });
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let resetCode = '';
+        for (let i = 0; i < 6; i++) {
+            resetCode += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        const resetCodeExpires = new Date(Date.now() + 5 * 60 * 1000);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: { resetCode, resetCodeExpires }
+        });
+        try {
+            const nodemailer = await import('nodemailer');
+            if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+                const transporter = nodemailer.createTransport({
+                    host: process.env.SMTP_HOST,
+                    port: parseInt(process.env.SMTP_PORT || '587'),
+                    secure: process.env.SMTP_SECURE === 'true',
+                    auth: {
+                        user: process.env.SMTP_USER,
+                        pass: process.env.SMTP_PASS,
+                    },
+                });
+                await transporter.sendMail({
+                    from: `"MarkatVerse Security" <${process.env.SMTP_USER}>`,
+                    to: user.email || undefined,
+                    subject: 'Password Reset Code - MarkatVerse',
+                    html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Password Reset Request</h2>
+              <p>Hi ${user.name},</p>
+              <p>You requested to reset your password. Please use the 6-character code below. This code will expire in 5 minutes.</p>
+              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e3a8a;">${resetCode}</span>
+              </div>
+              <p>If you did not request this, you can safely ignore this email.</p>
+            </div>
+          `
+                });
+                this.logger.log(`Password reset email sent to ${user.email}`);
+            }
+            else {
+                this.logger.warn(`No SMTP configuration found. Development mode reset code for ${identifier}: ${resetCode}`);
+            }
+        }
+        catch (error) {
+            this.logger.error('Failed to send reset email', error);
+        }
         return {
-            message: 'OTP sent successfully',
-            reset_token: resetToken,
+            message: 'Password reset code sent to your email',
             user_name: user.name,
         };
     }
     async resetPassword(resetToken, newPassword) {
-        try {
-            const payload = this.jwtService.verify(resetToken);
-            if (payload.purpose !== 'password_reset') {
-                throw new UnauthorizedException('Invalid reset token');
+        throw new BadRequestException('Method signature changed, use resetPasswordWithCode instead');
+    }
+    async resetPasswordWithCode(identifier, code, newPassword) {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                OR: [{ email: identifier }, { phone: identifier }]
             }
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await this.prisma.user.update({
-                where: { id: payload.sub },
-                data: { password: hashedPassword },
-            });
-            return { message: 'Password updated successfully' };
+        });
+        if (!user) {
+            throw new BadRequestException('No account found with this email or phone');
         }
-        catch {
-            throw new UnauthorizedException('Reset link is invalid or has expired');
+        if (!user.resetCode || user.resetCode !== code.toUpperCase()) {
+            throw new BadRequestException('Invalid or incorrect reset code');
         }
+        if (!user.resetCodeExpires || new Date() > new Date(user.resetCodeExpires)) {
+            throw new BadRequestException('Reset code has expired (valid for 5 minutes)');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashedPassword,
+                resetCode: null,
+                resetCodeExpires: null
+            },
+        });
+        return { message: 'Password updated successfully' };
     }
     generateToken(user) {
         const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
@@ -207,7 +266,7 @@ let AuthService = class AuthService {
         };
     }
 };
-AuthService = __decorate([
+AuthService = AuthService_1 = __decorate([
     Injectable(),
     __metadata("design:paramtypes", [PrismaService,
         JwtService,

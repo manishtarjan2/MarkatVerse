@@ -162,9 +162,9 @@ export declare class ConfigurationService {
     }>;
     getSystemSettings(): Promise<import("@prisma/client/runtime/library").JsonValue>;
     updateSystemSettings(data: any): Promise<{
-        data: import("@prisma/client/runtime/library").JsonValue;
         id: string;
         name: string;
+        data: import("@prisma/client/runtime/library").JsonValue;
         createdAt: Date;
         updatedAt: Date;
         type: string;

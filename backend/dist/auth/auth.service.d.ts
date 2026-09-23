@@ -5,6 +5,7 @@ export declare class AuthService {
     private prisma;
     private jwtService;
     private idGenerator;
+    private readonly logger;
     constructor(prisma: PrismaService, jwtService: JwtService, idGenerator: IdGeneratorService);
     signup(data: any): Promise<{
         access_token: string;
@@ -52,8 +53,10 @@ export declare class AuthService {
     }>;
     getMe(token: string): Promise<{
         id: string;
-        name: string;
+        markatId: string | null;
+        email: string | null;
         phone: string | null;
+        name: string;
         role: string;
         business: ({
             wallet: {
@@ -70,9 +73,6 @@ export declare class AuthService {
         } & {
             id: string;
             name: string;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             createdAt: Date;
             updatedAt: Date;
             businessCode: string | null;
@@ -82,6 +82,9 @@ export declare class AuthService {
             businessModel: import(".prisma/client").$Enums.MainType;
             businessType: string;
             address: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             verified: boolean;
             capabilities: string[];
             maxListings: number;
@@ -91,15 +94,13 @@ export declare class AuthService {
             subscriptionStartDate: Date | null;
             subscriptionEndDate: Date | null;
         }) | null;
-        markatId: string | null;
-        email: string | null;
     }>;
     forgotPassword(identifier: string): Promise<{
         message: string;
-        reset_token: string;
         user_name: string;
     }>;
-    resetPassword(resetToken: string, newPassword: string): Promise<{
+    resetPassword(resetToken: string, newPassword: string): Promise<void>;
+    resetPasswordWithCode(identifier: string, code: string, newPassword: string): Promise<{
         message: string;
     }>;
     private generateToken;
