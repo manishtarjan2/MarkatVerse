@@ -85,6 +85,11 @@ export default function Recommendations() {
 
   if (recommendations.length === 0) return null;
 
+  // Only show items that have a real image
+  const realItems = recommendations.filter((item) => item.images?.[0]);
+
+  if (realItems.length === 0) return null;
+
   return (
     <section className="mt-4">
       <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-4">
@@ -95,7 +100,7 @@ export default function Recommendations() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {recommendations.map((item) => (
+        {realItems.map((item) => (
           <div
             key={item.id}
             className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md hover:border-indigo-300 transition-all group cursor-pointer"
@@ -104,7 +109,7 @@ export default function Recommendations() {
           >
             <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
               <img
-                src={item.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400'}
+                src={item.images[0]}
                 alt={item.name || item.title}
                 className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
               />
@@ -118,7 +123,7 @@ export default function Recommendations() {
                 {item.name || item.title}
               </h3>
               <div className="flex items-center justify-between mt-1">
-                <span className="text-sm font-black text-slate-900">${item.price}</span>
+                <span className="text-sm font-black text-slate-900">₹{item.price}</span>
                 <span className="text-[9px] text-slate-400 font-medium">
                   {item.seller?.name || item.seller?.storeName || ''}
                 </span>
