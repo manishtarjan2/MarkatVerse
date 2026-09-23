@@ -31,13 +31,13 @@ let RecommendationsService = class RecommendationsService {
             this.prisma.product.findMany({
                 include: { seller: true }
             }),
-            this.prisma.service.findMany({
+            this.prisma.serviceQueue.findMany({
                 include: { seller: true }
             })
         ]);
         const allItems = [
-            ...products.map(p => ({ ...p, itemType: 'product' })),
-            ...services.map(s => ({ ...s, itemType: 'service' }))
+            ...products.map((p) => ({ ...p, itemType: 'product' })),
+            ...services.map((s) => ({ ...s, itemType: 'service' }))
         ];
         let recommended = allItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         if (userId) {

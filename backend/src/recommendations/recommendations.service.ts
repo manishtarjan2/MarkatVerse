@@ -24,15 +24,15 @@ export class RecommendationsService {
       this.prisma.product.findMany({
         include: { seller: true }
       }),
-      this.prisma.service.findMany({
+      this.prisma.serviceQueue.findMany({
         include: { seller: true }
       })
     ]);
 
     // Format all items to a generic structure
     const allItems = [
-      ...products.map(p => ({ ...p, itemType: 'product' })),
-      ...services.map(s => ({ ...s, itemType: 'service' }))
+      ...products.map((p: any) => ({ ...p, itemType: 'product' })),
+      ...services.map((s: any) => ({ ...s, itemType: 'service' }))
     ];
 
     // Default sorting (e.g. newest first if no interactions)
