@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Phone, Lock, User, ArrowRight, ArrowLeft, CheckCircle, ShieldCheck } from 'lucide-react';
@@ -32,6 +33,15 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [otpTimer, setOtpTimer] = useState(300);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (view === 'otp' && otpTimer > 0) {
+      interval = setInterval(() => setOtpTimer(prev => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [view, otpTimer]);
 
   // Sign In fields
   const [siIdentifier, setSiIdentifier] = useState('');
@@ -138,10 +148,12 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
-      // Store reset token returned from backend (in prod this would come via email/SMS)
-      setSuccessMsg(`Code sent to your email! (Check backend console for dev)`);
+      
+      setOtpTimer(300);
+      toast.success("Code sent! Check your spam folder if you don't see it.", { duration: 6000 });
       setView('otp');
     } catch (err: any) {
+      toast.error(err.message);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -166,6 +178,7 @@ export default function LoginPage() {
       setView('reset-password');
       setSuccessMsg('');
     } catch (err: any) {
+      toast.error(err.message);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -188,8 +201,10 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to reset password');
+      toast.success("Password successfully changed!");
       setView('success');
     } catch (err: any) {
+      toast.error(err.message);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -543,10 +558,14 @@ export default function LoginPage() {
                   Verify Code <ArrowRight className="w-4 h-4" />
                 </button>
 
+                <p className="text-center text-sm font-semibold text-slate-700">
+                  Time remaining: {Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}
+                </p>
+
                 <p className="text-center text-sm text-slate-500">
                   Didn't receive it?{' '}
-                  <button type="button" onClick={handleForgotSend as any} className="text-blue-600 font-semibold hover:underline">
-                    Resend OTP
+                  <button type="button" onClick={handleForgotSend as any} disabled={otpTimer > 0} className="text-blue-600 font-semibold hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed">
+                    Resend Code
                   </button>
                 </p>
               </form>
