@@ -513,3 +513,136 @@ model Review {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model CmsPage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  slug      String   @unique
+  content   String
+  status    String   @default("DRAFT") // DRAFT, PUBLISHED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  position  String   @default("HOMEPAGE")
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogPost {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  slug          String   @unique
+  content       String
+  author        String?
+  featuredImage String?
+  tags          String[] @default([])
+  status        String   @default("DRAFT") // DRAFT, PUBLISHED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SeoMetadata {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  pageUrl     String   @unique
+  title       String
+  description String
+  keywords    String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------
+// COMMERCIAL MODULE
+// ---------------------------------------------------------
+
+model Advertisement {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  mediaUrl  String?
+  linkUrl   String?
+  position  String   @default("HOMEPAGE")
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Coupon {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  code        String   @unique
+  discount    Float
+  type        String   @default("PERCENTAGE") // PERCENTAGE, FIXED
+  validUntil  DateTime?
+  status      String   @default("ACTIVE") // ACTIVE, EXPIRED, DISABLED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Subscription {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  planName    String
+  price       Float
+  features    String[] @default([])
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Commission {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  type        String   // SELLER, CATEGORY, CUSTOM
+  rate        Float
+  conditions  String?
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------
+// SUPPORT MODULE
+// ---------------------------------------------------------
+
+model Complaint {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, RESOLVED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------
+// SECURITY MODULE
+// ---------------------------------------------------------
+
+model AuditLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  action    String
+  resource  String
+  details   String?
+  userId    String?  @db.ObjectId
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------
+// RECOMMENDATIONS MODULE
+// ---------------------------------------------------------
+
+model UserInteraction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?  @db.ObjectId
+  productId String?  @db.ObjectId
+  serviceId String?  @db.ObjectId
+  type      String   // "VIEW" or "CLICK"
+  weight    Int      @default(1)
+  createdAt DateTime @default(now())
+}
+

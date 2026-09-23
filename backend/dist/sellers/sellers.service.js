@@ -149,18 +149,37 @@ let SellersService = class SellersService {
         });
     }
     async removeUser(userId) {
-        await this.prisma.product.deleteMany({
-            where: { sellerId: userId },
-        });
-        await this.prisma.business.deleteMany({
-            where: { userId: userId },
-        });
-        await this.prisma.serviceQueue.deleteMany({
-            where: { sellerId: userId },
-        });
-        return this.prisma.user.delete({
-            where: { id: userId },
-        });
+        const queues = await this.prisma.serviceQueue.findMany({ where: { sellerId: userId } });
+        const queueIds = queues.map(q => q.id);
+        if (queueIds.length > 0) {
+            await this.prisma.serviceBooking.deleteMany({ where: { queueId: { in: queueIds } } });
+            await this.prisma.serviceStaff.deleteMany({ where: { queueId: { in: queueIds } } });
+            await this.prisma.serviceResource.deleteMany({ where: { queueId: { in: queueIds } } });
+            await this.prisma.serviceQueue.deleteMany({ where: { sellerId: userId } });
+        }
+        const businesses = await this.prisma.business.findMany({ where: { userId: userId } });
+        const businessIds = businesses.map(b => b.id);
+        if (businessIds.length > 0) {
+            const wallets = await this.prisma.wallet.findMany({ where: { businessId: { in: businessIds } } });
+            const walletIds = wallets.map(w => w.id);
+            if (walletIds.length > 0) {
+                await this.prisma.ledgerTransaction.deleteMany({ where: { walletId: { in: walletIds } } });
+                await this.prisma.withdrawalRequest.deleteMany({ where: { walletId: { in: walletIds } } });
+                await this.prisma.wallet.deleteMany({ where: { businessId: { in: businessIds } } });
+            }
+            const bankAccounts = await this.prisma.bankAccount.findMany({ where: { businessId: { in: businessIds } } });
+            const bankAccountIds = bankAccounts.map(ba => ba.id);
+            if (bankAccountIds.length > 0) {
+                await this.prisma.withdrawalRequest.deleteMany({ where: { bankAccountId: { in: bankAccountIds } } });
+                await this.prisma.bankAccount.deleteMany({ where: { businessId: { in: businessIds } } });
+            }
+            await this.prisma.businessFeature.deleteMany({ where: { businessId: { in: businessIds } } });
+            await this.prisma.business.deleteMany({ where: { userId: userId } });
+        }
+        await this.prisma.lead.deleteMany({ where: { OR: [{ buyerId: userId }, { sellerId: userId }] } });
+        await this.prisma.product.deleteMany({ where: { sellerId: userId } });
+        await this.prisma.listing.deleteMany({ where: { sellerId: userId } });
+        return this.prisma.user.delete({ where: { id: userId } });
     }
 };
 SellersService = __decorate([

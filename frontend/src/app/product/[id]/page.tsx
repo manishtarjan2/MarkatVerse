@@ -308,7 +308,7 @@ export default function ProductDetails() {
 
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-4">
-              <StarRating rating={Number(product.rating || 0)} totalReviews={Number(product.reviews || 0)} />
+              <StarRating rating={Number(product.rating || 0)} totalReviews={Number(product.reviews || 0)} compact={true} />
             </div>
             <button 
               onClick={() => toggleWishlist(product.id)}

@@ -20,9 +20,15 @@ import { AdminModule } from './admin/admin.module.js';
 import { WorkflowsModule } from './workflows/workflows.module.js';
 import { IdGeneratorModule } from './id-generator/id-generator.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
+import { SystemConfigModule } from './system-config/system-config.module.js';
+import { ContentModule } from './content/content.module.js';
+import { CommercialModule } from './commercial/commercial.module.js';
+import { SupportModule } from './support/support.module.js';
+import { SecurityModule } from './security/security.module.js';
+import { RecommendationsModule } from './recommendations/recommendations.module.js';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule, AdminModule, WorkflowsModule, IdGeneratorModule, ReviewsModule],
+  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule, AdminModule, WorkflowsModule, IdGeneratorModule, ReviewsModule, SystemConfigModule, ContentModule, CommercialModule, SupportModule, SecurityModule, RecommendationsModule],
   controllers: [AppController],
   providers: [AppService],
 })

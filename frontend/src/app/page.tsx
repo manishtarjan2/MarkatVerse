@@ -5,18 +5,117 @@ import JoinSellerButton from "@/components/JoinSellerButton";
 import LiveBookingWidget from "@/components/LiveBookingWidget";
 import dynamic from 'next/dynamic';
 import ScrollReveal from "@/components/ScrollReveal";
+import Recommendations from "@/components/Recommendations";
 
 const ProductGrid = dynamic(() => import('@/components/ProductGrid'));
 
-export default function Home() {
+async function getAdvertisements() {
+  try {
+    const res = await fetch('http://localhost:3001/commercial/advertisements', { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      return data.filter((ad: any) => ad.status === 'ACTIVE' && ad.position === 'HOMEPAGE');
+    }
+  } catch (error) {
+    console.error("Failed to fetch ads", error);
+  }
+  return [];
+}
+
+async function getBanners() {
+  try {
+    const res = await fetch('http://localhost:3001/content/banners', { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      return data.filter((banner: any) => banner.status === 'ACTIVE' && banner.position === 'HOME_HERO');
+    }
+  } catch (error) {
+    console.error("Failed to fetch banners", error);
+  }
+  return [];
+}
+
+async function getBlogPosts() {
+  try {
+    const res = await fetch('http://localhost:3001/content/blog', { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      return data.filter((post: any) => post.status === 'PUBLISHED').slice(0, 3); // Top 3 latest posts
+    }
+  } catch (error) {
+    console.error("Failed to fetch blog posts", error);
+  }
+  return [];
+}
+
+export default async function Home() {
+  const [ads, banners, blogPosts] = await Promise.all([
+    getAdvertisements(),
+    getBanners(),
+    getBlogPosts()
+  ]);
+
   return (
     <div className="w-full min-h-[calc(100vh-80px)] flex bg-slate-50">
       
       {/* Main Content Area */}
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col overflow-hidden">
         
+        {/* Banners */}
+        {banners.length > 0 && (
+          <div className="w-full mb-8 relative rounded-3xl overflow-hidden shadow-sm">
+            <div className="flex snap-x snap-mandatory overflow-x-auto hide-scrollbar">
+              {banners.map((banner: any) => (
+                <div key={banner.id} className="min-w-full snap-start relative h-[300px] md:h-[400px]">
+                  <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+                    <h2 className="text-3xl md:text-5xl font-black text-white mb-2">{banner.title}</h2>
+                    {banner.linkUrl && (
+                      <a href={banner.linkUrl} className="inline-block mt-4 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-xl font-bold transition-all w-fit">
+                        Explore Offer
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Advertisements */}
+        {ads.length > 0 && (
+          <div className="w-full mb-6 flex flex-col gap-4">
+            {ads.map((ad: any) => (
+              <a key={ad.id} href={ad.linkUrl || '#'} className="block w-full bg-slate-900 rounded-2xl p-8 text-white shadow-md hover:shadow-lg transition-all relative overflow-hidden group min-h-[160px] flex items-center">
+                
+                {/* Background Image or Gradient */}
+                {ad.mediaUrl ? (
+                  <div className="absolute inset-0 z-0">
+                    <img src={ad.mediaUrl} alt={ad.title} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-transparent"></div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 z-0 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                )}
+                
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-0"></div>
+                
+                <div className="relative z-10 flex items-center justify-between w-full">
+                  <h3 className="text-3xl font-black tracking-tight drop-shadow-md w-2/3 leading-tight">{ad.title}</h3>
+                  <span className="bg-white text-emerald-600 px-5 py-2.5 rounded-xl font-bold text-sm shadow-xl group-hover:scale-105 transition-transform">Explore Now &rarr;</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+
         {/* Live Token Status */}
         <LiveBookingWidget />
+
+        {/* Recommendations */}
+        <ScrollReveal delay={50}>
+          <Recommendations />
+        </ScrollReveal>
 
         {/* Quick Shortcuts */}
         <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-5 flex items-center justify-between overflow-x-auto hide-scrollbar gap-4 lg:gap-8 w-full mb-8">
@@ -366,6 +465,35 @@ export default function Home() {
             </div>
           </div>
         </div>
+        {/* Blog Posts */}
+        {blogPosts.length > 0 && (
+          <ScrollReveal delay={600}>
+            <section className="mt-8 mb-8">
+              <div className="flex justify-between items-end border-b border-slate-200 pb-3 mb-6">
+                <div>
+                  <div className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Latest News</div>
+                  <h2 className="text-xl lg:text-2xl font-bold text-slate-900">From Our Blog</h2>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {blogPosts.map((post: any) => (
+                  <div key={post.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-all group">
+                    <div className="p-6">
+                      <div className="text-xs font-bold text-emerald-600 mb-2 uppercase tracking-wide">Article</div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">{post.title}</h3>
+                      <p className="text-sm text-slate-500 mb-4 line-clamp-3">{post.content}</p>
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                        <div className="text-xs font-medium text-slate-400">By {post.author || 'MarkatVerse Team'}</div>
+                        <a href={`/blog/${post.slug}`} className="text-sm font-bold text-blue-600 hover:underline">Read More &rarr;</a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </ScrollReveal>
+        )}
+
       </main>
 
     </div>

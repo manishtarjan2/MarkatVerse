@@ -7,9 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma.service.js';
 let ReviewsService = class ReviewsService {
     prisma;
     constructor(prisma) {
@@ -84,7 +83,7 @@ let ReviewsService = class ReviewsService {
 };
 ReviewsService = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [typeof (_a = typeof PrismaService !== "undefined" && PrismaService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [PrismaService])
 ], ReviewsService);
 export { ReviewsService };
 //# sourceMappingURL=reviews.service.js.map

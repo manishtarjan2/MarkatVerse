@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma.service.js';
 
 @Injectable()
 export class ReviewsService {
@@ -51,7 +51,7 @@ export class ReviewsService {
     const totalReviews = allReviews.length;
     const averageRating = totalReviews === 0 
       ? 0 
-      : allReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
+      : allReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / totalReviews;
 
     const formattedRating = averageRating.toFixed(1);
     const formattedReviews = totalReviews.toString();

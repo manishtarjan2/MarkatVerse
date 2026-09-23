@@ -38,7 +38,7 @@ let ServiceQueueService = class ServiceQueueService {
     }
     async getAllQueues() {
         return this.prisma.serviceQueue.findMany({
-            where: { isOpen: true },
+            where: { isOpen: true, status: 'ACTIVE' },
             orderBy: { createdAt: 'desc' },
         });
     }

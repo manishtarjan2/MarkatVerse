@@ -177,8 +177,8 @@ export default function ProductGrid({ products: propProducts, limit, category, p
                 )}
               </div>
               <div className="flex justify-between items-center mt-2 sm:mt-3 text-[9px] sm:text-[10px]">
-                <div className="shrink-0 scale-75 origin-left">
-                  <StarRating rating={Number(product.rating || 0)} totalReviews={Number(product.reviews || 0)} size={12} />
+                <div className="shrink-0 flex items-center">
+                  <StarRating rating={Number(product.rating || 0)} totalReviews={Number(product.reviews || 0)} size={11} compact={true} />
                 </div>
                 <span className="text-gray-500 truncate text-right ml-1" title={product.location}>
                   {product._distance != null && product._distance !== Infinity ? `${product._distance.toFixed(1)} km • ` : ''}

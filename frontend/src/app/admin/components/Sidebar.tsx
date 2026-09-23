@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronRight, ArrowLeft, ShieldCheck, Activity, Users, Store, Box, Network, Settings, CheckCircle, ListTree, LogOut } from 'lucide-react';
+import { ChevronRight, ArrowLeft, ShieldCheck, Activity, Users, Store, Box, Network, Settings, CheckCircle, ListTree, LogOut, Receipt, Briefcase, BarChart3, Bell, LayoutDashboard, Headset } from 'lucide-react';
 
 type NavItem = {
   name: string;
@@ -25,7 +25,7 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
   };
 
   const navItems: NavItem[] = [
-    { name: 'Dashboard Overview', href: '/admin', icon: <Activity className="w-5 h-5" /> },
+    { name: 'Dashboard Overview', href: '/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
     {
       name: 'Users',
       icon: <Users className="w-5 h-5" />,
@@ -61,7 +61,7 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
     },
     {
       name: 'Transactions',
-      icon: <Activity className="w-5 h-5" />,
+      icon: <Receipt className="w-5 h-5" />,
       subItems: [
         { name: 'Orders', href: '/admin/transactions/orders' },
         { name: 'Bookings', href: '/admin/transactions/bookings' },
@@ -73,7 +73,7 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
     },
     {
       name: 'Commercial',
-      icon: <Activity className="w-5 h-5" />,
+      icon: <Briefcase className="w-5 h-5" />,
       subItems: [
         { name: 'Commission', href: '/admin/commercial/commission' },
         { name: 'Subscriptions', href: '/admin/commercial/subscriptions' },
@@ -93,7 +93,7 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
     },
     {
       name: 'Customer Support',
-      icon: <Users className="w-5 h-5" />,
+      icon: <Headset className="w-5 h-5" />,
       subItems: [
         { name: 'Tickets', href: '/admin/support/tickets' },
         { name: 'Complaints', href: '/admin/support/complaints' },
@@ -112,7 +112,7 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
     },
     {
       name: 'Analytics',
-      icon: <Activity className="w-5 h-5" />,
+      icon: <BarChart3 className="w-5 h-5" />,
       subItems: [
         { name: 'Marketplace', href: '/admin/analytics/marketplace' },
         { name: 'Sales', href: '/admin/analytics/sales' },
@@ -134,7 +134,7 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
     },
     {
       name: 'Notifications',
-      icon: <Activity className="w-5 h-5" />,
+      icon: <Bell className="w-5 h-5" />,
       subItems: [
         { name: 'Email', href: '/admin/notifications/email' },
         { name: 'SMS', href: '/admin/notifications/sms' },

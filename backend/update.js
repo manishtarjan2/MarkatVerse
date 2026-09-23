@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.product.updateMany({ where: { categoryName: { in: ['Services', 'Home Services', 'Transport', 'Rentals', 'Organizers'] } }, data: { status: 'ACTIVE' } }).then(res => console.log(res)).catch(e => console.error(e)).finally(() => prisma.$disconnect());

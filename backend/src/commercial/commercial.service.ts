@@ -1,0 +1,83 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma.service.js';
+
+@Injectable()
+export class CommercialService {
+  constructor(private prisma: PrismaService) {}
+
+  // Advertisements
+  async getAdvertisements() {
+    return this.prisma.advertisement.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+  async getAdvertisement(id: string) {
+    const item = await this.prisma.advertisement.findUnique({ where: { id } });
+    if (!item) throw new NotFoundException('Advertisement not found');
+    return item;
+  }
+  async createAdvertisement(data: any) {
+    return this.prisma.advertisement.create({ data });
+  }
+  async updateAdvertisement(id: string, data: any) {
+    return this.prisma.advertisement.update({ where: { id }, data });
+  }
+  async deleteAdvertisement(id: string) {
+    return this.prisma.advertisement.delete({ where: { id } });
+  }
+
+  // Coupons
+  async getCoupons() {
+    return this.prisma.coupon.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+  async getCoupon(id: string) {
+    const item = await this.prisma.coupon.findUnique({ where: { id } });
+    if (!item) throw new NotFoundException('Coupon not found');
+    return item;
+  }
+  async createCoupon(data: any) {
+    return this.prisma.coupon.create({ data });
+  }
+  async updateCoupon(id: string, data: any) {
+    return this.prisma.coupon.update({ where: { id }, data });
+  }
+  async deleteCoupon(id: string) {
+    return this.prisma.coupon.delete({ where: { id } });
+  }
+
+  // Subscriptions
+  async getSubscriptions() {
+    return this.prisma.subscription.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+  async getSubscription(id: string) {
+    const item = await this.prisma.subscription.findUnique({ where: { id } });
+    if (!item) throw new NotFoundException('Subscription not found');
+    return item;
+  }
+  async createSubscription(data: any) {
+    return this.prisma.subscription.create({ data });
+  }
+  async updateSubscription(id: string, data: any) {
+    return this.prisma.subscription.update({ where: { id }, data });
+  }
+  async deleteSubscription(id: string) {
+    return this.prisma.subscription.delete({ where: { id } });
+  }
+
+  // Commission
+  async getCommissions() {
+    return this.prisma.commission.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+  async getCommission(id: string) {
+    const item = await this.prisma.commission.findUnique({ where: { id } });
+    if (!item) throw new NotFoundException('Commission not found');
+    return item;
+  }
+  async createCommission(data: any) {
+    return this.prisma.commission.create({ data });
+  }
+  async updateCommission(id: string, data: any) {
+    return this.prisma.commission.update({ where: { id }, data });
+  }
+  async deleteCommission(id: string) {
+    return this.prisma.commission.delete({ where: { id } });
+  }
+}

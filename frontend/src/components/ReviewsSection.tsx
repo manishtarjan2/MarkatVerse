@@ -18,10 +18,16 @@ interface ReviewsSectionProps {
   entityType: 'PRODUCT' | 'SERVICE';
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    return `http://${window.location.hostname}:3001`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+};
+const API_URL = getApiUrl();
 
 export default function ReviewsSection({ entityId, entityType }: ReviewsSectionProps) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -50,7 +56,7 @@ export default function ReviewsSection({ entityId, entityType }: ReviewsSectionP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !token) {
+    if (!user) {
       toast.error('You must be logged in to leave a review.');
       return;
     }
@@ -59,14 +65,15 @@ export default function ReviewsSection({ entityId, entityType }: ReviewsSectionP
       const res = await fetch(`${API_URL}/reviews`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           entityId,
           entityType,
           rating,
-          comment
+          comment,
+          userId: user.id || user.markatId || 'anonymous',
+          userName: user.name || 'Anonymous'
         })
       });
       

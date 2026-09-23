@@ -155,24 +155,49 @@ export class SellersService {
   }
 
   async removeUser(userId: string) {
-    // Attempt to delete products associated with the user
-    await this.prisma.product.deleteMany({
-      where: { sellerId: userId },
-    });
+    // 1. Delete ServiceQueues and related
+    const queues = await this.prisma.serviceQueue.findMany({ where: { sellerId: userId } });
+    const queueIds = queues.map(q => q.id);
+    if (queueIds.length > 0) {
+      await this.prisma.serviceBooking.deleteMany({ where: { queueId: { in: queueIds } } });
+      await this.prisma.serviceStaff.deleteMany({ where: { queueId: { in: queueIds } } });
+      await this.prisma.serviceResource.deleteMany({ where: { queueId: { in: queueIds } } });
+      await this.prisma.serviceQueue.deleteMany({ where: { sellerId: userId } });
+    }
 
-    // Attempt to delete business associated with the user
-    await this.prisma.business.deleteMany({
-      where: { userId: userId },
-    });
+    // 2. Delete Businesses and related
+    const businesses = await this.prisma.business.findMany({ where: { userId: userId } });
+    const businessIds = businesses.map(b => b.id);
+    if (businessIds.length > 0) {
+      const wallets = await this.prisma.wallet.findMany({ where: { businessId: { in: businessIds } } });
+      const walletIds = wallets.map(w => w.id);
+      if (walletIds.length > 0) {
+        await this.prisma.ledgerTransaction.deleteMany({ where: { walletId: { in: walletIds } } });
+        await this.prisma.withdrawalRequest.deleteMany({ where: { walletId: { in: walletIds } } });
+        await this.prisma.wallet.deleteMany({ where: { businessId: { in: businessIds } } });
+      }
+      
+      const bankAccounts = await this.prisma.bankAccount.findMany({ where: { businessId: { in: businessIds } } });
+      const bankAccountIds = bankAccounts.map(ba => ba.id);
+      if (bankAccountIds.length > 0) {
+        await this.prisma.withdrawalRequest.deleteMany({ where: { bankAccountId: { in: bankAccountIds } } });
+        await this.prisma.bankAccount.deleteMany({ where: { businessId: { in: businessIds } } });
+      }
 
-    // Attempt to delete service queue associated with the user
-    await this.prisma.serviceQueue.deleteMany({
-      where: { sellerId: userId },
-    });
+      await this.prisma.businessFeature.deleteMany({ where: { businessId: { in: businessIds } } });
+      await this.prisma.business.deleteMany({ where: { userId: userId } });
+    }
+
+    // 3. Delete Leads
+    await this.prisma.lead.deleteMany({ where: { OR: [{ buyerId: userId }, { sellerId: userId }] } });
+
+    // 4. Delete Products
+    await this.prisma.product.deleteMany({ where: { sellerId: userId } });
+
+    // 5. Delete Listings
+    await this.prisma.listing.deleteMany({ where: { sellerId: userId } });
 
     // Delete the user itself
-    return this.prisma.user.delete({
-      where: { id: userId },
-    });
+    return this.prisma.user.delete({ where: { id: userId } });
   }
 }

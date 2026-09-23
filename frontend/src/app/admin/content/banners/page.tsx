@@ -1,22 +1,113 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-export default function ContentgtBannersPage() {
+export default function ContentBannersPage() {
+  const [banners, setBanners] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ title: '', imageUrl: '', linkUrl: '', position: 'HOME_HERO', status: 'ACTIVE' });
+
+  const fetchBanners = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/content/banners');
+      if (res.ok) {
+        const data = await res.json();
+        setBanners(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBanners();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this Banner?')) {
+      try {
+        await fetch(`http://localhost:3001/content/banners/${id}`, { method: 'DELETE' });
+        fetchBanners();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const url = editingId 
+        ? `http://localhost:3001/content/banners/${editingId}` 
+        : 'http://localhost:3001/content/banners';
+      const method = editingId ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (res.ok) {
+        setShowModal(false);
+        setEditingId(null);
+        setFormData({ title: '', imageUrl: '', linkUrl: '', position: 'HOME_HERO', status: 'ACTIVE' });
+        fetchBanners();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleEdit = (banner: any) => {
+    setFormData({
+      title: banner.title,
+      imageUrl: banner.imageUrl,
+      linkUrl: banner.linkUrl || '',
+      position: banner.position,
+      status: banner.status,
+    });
+    setEditingId(banner.id);
+    setShowModal(true);
+  };
+
+  const handleToggleStatus = async (banner: any) => {
+    const newStatus = banner.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    try {
+      await fetch(`http://localhost:3001/content/banners/${banner.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      fetchBanners();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full">
+    <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full relative">
       <header className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Content &gt; Banners</h1>
-          <p className="text-slate-400 mt-2 text-sm">Manage and configure content &gt; banners.</p>
+          <p className="text-slate-400 mt-2 text-sm">Manage and configure promotional banners.</p>
         </div>
-        <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center gap-2">
-          + Add New
+        <button 
+          onClick={() => {
+            setEditingId(null);
+            setFormData({ title: '', imageUrl: '', linkUrl: '', position: 'HOME_HERO', status: 'ACTIVE' });
+            setShowModal(true);
+          }}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center gap-2">
+          + Add New Banner
         </button>
       </header>
 
       <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden">
         <div className="p-4 border-b border-slate-700 flex justify-between">
-          <input type="text" placeholder="Search..." className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 w-64" />
+          <input type="text" placeholder="Search banners..." className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 w-64" />
           <select className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
             <option>All Status</option>
             <option>Active</option>
@@ -25,45 +116,77 @@ export default function ContentgtBannersPage() {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-900/80 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
-              <tr>
-                <th className="p-4 pl-6">ID</th>
-                <th className="p-4">Name / Title</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Date Modified</th>
-                <th className="p-4 pr-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700/50">
-              <tr className="hover:bg-slate-700/50 transition-all">
-                <td className="p-4 pl-6 font-mono text-xs text-slate-500">#1001</td>
-                <td className="p-4 font-bold text-white">Sample Entry A</td>
-                <td className="p-4">
-                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full text-xs font-bold">Active</span>
-                </td>
-                <td className="p-4 text-slate-400 text-sm">Just now</td>
-                <td className="p-4 pr-6 text-right">
-                  <button className="text-slate-500 hover:text-blue-400 px-2">Edit</button>
-                  <button className="text-slate-500 hover:text-rose-400 px-2">Delete</button>
-                </td>
-              </tr>
-              <tr className="hover:bg-slate-700/50 transition-all">
-                <td className="p-4 pl-6 font-mono text-xs text-slate-500">#1002</td>
-                <td className="p-4 font-bold text-white">Sample Entry B</td>
-                <td className="p-4">
-                  <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-full text-xs font-bold">Inactive</span>
-                </td>
-                <td className="p-4 text-slate-400 text-sm">2 hours ago</td>
-                <td className="p-4 pr-6 text-right">
-                  <button className="text-slate-500 hover:text-blue-400 px-2">Edit</button>
-                  <button className="text-slate-500 hover:text-rose-400 px-2">Delete</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {loading ? (
+             <div className="p-8 text-center text-slate-400">Loading banners...</div>
+          ) : banners.length === 0 ? (
+             <div className="p-8 text-center text-slate-400">No Banners found.</div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-slate-900/80 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
+                <tr>
+                  <th className="p-4 pl-6">ID</th>
+                  <th className="p-4">Banner Preview</th>
+                  <th className="p-4">Title / Position</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 pr-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-700/50">
+                {banners.map((banner) => (
+                  <tr key={banner.id} className="hover:bg-slate-700/50 transition-all">
+                    <td className="p-4 pl-6 font-mono text-xs text-slate-500">{banner.id.substring(0,8)}...</td>
+                    <td className="p-4">
+                       <img src={banner.imageUrl} alt={banner.title} className="h-12 w-24 object-cover rounded-md border border-slate-700 bg-slate-900" />
+                    </td>
+                    <td className="p-4">
+                       <div className="font-bold text-white">{banner.title}</div>
+                       <div className="text-xs text-slate-400">Pos: {banner.position}</div>
+                    </td>
+                    <td className="p-4">
+                      {banner.status === 'ACTIVE' ? (
+                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full text-xs font-bold">Active</span>
+                      ) : (
+                        <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-full text-xs font-bold">Inactive</span>
+                      )}
+                    </td>
+                    <td className="p-4 pr-6 text-right space-x-2">
+                      <button onClick={() => handleToggleStatus(banner)} className="text-slate-500 hover:text-white px-2 transition-colors">Toggle</button>
+                      <button onClick={() => handleEdit(banner)} className="text-slate-500 hover:text-indigo-400 px-2 transition-colors">Edit</button>
+                      <button onClick={() => handleDelete(banner.id)} className="text-slate-500 hover:text-rose-400 px-2 transition-colors">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 w-[500px] shadow-2xl">
+            <h2 className="text-2xl font-bold text-white mb-4">{editingId ? 'Edit Banner' : 'Add Banner'}</h2>
+            <form onSubmit={handleSave} className="flex flex-col gap-4">
+              <input type="text" placeholder="Banner Title" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500" />
+              <input type="text" placeholder="Image URL" required value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500" />
+              <input type="text" placeholder="Link URL (e.g. /category/shoes)" value={formData.linkUrl} onChange={e => setFormData({...formData, linkUrl: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500" />
+              <select value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500">
+                <option value="HOME_HERO">Home Hero</option>
+                <option value="SIDEBAR">Sidebar</option>
+                <option value="TOP_BAR">Top Bar</option>
+              </select>
+              <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500">
+                <option value="INACTIVE">Inactive</option>
+                <option value="ACTIVE">Active</option>
+              </select>
+              <div className="flex justify-end gap-3 mt-4">
+                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-slate-400 hover:text-white">Cancel</button>
+                <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg font-bold">{editingId ? 'Update Banner' : 'Save Banner'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

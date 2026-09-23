@@ -10,20 +10,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
-import { Controller, Post, Get, Body, Param, UseGuards, Request } from '@nestjs/common';
-import { ReviewsService } from './reviews.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { ReviewsService } from './reviews.service.js';
 let ReviewsController = class ReviewsController {
     reviewsService;
     constructor(reviewsService) {
         this.reviewsService = reviewsService;
     }
-    async createReview(req, body) {
+    async createReview(body) {
         return this.reviewsService.createReview({
             ...body,
-            userId: req.user.userId,
-            userName: req.user.name,
         });
     }
     async getReviews(entityType, entityId) {
@@ -31,12 +27,10 @@ let ReviewsController = class ReviewsController {
     }
 };
 __decorate([
-    UseGuards(JwtAuthGuard),
     Post(),
-    __param(0, Request()),
-    __param(1, Body()),
+    __param(0, Body()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], ReviewsController.prototype, "createReview", null);
 __decorate([
@@ -49,7 +43,7 @@ __decorate([
 ], ReviewsController.prototype, "getReviews", null);
 ReviewsController = __decorate([
     Controller('reviews'),
-    __metadata("design:paramtypes", [typeof (_a = typeof ReviewsService !== "undefined" && ReviewsService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [ReviewsService])
 ], ReviewsController);
 export { ReviewsController };
 //# sourceMappingURL=reviews.controller.js.map

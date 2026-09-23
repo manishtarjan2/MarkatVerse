@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -66,146 +67,133 @@ export default function AdminLoginPage() {
     }
   };
 
+  const inputCls = "w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 focus:bg-white transition-all text-sm";
+  const labelCls = "block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide";
+  const btnPrimary = "w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-amber-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-orange-50 flex">
       
-      {/* Left Side: Branding Panel */}
-      <div className="hidden lg:flex w-[420px] bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 relative overflow-hidden flex-col justify-between p-10 shrink-0">
+      {/* ── Left Branding Panel ── */}
+      <div className="hidden lg:flex w-[440px] bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 relative overflow-hidden flex-col justify-between p-12 shrink-0">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 border border-amber-500/30 rounded-full"></div>
           <div className="absolute bottom-20 right-10 w-96 h-96 border border-amber-500/20 rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-amber-500/10 rounded-full"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
         </div>
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
-        }}></div>
 
         {/* Logo */}
         <div className="relative z-10">
-          <img src="/logo.png" alt="MarkatVerse" className="h-12 brightness-0 invert object-contain" />
-          <div className="mt-1 text-amber-400 text-sm font-bold tracking-widest">ADMIN PORTAL</div>
+          <img src="/logo.png" alt="MarkatVerse" className="h-10 brightness-0 invert object-contain" />
+          <div className="mt-2 text-amber-400 text-xs font-bold tracking-widest uppercase">Admin Portal</div>
         </div>
 
         {/* Center Content */}
-        <div className="relative z-10 max-w-md">
-          <h1 className="text-4xl font-bold text-white leading-tight mb-6">
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span className="text-white/90 text-xs font-semibold">Authorized Access Only</span>
+          </div>
+          <h1 className="text-4xl font-bold text-white leading-tight mb-5">
             Command center for<br />
-            <span className="text-amber-400">MarkatVerse</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">MarkatVerse</span>
           </h1>
-          <p className="text-slate-300 text-base leading-relaxed mb-8">
+          <p className="text-slate-300 text-sm leading-relaxed mb-10">
             Manage sellers, moderate products, oversee finances, and keep the platform running smoothly — all from one dashboard.
           </p>
           
           {/* Features */}
-          <div className="flex flex-col gap-4">
+          <div className="space-y-4">
             {[
-              { icon: '🛡️', title: 'Seller Approvals', desc: 'Review & verify new businesses' },
-              { icon: '📊', title: 'Analytics Dashboard', desc: 'Real-time platform metrics' },
-              { icon: '👥', title: 'User Management', desc: 'Full control over accounts' },
-              { icon: '💰', title: 'Financial Overview', desc: 'Revenue & payout tracking' },
+              { icon: '🛡️', text: 'Review & verify new businesses' },
+              { icon: '📊', text: 'Real-time platform metrics' },
+              { icon: '👥', text: 'Full control over accounts' },
+              { icon: '💰', text: 'Revenue & payout tracking' },
             ].map((f, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-lg p-3">
-                <span className="text-xl">{f.icon}</span>
-                <div>
-                  <div className="text-white text-base font-medium">{f.title}</div>
-                  <div className="text-slate-400 text-sm">{f.desc}</div>
-                </div>
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-base shrink-0">{f.icon}</div>
+                <span className="text-slate-300 text-sm">{f.text}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Trust badges */}
-        <div className="relative z-10 flex items-center gap-6 text-slate-400 text-sm">
-          <span className="flex items-center gap-1.5">🔒 End-to-End Encrypted</span>
-          <span className="flex items-center gap-1.5">🛡️ 2FA Protected</span>
-          <span className="flex items-center gap-1.5">📋 Audit Logged</span>
+        <div className="relative z-10 flex items-center gap-6 text-slate-400/60 text-xs">
+          <span>🔒 End-to-End Encrypted</span>
+          <span>🛡️ 2FA Protected</span>
+          <span>📋 Audit Logged</span>
         </div>
       </div>
 
-      {/* Right Side: Form Panel */}
-      <div className="flex-1 flex flex-col justify-center p-6 lg:p-10 overflow-y-auto">
-        <div className="w-full max-w-[600px] mx-auto">
+      {/* ── Right Form Panel ── */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 overflow-y-auto">
+        <div className="w-full max-w-[440px]">
           
-          {/* Mobile Logo */}
-          <div className="lg:hidden mb-6 text-center">
-            <img src="/logo.png" alt="MarkatVerse" className="h-10 mx-auto object-contain" />
-            <div className="text-amber-600 text-sm font-bold tracking-widest mt-1">ADMIN PORTAL</div>
-          </div>
-
-          {/* Admin Badge */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-            <div className="flex items-center justify-center gap-2.5 mb-6">
-            <div className="w-11 h-11 bg-amber-100 border border-amber-200 rounded-xl flex items-center justify-center">
-              <span className="text-xl">🛡️</span>
+          <div className="mb-8">
+            <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center mb-4 lg:hidden">
+              <ShieldCheck className="w-7 h-7 text-amber-600" />
             </div>
-            <div>
-              <div className="text-slate-900 font-bold text-base">Secure Admin Login</div>
-              <div className="text-slate-400 text-xs">Authorized Personnel Only</div>
-            </div>
+            <h2 className="text-3xl font-bold text-slate-900 mb-1">Secure Admin Login</h2>
+            <p className="text-slate-500 text-sm">Authorized Personnel Only</p>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 p-3.5 rounded-xl mb-6 text-sm text-center flex items-center justify-center gap-2">
-              <span>⚠️</span> {error}
+            <div className="mb-5 p-3.5 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 flex items-start gap-2">
+              <span className="text-red-500 mt-0.5">⚠️</span> {error}
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleAdminLogin} className="max-w-[360px] mx-auto">
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-slate-700 mb-2">Admin Email</label>
+          <form onSubmit={handleAdminLogin} className="space-y-5">
+            <div>
+              <label className={labelCls}>Admin Email</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">📧</span>
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@example.com" 
-                  className="w-full p-3.5 pl-10 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all placeholder:text-slate-400 text-base" 
+                  className={inputCls} 
                 />
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-700 mb-2">Password</label>
+            <div>
+              <label className={labelCls}>Password</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base">🔒</span>
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   required type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  className="w-full p-3.5 pl-10 pr-12 rounded-lg border border-slate-300 bg-white text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-all placeholder:text-slate-400 text-base" 
+                  placeholder="Enter your password" 
+                  className={`${inputCls} pr-11`} 
                 />
                 <button 
                   type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer bg-transparent border-none text-base hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
             <button 
-              type="submit" disabled={isLoading}
-              className="w-full p-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-base cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed border-none shadow-lg shadow-amber-500/20"
+              type="submit" disabled={isLoading || email.length < 5}
+              className={btnPrimary}
             >
               {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  Authenticating...
-                </span>
-              ) : 'Secure Login →'}
+                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Authenticating...</>
+              ) : (
+                <>Secure Login <ArrowRight className="w-4 h-4" /></>
+              )}
             </button>
           </form>
 
-          </div>
-
           {/* Footer Link */}
-          <div className="mt-8 text-center">
-            <Link href="/login" className="text-slate-400 text-sm hover:text-slate-600 transition-colors">
-              ← Return to Buyer Login
+          <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+            <Link href="/login" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+              ← Return to Main Portal
             </Link>
           </div>
 

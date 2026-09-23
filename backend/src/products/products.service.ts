@@ -40,6 +40,7 @@ export class ProductsService {
 
   async findAll(location?: string, lat?: number, lng?: number, radius?: number) {
     let products = await this.prisma.product.findMany({
+      where: { status: 'ACTIVE' },
       orderBy: { createdAt: 'desc' },
     });
 

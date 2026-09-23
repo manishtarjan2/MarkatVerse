@@ -48,6 +48,7 @@ let ProductsService = class ProductsService {
     }
     async findAll(location, lat, lng, radius) {
         let products = await this.prisma.product.findMany({
+            where: { status: 'ACTIVE' },
             orderBy: { createdAt: 'desc' },
         });
         if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {

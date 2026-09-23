@@ -11,8 +11,8 @@ export declare class OrdersService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            price: number;
             sellerId: string | null;
+            price: number;
             productId: string;
             productName: string | null;
             quantity: number;
@@ -23,8 +23,8 @@ export declare class OrdersService {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        orderNumber: string | null;
         buyerId: string | null;
+        orderNumber: string | null;
         total: number;
     }>;
     findAll(): Promise<{
@@ -51,8 +51,8 @@ export declare class OrdersService {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        orderNumber: string | null;
         buyerId: string | null;
+        orderNumber: string | null;
         total: number;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateOrderDto: UpdateOrderDto): Promise<{
@@ -60,8 +60,8 @@ export declare class OrdersService {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        orderNumber: string | null;
         buyerId: string | null;
+        orderNumber: string | null;
         total: number;
     }>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__OrderClient<{
@@ -69,8 +69,8 @@ export declare class OrdersService {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        orderNumber: string | null;
         buyerId: string | null;
+        orderNumber: string | null;
         total: number;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

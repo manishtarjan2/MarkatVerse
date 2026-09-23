@@ -56,7 +56,7 @@ export declare class UsersService {
         resetCode: string | null;
         resetCodeExpires: Date | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
-    remove(id: string): import(".prisma/client").Prisma.Prisma__UserClient<{
+    remove(id: string): Promise<{
         id: string;
         name: string;
         markatId: string | null;
@@ -68,5 +68,5 @@ export declare class UsersService {
         updatedAt: Date;
         resetCode: string | null;
         resetCodeExpires: Date | null;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    }>;
 }

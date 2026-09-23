@@ -1,7 +1,13 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    return `http://${window.location.hostname}:3001`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+};
+const API_URL = getApiUrl();
 
 export type Product = {
   id: string;
@@ -673,26 +679,15 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
           setUserLat(latitude);
           setUserLng(longitude);
           
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, {
-            headers: { 'User-Agent': 'MarkatVerse/1.0' }
-          });
+          const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
           const data = await res.json();
           
-          if (data && data.address) {
-            const houseNumber = data.address.house_number || data.address.building || '';
-            const road = data.address.road || data.address.street || data.address.pedestrian || data.address.residential || data.address.footway || data.address.path || data.address.alley || data.address.hamlet || data.address.locality;
-            const neighbourhood = data.address.neighbourhood || data.address.suburb || data.address.quarter;
-            const city = data.address.city || data.address.town || data.address.village || data.address.state_district;
-            const pincode = data.address.postcode;
-            
-            const streetArea = [houseNumber, road].filter(Boolean).join(' ');
-            const parts = [streetArea, neighbourhood, city].filter(Boolean);
-            const preciseShort = parts.slice(0, 2).join(', ');
+          if (data) {
+            const city = data.city || data.locality || data.principalSubdivision;
+            const pincode = data.postcode || '';
             
             if (city) {
               setUserLocation(city + (pincode ? `, ${pincode}` : ''));
-            } else if (data.display_name) {
-              setUserLocation(data.display_name.split(',').slice(0, 2).join(','));
             }
           }
         } catch (error) {

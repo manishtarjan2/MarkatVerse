@@ -14,6 +14,7 @@ export declare class WalletController {
         owedToPlatform: number;
     }>;
     getTransactions(walletId: string): Promise<{
+        commission: number;
         id: string;
         createdAt: Date;
         status: string;
@@ -24,7 +25,6 @@ export declare class WalletController {
         paymentRef: string | null;
         grossAmount: number;
         platformFee: number;
-        commission: number;
         tax: number;
         netAmount: number;
         settledAt: Date | null;

@@ -1,7 +1,13 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    return `http://${window.location.hostname}:3001`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+};
+const API_URL = getApiUrl();
 
 type User = {
   id?: string;
@@ -48,11 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (res.status === 401 || res.status === 403) {
             localStorage.removeItem('token');
           }
-          throw new Error('Token invalid or network error');
+          return null;
         }
         return res.json();
       })
       .then(data => {
+        if (!data) return;
         setUser({
           id: data.id,
           markatId: data.markatId,
@@ -65,9 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       })
       .catch((e) => {
-        console.error('Auth verification failed:', e);
-        // We no longer unconditionally remove the token here to prevent 
-        // temporary network errors from logging the user out.
+        console.warn('Auth verification failed:', e.message || e);
       })
       .finally(() => setIsLoading(false));
   }, []);

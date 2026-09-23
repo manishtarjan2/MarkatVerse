@@ -1,0 +1,10 @@
+import { Module } from '@nestjs/common';
+import { ComplaintsController } from './complaints.controller.js';
+import { ComplaintsService } from './complaints.service.js';
+import { PrismaService } from '../prisma.service.js';
+
+@Module({
+  controllers: [ComplaintsController],
+  providers: [ComplaintsService, PrismaService],
+})
+export class SupportModule {}

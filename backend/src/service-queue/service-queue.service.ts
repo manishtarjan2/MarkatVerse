@@ -43,7 +43,7 @@ export class ServiceQueueService {
   /** Get all queues (for listing services) */
   async getAllQueues() {
     return this.prisma.serviceQueue.findMany({
-      where: { isOpen: true },
+      where: { isOpen: true, status: 'ACTIVE' },
       orderBy: { createdAt: 'desc' },
     });
   }
