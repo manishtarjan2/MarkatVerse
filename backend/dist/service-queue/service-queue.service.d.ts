@@ -13,6 +13,8 @@ export declare class ServiceQueueService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        rating: string | null;
+        reviews: string | null;
         location: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -33,6 +35,8 @@ export declare class ServiceQueueService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        rating: string | null;
+        reviews: string | null;
         location: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -53,6 +57,8 @@ export declare class ServiceQueueService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        rating: string | null;
+        reviews: string | null;
         location: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -101,6 +107,8 @@ export declare class ServiceQueueService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            rating: string | null;
+            reviews: string | null;
             location: string | null;
             pincode: string | null;
             latitude: number | null;
@@ -242,6 +250,8 @@ export declare class ServiceQueueService {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
+                rating: string | null;
+                reviews: string | null;
                 location: string | null;
                 pincode: string | null;
                 latitude: number | null;
@@ -302,6 +312,8 @@ export declare class ServiceQueueService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            rating: string | null;
+            reviews: string | null;
             location: string | null;
             pincode: string | null;
             latitude: number | null;
@@ -470,6 +482,8 @@ export declare class ServiceQueueService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            rating: string | null;
+            reviews: string | null;
             location: string | null;
             pincode: string | null;
             latitude: number | null;
@@ -499,6 +513,8 @@ export declare class ServiceQueueService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        rating: string | null;
+        reviews: string | null;
         location: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -519,6 +535,8 @@ export declare class ServiceQueueService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        rating: string | null;
+        reviews: string | null;
         location: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -591,6 +609,8 @@ export declare class ServiceQueueService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        rating: string | null;
+        reviews: string | null;
         location: string | null;
         pincode: string | null;
         latitude: number | null;

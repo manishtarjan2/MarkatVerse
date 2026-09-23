@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import SmartQueueWidget from '@/components/SmartQueueWidget';
 import { useUserTrends } from '@/hooks/useUserTrends';
+import ReviewsSection from '@/components/ReviewsSection';
 
 // ─── Dynamic Walk-in Services ───────────────────────────────────────────────────
 
@@ -484,6 +485,11 @@ export default function ServiceDetails() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* REVIEWS SECTION */}
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <ReviewsSection entityId={service.id} entityType="SERVICE" />
       </div>
     </div>
   );

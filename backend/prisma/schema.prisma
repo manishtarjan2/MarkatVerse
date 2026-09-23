@@ -201,6 +201,9 @@ model ServiceQueue {
   queuePolicy        String       @default("FIFO") // FIFO, APPOINTMENT_PRIORITY, MIXED
   status             String       @default("ACTIVE") // ACTIVE, SUSPENDED
   
+  rating             String?      @default("0.0")
+  reviews            String?      @default("0")
+  
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -497,4 +500,16 @@ model SystemConfig {
 model Counter {
   id  String @id @map("_id") // "User", "Business", "Order", "Booking", "Staff"
   seq Int    @default(0)
+}
+
+model Review {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  rating      Int
+  comment     String?
+  entityId    String   @db.ObjectId
+  entityType  String
+  userId      String   @db.ObjectId
+  userName    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

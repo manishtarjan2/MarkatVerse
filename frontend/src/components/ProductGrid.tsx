@@ -7,6 +7,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { MapPin, Heart, Share2 } from 'lucide-react';
 
 import { useUserTrends } from '@/hooks/useUserTrends';
+import StarRating from './StarRating';
 
 export default function ProductGrid({ products: propProducts, limit, category, personalized, recent, serviceOnly }: { products?: Product[], limit?: number, category?: string, personalized?: boolean, recent?: boolean, serviceOnly?: boolean }) {
   const { products: contextProducts, userLocation, userLat, userLng, radiusFilter, setRadiusFilter } = useProducts();
@@ -176,7 +177,9 @@ export default function ProductGrid({ products: propProducts, limit, category, p
                 )}
               </div>
               <div className="flex justify-between items-center mt-2 sm:mt-3 text-[9px] sm:text-[10px]">
-                <span className="text-amber-500 font-normal shrink-0">★ {product.rating} <span className="text-gray-500 hidden sm:inline">({product.reviews})</span></span>
+                <div className="shrink-0 scale-75 origin-left">
+                  <StarRating rating={Number(product.rating || 0)} totalReviews={Number(product.reviews || 0)} size={12} />
+                </div>
                 <span className="text-gray-500 truncate text-right ml-1" title={product.location}>
                   {product._distance != null && product._distance !== Infinity ? `${product._distance.toFixed(1)} km • ` : ''}
                   {product.location}

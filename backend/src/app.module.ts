@@ -19,9 +19,10 @@ import { CategoriesModule } from './categories/categories.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { WorkflowsModule } from './workflows/workflows.module.js';
 import { IdGeneratorModule } from './id-generator/id-generator.module.js';
+import { ReviewsModule } from './reviews/reviews.module.js';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule, AdminModule, WorkflowsModule, IdGeneratorModule],
+  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule, AdminModule, WorkflowsModule, IdGeneratorModule, ReviewsModule],
   controllers: [AppController],
   providers: [AppService],
 })

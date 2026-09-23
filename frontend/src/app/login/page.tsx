@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Phone, Lock, User, ArrowRight, ArrowLeft, CheckCircle, ShieldCheck } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -158,8 +157,7 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to send OTP');
       // Store reset token returned from backend (in prod this would come via email/SMS)
-      setSuccessMsg(`Code sent to your email!`);
-      toast('Please check your spam folder if you don\'t see the email.', { icon: '📧', duration: 6000 });
+      setSuccessMsg(`Code sent to your email! (check your spam box)`);
       setOtpTimer(300); // Reset timer to 5 mins
       setView('otp');
     } catch (err: any) {
@@ -560,14 +558,6 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <p className="text-center text-sm text-slate-500">
-                  {otpTimer > 0 ? (
-                    <>Code expires in <span className="font-semibold text-rose-500">{formatTime(otpTimer)}</span></>
-                  ) : (
-                    <span className="text-red-500 font-semibold">Code has expired</span>
-                  )}
-                </p>
-
                 <button type="submit" className={btnPrimary} disabled={fpOtp.length !== 6 || otpTimer === 0 || isLoading}>
                   {isLoading
                     ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verifying...</>
@@ -575,12 +565,21 @@ export default function LoginPage() {
                   }
                 </button>
 
-                <p className="text-center text-sm text-slate-500">
-                  Didn't receive it?{' '}
-                  <button type="button" onClick={handleForgotSend as any} className="text-blue-600 font-semibold hover:underline">
-                    Resend OTP
-                  </button>
-                </p>
+                <div className="flex items-center justify-between text-sm">
+                  <p className="text-slate-500">
+                    Didn't receive it?{' '}
+                    <button type="button" onClick={handleForgotSend as any} className="text-blue-600 font-semibold hover:underline">
+                      Resend OTP
+                    </button>
+                  </p>
+                  <p className="text-slate-500 text-right">
+                    {otpTimer > 0 ? (
+                      <>Code expires in <span className="font-semibold text-rose-500">{formatTime(otpTimer)}</span></>
+                    ) : (
+                      <span className="text-red-500 font-semibold">Code has expired</span>
+                    )}
+                  </p>
+                </div>
               </form>
             </div>
           )}

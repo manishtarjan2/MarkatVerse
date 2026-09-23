@@ -9,6 +9,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useUserTrends } from '@/hooks/useUserTrends';
 import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin, PhoneCall, CalendarClock, Heart } from 'lucide-react';
 import SmartQueueWidget from '@/components/SmartQueueWidget';
+import ReviewsSection from '@/components/ReviewsSection';
+import StarRating from '@/components/StarRating';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -306,9 +308,7 @@ export default function ProductDetails() {
 
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-4">
-              <span className="text-amber-500 font-medium flex items-center gap-1">
-                <Star className="w-4 h-4 fill-amber-500" /> {product.rating} <span className="text-slate-500 font-normal">({product.reviews} ratings)</span>
-              </span>
+              <StarRating rating={Number(product.rating || 0)} totalReviews={Number(product.reviews || 0)} />
             </div>
             <button 
               onClick={() => toggleWishlist(product.id)}
@@ -825,6 +825,9 @@ export default function ProductDetails() {
           </div>
         </div>
       </div>
+
+      {/* REVIEWS SECTION */}
+      <ReviewsSection entityId={product.id} entityType="PRODUCT" />
 
       {/* Bottom Section: Related Products */}
       <div className="mt-20 pt-10 border-t border-slate-200">
