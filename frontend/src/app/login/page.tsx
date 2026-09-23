@@ -528,9 +528,11 @@ export default function LoginPage() {
                   <Mail className="w-7 h-7 text-emerald-600" />
                 </div>
                 <h2 className="text-3xl font-bold text-slate-900 mb-1">Enter Code</h2>
-                <p className="text-slate-500 text-sm">
-                  A 6-character code was sent to <span className="font-semibold text-slate-700">{fpIdentifier}</span>
-                </p>
+                <div className="mt-3 p-3 bg-blue-50/80 rounded-lg border border-blue-100 flex items-center justify-center gap-2">
+                  <p className="text-blue-700 text-sm font-medium">
+                    Code sent to <span className="font-bold text-blue-900 bg-white px-2 py-0.5 rounded shadow-sm ml-1">{fpIdentifier}</span>
+                  </p>
+                </div>
               </div>
 
               {successMsg && (
