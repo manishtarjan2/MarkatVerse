@@ -87,7 +87,7 @@ export default function PublicShopPage({ params }: { params: Promise<{ id: strin
             </div>
             
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-slate-600 font-medium text-sm mb-4">
-              <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-slate-400" /> New Delhi, India</span>
+              <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-slate-400" /> {shopProducts.length > 0 && shopProducts[0].location ? shopProducts[0].location : 'Location unpinned'}</span>
               <span className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-500 fill-amber-500" /> 4.9 (1,240 Reviews)</span>
               <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-emerald-500" /> Verified Business</span>
             </div>

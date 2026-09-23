@@ -27,11 +27,13 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
 
   // Pricing
   const [sellingType, setSellingType] = useState<'B2C'|'B2B'>(initialData?.isB2B ? 'B2B' : 'B2C');
+  const [costPrice, setCostPrice] = useState(initialData?.originalPrice?.toString() || '');
+  const [discountPct, setDiscountPct] = useState(initialData?.discount?.replace('%', '') || '');
   const [b2cPrice, setB2cPrice] = useState(initialData?.price?.toString() || '');
-  const [wholesaleTiers, setWholesaleTiers] = useState<{ minQty: number, price: number }[]>(initialData?.wholesaleTiers || [
-    { minQty: 10, price: 0 },
-    { minQty: 50, price: 0 },
-    { minQty: 100, price: 0 }
+  const [wholesaleTiers, setWholesaleTiers] = useState<{ minQty: number, price: number, discountPct?: string }[]>(initialData?.wholesaleTiers || [
+    { minQty: 10, price: 0, discountPct: '' },
+    { minQty: 50, price: 0, discountPct: '' },
+    { minQty: 100, price: 0, discountPct: '' }
   ]);
   
   // Dynamic Attributes
@@ -49,10 +51,78 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
   const [imageUrlError, setImageUrlError] = useState('');
 
   // Location
-  const [location, setLocation] = useState(initialData?.location || '');
-  const [localAddress, setLocalAddress] = useState('');
+  const [locState, setLocState] = useState('');
+  const [locDistrict, setLocDistrict] = useState('');
+  const [locCity, setLocCity] = useState('');
+  const [locArea, setLocArea] = useState('');
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
   const [pincode, setPincode] = useState(initialData?.pincode || '');
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+
+  // Watch Pincode for auto-fill
+  useEffect(() => {
+    if (pincode.length === 6 && /^\d+$/.test(pincode)) {
+      setIsVerifyingPin(true);
+      fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === 'Success') {
+            const postOffice = data[0].PostOffice[0];
+            setLocState(postOffice.State || '');
+            setLocDistrict(postOffice.District || '');
+            setLocCity(postOffice.Block || postOffice.Region || '');
+          }
+        })
+        .catch(err => console.error("Pincode verification failed", err))
+        .finally(() => setIsVerifyingPin(false));
+    }
+  }, [pincode]);
+
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setLatitude(lat);
+          setLongitude(lng);
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, {
+              headers: { 'User-Agent': 'MarkatVerse/1.0' }
+            });
+            const data = await res.json();
+            if (data && data.address) {
+              setLocState(data.address.state || '');
+              setLocDistrict(data.address.state_district || data.address.county || '');
+              setLocCity(data.address.city || data.address.town || data.address.village || '');
+              setPincode(data.address.postcode || '');
+              
+              const localFields = [
+                data.address.road,
+                data.address.neighbourhood,
+                data.address.suburb
+              ].filter(Boolean);
+              if (localFields.length > 0) setLocArea(localFields.join(', '));
+            }
+          } catch (err) {
+            console.error("Failed to get location details", err);
+          }
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          alert("Could not get your location. Please check browser permissions.");
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  };
 
   // Cascading Logic
   const catRules = useCategoryRules(category);
@@ -137,6 +207,20 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
     e.preventDefault();
     setIsSubmitting(true);
     
+    let finalPrice = 0;
+    let finalOriginalPrice = undefined;
+    let finalDiscount = undefined;
+
+    if (sellingType === 'B2C') {
+      finalPrice = Number(b2cPrice);
+      if (costPrice) finalOriginalPrice = Number(costPrice);
+      if (discountPct) finalDiscount = `${discountPct}%`;
+    } else {
+      finalPrice = wholesaleTiers[0].price;
+    }
+
+    const finalLocationString = [locArea, locCity, locDistrict, locState, pincode].filter(Boolean).join(', ');
+
     const payload = {
       name,
       description,
@@ -145,14 +229,19 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
       subcategory,
       nestedSubcategory,
       isB2B: sellingType === 'B2B',
-      price: sellingType === 'B2C' ? Number(b2cPrice) : wholesaleTiers[0].price, // Fallback price
+      price: finalPrice,
+      originalPrice: finalOriginalPrice,
+      discount: finalDiscount,
+      quantity: 999, // default if not tracked
       wholesaleTiers: sellingType === 'B2B' ? wholesaleTiers : undefined,
       images: uploadedImages.length > 0 ? uploadedImages : undefined,
       image: uploadedImages.length > 0 ? uploadedImages[0] : '/hero-left-logo.png',
       parameters,
       options: options.length > 0 ? options : undefined,
-      location: localAddress ? `${localAddress}, ${location}` : location,
-      pincode
+      location: finalLocationString,
+      pincode,
+      latitude,
+      longitude
     };
 
     await onSave(payload);
@@ -268,63 +357,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
               <button 
                 type="button" 
                 disabled={isLocating}
-                onClick={() => {
-                  if (navigator.geolocation) {
-                    setIsLocating(true);
-                    navigator.geolocation.getCurrentPosition(
-                      async (position) => {
-                        try {
-                          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
-                          const data = await res.json();
-                          const addr = data.address || {};
-                          const city = addr.city || addr.town || addr.village || addr.county || '';
-                          const state = addr.state || '';
-                          const postcode = addr.postcode || '';
-                          
-                          // Build precise local address from all available granular fields
-                          const localParts = [
-                            addr.house_number,
-                            addr.building,
-                            addr.amenity,
-                            addr.shop,
-                            addr.road || addr.pedestrian || addr.residential || addr.cycleway,
-                            addr.neighbourhood,
-                            addr.suburb || addr.quarter
-                          ].filter(Boolean);
-                          
-                          // Fallback: if no road/local parts found, extract from display_name
-                          let local = localParts.join(', ');
-                          if (!local && data.display_name) {
-                            // display_name is "Part1, Part2, City, State, PIN, Country" — take first 2-3 parts as local
-                            const parts = data.display_name.split(', ');
-                            local = parts.slice(0, Math.min(3, parts.length - 3)).join(', ');
-                          }
-                          
-                          if (local) setLocalAddress(local);
-                          
-                          if (city && state) {
-                            setLocation(`${city}, ${state}`);
-                          } else if (state) {
-                            setLocation(state);
-                          }
-                          if (postcode) setPincode(postcode);
-                          
-                          alert(`Location found! Auto-filled: ${local ? local + ', ' : ''}${city ? city + ', ' + state : state}`);
-                        } catch (err) {
-                          alert('Location pinned, but failed to fetch address details automatically.');
-                        } finally {
-                          setIsLocating(false);
-                        }
-                      },
-                      (error) => {
-                        alert('Error getting location: ' + error.message);
-                        setIsLocating(false);
-                      }
-                    );
-                  } else {
-                    alert('Geolocation is not supported by your browser.');
-                  }
-                }}
+                onClick={handleGetLocation}
                 className={`text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 shadow-sm ${isLocating ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isLocating ? (
@@ -335,84 +368,32 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
                 {isLocating ? 'Locating...' : 'Pin My Location'}
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1 md:col-span-2">
-                <label className="text-xs font-semibold text-slate-500">Street / Area / Landmark</label>
-                <input 
-                  type="text" 
-                  value={localAddress} 
-                  onChange={e => setLocalAddress(e.target.value)} 
-                  placeholder="e.g. Shop No 5, MG Road, Near City Mall" 
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" 
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500 flex justify-between">
+                  <span>PIN Code <span className="text-red-500">*</span></span>
+                  {isVerifyingPin && <span className="text-blue-500 animate-pulse text-[10px]">Verifying...</span>}
+                </label>
+                <input required type="text" maxLength={6} value={pincode} onChange={e => setPincode(e.target.value.replace(/\D/g, ''))} placeholder="e.g. 400001" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500">Address / City</label>
-                <input 
-                  type="text" 
-                  list="city-options" 
-                  value={location} 
-                  onChange={e => setLocation(e.target.value)} 
-                  placeholder="e.g. Mumbai, Maharashtra" 
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" 
-                />
-                <datalist id="city-options">
-                  <option value="Mumbai, Maharashtra" />
-                  <option value="Delhi, NCR" />
-                  <option value="Bangalore, Karnataka" />
-                  <option value="Hyderabad, Telangana" />
-                  <option value="Ahmedabad, Gujarat" />
-                  <option value="Chennai, Tamil Nadu" />
-                  <option value="Kolkata, West Bengal" />
-                  <option value="Pune, Maharashtra" />
-                  <option value="Jaipur, Rajasthan" />
-                  <option value="Surat, Gujarat" />
-                  <option value="Lucknow, Uttar Pradesh" />
-                  <option value="Kanpur, Uttar Pradesh" />
-                  <option value="Nagpur, Maharashtra" />
-                  <option value="Indore, Madhya Pradesh" />
-                  <option value="Thane, Maharashtra" />
-                  <option value="Bhopal, Madhya Pradesh" />
-                  <option value="Visakhapatnam, Andhra Pradesh" />
-                  <option value="Pimpri-Chinchwad, Maharashtra" />
-                  <option value="Patna, Bihar" />
-                  <option value="Vadodara, Gujarat" />
-                  <option value="Ludhiana, Punjab" />
-                  <option value="Agra, Uttar Pradesh" />
-                  <option value="Nashik, Maharashtra" />
-                  <option value="Ranchi, Jharkhand" />
-                  <option value="Faridabad, Haryana" />
-                  <option value="Meerut, Uttar Pradesh" />
-                  <option value="Rajkot, Gujarat" />
-                  <option value="Kalyan-Dombivli, Maharashtra" />
-                  <option value="Vasai-Virar, Maharashtra" />
-                  <option value="Varanasi, Uttar Pradesh" />
-                  <option value="Srinagar, Jammu and Kashmir" />
-                  <option value="Aurangabad, Maharashtra" />
-                  <option value="Dhanbad, Jharkhand" />
-                  <option value="Amritsar, Punjab" />
-                  <option value="Navi Mumbai, Maharashtra" />
-                  <option value="Allahabad, Uttar Pradesh" />
-                  <option value="Howrah, West Bengal" />
-                  <option value="Gwalior, Madhya Pradesh" />
-                  <option value="Jabalpur, Madhya Pradesh" />
-                  <option value="Coimbatore, Tamil Nadu" />
-                  <option value="Vijayawada, Andhra Pradesh" />
-                  <option value="Jodhpur, Rajasthan" />
-                  <option value="Madurai, Tamil Nadu" />
-                  <option value="Raipur, Chhattisgarh" />
-                  <option value="Kota, Rajasthan" />
-                  <option value="Guwahati, Assam" />
-                  <option value="Chandigarh, Chandigarh" />
-                  <option value="Solapur, Maharashtra" />
-                </datalist>
+                <label className="text-xs font-semibold text-slate-500">State <span className="text-red-500">*</span></label>
+                <input required type="text" value={locState} onChange={e => setLocState(e.target.value)} placeholder="e.g. Maharashtra" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500">PIN Code / ZIP</label>
-                <input type="text" value={pincode} onChange={e => setPincode(e.target.value)} placeholder="e.g. 400001" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
+                <label className="text-xs font-semibold text-slate-500">District <span className="text-red-500">*</span></label>
+                <input required type="text" value={locDistrict} onChange={e => setLocDistrict(e.target.value)} placeholder="e.g. Mumbai" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-500">City / Region <span className="text-red-500">*</span></label>
+                <input required type="text" value={locCity} onChange={e => setLocCity(e.target.value)} placeholder="e.g. Andheri" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
+              </div>
+              <div className="space-y-1 lg:col-span-2">
+                <label className="text-xs font-semibold text-slate-500">Local Area (Road, Gali, House No) <span className="text-red-500">*</span></label>
+                <input required type="text" value={locArea} onChange={e => setLocArea(e.target.value)} placeholder="e.g. Shop No 4, Main Road, Gali 2" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 mt-2">Pinning your location helps local customers find your services easily in the 'Near Me' section.</p>
+            <p className="text-[10px] text-slate-500 mt-2">Entering your PIN code will automatically fetch your State, District, and City. Pinning your location helps local customers find you in the 'Near Me' section.</p>
           </div>
         </div>
       </div>
@@ -489,13 +470,13 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
                                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Price</label>
                                   <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
-                                    <input type="number" value={existingOption.price || ''} onChange={e => setOptions(options.map(o => o.name === optName ? { ...o, price: Number(e.target.value) } : o))} className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-300 outline-none text-sm bg-white focus:border-blue-500" />
+                                    <input type="number" min="0" value={existingOption.price || ''} onChange={e => setOptions(options.map(o => o.name === optName ? { ...o, price: Math.max(0, Number(e.target.value)) } : o))} className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-300 outline-none text-sm bg-white focus:border-blue-500" />
                                   </div>
                                 </div>
                                 <div className="w-24">
                                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Discount</label>
                                   <div className="relative">
-                                    <input type="number" value={existingOption.discountPercentage || ''} onChange={e => setOptions(options.map(o => o.name === optName ? { ...o, discountPercentage: Number(e.target.value) } : o))} placeholder="0" className="w-full pl-3 pr-7 py-1.5 rounded-lg border border-slate-300 outline-none text-sm bg-white focus:border-blue-500" />
+                                    <input type="number" min="0" max="100" value={existingOption.discountPercentage || ''} onChange={e => setOptions(options.map(o => o.name === optName ? { ...o, discountPercentage: Math.min(100, Math.max(0, Number(e.target.value))) } : o))} placeholder="0" className="w-full pl-3 pr-7 py-1.5 rounded-lg border border-slate-300 outline-none text-sm bg-white focus:border-blue-500" />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">%</span>
                                   </div>
                                 </div>
@@ -561,50 +542,144 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
         )}
 
         {sellingType === 'B2C' ? (
-          <div className="max-w-xs space-y-2">
-            <label className="text-sm font-semibold text-slate-700">Selling Price (₹)</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
-              <input required={options.length === 0} type="number" value={b2cPrice} onChange={e => setB2cPrice(e.target.value)} placeholder="0.00" className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Cost Price / MRP (₹)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                <input type="number" min="0" value={costPrice} onChange={e => {
+                  const val = e.target.value; 
+                  setCostPrice(val === '' ? '' : Math.max(0, Number(val)).toString());
+                  // Auto-calculate discount if selling price exists
+                  if (val && b2cPrice) {
+                    const cost = Number(val);
+                    const sell = Number(b2cPrice);
+                    if (cost > 0 && cost >= sell) {
+                      setDiscountPct(((cost - sell) / cost * 100).toFixed(0));
+                    }
+                  }
+                }} placeholder="0.00" className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Final Selling Price (₹)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                <input required={options.length === 0} type="number" min="0" value={b2cPrice} onChange={e => {
+                  const val = e.target.value; 
+                  setB2cPrice(val === '' ? '' : Math.max(0, Number(val)).toString());
+                  // Auto-calculate discount if cost price exists
+                  if (val && costPrice) {
+                    const cost = Number(costPrice);
+                    const sell = Number(val);
+                    if (cost > 0 && cost >= sell) {
+                      setDiscountPct(((cost - sell) / cost * 100).toFixed(0));
+                    }
+                  }
+                }} placeholder="0.00" className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Discount (%)</label>
+              <div className="relative">
+                <input type="number" min="0" max="100" value={discountPct} onChange={e => {
+                  const val = e.target.value; 
+                  const numVal = Math.min(100, Math.max(0, Number(val)));
+                  setDiscountPct(val === '' ? '' : numVal.toString());
+                  // Auto-calculate selling price based on cost price
+                  if (val && costPrice) {
+                    const cost = Number(costPrice);
+                    setB2cPrice((cost - (cost * numVal / 100)).toFixed(2));
+                  }
+                }} placeholder="0" className="w-full pl-4 pr-8 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+              </div>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            <label className="text-sm font-semibold text-slate-700">Wholesale Pricing Tiers</label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {wholesaleTiers.map((tier, index) => (
-                <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tier {index + 1}</span>
-                    {index > 0 && (
-                      <button type="button" onClick={() => setWholesaleTiers(prev => prev.filter((_, i) => i !== index))} className="text-red-400 hover:text-red-600">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+            <div className="max-w-xs space-y-2 mb-6">
+              <label className="text-sm font-semibold text-slate-700">Base Cost Price (₹)</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                <input type="number" min="0" value={costPrice} onChange={e => {
+                  const val = e.target.value; 
+                  setCostPrice(val === '' ? '' : Math.max(0, Number(val)).toString());
+                }} placeholder="0.00" className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+              </div>
+              <p className="text-[10px] text-slate-500">Optional: Track your own cost price for profit calculation.</p>
+            </div>
+              <label className="text-sm font-semibold text-slate-700">Wholesale Pricing Tiers</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {wholesaleTiers.map((tier, index) => (
+                  <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tier {index + 1}</span>
+                      {index > 0 && (
+                        <button type="button" onClick={() => setWholesaleTiers(prev => prev.filter((_, i) => i !== index))} className="text-red-400 hover:text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-500">Min Quantity (+)</label>
+                      <input type="number" min="0" value={tier.minQty} onChange={e => {
+                        const newTiers = [...wholesaleTiers];
+                        newTiers[index].minQty = Math.max(0, Number(e.target.value));
+                        setWholesaleTiers(newTiers);
+                      }} className="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none text-sm mt-1" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-slate-500">Discount (%)</label>
+                        <div className="relative mt-1">
+                          <input type="number" min="0" max="100" value={tier.discountPct || ''} onChange={e => {
+                            const val = e.target.value;
+                            const numVal = Math.min(100, Math.max(0, Number(val)));
+                            const newTiers = [...wholesaleTiers];
+                            newTiers[index].discountPct = val === '' ? '' : numVal.toString();
+                            if (val && costPrice) {
+                              const cost = Number(costPrice);
+                              newTiers[index].price = Number((cost - (cost * numVal / 100)).toFixed(2));
+                            }
+                            setWholesaleTiers(newTiers);
+                          }} className="w-full pl-2 pr-6 py-2 rounded-lg border border-slate-300 outline-none text-sm" />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">%</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-slate-500">Unit Price (₹)</label>
+                        <input type="number" min="0" value={tier.price} onChange={e => {
+                          const val = e.target.value;
+                          const newTiers = [...wholesaleTiers];
+                          newTiers[index].price = Math.max(0, Number(val));
+                          if (val && costPrice) {
+                            const cost = Number(costPrice);
+                            const sell = Number(val);
+                            if (cost > 0 && cost >= sell) {
+                              newTiers[index].discountPct = ((cost - sell) / cost * 100).toFixed(0);
+                            }
+                          }
+                          setWholesaleTiers(newTiers);
+                        }} className="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none text-sm mt-1" />
+                      </div>
+                    </div>
+                    {(tier.minQty > 0 && tier.price > 0) && (
+                      <div className="pt-2 border-t border-slate-200">
+                        <p className="text-xs font-semibold text-slate-700">
+                          Total Bulk Price: <span className="text-blue-600">₹{tier.minQty * tier.price}</span> for {tier.minQty} units
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <div>
-                    <label className="text-xs text-slate-500">Min Quantity (+)</label>
-                    <input type="number" value={tier.minQty} onChange={e => {
-                      const newTiers = [...wholesaleTiers];
-                      newTiers[index].minQty = Number(e.target.value);
-                      setWholesaleTiers(newTiers);
-                    }} className="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none text-sm mt-1" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-slate-500">Unit Price (₹)</label>
-                    <input type="number" value={tier.price} onChange={e => {
-                      const newTiers = [...wholesaleTiers];
-                      newTiers[index].price = Number(e.target.value);
-                      setWholesaleTiers(newTiers);
-                    }} className="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none text-sm mt-1" />
-                  </div>
-                </div>
-              ))}
-              <button type="button" onClick={() => setWholesaleTiers(prev => [...prev, { minQty: 0, price: 0 }])} className="p-4 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 flex flex-col items-center justify-center gap-2 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-colors">
-                <PlusCircle className="w-6 h-6" />
-                <span className="text-sm font-semibold">Add Tier</span>
-              </button>
-            </div>
+                ))}
+                <button type="button" onClick={() => setWholesaleTiers(prev => [...prev, { minQty: 0, price: 0, discountPct: '' }])} className="p-4 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 flex flex-col items-center justify-center gap-2 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition-colors">
+                  <PlusCircle className="w-6 h-6" />
+                  <span className="text-sm font-semibold">Add Tier</span>
+                </button>
+              </div>
           </div>
         )}
 

@@ -9,14 +9,19 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 let OrdersService = class OrdersService {
     prisma;
-    constructor(prisma) {
+    idGenerator;
+    constructor(prisma, idGenerator) {
         this.prisma = prisma;
+        this.idGenerator = idGenerator;
     }
     async create(createOrderDto) {
+        const orderNumber = await this.idGenerator.generateOrderId();
         return this.prisma.order.create({
             data: {
+                orderNumber,
                 buyerId: createOrderDto.buyerId,
                 total: createOrderDto.total,
                 status: createOrderDto.status || 'PENDING',
@@ -41,6 +46,7 @@ let OrdersService = class OrdersService {
         });
         return orders.map(o => ({
             id: o.id,
+            orderNumber: o.orderNumber,
             customerId: o.buyerId,
             customerName: o.buyerId || 'Guest',
             totalAmount: o.total,
@@ -64,6 +70,7 @@ let OrdersService = class OrdersService {
         });
         return orders.map(o => ({
             id: o.id,
+            orderNumber: o.orderNumber,
             buyer: o.buyerId || 'Guest User',
             item: o.items.map(i => i.productName || 'Unknown Item').join(', '),
             amount: `₹${o.total}`,
@@ -88,7 +95,8 @@ let OrdersService = class OrdersService {
 };
 OrdersService = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [PrismaService])
+    __metadata("design:paramtypes", [PrismaService,
+        IdGeneratorService])
 ], OrdersService);
 export { OrdersService };
 //# sourceMappingURL=orders.service.js.map

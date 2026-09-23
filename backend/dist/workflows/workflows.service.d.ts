@@ -6,46 +6,46 @@ export declare class WorkflowsService {
     create(data: Prisma.WorkflowCreateInput): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: Prisma.JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     findAll(): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: Prisma.JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: Prisma.JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     update(id: string, data: Prisma.WorkflowUpdateInput): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: Prisma.JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: Prisma.JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

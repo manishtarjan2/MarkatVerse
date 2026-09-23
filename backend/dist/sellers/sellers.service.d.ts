@@ -1,21 +1,24 @@
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 export declare class SellersService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private idGenerator;
+    constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     create(seller: any): Promise<{
         status: string;
-        businessType: string;
         id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+        businessCode: string | null;
         userId: string;
         logo: string | null;
+        description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
         address: string | null;
         verified: boolean;
         capabilities: string[];
@@ -30,18 +33,19 @@ export declare class SellersService {
         email: string | null;
         phone: string | null;
         status: string;
-        businessType: string;
         id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+        businessCode: string | null;
         userId: string;
         logo: string | null;
+        description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
         address: string | null;
         verified: boolean;
         capabilities: string[];
@@ -54,6 +58,7 @@ export declare class SellersService {
     }>;
     findAll(): Promise<{
         id: string;
+        businessCode: string | null;
         userId: string;
         businessName: string;
         ownerName: string;
@@ -69,18 +74,19 @@ export declare class SellersService {
     }[]>;
     updateStatus(id: string, status: string): Promise<{
         status: string;
-        businessType: string;
         id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+        businessCode: string | null;
         userId: string;
         logo: string | null;
+        description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
         address: string | null;
         verified: boolean;
         capabilities: string[];
@@ -92,18 +98,19 @@ export declare class SellersService {
         subscriptionEndDate: Date | null;
     }>;
     updateUser(userId: string, data: any): Promise<{
-        businessType: string;
         id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
+        createdAt: Date;
+        updatedAt: Date;
+        businessCode: string | null;
         userId: string;
         logo: string | null;
+        description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
         address: string | null;
         verified: boolean;
         capabilities: string[];
@@ -116,12 +123,13 @@ export declare class SellersService {
     }>;
     removeUser(userId: string): Promise<{
         id: string;
-        email: string | null;
-        phone: string | null;
-        password: string;
         name: string;
-        role: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
+        role: string;
+        markatId: string | null;
+        email: string | null;
+        password: string;
     }>;
 }

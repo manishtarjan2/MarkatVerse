@@ -18,9 +18,10 @@ export default function LiveBookingWidget({ compact = false, onClose }: LiveBook
   // Initial read
   useEffect(() => {
     const id = localStorage.getItem('markatverse_active_token_id');
-    if (id) {
+    if (id && id !== 'undefined' && id !== 'null') {
       setTokenId(id);
     } else {
+      localStorage.removeItem('markatverse_active_token_id');
       setLoading(false);
     }
     
@@ -55,8 +56,9 @@ export default function LiveBookingWidget({ compact = false, onClose }: LiveBook
         } else {
           setData(json);
         }
-      } catch (err) {
-        console.error("Failed to fetch token status", err);
+      } catch (err: any) {
+        // Use warn to prevent Next.js from throwing the red error overlay during dev if backend is offline
+        console.warn("Failed to fetch token status:", err?.message || err);
       } finally {
         setLoading(false);
       }

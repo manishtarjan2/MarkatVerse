@@ -13,7 +13,13 @@ export default function SellerStorefront() {
   const { products } = useProducts();
   const { addToCart } = useCart();
 
-  const sellerProducts = products.filter(p => p.seller === sellerName);
+  const sellerProducts = products.filter(p => 
+    p.seller === sellerName || 
+    p.seller?.toLowerCase().replace(/ /g, '-') === sellerName?.toLowerCase()
+  );
+
+  // If we found a matching product, use its proper seller name for display, otherwise fallback to the URL name
+  const displaySellerName = sellerProducts.length > 0 ? sellerProducts[0].seller : sellerName;
 
   // Dynamic detection (Mocked based on name for demonstration)
   const isDoctor = sellerName.toLowerCase().includes('hospital') || sellerName.toLowerCase().includes('clinic') || sellerName.toLowerCase().includes('doctor');
@@ -67,6 +73,12 @@ export default function SellerStorefront() {
 
   const cartTotal = availableServices.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0);
 
+  const firstProduct = sellerProducts.length > 0 ? sellerProducts[0] : null;
+  const locationString = firstProduct?.location || 'Location unpinned';
+  const distanceString = firstProduct?._distance != null && firstProduct._distance !== Infinity 
+    ? `${firstProduct._distance.toFixed(1)} km away • ` 
+    : '';
+
   return (
     <div className="min-h-screen bg-gray-50 pb-28 md:pb-20">
       {/* Storefront Hero Header */}
@@ -77,14 +89,14 @@ export default function SellerStorefront() {
           </div>
           <div className="flex-1 text-center md:text-left w-full">
             <h1 className="text-3xl sm:text-4xl font-extrabold flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3 sm:gap-4 mb-3">
-              {sellerName}
+              {displaySellerName}
               <span className="bg-emerald-500 text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide flex items-center gap-1 shadow">
                 <span>🛡️</span> Verified
               </span>
             </h1>
             <div className="text-slate-400 text-xs sm:text-sm flex flex-wrap justify-center md:justify-start gap-4 sm:gap-6 font-medium">
               <span className="flex items-center gap-1">⭐ New Seller</span>
-              <span className="flex items-center gap-1">📍 New Delhi, India</span>
+              <span className="flex items-center gap-1">📍 {distanceString}{locationString}</span>
               {!isService && <span className="flex items-center gap-1">📦 {sellerProducts.length} Products</span>}
             </div>
           </div>
@@ -132,14 +144,14 @@ export default function SellerStorefront() {
                     <span className="bg-slate-700 text-slate-300 border border-slate-600 px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold flex items-center gap-1">📈 Top Rated</span>
                   </div>
 
-                  <h1 className="text-3xl md:text-5xl font-black mb-3 md:mb-4 tracking-tight">{sellerName}</h1>
+                  <h1 className="text-3xl md:text-5xl font-black mb-3 md:mb-4 tracking-tight">{displaySellerName}</h1>
                   
                   <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8 flex-wrap">
                     <div className="bg-amber-500/20 text-amber-300 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-xs md:text-sm font-bold flex items-center gap-1.5">
                       ⭐ New <span className="text-amber-300/70 font-medium">(0 reviews)</span>
                     </div>
                     <div className="bg-white/5 border border-white/10 px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-xs md:text-sm text-slate-300 flex items-center gap-1.5">
-                      📍 New Delhi, India
+                      📍 {distanceString}{locationString}
                     </div>
                   </div>
 
@@ -151,7 +163,7 @@ export default function SellerStorefront() {
                       </div>
                       <div>
                         <div className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5 md:mb-1">Service Provider</div>
-                        <div className="text-base md:text-xl font-bold text-white">Seller1</div>
+                        <div className="text-base md:text-xl font-bold text-white">{displaySellerName}</div>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 md:gap-2">
@@ -207,6 +219,13 @@ export default function SellerStorefront() {
                       <div>
                         <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Languages Spoken</div>
                         <div className="text-sm font-medium text-gray-900">English, Hindi</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 sm:col-span-2 mt-2">
+                      <div className="w-8 h-8 rounded-full bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">📍</div>
+                      <div>
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Exact Location</div>
+                        <div className="text-sm font-medium text-gray-900">{distanceString}{locationString}</div>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 sm:col-span-2 mt-2">

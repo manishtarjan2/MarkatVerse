@@ -140,9 +140,16 @@ export default function ProductGrid({ products: propProducts, limit, category, p
               </div>
               
               {product.image ? (
-                <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <img src={product.image} alt={product.name} className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${product._outOfRange ? 'grayscale opacity-70' : ''}`} />
               ) : (
-                <img src="/hero-left-logo.png" alt={product.name} className="w-full h-full object-contain opacity-50 group-hover:scale-105 transition-transform duration-300 p-4" />
+                <img src="/hero-left-logo.png" alt={product.name} className={`w-full h-full object-contain opacity-50 group-hover:scale-105 transition-transform duration-300 p-4 ${product._outOfRange ? 'grayscale' : ''}`} />
+              )}
+              {product._outOfRange && (
+                <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center backdrop-blur-[1px] z-10">
+                  <span className="bg-slate-900/90 text-white text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full border border-slate-700/50 shadow-lg flex items-center gap-1.5">
+                    <MapPin className="w-3 h-3 text-rose-400" /> Out of Range
+                  </span>
+                </div>
               )}
             </div>
             <div className="text-[9px] sm:text-[11px] text-blue-600 uppercase tracking-[0.5px] sm:tracking-[1px] font-medium flex items-center gap-1">
@@ -170,7 +177,10 @@ export default function ProductGrid({ products: propProducts, limit, category, p
               </div>
               <div className="flex justify-between items-center mt-2 sm:mt-3 text-[9px] sm:text-[10px]">
                 <span className="text-amber-500 font-normal shrink-0">★ {product.rating} <span className="text-gray-500 hidden sm:inline">({product.reviews})</span></span>
-                <span className="text-gray-500 truncate text-right ml-1">{product.location}</span>
+                <span className="text-gray-500 truncate text-right ml-1" title={product.location}>
+                  {product._distance != null && product._distance !== Infinity ? `${product._distance.toFixed(1)} km • ` : ''}
+                  {product.location}
+                </span>
               </div>
             </div>
           </div>

@@ -4,54 +4,59 @@ import { UpdateUserDto } from './dto/update-user.dto.js';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
-    create(createUserDto: CreateUserDto): import(".prisma/client").Prisma.Prisma__UserClient<{
+    create(createUserDto: CreateUserDto): Promise<{
         id: string;
-        email: string | null;
-        phone: string | null;
-        password: string;
         name: string;
-        role: string;
         createdAt: Date;
         updatedAt: Date;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+        phone: string | null;
+        role: string;
+        markatId: string | null;
+        email: string | null;
+        password: string;
+    }>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        email: string | null;
-        phone: string | null;
-        password: string;
         name: string;
-        role: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
+        role: string;
+        markatId: string | null;
+        email: string | null;
+        password: string;
     }[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
-        email: string | null;
-        phone: string | null;
-        password: string;
         name: string;
-        role: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
+        role: string;
+        markatId: string | null;
+        email: string | null;
+        password: string;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateUserDto: UpdateUserDto): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
-        email: string | null;
-        phone: string | null;
-        password: string;
         name: string;
-        role: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
+        role: string;
+        markatId: string | null;
+        email: string | null;
+        password: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
-        email: string | null;
-        phone: string | null;
-        password: string;
         name: string;
-        role: string;
         createdAt: Date;
         updatedAt: Date;
+        phone: string | null;
+        role: string;
+        markatId: string | null;
+        email: string | null;
+        password: string;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

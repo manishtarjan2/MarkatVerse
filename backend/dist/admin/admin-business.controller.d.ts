@@ -29,6 +29,7 @@ export declare class AdminBusinessController {
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
+        businessCode: string | null;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -56,6 +57,7 @@ export declare class AdminBusinessController {
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
+        businessCode: string | null;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -85,6 +87,7 @@ export declare class AdminBusinessController {
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
+        businessCode: string | null;
         userId: string;
         logo: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;

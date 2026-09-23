@@ -160,7 +160,9 @@ export default function ServiceDetails() {
                   <span className="text-amber-400/80 text-sm font-medium">({service.reviews} reviews)</span>
                 </div>
                 <div className="flex items-center gap-2 text-white/70 font-medium text-base bg-white/5 border border-white/10 px-5 py-2.5 rounded-2xl backdrop-blur-md">
-                  <MapPin className="w-4 h-4 text-violet-300" /> {service.location}
+                  <MapPin className="w-4 h-4 text-violet-300" />
+                  {service._distance != null && service._distance !== Infinity ? `${service._distance.toFixed(1)} km away • ` : ''}
+                  {service.location || 'Location unpinned'}
                 </div>
               </div>
 
@@ -172,7 +174,7 @@ export default function ServiceDetails() {
                   </div>
                   <div>
                     <div className="text-white/50 text-[10px] font-black uppercase tracking-widest mb-0.5">Service Provider</div>
-                    <Link href={`/shop/${encodeURIComponent(service.seller.toLowerCase().replace(/ /g, '-'))}`}
+                    <Link href={`/seller/${encodeURIComponent(service.seller.toLowerCase().replace(/ /g, '-'))}`}
                       className="text-white font-black text-xl hover:text-violet-300 transition-colors drop-shadow-md">
                       {service.seller}
                     </Link>
@@ -222,6 +224,15 @@ export default function ServiceDetails() {
                 </h2>
                 <p className="text-slate-600 leading-relaxed text-base">
                   {service.description || "Experience top-tier service tailored to your needs. Our professionals use the best practices and tools to ensure your complete satisfaction."}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-3xl p-7 border border-slate-100 shadow-sm mt-5">
+                <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-violet-600" /> Exact Address
+                </h2>
+                <p className="text-slate-600 leading-relaxed text-base font-medium">
+                  {service.location || 'Address not provided'}
                 </p>
               </div>
 

@@ -5,10 +5,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useProducts } from '@/context/ProductContext';
 import { useCart } from '@/context/CartContext';
-import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell, ChevronRight, LogOut, Edit3, Trash2, Plus, Star, Heart, ShoppingBag } from 'lucide-react';
+import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell, ChevronRight, ChevronLeft, LogOut, Edit3, Trash2, Plus, Star, Heart, ShoppingBag } from 'lucide-react';
 
 export default function ProfileSettings() {
   const [activeTab, setActiveTab] = useState('personal');
+  const [showMobileMenu, setShowMobileMenu] = useState(true);
   const { user, logout } = useAuth();
   const { wishlistIds, removeFromWishlist } = useWishlist();
   const { products } = useProducts();
@@ -39,7 +40,7 @@ export default function ProfileSettings() {
       <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row gap-8 relative z-10">
         
         {/* Sidebar Navigation */}
-        <aside className="w-full md:w-[300px] shrink-0">
+        <aside className={`w-full md:w-[300px] shrink-0 ${!showMobileMenu ? 'hidden md:block' : 'block'}`}>
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col h-full relative overflow-hidden">
             {/* Glossy top edge highlight */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
@@ -76,7 +77,10 @@ export default function ProfileSettings() {
               {navItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setShowMobileMenu(false);
+                  }}
                   className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 group ${
                     activeTab === item.id 
                       ? 'bg-blue-600/10 border-blue-500/30 text-blue-400 border shadow-[inset_0_0_20px_rgba(37,99,235,0.1)]' 
@@ -108,8 +112,17 @@ export default function ProfileSettings() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1">
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 lg:p-12 shadow-2xl min-h-full relative overflow-hidden">
+        <main className={`flex-1 ${showMobileMenu ? 'hidden md:block' : 'block'}`}>
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 lg:p-12 shadow-2xl min-h-full relative overflow-hidden">
+            
+            {/* Mobile Back Button */}
+            <button 
+              onClick={() => setShowMobileMenu(true)}
+              className="md:hidden flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors font-medium text-sm bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-700/50"
+            >
+              <ChevronLeft className="w-4 h-4" /> Back to Menu
+            </button>
+
             {/* Top highlight line */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
 

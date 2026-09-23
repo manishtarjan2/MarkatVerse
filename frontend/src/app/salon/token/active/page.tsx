@@ -216,7 +216,7 @@ export default function CustomerBookingsDashboard() {
         <div className="flex flex-col lg:flex-row gap-6">
           
           {/* LEFT COLUMN: LIST */}
-          <div className="flex-[2] lg:min-w-[60%] flex flex-col gap-4">
+          <div className={`flex-[2] lg:min-w-[60%] flex flex-col gap-4 ${selectedTokenId ? 'hidden lg:flex' : 'flex'}`}>
             
             {/* Toolbar */}
             <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-col sm:flex-row gap-3">
@@ -287,15 +287,15 @@ export default function CustomerBookingsDashboard() {
                         onClick={() => setSelectedTokenId(token.id)}
                         className={`p-4 cursor-pointer transition-all border-l-4 ${
                           isSelected 
-                            ? 'bg-blue-50/50 border-blue-600' 
-                            : 'border-transparent hover:bg-slate-50'
+                            ? 'bg-blue-100 border-blue-600 shadow-sm scale-[1.01] rounded-r-xl relative z-10' 
+                            : 'border-transparent hover:bg-blue-50 hover:border-blue-300 opacity-90 hover:opacity-100'
                         }`}
                       >
                         {/* Mobile Layout */}
                         <div className="md:hidden flex flex-col gap-3">
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-700">
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${isSelected ? 'bg-white text-blue-700 shadow-sm' : 'bg-slate-100 text-slate-700'}`}>
                                 #{token.tokenNumber || '-'}
                               </div>
                               <div>
@@ -310,7 +310,7 @@ export default function CustomerBookingsDashboard() {
                               <StatusIcon className="w-3 h-3" /> {token.status}
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 text-xs font-medium text-slate-500 bg-white p-2 rounded-lg border border-slate-100">
+                          <div className={`flex items-center gap-4 text-xs font-medium text-slate-500 p-2 rounded-lg border ${isSelected ? 'bg-white/50 border-blue-200' : 'bg-white border-slate-100'}`}>
                             <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(token.timestamp).toLocaleDateString()}</span>
                             <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {new Date(token.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                           </div>
@@ -319,7 +319,7 @@ export default function CustomerBookingsDashboard() {
                         {/* Desktop Layout */}
                         <div className="hidden md:grid grid-cols-12 gap-4 items-center">
                           <div className="col-span-3 flex items-center gap-3">
-                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-700 shrink-0">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black shrink-0 ${isSelected ? 'bg-white text-blue-700 shadow-sm' : 'bg-slate-100 text-slate-700'}`}>
                               #{token.tokenNumber || '-'}
                             </div>
                             <div className="min-w-0">
@@ -359,14 +359,22 @@ export default function CustomerBookingsDashboard() {
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm sticky top-[100px] overflow-hidden flex flex-col max-h-[calc(100vh-120px)]">
                 
                 {/* Header */}
-                <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
-                  <div>
-                    <h2 className="text-xl font-black text-slate-900">Token #{selectedToken.tokenNumber || '-'}</h2>
-                    <p className="text-xs font-medium text-slate-500 mt-1">
-                      Created on {new Date(selectedToken.timestamp).toLocaleString()}
-                    </p>
+                <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between sm:items-start gap-4">
+                  <div className="flex items-start gap-3">
+                    <button 
+                      onClick={() => setSelectedTokenId(null)}
+                      className="lg:hidden p-2 -ml-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-full text-slate-600 transition-colors shadow-sm shrink-0"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div>
+                      <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">Token #{selectedToken.tokenNumber || '-'}</h2>
+                      <p className="text-xs font-medium text-slate-500 mt-1">
+                        Created on {new Date(selectedToken.timestamp).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                  <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider self-start shrink-0 ${
                     selectedToken.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
                     selectedToken.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
                     'bg-amber-100 text-amber-700'

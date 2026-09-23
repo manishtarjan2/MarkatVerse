@@ -1,13 +1,16 @@
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 export declare class AuthService {
     private prisma;
     private jwtService;
-    constructor(prisma: PrismaService, jwtService: JwtService);
+    private idGenerator;
+    constructor(prisma: PrismaService, jwtService: JwtService, idGenerator: IdGeneratorService);
     signup(data: any): Promise<{
         access_token: string;
         user: {
             id: any;
+            markatId: any;
             name: any;
             email: any;
             phone: any;
@@ -18,6 +21,7 @@ export declare class AuthService {
         access_token: string;
         user: {
             id: any;
+            markatId: any;
             name: any;
             email: any;
             phone: any;
@@ -28,6 +32,7 @@ export declare class AuthService {
         access_token: string;
         user: {
             id: any;
+            markatId: any;
             name: any;
             email: any;
             phone: any;
@@ -38,6 +43,7 @@ export declare class AuthService {
         access_token: string;
         user: {
             id: any;
+            markatId: any;
             name: any;
             email: any;
             phone: any;
@@ -45,6 +51,10 @@ export declare class AuthService {
         };
     }>;
     getMe(token: string): Promise<{
+        id: string;
+        name: string;
+        phone: string | null;
+        role: string;
         business: ({
             wallet: {
                 id: string;
@@ -58,18 +68,19 @@ export declare class AuthService {
                 owedToPlatform: number;
             } | null;
         } & {
-            businessType: string;
             id: string;
             name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
             pincode: string | null;
             latitude: number | null;
             longitude: number | null;
+            createdAt: Date;
+            updatedAt: Date;
+            businessCode: string | null;
             userId: string;
             logo: string | null;
+            description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
+            businessType: string;
             address: string | null;
             verified: boolean;
             capabilities: string[];
@@ -80,11 +91,8 @@ export declare class AuthService {
             subscriptionStartDate: Date | null;
             subscriptionEndDate: Date | null;
         }) | null;
-        id: string;
+        markatId: string | null;
         email: string | null;
-        phone: string | null;
-        name: string;
-        role: string;
     }>;
     forgotPassword(identifier: string): Promise<{
         message: string;

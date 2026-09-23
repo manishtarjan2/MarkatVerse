@@ -36,7 +36,7 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {user?.role !== 'super_admin' && (
+      {(user?.role !== 'super_admin' && user?.role !== 'admin') && (
         <>
           {/* Deliver to (Hidden on Mobile, Left on Desktop) */}
           <div
@@ -93,22 +93,37 @@ export default function Navbar() {
                         const { latitude, longitude } = position.coords;
                         setUserLat(latitude);
                         setUserLng(longitude);
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, {
+                          headers: { 'User-Agent': 'MarkatVerse/1.0' }
+                        });
                         const data = await res.json();
 
-                        const pincode = data?.address?.postcode;
-                        const city = data?.address?.city || data?.address?.town || data?.address?.village || data?.address?.state_district;
-
-                        if (pincode) {
-                          const displayStr = city ? `${city}, ${pincode}` : pincode;
-                          setLocationInput(pincode);
-                          setUserLocation(displayStr);
-                        } else if (city) {
-                          setLocationInput(city);
-                          setUserLocation(city);
+                        if (data && data.address) {
+                          const houseNumber = data.address.house_number || data.address.building || '';
+                          const road = data.address.road || data.address.street || data.address.pedestrian || data.address.residential || data.address.footway || data.address.path || data.address.alley || data.address.hamlet || data.address.locality;
+                          const neighbourhood = data.address.neighbourhood || data.address.suburb || data.address.quarter;
+                          const city = data.address.city || data.address.town || data.address.village || data.address.state_district;
+                          const pincode = data.address.postcode;
+                          
+                          const streetArea = [houseNumber, road].filter(Boolean).join(' ');
+                          const parts = [streetArea, neighbourhood, city].filter(Boolean);
+                          const preciseShort = parts.slice(0, 2).join(', ');
+                          
+                          if (city) {
+                            const displayStr = city + (pincode ? `, ${pincode}` : '');
+                            setLocationInput(pincode || city || preciseShort);
+                            setUserLocation(displayStr);
+                          } else if (data.display_name) {
+                            const fallback = data.display_name.split(',').slice(0, 2).join(',');
+                            setLocationInput(pincode || fallback);
+                            setUserLocation(fallback);
+                          } else {
+                            setUserLocation("Select Location");
+                            alert("Could not determine your address.");
+                          }
                         } else {
                           setUserLocation("Select Location");
-                          alert("Could not determine your pincode.");
+                          alert("Could not determine your precise location.");
                         }
                       } catch (error) {
                         console.error("Error fetching location:", error);
@@ -121,7 +136,7 @@ export default function Navbar() {
                       console.error("Geolocation error:", error);
                       setUserLocation("Select Location");
                       alert("Unable to retrieve your location. Please check your browser permissions.");
-                    });
+                    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
                   }}
                   className="w-full flex items-center justify-center gap-2 py-2 px-3 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
@@ -149,7 +164,7 @@ export default function Navbar() {
         </>
       )}
 
-      {user?.role === 'super_admin' && (
+      {(user?.role === 'super_admin' || user?.role === 'admin') && (
         <div className="flex-1 flex justify-center hidden md:flex order-2">
           <div className="bg-amber-50 px-5 py-2 rounded-lg border border-amber-500/50 flex items-center gap-2 shadow-sm">
             <span className="text-amber-500">🛡️</span>
@@ -160,7 +175,7 @@ export default function Navbar() {
 
       <div className="flex items-center gap-2 sm:gap-3 md:gap-5 text-slate-600 shrink-0 order-2 md:order-3 ml-auto md:ml-0">
 
-        {user?.role !== 'super_admin' && (
+        {(user?.role !== 'super_admin' && user?.role !== 'admin') && (
           <>
             <Link href="/help" className="hidden lg:flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group">
               <Headphones className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
@@ -184,7 +199,7 @@ export default function Navbar() {
           </>
         )}
 
-        {user?.role !== 'super_admin' && (
+        {(user?.role !== 'super_admin' && user?.role !== 'admin') && (
           <>
             {user && (
               <>

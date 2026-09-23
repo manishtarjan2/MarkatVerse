@@ -31,6 +31,8 @@ export type Product = {
   status?: string;
   parameters?: Record<string, string | string[]>;
   options?: { id: string; name: string; price: number; discountPercentage?: number }[];
+  _distance?: number;
+  _outOfRange?: boolean;
 };
 
 export type FormField = {
@@ -658,10 +660,49 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const { isSectorActive } = useSettings();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [userLocation, setUserLocation] = useState<string>('Mumbai'); // Default mock location
+  const [userLocation, setUserLocation] = useState<string>('');
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
   const [radiusFilter, setRadiusFilter] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          setUserLat(latitude);
+          setUserLng(longitude);
+          
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, {
+            headers: { 'User-Agent': 'MarkatVerse/1.0' }
+          });
+          const data = await res.json();
+          
+          if (data && data.address) {
+            const houseNumber = data.address.house_number || data.address.building || '';
+            const road = data.address.road || data.address.street || data.address.pedestrian || data.address.residential || data.address.footway || data.address.path || data.address.alley || data.address.hamlet || data.address.locality;
+            const neighbourhood = data.address.neighbourhood || data.address.suburb || data.address.quarter;
+            const city = data.address.city || data.address.town || data.address.village || data.address.state_district;
+            const pincode = data.address.postcode;
+            
+            const streetArea = [houseNumber, road].filter(Boolean).join(' ');
+            const parts = [streetArea, neighbourhood, city].filter(Boolean);
+            const preciseShort = parts.slice(0, 2).join(', ');
+            
+            if (city) {
+              setUserLocation(city + (pincode ? `, ${pincode}` : ''));
+            } else if (data.display_name) {
+              setUserLocation(data.display_name.split(',').slice(0, 2).join(','));
+            }
+          }
+        } catch (error) {
+          console.error("Auto-location fetch failed", error);
+        }
+      }, (err) => {
+        console.log("Auto-location permission denied or failed:", err.message);
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch products

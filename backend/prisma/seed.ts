@@ -4,13 +4,20 @@ import * as path from 'path';
 
 const prisma = new PrismaClient();
 
+import * as crypto from 'crypto';
+
+function generateObjectId(str: string): string {
+  return crypto.createHash('md5').update(str).digest('hex').substring(0, 24);
+}
+
 async function main() {
   const dataPath = path.join(process.cwd(), 'data.json');
   const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 
   for (const item of data) {
+    const validId = generateObjectId(item.id);
     await prisma.product.upsert({
-      where: { id: item.id },
+      where: { id: validId },
       update: {
         name: item.name,
         price: parseFloat(item.price),
@@ -28,7 +35,7 @@ async function main() {
         moq: (item.category === 'B2B' || item.category === 'Wholesale') ? 50 : 1
       },
       create: {
-        id: item.id,
+        id: validId,
         name: item.name,
         price: parseFloat(item.price),
         originalPrice: item.originalPrice ? parseFloat(item.originalPrice) : null,

@@ -4,19 +4,16 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-import { Module } from '@nestjs/common';
-import { SellersService } from './sellers.service.js';
-import { SellersController } from './sellers.controller.js';
-import { PrismaModule } from '../prisma.module.js';
-import { IdGeneratorModule } from '../id-generator/id-generator.module.js';
-let SellersModule = class SellersModule {
+import { Module, Global } from '@nestjs/common';
+import { IdGeneratorService } from './id-generator.service.js';
+let IdGeneratorModule = class IdGeneratorModule {
 };
-SellersModule = __decorate([
+IdGeneratorModule = __decorate([
+    Global(),
     Module({
-        imports: [PrismaModule, IdGeneratorModule],
-        controllers: [SellersController],
-        providers: [SellersService],
+        providers: [IdGeneratorService],
+        exports: [IdGeneratorService],
     })
-], SellersModule);
-export { SellersModule };
-//# sourceMappingURL=sellers.module.js.map
+], IdGeneratorModule);
+export { IdGeneratorModule };
+//# sourceMappingURL=id-generator.module.js.map

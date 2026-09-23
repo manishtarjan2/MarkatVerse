@@ -1,31 +1,35 @@
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { UpdateOrderDto } from './dto/update-order.dto.js';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 export declare class OrdersService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private idGenerator;
+    constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     create(createOrderDto: CreateOrderDto): Promise<{
         items: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            sellerId: string | null;
+            price: number;
             productId: string;
             productName: string | null;
-            sellerId: string | null;
             quantity: number;
-            price: number;
             orderId: string;
         }[];
     } & {
         id: string;
-        buyerId: string | null;
-        total: number;
         status: string;
         createdAt: Date;
         updatedAt: Date;
+        orderNumber: string | null;
+        buyerId: string | null;
+        total: number;
     }>;
     findAll(): Promise<{
         id: string;
+        orderNumber: string | null;
         customerId: string | null;
         customerName: string;
         totalAmount: number;
@@ -34,6 +38,7 @@ export declare class OrdersService {
     }[]>;
     findBySeller(sellerId: string): Promise<{
         id: string;
+        orderNumber: string | null;
         buyer: string;
         item: string;
         amount: string;
@@ -43,26 +48,29 @@ export declare class OrdersService {
     }[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__OrderClient<{
         id: string;
-        buyerId: string | null;
-        total: number;
         status: string;
         createdAt: Date;
         updatedAt: Date;
+        orderNumber: string | null;
+        buyerId: string | null;
+        total: number;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateOrderDto: UpdateOrderDto): Promise<{
         id: string;
-        buyerId: string | null;
-        total: number;
         status: string;
         createdAt: Date;
         updatedAt: Date;
+        orderNumber: string | null;
+        buyerId: string | null;
+        total: number;
     }>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__OrderClient<{
         id: string;
-        buyerId: string | null;
-        total: number;
         status: string;
         createdAt: Date;
         updatedAt: Date;
+        orderNumber: string | null;
+        buyerId: string | null;
+        total: number;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

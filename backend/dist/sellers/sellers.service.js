@@ -9,10 +9,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 let SellersService = class SellersService {
     prisma;
-    constructor(prisma) {
+    idGenerator;
+    constructor(prisma, idGenerator) {
         this.prisma = prisma;
+        this.idGenerator = idGenerator;
     }
     async create(seller) {
         let user = null;
@@ -28,8 +31,10 @@ let SellersService = class SellersService {
         }
         if (!user) {
             const bcrypt = await import('bcryptjs');
+            const markatId = await this.idGenerator.generateUserId();
             user = await this.prisma.user.create({
                 data: {
+                    markatId,
                     name: seller.ownerName || seller.name || 'Seller',
                     email: seller.email || null,
                     phone: seller.phone || null,
@@ -50,8 +55,10 @@ let SellersService = class SellersService {
         if (existingBusiness) {
             return { ...existingBusiness, status: 'Pending' };
         }
+        const businessCode = await this.idGenerator.generateBusinessId();
         const business = await this.prisma.business.create({
             data: {
+                businessCode,
                 userId: user.id,
                 name: seller.businessName || seller.name || 'My Business',
                 description: seller.description || null,
@@ -70,12 +77,14 @@ let SellersService = class SellersService {
                 },
             });
             if (seller.staff && seller.staff.length > 0) {
+                const staffData = await Promise.all(seller.staff.map(async (s) => ({
+                    queueId: queue.id,
+                    name: s.name,
+                    role: s.role,
+                    staffCode: await this.idGenerator.generateStaffId(),
+                })));
                 await this.prisma.serviceStaff.createMany({
-                    data: seller.staff.map((s) => ({
-                        queueId: queue.id,
-                        name: s.name,
-                        role: s.role,
-                    })),
+                    data: staffData,
                 });
             }
             if (seller.resources && seller.resources.length > 0) {
@@ -102,6 +111,7 @@ let SellersService = class SellersService {
         });
         return businesses.map(b => ({
             id: b.id,
+            businessCode: b.businessCode,
             userId: b.userId,
             businessName: b.name,
             ownerName: b.user.name,
@@ -155,7 +165,8 @@ let SellersService = class SellersService {
 };
 SellersService = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [PrismaService])
+    __metadata("design:paramtypes", [PrismaService,
+        IdGeneratorService])
 ], SellersService);
 export { SellersService };
 //# sourceMappingURL=sellers.service.js.map

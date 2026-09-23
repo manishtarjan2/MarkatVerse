@@ -5,46 +5,46 @@ export declare class WorkflowsController {
     create(createWorkflowDto: any): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: import("@prisma/client/runtime/library").JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     findAll(): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: import("@prisma/client/runtime/library").JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }[]>;
     findOne(id: string): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: import("@prisma/client/runtime/library").JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     update(id: string, updateWorkflowDto: any): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: import("@prisma/client/runtime/library").JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: string;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         version: number;
         steps: import("@prisma/client/runtime/library").JsonValue;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

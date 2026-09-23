@@ -9,10 +9,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 let ServiceQueueService = class ServiceQueueService {
     prisma;
-    constructor(prisma) {
+    idGenerator;
+    constructor(prisma, idGenerator) {
         this.prisma = prisma;
+        this.idGenerator = idGenerator;
     }
     async createQueue(data) {
         const safeSellerId = data.sellerId || Array.from({ length: 24 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
@@ -100,8 +103,10 @@ let ServiceQueueService = class ServiceQueueService {
             where: { queueId, status: { in: ['WAITING', 'CHECKED_IN'] } },
         });
         const estimatedWaitMin = mode === 'TOKEN' ? ahead * queue.avgMinutes : 0;
+        const bookingNumber = await this.idGenerator.generateBookingId(mode === 'TOKEN');
         const token = await this.prisma.serviceBooking.create({
             data: {
+                bookingNumber,
                 queueId,
                 tokenNumber,
                 bookingMode: mode,
@@ -430,7 +435,8 @@ let ServiceQueueService = class ServiceQueueService {
 };
 ServiceQueueService = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [PrismaService])
+    __metadata("design:paramtypes", [PrismaService,
+        IdGeneratorService])
 ], ServiceQueueService);
 export { ServiceQueueService };
 //# sourceMappingURL=service-queue.service.js.map

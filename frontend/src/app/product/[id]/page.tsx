@@ -296,8 +296,14 @@ export default function ProductDetails() {
             )}
             <span className="text-blue-600">{product.seller}</span>
           </div>
-          <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 leading-tight">{product.name}</h1>
+          <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-2 leading-tight">{product.name}</h1>
           
+          <div className="text-slate-600 font-medium mb-4 flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-slate-400" />
+            {product._distance != null && product._distance !== Infinity ? `${product._distance.toFixed(1)} km away • ` : ''}
+            {product.location || 'Location not provided'}
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-4">
               <span className="text-amber-500 font-medium flex items-center gap-1">

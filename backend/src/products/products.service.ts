@@ -17,6 +17,8 @@ export class ProductsService {
         sellerId: data.sellerId || null,
         sellerName: data.seller || data.sellerName || 'MarkatVerse Seller',
         location: data.location || 'India',
+        latitude: data.latitude ? parseFloat(data.latitude) : null,
+        longitude: data.longitude ? parseFloat(data.longitude) : null,
         rating: data.rating || '0.0',
         reviews: data.reviews || '0',
         discount: data.discount || null,
@@ -42,14 +44,36 @@ export class ProductsService {
     });
 
     if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
-      // 1. Get system default radius if not provided
+      // 1. Get system settings for radii
       let effectiveRadius = radius;
+      let sectorRadiusMap: Record<string, number> = {};
+
+      const settings = await this.prisma.configuration.findFirst({
+        where: { type: 'SYSTEM_SETTINGS', name: 'global' },
+      });
+      const data = settings?.data as any;
+
+      const strictRadius = data?.strictRadius === true;
+      const globalMaxRadius = data?.searchRadius ?? 50;
+
       if (effectiveRadius === undefined || isNaN(effectiveRadius)) {
-        const settings = await this.prisma.configuration.findFirst({
-          where: { type: 'SYSTEM_SETTINGS', name: 'global' },
-        });
-        effectiveRadius = (settings?.data as any)?.searchRadius ?? 50; // fallback to 50km
+        effectiveRadius = globalMaxRadius; // fallback
+      } else if (strictRadius && effectiveRadius > globalMaxRadius) {
+        effectiveRadius = globalMaxRadius; // clamp to max if strict
       }
+      sectorRadiusMap = data?.sectorRadius || {};
+
+      // Helper to map category to sector name
+      const getSectorForProduct = (p: any) => {
+        if (p.isB2B) return 'b2b';
+        const cat = p.categoryName || '';
+        if (cat === 'Beauty') return 'salon';
+        if (cat === 'Home') return 'home';
+        if (cat === 'Professional') return 'events';
+        if (cat === 'Rentals') return 'transport';
+        if (cat === 'B2B') return 'b2b';
+        return 'default';
+      };
 
       // 2. Calculate distances and filter
       const withDistances = products.map(p => {
@@ -60,12 +84,61 @@ export class ProductsService {
         return { ...p, _distance: dist };
       });
 
-      // Filter out products outside the radius (unless they have no coordinates)
-      const finalRadius = effectiveRadius ?? 50;
-      products = withDistances.filter(p => p._distance <= finalRadius || p._distance === Infinity);
+      const showOutOfRange = data?.showOutOfRange === true;
+      const distanceWeight = data?.distanceWeight ?? 50; // 0-100
 
-      // Sort by distance
-      products.sort((a: any, b: any) => a._distance - b._distance);
+      // Filter out products outside the radius (unless they have no coordinates)
+      products = withDistances.filter(p => {
+        if (p._distance === Infinity) return true;
+        
+        // Find specific radius for this product's sector
+        const sectorName = getSectorForProduct(p);
+        const radiusToUse = sectorRadiusMap[sectorName] ?? effectiveRadius ?? 50;
+        
+        if (p._distance > radiusToUse) {
+          if (showOutOfRange) {
+            p._outOfRange = true; // Tag it for UI
+            return true;
+          }
+          return false;
+        }
+        return true;
+      });
+
+      // Sort by distance vs rating
+      products.sort((a: any, b: any) => {
+        // Always push out of range items to bottom
+        if (a._outOfRange && !b._outOfRange) return 1;
+        if (!a._outOfRange && b._outOfRange) return -1;
+
+        const wDist = distanceWeight / 100;
+        const wRat = 1 - wDist;
+
+        if (wDist === 1) {
+          return a._distance - b._distance;
+        }
+
+        const ratA = parseFloat(a.rating) || 0;
+        const ratB = parseFloat(b.rating) || 0;
+
+        if (wRat === 1) {
+          return ratB - ratA;
+        }
+
+        // Hybrid score: normalize distance (assume 500km max scale) and rating (5 max scale)
+        // We want lower distance, higher rating
+        const normDistA = Math.min(a._distance, 500) / 500;
+        const normDistB = Math.min(b._distance, 500) / 500;
+        
+        const normRatA = ratA / 5;
+        const normRatB = ratB / 5;
+
+        // Lower score is better
+        const scoreA = (normDistA * wDist) - (normRatA * wRat);
+        const scoreB = (normDistB * wDist) - (normRatB * wRat);
+
+        return scoreA - scoreB;
+      });
       
     } else if (location && location.trim() !== '') {
       // Fallback to text matching if no coords
@@ -129,13 +202,13 @@ export class ProductsService {
     
     // Toggle Products
     await this.prisma.product.updateMany({
-      where: { name: { contains: 'Dummy' } },
+      where: { OR: [{ sellerId: null }, { sellerId: { isSet: false } }] },
       data: { status }
     });
 
     // Toggle Queues
     await this.prisma.serviceQueue.updateMany({
-      where: { shopName: { contains: 'Dummy' } },
+      where: { OR: [{ sellerId: null }, { sellerId: { isSet: false } }] },
       data: { status }
     });
 
@@ -144,7 +217,10 @@ export class ProductsService {
 
   async getDummyStatus() {
     const dummyProduct = await this.prisma.product.findFirst({
-      where: { name: { contains: 'Dummy' }, status: 'ACTIVE' }
+      where: { 
+        OR: [{ sellerId: null }, { sellerId: { isSet: false } }], 
+        status: 'ACTIVE' 
+      }
     });
     return { enabled: !!dummyProduct };
   }

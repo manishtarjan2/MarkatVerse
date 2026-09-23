@@ -26,6 +26,8 @@ let ProductsService = class ProductsService {
                 sellerId: data.sellerId || null,
                 sellerName: data.seller || data.sellerName || 'MarkatVerse Seller',
                 location: data.location || 'India',
+                latitude: data.latitude ? parseFloat(data.latitude) : null,
+                longitude: data.longitude ? parseFloat(data.longitude) : null,
                 rating: data.rating || '0.0',
                 reviews: data.reviews || '0',
                 discount: data.discount || null,
@@ -50,12 +52,36 @@ let ProductsService = class ProductsService {
         });
         if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
             let effectiveRadius = radius;
+            let sectorRadiusMap = {};
+            const settings = await this.prisma.configuration.findFirst({
+                where: { type: 'SYSTEM_SETTINGS', name: 'global' },
+            });
+            const data = settings?.data;
+            const strictRadius = data?.strictRadius === true;
+            const globalMaxRadius = data?.searchRadius ?? 50;
             if (effectiveRadius === undefined || isNaN(effectiveRadius)) {
-                const settings = await this.prisma.configuration.findFirst({
-                    where: { type: 'SYSTEM_SETTINGS', name: 'global' },
-                });
-                effectiveRadius = settings?.data?.searchRadius ?? 50;
+                effectiveRadius = globalMaxRadius;
             }
+            else if (strictRadius && effectiveRadius > globalMaxRadius) {
+                effectiveRadius = globalMaxRadius;
+            }
+            sectorRadiusMap = data?.sectorRadius || {};
+            const getSectorForProduct = (p) => {
+                if (p.isB2B)
+                    return 'b2b';
+                const cat = p.categoryName || '';
+                if (cat === 'Beauty')
+                    return 'salon';
+                if (cat === 'Home')
+                    return 'home';
+                if (cat === 'Professional')
+                    return 'events';
+                if (cat === 'Rentals')
+                    return 'transport';
+                if (cat === 'B2B')
+                    return 'b2b';
+                return 'default';
+            };
             const withDistances = products.map(p => {
                 let dist = Infinity;
                 if (p.latitude !== null && p.longitude !== null) {
@@ -63,9 +89,45 @@ let ProductsService = class ProductsService {
                 }
                 return { ...p, _distance: dist };
             });
-            const finalRadius = effectiveRadius ?? 50;
-            products = withDistances.filter(p => p._distance <= finalRadius || p._distance === Infinity);
-            products.sort((a, b) => a._distance - b._distance);
+            const showOutOfRange = data?.showOutOfRange === true;
+            const distanceWeight = data?.distanceWeight ?? 50;
+            products = withDistances.filter(p => {
+                if (p._distance === Infinity)
+                    return true;
+                const sectorName = getSectorForProduct(p);
+                const radiusToUse = sectorRadiusMap[sectorName] ?? effectiveRadius ?? 50;
+                if (p._distance > radiusToUse) {
+                    if (showOutOfRange) {
+                        p._outOfRange = true;
+                        return true;
+                    }
+                    return false;
+                }
+                return true;
+            });
+            products.sort((a, b) => {
+                if (a._outOfRange && !b._outOfRange)
+                    return 1;
+                if (!a._outOfRange && b._outOfRange)
+                    return -1;
+                const wDist = distanceWeight / 100;
+                const wRat = 1 - wDist;
+                if (wDist === 1) {
+                    return a._distance - b._distance;
+                }
+                const ratA = parseFloat(a.rating) || 0;
+                const ratB = parseFloat(b.rating) || 0;
+                if (wRat === 1) {
+                    return ratB - ratA;
+                }
+                const normDistA = Math.min(a._distance, 500) / 500;
+                const normDistB = Math.min(b._distance, 500) / 500;
+                const normRatA = ratA / 5;
+                const normRatB = ratB / 5;
+                const scoreA = (normDistA * wDist) - (normRatA * wRat);
+                const scoreB = (normDistB * wDist) - (normRatB * wRat);
+                return scoreA - scoreB;
+            });
         }
         else if (location && location.trim() !== '') {
             const loc = location.toLowerCase();
@@ -123,18 +185,21 @@ let ProductsService = class ProductsService {
     async toggleDummyData(enable) {
         const status = enable ? 'ACTIVE' : 'SUSPENDED';
         await this.prisma.product.updateMany({
-            where: { name: { contains: 'Dummy' } },
+            where: { OR: [{ sellerId: null }, { sellerId: { isSet: false } }] },
             data: { status }
         });
         await this.prisma.serviceQueue.updateMany({
-            where: { shopName: { contains: 'Dummy' } },
+            where: { OR: [{ sellerId: null }, { sellerId: { isSet: false } }] },
             data: { status }
         });
         return { success: true, message: `Dummy data set to ${status}` };
     }
     async getDummyStatus() {
         const dummyProduct = await this.prisma.product.findFirst({
-            where: { name: { contains: 'Dummy' }, status: 'ACTIVE' }
+            where: {
+                OR: [{ sellerId: null }, { sellerId: { isSet: false } }],
+                status: 'ACTIVE'
+            }
         });
         return { enabled: !!dummyProduct };
     }

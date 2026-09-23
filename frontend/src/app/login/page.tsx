@@ -71,6 +71,10 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Login failed');
 
+      if (data.user.role.toUpperCase() === 'ADMIN' || data.user.role.toUpperCase() === 'SUPER_ADMIN') {
+        throw new Error('Admin accounts must log in via the Admin Portal.');
+      }
+
       login(
         { id: data.user.id, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '' },
         data.access_token

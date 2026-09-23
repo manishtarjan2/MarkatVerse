@@ -7,14 +7,29 @@ import { useProducts } from '@/context/ProductContext';
 import { ShieldAlert, Info, Edit2, X, Check } from 'lucide-react';
 
 export default function SettingsPlatformPage() {
-  const { sectors, toggleSector, editSector } = useSettings();
+  const { sectors, toggleSector, editSector, systemConfig, updateSystemConfig } = useSettings();
   const { allProducts } = useProducts();
   const { canToggleSector } = useAdminRole();
   const hasTogglePermission = canToggleSector();
 
-  const isDummyActive = allProducts.some(p => p.name.includes('Dummy') && p.status !== 'SUSPENDED');
-
+  const [isDummyActive, setIsDummyActive] = useState<boolean>(false);
   const [editingSectorId, setEditingSectorId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const fetchDummyStatus = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const res = await fetch(`${API_URL}/products/dummy-status`);
+        if (res.ok) {
+          const data = await res.json();
+          setIsDummyActive(data.enabled);
+        }
+      } catch (e) {
+        console.error("Failed to fetch dummy status", e);
+      }
+    };
+    fetchDummyStatus();
+  }, []);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
 
@@ -91,6 +106,38 @@ export default function SettingsPlatformPage() {
               {isDummyActive ? 'Active' : 'Suspended'}
             </span>
             <span className="text-xs text-slate-500">Global Sandbox</span>
+          </div>
+        </div>
+        
+        {/* Global Search Radius */}
+        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm flex flex-col justify-between h-full relative overflow-hidden">
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white capitalize">Nearby Search Radius</h3>
+            </div>
+            <p className="text-sm text-slate-400 mb-4">
+              Set the maximum distance (km) to show services/products. Out of range items are pushed to the bottom.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={systemConfig?.searchRadius || 50}
+                onChange={(e) => updateSystemConfig({ ...systemConfig, searchRadius: parseInt(e.target.value) || 50 })}
+                disabled={!hasTogglePermission}
+                className="w-24 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-indigo-500"
+              />
+              <span className="text-slate-400 flex items-center">km</span>
+            </div>
+            <label className="flex items-center gap-2 mt-4 text-sm text-slate-300">
+              <input 
+                type="checkbox" 
+                checked={systemConfig?.strictRadius || false} 
+                onChange={(e) => updateSystemConfig({ ...systemConfig, strictRadius: e.target.checked })}
+                disabled={!hasTogglePermission}
+                className="rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500"
+              />
+              Strict limit (hide items outside radius)
+            </label>
           </div>
         </div>
 

@@ -289,7 +289,7 @@ function DashboardContent() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Electronics');
   const [subcategory, setSubcategory] = useState('');
-  const [location, setLocation] = useState('New Delhi, Delhi');
+  const [location, setLocation] = useState('');
   const [imageUrl, setImageUrl] = useState('');
 
   // Settings Location States

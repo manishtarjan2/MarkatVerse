@@ -26,8 +26,14 @@ export default function AdminCategoriesPage() {
     allowedListingTypes: [],
     businessModels: [],
     workflow: '',
-    allowedFeatures: []
+    allowedFeatures: [],
+    parameters: [],
+    subcategories: []
   });
+  
+  // Local state for JSON editor strings
+  const [parametersJson, setParametersJson] = useState('[]');
+  const [subcategoriesJson, setSubcategoriesJson] = useState('[]');
 
   const filteredCategories = categories.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -35,7 +41,9 @@ export default function AdminCategoriesPage() {
 
   const handleStartAdd = () => {
     if (!hasEditPermission) return;
-    setDraft({ name: '', theme: 'slate', icon: '', primaryType: 'PRODUCT', defaultCommissionRate: 5.0, defaultFlatRate: 999.0 });
+    setDraft({ name: '', theme: 'slate', icon: '', primaryType: 'PRODUCT', defaultCommissionRate: 5.0, defaultFlatRate: 999.0, parameters: [], subcategories: [] });
+    setParametersJson('[]');
+    setSubcategoriesJson('[]');
     setIsAdding(true);
     setEditingId(null);
   };
@@ -43,6 +51,8 @@ export default function AdminCategoriesPage() {
   const handleStartEdit = (cat: Category) => {
     if (!hasEditPermission) return;
     setDraft({ ...cat });
+    setParametersJson(JSON.stringify(cat.parameters || [], null, 2));
+    setSubcategoriesJson(JSON.stringify(cat.subcategories || [], null, 2));
     setEditingId(cat.id);
     setIsAdding(false);
   };
@@ -51,11 +61,26 @@ export default function AdminCategoriesPage() {
     if (!hasEditPermission) return;
     if (!draft.name) return alert('Name is required');
 
+    let parsedParameters = [];
+    let parsedSubcategories = [];
+    try {
+      parsedParameters = JSON.parse(parametersJson);
+      parsedSubcategories = JSON.parse(subcategoriesJson);
+    } catch (e) {
+      return alert('Invalid JSON in Parameters or Subcategories. Please fix the formatting.');
+    }
+
+    const payloadToSave = {
+      ...draft,
+      parameters: parsedParameters,
+      subcategories: parsedSubcategories
+    };
+
     if (isAdding) {
-      addCategory({ ...draft, id: Date.now().toString() } as Category);
+      addCategory({ ...payloadToSave, id: Date.now().toString() } as Category);
       setIsAdding(false);
     } else if (editingId) {
-      updateCategory(editingId, draft);
+      updateCategory(editingId, payloadToSave);
       setEditingId(null);
     }
   };
@@ -222,6 +247,45 @@ export default function AdminCategoriesPage() {
                     onChange={e => setDraft(d => ({ ...d, allowedListingTypes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) as any }))}
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced JSON Fields */}
+            <div className="col-span-1 sm:col-span-2 lg:col-span-4 border-t border-slate-700 pt-4 mt-2">
+              <h4 className="text-sm font-bold text-slate-300 mb-3">Dynamic Configuration (Advanced)</h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase flex justify-between">
+                    <span>Parameters (JSON)</span>
+                    <button type="button" onClick={() => {
+                      try { setParametersJson(JSON.stringify(JSON.parse(parametersJson), null, 2)); } catch(e) { alert("Invalid JSON"); }
+                    }} className="text-indigo-400 hover:text-indigo-300 normal-case">Format JSON</button>
+                  </label>
+                  <textarea
+                    rows={8}
+                    value={parametersJson}
+                    onChange={e => setParametersJson(e.target.value)}
+                    placeholder='[\n  {\n    "name": "Size",\n    "type": "radio",\n    "options": ["S", "M", "L"]\n  }\n]'
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 font-mono text-xs focus:outline-none focus:border-indigo-500"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">Defines the root-level dynamic form fields for this category.</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase flex justify-between">
+                    <span>Subcategories (JSON)</span>
+                    <button type="button" onClick={() => {
+                      try { setSubcategoriesJson(JSON.stringify(JSON.parse(subcategoriesJson), null, 2)); } catch(e) { alert("Invalid JSON"); }
+                    }} className="text-indigo-400 hover:text-indigo-300 normal-case">Format JSON</button>
+                  </label>
+                  <textarea
+                    rows={8}
+                    value={subcategoriesJson}
+                    onChange={e => setSubcategoriesJson(e.target.value)}
+                    placeholder='[\n  {\n    "name": "Smartphones",\n    "parameters": []\n  }\n]'
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 font-mono text-xs focus:outline-none focus:border-indigo-500"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">Defines the subcategory hierarchy and their specific parameters.</p>
                 </div>
               </div>
             </div>

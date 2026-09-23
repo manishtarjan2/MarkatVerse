@@ -1,31 +1,84 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdminRole } from '@/context/AdminRoleContext';
-import { ShieldAlert, Map, Hexagon, Crosshair, Save, Check } from 'lucide-react';
+import { useSettings } from '@/context/SettingsContext';
+import { ShieldAlert, Map, Hexagon, Crosshair, Save, Check, Search } from 'lucide-react';
 
 export default function AdminLocationsPage() {
   const { canToggleSector } = useAdminRole();
   const hasSettingsPermission = canToggleSector(); // Super Admin only for core platform settings
+  const { systemConfig, updateSystemConfig, sectors } = useSettings();
 
   const [hexagonalRouting, setHexagonalRouting] = useState(true);
   const [defaultRadius, setDefaultRadius] = useState(50);
+  const [sectorRadii, setSectorRadii] = useState<Record<string, number>>({});
+  
+  const [strictRadius, setStrictRadius] = useState(false);
+  const [showOutOfRange, setShowOutOfRange] = useState(false);
+  const [distanceWeight, setDistanceWeight] = useState(50);
+  
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
+  // Initialize state from systemConfig when it loads
+  useEffect(() => {
+    if (systemConfig) {
+      if (typeof systemConfig.h3Indexing === 'boolean') {
+        setHexagonalRouting(systemConfig.h3Indexing);
+      }
+      if (typeof systemConfig.searchRadius === 'number') {
+        setDefaultRadius(systemConfig.searchRadius);
+      }
+      if (systemConfig.sectorRadius && typeof systemConfig.sectorRadius === 'object') {
+        setSectorRadii(systemConfig.sectorRadius);
+      }
+      if (typeof systemConfig.strictRadius === 'boolean') {
+        setStrictRadius(systemConfig.strictRadius);
+      }
+      if (typeof systemConfig.showOutOfRange === 'boolean') {
+        setShowOutOfRange(systemConfig.showOutOfRange);
+      }
+      if (typeof systemConfig.distanceWeight === 'number') {
+        setDistanceWeight(systemConfig.distanceWeight);
+      }
+    }
+  }, [systemConfig]);
+
+  const handleSave = async () => {
     if (!hasSettingsPermission) return;
     setIsSaving(true);
-    // Simulate API call to save platform settings
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      await updateSystemConfig({
+        ...systemConfig,
+        h3Indexing: hexagonalRouting,
+        searchRadius: defaultRadius,
+        sectorRadius: sectorRadii,
+        strictRadius,
+        showOutOfRange,
+        distanceWeight
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    }, 800);
+    } catch (e) {
+      console.error("Failed to save settings", e);
+      alert("Failed to save configuration.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+  const handleSectorRadiusChange = (sectorName: string, value: number) => {
+    setSectorRadii(prev => ({
+      ...prev,
+      [sectorName]: value
+    }));
+  };
+
+  const activeSectors = sectors.filter(s => s.isActive);
+
   return (
-    <div className="max-w-4xl mx-auto animate-in fade-in duration-300 w-full">
+    <div className="max-w-4xl mx-auto animate-in fade-in duration-300 w-full pb-20">
       <header className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Hyperlocal Locations</h1>
@@ -101,14 +154,14 @@ export default function AdminLocationsPage() {
             <div>
               <h2 className="text-lg font-bold text-white">Default Discovery Radius</h2>
               <p className="text-sm text-slate-400 mt-1 max-w-xl">
-                Set the default maximum radius constraint for discovering products and businesses when a user lands on the platform.
+                Set the default maximum radius constraint for discovering products and businesses when a user lands on the platform. This serves as the fallback for all queries.
               </p>
             </div>
           </div>
 
-          <div className="ml-16">
+          <div className="ml-16 pb-6 border-b border-slate-700/50 mb-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Radius (km)</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Global Radius (km)</span>
               <span className="text-xl font-black text-white">{defaultRadius} km</span>
             </div>
             <input 
@@ -124,6 +177,125 @@ export default function AdminLocationsPage() {
               <span>1 km (Hyperlocal)</span>
               <span>250 km (Regional)</span>
               <span>500 km (National)</span>
+            </div>
+          </div>
+
+          {/* Dynamic Sector Radii */}
+          <div className="ml-16">
+            <div className="flex items-center gap-2 mb-4">
+              <Search className="w-4 h-4 text-emerald-400" />
+              <h3 className="font-bold text-white text-sm">Sector-Specific Radii overrides</h3>
+            </div>
+            
+            {activeSectors.length === 0 && (
+              <p className="text-sm text-slate-500 italic">No active sectors found to configure.</p>
+            )}
+
+            <div className="space-y-6">
+              {activeSectors.map(sector => {
+                const currentVal = sectorRadii[sector.name] ?? defaultRadius;
+                return (
+                  <div key={sector.id} className="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-sm font-bold text-slate-200 capitalize">{sector.name} Radius</span>
+                        {sectorRadii[sector.name] === undefined && (
+                          <span className="ml-2 text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded font-medium">Using Default</span>
+                        )}
+                      </div>
+                      <span className="text-lg font-black text-emerald-400">{currentVal} km</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="500" 
+                      value={currentVal}
+                      disabled={!hasSettingsPermission}
+                      onChange={(e) => handleSectorRadiusChange(sector.name, parseInt(e.target.value))}
+                      className={`w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500 ${!hasSettingsPermission && 'opacity-50 cursor-not-allowed'}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Advanced Discovery Customizations */}
+        <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-lg space-y-6 mt-6">
+          <div className="flex items-start gap-4 mb-2">
+            <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center border border-pink-500/30 text-pink-400 shrink-0">
+              <Map className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Advanced Search Customizations</h2>
+              <p className="text-sm text-slate-400 mt-1 max-w-xl">
+                Fine-tune how strict the platform is about location limits and how ranking algorithms prioritize distance versus user ratings.
+              </p>
+            </div>
+          </div>
+
+          <div className="ml-16 space-y-8">
+            {/* Strict Radius Enforcement */}
+            <div className="flex items-center justify-between border-b border-slate-700/50 pb-6">
+              <div>
+                <h3 className="text-white font-bold mb-1">Strict Radius Enforcement</h3>
+                <p className="text-sm text-slate-400">Lock the maximum radius. Users will not be able to override search beyond your configured maximums.</p>
+              </div>
+              <label className={`relative inline-flex items-center cursor-pointer ${!hasSettingsPermission && 'opacity-50 cursor-not-allowed'}`}>
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={strictRadius}
+                  disabled={!hasSettingsPermission}
+                  onChange={(e) => setStrictRadius(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+              </label>
+            </div>
+
+            {/* Out-of-Range Visibility */}
+            <div className="flex items-center justify-between border-b border-slate-700/50 pb-6">
+              <div>
+                <h3 className="text-white font-bold mb-1">Out-of-Range Visibility</h3>
+                <p className="text-sm text-slate-400">Show out-of-range products at the bottom of search results instead of completely hiding them.</p>
+              </div>
+              <label className={`relative inline-flex items-center cursor-pointer ${!hasSettingsPermission && 'opacity-50 cursor-not-allowed'}`}>
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={showOutOfRange}
+                  disabled={!hasSettingsPermission}
+                  onChange={(e) => setShowOutOfRange(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+              </label>
+            </div>
+
+            {/* Distance vs Rating Weight */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white font-bold">Sorting Weight: Distance vs. Rating</span>
+                <span className="text-lg font-black text-pink-400">{distanceWeight}% Distance</span>
+              </div>
+              <p className="text-sm text-slate-400 mb-4">
+                At 100%, the algorithm sorts purely by nearest distance. At 0%, it sorts purely by highest rating.
+              </p>
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={distanceWeight}
+                disabled={!hasSettingsPermission}
+                onChange={(e) => setDistanceWeight(parseInt(e.target.value))}
+                className={`w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-pink-500 ${!hasSettingsPermission && 'opacity-50 cursor-not-allowed'}`}
+              />
+              <div className="flex justify-between text-xs font-semibold text-slate-500 mt-2">
+                <span>0% (Ratings Focus)</span>
+                <span>50% (Balanced)</span>
+                <span>100% (Hyperlocal Focus)</span>
+              </div>
             </div>
           </div>
         </div>
