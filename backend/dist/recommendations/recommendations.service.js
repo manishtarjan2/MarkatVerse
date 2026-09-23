@@ -29,9 +29,11 @@ let RecommendationsService = class RecommendationsService {
     async getRecommendations(userId) {
         const [products, services] = await Promise.all([
             this.prisma.product.findMany({
+                where: { status: 'ACTIVE', sellerId: { not: null } },
                 include: { seller: true }
             }),
             this.prisma.serviceQueue.findMany({
+                where: { status: 'ACTIVE', sellerId: { not: null } },
                 include: { seller: true }
             })
         ]);

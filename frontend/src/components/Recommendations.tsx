@@ -1,12 +1,14 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Star, MousePointerClick } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function Recommendations() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -29,7 +31,8 @@ export default function Recommendations() {
     fetchRecommendations();
   }, [user?.id]);
 
-  const logInteraction = async (item: any, type: string) => {
+  const handleClick = async (item: any) => {
+    // Log interaction
     try {
       await fetch('http://localhost:3001/recommendations/interactions', {
         method: 'POST',
@@ -38,12 +41,31 @@ export default function Recommendations() {
           userId: user?.id || null,
           productId: item.itemType === 'product' ? item.id : undefined,
           serviceId: item.itemType === 'service' ? item.id : undefined,
-          type
+          type: 'CLICK'
         })
       });
     } catch (e) {
       console.error('Failed to log interaction', e);
     }
+    // Navigate to product or service page
+    if (item.itemType === 'product') {
+      router.push(`/product/${item.id}`);
+    } else {
+      router.push(`/service/${item.id}`);
+    }
+  };
+
+  const handleMouseEnter = (item: any) => {
+    fetch('http://localhost:3001/recommendations/interactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user?.id || null,
+        productId: item.itemType === 'product' ? item.id : undefined,
+        serviceId: item.itemType === 'service' ? item.id : undefined,
+        type: 'VIEW'
+      })
+    }).catch(() => {});
   };
 
   if (loading) {
@@ -77,13 +99,13 @@ export default function Recommendations() {
           <div
             key={item.id}
             className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md hover:border-indigo-300 transition-all group cursor-pointer"
-            onMouseEnter={() => logInteraction(item, 'VIEW')}
-            onClick={() => logInteraction(item, 'CLICK')}
+            onMouseEnter={() => handleMouseEnter(item)}
+            onClick={() => handleClick(item)}
           >
             <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
               <img
                 src={item.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400'}
-                alt={item.title}
+                alt={item.name || item.title}
                 className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute top-2 left-2 bg-indigo-600 text-white text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded">
@@ -93,13 +115,13 @@ export default function Recommendations() {
 
             <div className="p-2.5">
               <h3 className="text-xs font-bold text-slate-900 line-clamp-1 group-hover:text-indigo-600 transition-colors mb-0.5">
-                {item.title || item.name}
+                {item.name || item.title}
               </h3>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-sm font-black text-slate-900">${item.price}</span>
-                <button className="text-slate-400 hover:text-indigo-500 transition-colors">
-                  <MousePointerClick className="w-3.5 h-3.5" />
-                </button>
+                <span className="text-[9px] text-slate-400 font-medium">
+                  {item.seller?.name || item.seller?.storeName || ''}
+                </span>
               </div>
             </div>
           </div>
