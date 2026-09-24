@@ -30,4 +30,9 @@ export declare class SystemConfigService {
         enableGoogle: boolean;
         require2FA: boolean;
     }>;
+    getPaymentMethods(): Promise<any>;
+    savePaymentMethods(methods: any[]): Promise<any[]>;
+    addPaymentMethod(data: any): Promise<any[]>;
+    updatePaymentMethod(id: string, data: any): Promise<any[]>;
+    deletePaymentMethod(id: string): Promise<any[]>;
 }

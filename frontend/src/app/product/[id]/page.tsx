@@ -11,6 +11,7 @@ import { ShieldCheck, Camera, Ruler, ZoomIn, Package, Star, Building2, MapPin, P
 import SmartQueueWidget from '@/components/SmartQueueWidget';
 import ReviewsSection from '@/components/ReviewsSection';
 import StarRating from '@/components/StarRating';
+import AdvertisementWidget from '@/components/AdvertisementWidget';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -183,7 +184,7 @@ export default function ProductDetails() {
   return (
     <div className="max-w-[1400px] mx-auto p-6 lg:p-10 bg-white relative">
       
-      {/* Elite Toggle removed for real auth */}
+      <AdvertisementWidget position="PRODUCT_PAGE" className="mb-8" />
       
       {/* Top Section: Images and Details */}
       <div className="flex flex-col lg:flex-row gap-10">

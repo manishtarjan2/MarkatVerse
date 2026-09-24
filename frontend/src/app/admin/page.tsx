@@ -16,9 +16,7 @@ const defaultSettings = {
 
 export default function AdminDashboardPage() {
   const { allUsers } = useAuth();
-  const { currentAdminRole, canEdit, canToggleSector } = useAdminRole();
-  const [settings, setSettings] = useState(defaultSettings);
-  const [dummyStatus, setDummyStatus] = useState<boolean | null>(null);
+  const { currentAdminRole, canEdit } = useAdminRole();
   
   // States for real data aggregation
   const [totalVolume, setTotalVolume] = useState(0);
@@ -76,20 +74,7 @@ export default function AdminDashboardPage() {
         setRecentTransactions(allTx.slice(0, 10)); // Top 10 recent
       } catch (e) {
         console.error("Failed to fetch live aggregated data", e);
-      } finally {
         setIsLoading(false);
-      }
-    };
-
-    const fetchDummyStatus = async () => {
-      try {
-        const res = await fetch(`${API_URL}/products/dummy-status`);
-        if (res.ok) {
-          const data = await res.json();
-          setDummyStatus(data.enabled);
-        }
-      } catch (e) {
-        console.error("Failed to fetch dummy status", e);
       }
     };
 
@@ -98,35 +83,9 @@ export default function AdminDashboardPage() {
     } else {
       setIsLoading(false);
     }
-    fetchDummyStatus();
   }, [allUsers]);
 
-  const toggleSector = (id: string) => {
-    if (!canToggleSector()) return;
-    setSettings(prev => ({
-      ...prev,
-      sectors: prev.sectors.map(s => s.id === id ? { ...s, isActive: !s.isActive } : s)
-    }));
-  };
-
-  const handleDummyToggle = async (enable: boolean) => {
-    setDummyStatus(enable); // optimistic UI update
-    try {
-      const res = await fetch(`${API_URL}/products/toggle-dummy`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enable })
-      });
-      if (!res.ok) {
-        setDummyStatus(!enable); // revert on failure
-        alert('Failed to toggle dummy data.');
-      }
-    } catch(err) {
-      setDummyStatus(!enable);
-      alert('Error toggling dummy data.');
-    }
-  };
-
+  // Sector controls and dummy toggles removed
   return (
     <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full relative pb-10">
       
@@ -193,10 +152,10 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+      <div className="relative z-10">
         
         {/* Main Feed: Recent Transactions */}
-        <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col relative min-h-[400px]">
+        <div className="w-full bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col relative min-h-[400px]">
           <div className="absolute inset-0 opacity-[0.03] z-0" style={{
             backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
             backgroundSize: '40px 40px'
@@ -239,7 +198,9 @@ export default function AdminDashboardPage() {
                       <td className="p-4 pl-6 relative">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-indigo-500 transition-colors"></div>
                         <div className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">{tx.sellerName}</div>
-                        <div className="text-xs text-slate-500 font-mono mt-0.5">TX: {tx.id.slice(0, 8)}...</div>
+                        <div className="text-[10px] mt-1 font-mono flex items-center">
+                          <span className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700/50">TX-{tx.id.slice(0, 8).toUpperCase()}</span>
+                        </div>
                       </td>
                       <td className="p-4">
                         <div className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md inline-flex ${
@@ -267,88 +228,6 @@ export default function AdminDashboardPage() {
             )}
           </div>
         </div>
-
-        {/* Right Sidebar: Sector Controls & Status */}
-        <div className="space-y-6">
-          <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-2xl">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-indigo-400" /> Quick Sector Controls
-            </h3>
-            
-            {!canToggleSector() && (
-              <div className="mb-4 text-xs font-medium text-rose-400 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20">
-                You do not have permission to toggle global sectors.
-              </div>
-            )}
-
-            <div className="space-y-3">
-              {settings.sectors.map(sector => (
-                <div key={sector.id} className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-colors shadow-inner">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl drop-shadow-md">{sector.icon}</span>
-                    <div>
-                      <div className="text-sm font-bold text-white">{sector.name}</div>
-                      <div className={`text-[10px] font-black uppercase tracking-wider ${sector.isActive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {sector.isActive ? 'ONLINE' : 'OFFLINE'}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Master Toggle Switch */}
-                  <label className={`relative inline-flex items-center ${canToggleSector() ? 'cursor-pointer hover:scale-105 transition-transform' : 'cursor-not-allowed opacity-50'}`}>
-                    <input 
-                      type="checkbox" 
-                      className="sr-only peer" 
-                      checked={sector.isActive} 
-                      onChange={() => toggleSector(sector.id)}
-                      disabled={!canToggleSector()}
-                    />
-                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-2xl">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Database className="w-4 h-4 text-blue-400" /> Database Controls
-            </h3>
-            
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-colors shadow-inner">
-              <div className="flex items-center gap-3">
-                <span className="text-xl drop-shadow-md">🧪</span>
-                <div>
-                  <div className="text-sm font-bold text-white">Dummy Data</div>
-                  <div className={`text-[10px] font-black uppercase tracking-wider ${dummyStatus === true ? 'text-emerald-400' : dummyStatus === false ? 'text-rose-400' : 'text-slate-500'}`}>
-                    {dummyStatus === true ? 'ENABLED' : dummyStatus === false ? 'DISABLED' : 'LOADING...'}
-                  </div>
-                </div>
-              </div>
-              
-              <label className={`relative inline-flex items-center cursor-pointer hover:scale-105 transition-transform ${dummyStatus === null ? 'opacity-50' : ''}`}>
-                <input 
-                  type="checkbox" 
-                  className="sr-only peer" 
-                  checked={dummyStatus || false} 
-                  onChange={(e) => handleDummyToggle(e.target.checked)}
-                  disabled={dummyStatus === null}
-                />
-                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-              </label>
-            </div>
-          </div>
-
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-8 rounded-3xl shadow-[0_0_30px_rgba(16,185,129,0.15)] relative overflow-hidden backdrop-blur-md">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/20 rounded-full blur-[50px]"></div>
-            <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2 relative z-10">
-              <ShieldCheck className="w-5 h-5" /> System Health
-            </h3>
-            <div className="text-4xl font-black text-white mb-2 relative z-10 drop-shadow-md">99.9%</div>
-            <p className="text-emerald-400/90 text-sm font-medium relative z-10">All core services are operating normally. Database cluster stable.</p>
-          </div>
-        </div>
-
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { Search, Edit2, Trash2, Plus, GitMerge } from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -12,12 +13,13 @@ interface Workflow {
   updatedAt: string;
 }
 
-export default function OperationsgtWorkflowsPage() {
+export default function OperationsWorkflowsPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [newWorkflow, setNewWorkflow] = useState({ name: '', description: '', version: 1, steps: '[]' });
   const [submitting, setSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchWorkflows();
@@ -85,29 +87,52 @@ export default function OperationsgtWorkflowsPage() {
     }
   };
 
+  const filteredWorkflows = workflows.filter(w => 
+    w.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    w.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="max-w-6xl mx-auto w-full pb-20">
-      <header className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Operations &gt; Workflows</h1>
-          <p className="text-slate-500 mt-2 text-sm">Manage and configure automated workflows and booking logic.</p>
+    <div className="max-w-7xl mx-auto w-full pb-20 animate-in fade-in zoom-in-95 duration-500 relative">
+      {/* Background Glow Elements */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+      <header className="flex justify-between items-end mb-10 relative z-10 border-b border-white/5 pb-8">
+        <div className="flex gap-4 items-center">
+          <div className="p-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-2xl border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+            <GitMerge className="w-8 h-8 text-emerald-400" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">Workflows</h1>
+            <p className="text-slate-400 mt-2 text-sm font-medium">Manage and configure automated workflows and booking logic.</p>
+          </div>
         </div>
         <button 
           onClick={() => setShowModal(true)}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center gap-2 hover:-translate-y-0.5"
         >
-          + Add New Workflow
+          <Plus className="w-5 h-5" /> Add New Workflow
         </button>
       </header>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-200 flex justify-between bg-slate-50">
-          <input type="text" placeholder="Search..." className="bg-white border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500 w-64" />
+      <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative">
+        <div className="p-6 border-b border-white/5 bg-slate-900/50 flex justify-between">
+          <div className="relative w-full max-w-md">
+            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input 
+              type="text" 
+              placeholder="Search workflows..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition-colors shadow-inner" 
+            />
+          </div>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase tracking-widest font-black">
+            <thead className="bg-slate-900/80 border-b border-white/10 text-slate-400 text-[10px] uppercase tracking-widest font-black">
               <tr>
                 <th className="p-4 pl-6">ID</th>
                 <th className="p-4">Name / Title</th>
@@ -117,27 +142,56 @@ export default function OperationsgtWorkflowsPage() {
                 <th className="p-4 pr-6 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {loading ? (
-                <tr><td colSpan={6} className="p-8 text-center text-slate-500">Loading workflows...</td></tr>
-              ) : workflows.length === 0 ? (
-                <tr><td colSpan={6} className="p-8 text-center text-slate-500">No workflows found. Create one to get started.</td></tr>
+                <tr>
+                  <td colSpan={6} className="p-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                      <div className="font-bold text-white">Loading workflows...</div>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredWorkflows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <GitMerge className="w-12 h-12 text-slate-600 mb-4" />
+                      <div className="font-bold text-white text-lg">No workflows found</div>
+                      <p className="text-sm text-slate-400 mt-1">Create one to get started, or try a different search.</p>
+                    </div>
+                  </td>
+                </tr>
               ) : (
-                workflows.map(w => (
-                  <tr key={w.id} className="hover:bg-slate-50 transition-all">
-                    <td className="p-4 pl-6 font-mono text-xs text-slate-400">...{w.id.slice(-6)}</td>
+                filteredWorkflows.map(w => (
+                  <tr key={w.id} className="hover:bg-white/[0.02] transition-colors group">
+                    <td className="p-4 pl-6 font-mono text-xs text-slate-500">
+                      ...{w.id.slice(-6)}
+                    </td>
                     <td className="p-4">
-                      <div className="font-bold text-slate-900">{w.name}</div>
-                      <div className="text-xs text-slate-500">{w.description}</div>
+                      <div className="font-bold text-white group-hover:text-emerald-400 transition-colors">{w.name}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">{w.description}</div>
                     </td>
-                    <td className="p-4 text-slate-600 font-medium">v{w.version}</td>
-                    <td className="p-4 text-slate-600">
-                      {Array.isArray(w.steps) ? w.steps.length : 0} step(s)
+                    <td className="p-4">
+                      <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded text-xs font-bold font-mono">
+                        v{w.version}
+                      </span>
                     </td>
-                    <td className="p-4 text-slate-500 text-sm">{new Date(w.updatedAt).toLocaleDateString()}</td>
+                    <td className="p-4">
+                      <span className="bg-slate-800 text-slate-300 border border-slate-700 px-2.5 py-1 rounded-full text-xs font-bold shadow-inner">
+                        {Array.isArray(w.steps) ? w.steps.length : 0} step(s)
+                      </span>
+                    </td>
+                    <td className="p-4 text-slate-400 text-sm">{new Date(w.updatedAt).toLocaleDateString()}</td>
                     <td className="p-4 pr-6 text-right">
-                      <button className="text-slate-400 hover:text-blue-600 px-2 font-medium transition-colors">Edit</button>
-                      <button onClick={() => handleDelete(w.id)} className="text-slate-400 hover:text-rose-600 px-2 font-medium transition-colors">Delete</button>
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-700">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(w.id)} className="p-2 bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 rounded-lg transition-colors border border-slate-700 hover:border-rose-500/30">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -148,29 +202,32 @@ export default function OperationsgtWorkflowsPage() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl">
-            <h2 className="text-2xl font-black text-slate-900 mb-6">Create New Workflow</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 rounded-3xl p-8 w-full max-w-lg border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] transform animate-in zoom-in-95 duration-300">
+            <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+              <Plus className="w-6 h-6 text-emerald-400" />
+              Create New Workflow
+            </h2>
+            <form onSubmit={handleCreate} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Name</label>
-                <input required type="text" value={newWorkflow.name} onChange={e => setNewWorkflow({...newWorkflow, name: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500" placeholder="e.g. SALON_BOOKING_FLOW" />
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Name</label>
+                <input required type="text" value={newWorkflow.name} onChange={e => setNewWorkflow({...newWorkflow, name: e.target.value})} className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:border-emerald-500 text-white font-bold transition-colors" placeholder="e.g. SALON_BOOKING_FLOW" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                <input type="text" value={newWorkflow.description} onChange={e => setNewWorkflow({...newWorkflow, description: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500" placeholder="Describe the workflow..." />
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Description</label>
+                <input type="text" value={newWorkflow.description} onChange={e => setNewWorkflow({...newWorkflow, description: e.target.value})} className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:border-emerald-500 text-white transition-colors" placeholder="Describe the workflow..." />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Version</label>
-                <input required type="number" min="1" value={newWorkflow.version} onChange={e => setNewWorkflow({...newWorkflow, version: parseInt(e.target.value)})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500" />
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Version</label>
+                <input required type="number" min="1" value={newWorkflow.version} onChange={e => setNewWorkflow({...newWorkflow, version: parseInt(e.target.value)})} className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:border-emerald-500 text-white font-bold font-mono transition-colors" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Steps (JSON)</label>
-                <textarea required rows={5} value={newWorkflow.steps} onChange={e => setNewWorkflow({...newWorkflow, steps: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-sm" placeholder="[{}]" />
+                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">Steps (JSON)</label>
+                <textarea required rows={5} value={newWorkflow.steps} onChange={e => setNewWorkflow({...newWorkflow, steps: e.target.value})} className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl focus:outline-none focus:border-emerald-500 font-mono text-sm text-emerald-400 transition-colors" placeholder="[{}]" />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
-                <button type="submit" disabled={submitting} className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors disabled:opacity-50">
+              <div className="flex gap-4 pt-6">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 border border-white/10 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-slate-300 transition-colors">Cancel</button>
+                <button type="submit" disabled={submitting} className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all disabled:opacity-50 flex items-center justify-center">
                   {submitting ? 'Saving...' : 'Create Workflow'}
                 </button>
               </div>

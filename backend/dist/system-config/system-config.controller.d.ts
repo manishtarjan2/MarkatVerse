@@ -25,4 +25,8 @@ export declare class SystemConfigController {
         enableGoogle: boolean;
         require2FA: boolean;
     }>;
+    getPayment(): Promise<any>;
+    addPaymentMethod(body: any): Promise<any[]>;
+    updatePaymentMethod(id: string, body: any): Promise<any[]>;
+    deletePaymentMethod(id: string): Promise<any[]>;
 }

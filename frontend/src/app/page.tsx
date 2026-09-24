@@ -6,6 +6,7 @@ import LiveBookingWidget from "@/components/LiveBookingWidget";
 import dynamic from 'next/dynamic';
 import ScrollReveal from "@/components/ScrollReveal";
 import Recommendations from "@/components/Recommendations";
+import BannerSlideshow from "@/components/BannerSlideshow";
 
 const ProductGrid = dynamic(() => import('@/components/ProductGrid'));
 
@@ -62,25 +63,7 @@ export default async function Home() {
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col overflow-hidden">
         
         {/* Banners */}
-        {banners.length > 0 && (
-          <div className="w-full mb-8 relative rounded-3xl overflow-hidden shadow-sm">
-            <div className="flex snap-x snap-mandatory overflow-x-auto hide-scrollbar">
-              {banners.map((banner: any) => (
-                <div key={banner.id} className="min-w-full snap-start relative h-[300px] md:h-[400px]">
-                  <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
-                    <h2 className="text-3xl md:text-5xl font-black text-white mb-2">{banner.title}</h2>
-                    {banner.linkUrl && (
-                      <a href={banner.linkUrl} className="inline-block mt-4 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-xl font-bold transition-all w-fit">
-                        Explore Offer
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <BannerSlideshow banners={banners} />
 
         {/* Advertisements */}
         {ads.length > 0 && (

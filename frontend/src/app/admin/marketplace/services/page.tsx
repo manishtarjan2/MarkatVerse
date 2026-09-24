@@ -113,7 +113,9 @@ export default function MarketplaceServicesPage() {
                 <tr key={service.id} className="hover:bg-slate-700/30 transition-all group">
                   <td className="p-4 pl-6">
                     <div className="font-bold text-white text-sm">{service.name}</div>
-                    <div className="text-xs text-slate-500 mt-0.5 font-mono">{service.id.slice(0,8)}...</div>
+                    <div className="text-[10px] mt-1 font-mono flex items-center">
+                      <span className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700/50">SRV-{service.id.slice(0, 5).toUpperCase()}</span>
+                    </div>
                   </td>
                   <td className="p-4">
                     <div className="text-sm text-slate-300">{service.seller}</div>

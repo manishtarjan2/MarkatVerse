@@ -136,15 +136,19 @@ export default function AdminOrdersPage() {
                         <ShoppingBag className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm font-mono">{order.orderNumber || `${order.id.slice(0,8)}...`}</div>
-                        <div className="text-xs text-slate-500 mt-0.5">{new Date(order.createdAt || Date.now()).toLocaleDateString()}</div>
+                        <div className="font-bold text-white text-sm font-mono flex items-center gap-1.5">
+                          <span className="text-amber-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">{order.orderNumber || `ORD-${order.id.slice(0,5)}`}</span>
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1">{new Date(order.createdAt || Date.now()).toLocaleDateString()}</div>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded border border-slate-700">
-                      {order.customerId?.slice(0,8) || 'GUEST'}
-                    </span>
+                    <div className="text-[10px] font-mono flex items-center">
+                      <span className="text-blue-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">
+                        {order.buyerId || order.customerId || 'GUEST'}
+                      </span>
+                    </div>
                   </td>
                   <td className="p-4 font-bold text-white">
                     ₹{order.totalAmount || 0}

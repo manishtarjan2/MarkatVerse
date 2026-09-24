@@ -8,10 +8,11 @@ export default function CommercialgtCouponsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: '', code: '', discount: 0, type: 'PERCENTAGE', status: 'ACTIVE' });
   const [isEditing, setIsEditing] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   const fetchItems = async () => {
     try {
-      const res = await fetch('http://localhost:3001/commercial/coupons');
+      const res = await fetch(`${API_URL}/commercial/coupons`);
       if (res.ok) {
         const data = await res.json();
         setItems(data);
@@ -45,8 +46,8 @@ export default function CommercialgtCouponsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const url = isEditing 
-      ? `http://localhost:3001/commercial/coupons/${formData.id}`
-      : 'http://localhost:3001/commercial/coupons';
+      ? `${API_URL}/commercial/coupons/${formData.id}`
+      : `${API_URL}/commercial/coupons`;
     const method = isEditing ? 'PATCH' : 'POST';
     const { id, discount, ...dataToSend } = formData;
     try {
@@ -67,7 +68,7 @@ export default function CommercialgtCouponsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const res = await fetch(`http://localhost:3001/commercial/coupons/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/commercial/coupons/${id}`, { method: 'DELETE' });
       if (res.ok) fetchItems();
     } catch (error) {
       console.error("Failed to delete", error);
@@ -77,7 +78,7 @@ export default function CommercialgtCouponsPage() {
   const handleToggleStatus = async (item: any) => {
     const newStatus = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
-      const res = await fetch(`http://localhost:3001/commercial/coupons/${item.id}`, {
+      const res = await fetch(`${API_URL}/commercial/coupons/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

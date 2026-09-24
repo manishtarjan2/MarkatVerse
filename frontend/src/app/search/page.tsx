@@ -3,6 +3,8 @@ import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
 import ProductGrid from '@/components/ProductGrid';
 import ServiceDirectoryList from '@/components/ServiceDirectoryList';
+import SidebarBannerWidget from '@/components/SidebarBannerWidget';
+import AdvertisementWidget from '@/components/AdvertisementWidget';
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import { SlidersHorizontal, MapPin } from 'lucide-react';
 
@@ -322,8 +324,17 @@ function SearchContent() {
       </div>
 
       {/* Main Results Area */}
-      <main className="flex-1">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+      <div className="flex flex-col md:flex-row gap-6 flex-1">
+        
+        {/* Optional Sidebar Space for Banners on Desktop */}
+        <div className="hidden md:block w-64 shrink-0 space-y-4">
+           <SidebarBannerWidget />
+           <AdvertisementWidget position="SIDEBAR" />
+        </div>
+
+        <main className="flex-1">
+          <AdvertisementWidget position="SEARCH_PAGE" className="mb-6" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Search Results</h1>
             <p className="text-slate-500 font-medium">
@@ -351,7 +362,8 @@ function SearchContent() {
         ) : (
           <ProductGrid products={filteredProducts} />
         )}
-      </main>
+        </main>
+      </div>
 
     </div>
   );

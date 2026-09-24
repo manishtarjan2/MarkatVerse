@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Patch, Body, Post, Delete, Param } from '@nestjs/common';
 import { SystemConfigService } from './system-config.service.js';
 let SystemConfigController = class SystemConfigController {
     systemConfigService;
@@ -28,6 +28,18 @@ let SystemConfigController = class SystemConfigController {
     }
     updateAuth(body) {
         return this.systemConfigService.updateAuthConfig(body);
+    }
+    getPayment() {
+        return this.systemConfigService.getPaymentMethods();
+    }
+    addPaymentMethod(body) {
+        return this.systemConfigService.addPaymentMethod(body);
+    }
+    updatePaymentMethod(id, body) {
+        return this.systemConfigService.updatePaymentMethod(id, body);
+    }
+    deletePaymentMethod(id) {
+        return this.systemConfigService.deletePaymentMethod(id);
     }
 };
 __decorate([
@@ -56,6 +68,34 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], SystemConfigController.prototype, "updateAuth", null);
+__decorate([
+    Get('payment'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "getPayment", null);
+__decorate([
+    Post('payment'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "addPaymentMethod", null);
+__decorate([
+    Patch('payment/:id'),
+    __param(0, Param('id')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "updatePaymentMethod", null);
+__decorate([
+    Delete('payment/:id'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "deletePaymentMethod", null);
 SystemConfigController = __decorate([
     Controller('system-config'),
     __metadata("design:paramtypes", [SystemConfigService])

@@ -191,7 +191,7 @@ export default function AdminLocationsPage() {
               <p className="text-sm text-slate-500 italic">No active sectors found to configure.</p>
             )}
 
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {activeSectors.map(sector => {
                 const currentVal = sectorRadii[sector.name] ?? defaultRadius;
                 return (
@@ -237,40 +237,42 @@ export default function AdminLocationsPage() {
           </div>
 
           <div className="ml-16 space-y-8">
-            {/* Strict Radius Enforcement */}
-            <div className="flex items-center justify-between border-b border-slate-700/50 pb-6">
-              <div>
-                <h3 className="text-white font-bold mb-1">Strict Radius Enforcement</h3>
-                <p className="text-sm text-slate-400">Lock the maximum radius. Users will not be able to override search beyond your configured maximums.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-b border-slate-700/50 pb-6">
+              {/* Strict Radius Enforcement */}
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-white font-bold mb-1">Strict Radius Enforcement</h3>
+                  <p className="text-sm text-slate-400">Lock the maximum radius. Users will not be able to override search beyond your configured maximums.</p>
+                </div>
+                <label className={`relative inline-flex items-center cursor-pointer flex-shrink-0 ${!hasSettingsPermission && 'opacity-50 cursor-not-allowed'}`}>
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={strictRadius}
+                    disabled={!hasSettingsPermission}
+                    onChange={(e) => setStrictRadius(e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+                </label>
               </div>
-              <label className={`relative inline-flex items-center cursor-pointer ${!hasSettingsPermission && 'opacity-50 cursor-not-allowed'}`}>
-                <input 
-                  type="checkbox" 
-                  className="sr-only peer" 
-                  checked={strictRadius}
-                  disabled={!hasSettingsPermission}
-                  onChange={(e) => setStrictRadius(e.target.checked)}
-                />
-                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
-              </label>
-            </div>
 
-            {/* Out-of-Range Visibility */}
-            <div className="flex items-center justify-between border-b border-slate-700/50 pb-6">
-              <div>
-                <h3 className="text-white font-bold mb-1">Out-of-Range Visibility</h3>
-                <p className="text-sm text-slate-400">Show out-of-range products at the bottom of search results instead of completely hiding them.</p>
+              {/* Out-of-Range Visibility */}
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-white font-bold mb-1">Out-of-Range Visibility</h3>
+                  <p className="text-sm text-slate-400">Show out-of-range products at the bottom of search results instead of completely hiding them.</p>
+                </div>
+                <label className={`relative inline-flex items-center cursor-pointer flex-shrink-0 ${!hasSettingsPermission && 'opacity-50 cursor-not-allowed'}`}>
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={showOutOfRange}
+                    disabled={!hasSettingsPermission}
+                    onChange={(e) => setShowOutOfRange(e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+                </label>
               </div>
-              <label className={`relative inline-flex items-center cursor-pointer ${!hasSettingsPermission && 'opacity-50 cursor-not-allowed'}`}>
-                <input 
-                  type="checkbox" 
-                  className="sr-only peer" 
-                  checked={showOutOfRange}
-                  disabled={!hasSettingsPermission}
-                  onChange={(e) => setShowOutOfRange(e.target.checked)}
-                />
-                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
-              </label>
             </div>
 
             {/* Distance vs Rating Weight */}

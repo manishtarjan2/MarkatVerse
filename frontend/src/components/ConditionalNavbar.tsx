@@ -2,6 +2,7 @@
 import { usePathname } from 'next/navigation';
 import Navbar from './Navbar';
 import BottomNav from './BottomNav';
+import TopBannerWidget from './TopBannerWidget';
 
 export default function ConditionalNavbar() {
   const pathname = usePathname();
@@ -21,6 +22,7 @@ export default function ConditionalNavbar() {
 
   return (
     <>
+      <TopBannerWidget />
       <Navbar />
       <BottomNav />
     </>

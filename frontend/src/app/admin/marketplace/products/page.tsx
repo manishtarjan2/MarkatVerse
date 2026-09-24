@@ -197,14 +197,18 @@ export default function AdminProductsPage() {
                       </div>
                       <div>
                         <div className="font-bold text-white text-sm">{product.name}</div>
-                        <div className="text-xs text-slate-500 mt-0.5 font-mono">ID: {product.id.slice(0,8)}...</div>
+                        <div className="text-[10px] mt-1 font-mono flex items-center">
+                          <span className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700/50">PRD-{product.id.slice(0, 5).toUpperCase()}</span>
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded border border-slate-700">
-                      {product.sellerId.slice(0,8)}...
-                    </span>
+                    <div className="text-[10px] font-mono flex items-center">
+                      <span className="text-blue-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">
+                        {product.seller?.markatId || `USR-${product.sellerId.slice(0, 5).toUpperCase()}`}
+                      </span>
+                    </div>
                   </td>
                   <td className="p-4 font-bold text-indigo-300">
                     ₹{product.price}

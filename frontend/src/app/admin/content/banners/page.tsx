@@ -167,9 +167,53 @@ export default function ContentBannersPage() {
           <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 w-[500px] shadow-2xl">
             <h2 className="text-2xl font-bold text-white mb-4">{editingId ? 'Edit Banner' : 'Add Banner'}</h2>
             <form onSubmit={handleSave} className="flex flex-col gap-4">
-              <input type="text" placeholder="Banner Title" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500" />
-              <input type="text" placeholder="Image URL" required value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500" />
-              <input type="text" placeholder="Link URL (e.g. /category/shoes)" value={formData.linkUrl} onChange={e => setFormData({...formData, linkUrl: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500" />
+              <div>
+                <input type="text" placeholder="Banner Title" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Image (Drag & Drop or URL)</label>
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+                  <div 
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setFormData({...formData, imageUrl: reader.result as string});
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="sm:w-48 border-2 border-dashed border-slate-600 rounded-xl flex items-center justify-center text-center hover:border-emerald-500 hover:bg-slate-800/50 transition-all group relative overflow-hidden"
+                  >
+                    {formData.imageUrl && formData.imageUrl.startsWith('data:image') ? (
+                      <img src={formData.imageUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-30 transition-opacity" />
+                    ) : null}
+                    <div className="flex items-center gap-2 z-10 pointer-events-none px-2 py-3">
+                      <span className="text-xl drop-shadow-md">📸</span>
+                      <span className="text-[10px] font-bold text-slate-300 leading-tight drop-shadow-md">Drop image or<br/>click to upload</span>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setFormData({...formData, imageUrl: reader.result as string});
+                          reader.readAsDataURL(file);
+                        }
+                      }} 
+                    />
+                  </div>
+                  <input type="text" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-all text-sm min-w-0" placeholder="Or paste image URL here..." />
+                </div>
+              </div>
+              <div>
+                <input type="text" placeholder="Link URL (e.g. /category/shoes)" value={formData.linkUrl} onChange={e => setFormData({...formData, linkUrl: e.target.value})} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500" />
+              </div>
               <select value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500">
                 <option value="HOME_HERO">Home Hero</option>
                 <option value="SIDEBAR">Sidebar</option>

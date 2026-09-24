@@ -63,6 +63,48 @@ let SystemConfigService = class SystemConfigService {
         }
         return this.getAuthConfig();
     }
+    async getPaymentMethods() {
+        const record = await this.prisma.systemConfig.findUnique({ where: { key: 'PAYMENT_METHODS' } });
+        if (!record)
+            return [];
+        try {
+            return JSON.parse(record.value);
+        }
+        catch {
+            return [];
+        }
+    }
+    async savePaymentMethods(methods) {
+        await this.prisma.systemConfig.upsert({
+            where: { key: 'PAYMENT_METHODS' },
+            update: { value: JSON.stringify(methods) },
+            create: { key: 'PAYMENT_METHODS', value: JSON.stringify(methods), description: 'Dynamic Payment Methods' },
+        });
+        return methods;
+    }
+    async addPaymentMethod(data) {
+        const methods = await this.getPaymentMethods();
+        const newMethod = {
+            ...data,
+            id: 'PMT-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+            updatedAt: new Date().toISOString()
+        };
+        methods.push(newMethod);
+        return this.savePaymentMethods(methods);
+    }
+    async updatePaymentMethod(id, data) {
+        const methods = await this.getPaymentMethods();
+        const index = methods.findIndex((m) => m.id === id);
+        if (index === -1)
+            throw new Error('Payment method not found');
+        methods[index] = { ...methods[index], ...data, id, updatedAt: new Date().toISOString() };
+        return this.savePaymentMethods(methods);
+    }
+    async deletePaymentMethod(id) {
+        const methods = await this.getPaymentMethods();
+        const filtered = methods.filter((m) => m.id !== id);
+        return this.savePaymentMethods(filtered);
+    }
 };
 SystemConfigService = __decorate([
     Injectable(),

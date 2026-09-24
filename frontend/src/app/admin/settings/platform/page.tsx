@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useSettings } from '@/context/SettingsContext';
 import { useAdminRole } from '@/context/AdminRoleContext';
 import { useProducts } from '@/context/ProductContext';
-import { ShieldAlert, Info, Edit2, X, Check } from 'lucide-react';
+import { ShieldAlert, Info, Edit2, X, Check, Database, MapPin, Zap, Settings2 } from 'lucide-react';
 
 export default function SettingsPlatformPage() {
   const { sectors, toggleSector, editSector, systemConfig, updateSystemConfig } = useSettings();
@@ -14,6 +14,8 @@ export default function SettingsPlatformPage() {
 
   const [isDummyActive, setIsDummyActive] = useState<boolean>(false);
   const [editingSectorId, setEditingSectorId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
 
   React.useEffect(() => {
     const fetchDummyStatus = async () => {
@@ -30,8 +32,6 @@ export default function SettingsPlatformPage() {
     };
     fetchDummyStatus();
   }, []);
-  const [editName, setEditName] = useState('');
-  const [editDesc, setEditDesc] = useState('');
 
   const handleEditClick = (sector: any) => {
     if (!hasTogglePermission) return;
@@ -67,151 +67,220 @@ export default function SettingsPlatformPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full">
-      <header className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Platform Sectors</h1>
-          <p className="text-slate-400 mt-2 text-sm">Manage global settings, turn major platform features on and off, and configure sectors.</p>
+    <div className="max-w-7xl mx-auto animate-in fade-in zoom-in-95 duration-500 w-full relative pb-20">
+      {/* Dynamic Background Elements */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+
+      <header className="flex justify-between items-end mb-10 relative z-10 border-b border-white/5 pb-8">
+        <div className="flex gap-4 items-center">
+          <div className="p-4 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl border border-indigo-500/30 shadow-[0_0_30px_rgba(99,102,241,0.15)]">
+            <Settings2 className="w-8 h-8 text-indigo-400" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">Platform Settings</h1>
+            <p className="text-slate-400 mt-2 text-sm font-medium">Precision configuration controls for global system behavior.</p>
+          </div>
         </div>
       </header>
 
       {!hasTogglePermission && (
-        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl flex items-center gap-3 mb-8">
-          <ShieldAlert className="w-5 h-5" />
-          <p className="text-sm font-medium">You do not have permission to toggle or edit platform sectors. Contact a Super Admin.</p>
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 p-5 rounded-2xl flex items-center gap-4 mb-10 backdrop-blur-md shadow-[0_0_20px_rgba(244,63,94,0.1)]">
+          <ShieldAlert className="w-6 h-6 animate-pulse" />
+          <div>
+            <h4 className="font-bold">Insufficient Permissions</h4>
+            <p className="text-sm opacity-80">You do not have permission to toggle or edit platform configuration. Contact a Super Admin.</p>
+          </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Dummy Data Toggle */}
-        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm flex flex-col justify-between h-full relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl transform translate-x-8 -translate-y-8" />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white capitalize">Dummy Test Data</h3>
-              <button
-                onClick={toggleDummyData}
-                disabled={!hasTogglePermission}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${isDummyActive ? 'bg-amber-500' : 'bg-slate-600'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isDummyActive ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Core Controls Column */}
+        <div className="lg:col-span-4 flex flex-col gap-8">
+          
+          {/* Dummy Data Toggle */}
+          <div className="group bg-slate-900/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-amber-500/40 hover:shadow-[0_0_40px_rgba(245,158,11,0.1)]">
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-amber-500/20 rounded-full blur-[50px] group-hover:bg-amber-500/30 transition-colors" />
+            <div className="relative z-10 flex flex-col h-full">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                    <Database className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Dummy Data</h3>
+                </div>
+                <label className={`relative inline-flex items-center ${hasTogglePermission ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-50'} transition-transform`}>
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer" 
+                    checked={isDummyActive} 
+                    onChange={toggleDummyData}
+                    disabled={!hasTogglePermission}
+                  />
+                  <div className="w-14 h-7 bg-slate-800 border border-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-[20px] after:w-[20px] after:transition-all peer-checked:bg-amber-500 peer-checked:after:bg-white peer-checked:border-amber-400"></div>
+                </label>
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed mb-6">
+                Inject global sandbox data for testing algorithms, layouts, and performance. Disabling this removes all non-production entries.
+              </p>
+              <div className="mt-auto pt-5 border-t border-white/5 flex justify-between items-center">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-500">Status</span>
+                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${isDummyActive ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                  {isDummyActive ? 'Active' : 'Suspended'}
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-slate-400 line-clamp-3">
-              Enable or disable the dummy sellers, products, and services across the entire platform.
-            </p>
           </div>
-          <div className="mt-6 pt-4 border-t border-slate-700/50 flex justify-between items-center relative z-10">
-            <span className={`text-xs font-bold px-2 py-1 rounded ${isDummyActive ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-500/10 text-slate-400'}`}>
-              {isDummyActive ? 'Active' : 'Suspended'}
-            </span>
-            <span className="text-xs text-slate-500">Global Sandbox</span>
-          </div>
-        </div>
-        
-        {/* Global Search Radius */}
-        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm flex flex-col justify-between h-full relative overflow-hidden">
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white capitalize">Nearby Search Radius</h3>
+          
+          {/* Global Search Radius */}
+          <div className="group bg-slate-900/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-blue-500/40 hover:shadow-[0_0_40px_rgba(59,130,246,0.1)]">
+            <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-500/20 rounded-full blur-[50px] group-hover:bg-blue-500/30 transition-colors" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                  <MapPin className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white">Search Radius</h3>
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed mb-6">
+                Define the absolute geographical limit (in kilometers) for product and service discovery.
+              </p>
+              
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    value={systemConfig?.searchRadius || 50}
+                    onChange={(e) => updateSystemConfig({ ...systemConfig, searchRadius: parseInt(e.target.value) || 50 })}
+                    disabled={!hasTogglePermission}
+                    className="w-full bg-slate-950/50 border border-slate-700 rounded-xl pl-5 pr-12 py-3 text-white font-black text-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">KM</span>
+                </div>
+              </div>
+              
+              <label className="flex items-center gap-3 group/label cursor-pointer p-4 rounded-xl bg-slate-950/30 border border-white/5 hover:border-blue-500/30 transition-colors">
+                <div className="relative flex items-center">
+                  <input 
+                    type="checkbox" 
+                    checked={systemConfig?.strictRadius || false} 
+                    onChange={(e) => updateSystemConfig({ ...systemConfig, strictRadius: e.target.checked })}
+                    disabled={!hasTogglePermission}
+                    className="peer sr-only"
+                  />
+                  <div className="w-5 h-5 border-2 border-slate-600 rounded bg-transparent peer-checked:bg-blue-500 peer-checked:border-blue-500 transition-colors"></div>
+                  <Check className="absolute w-3.5 h-3.5 text-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-opacity" />
+                </div>
+                <span className="text-sm font-medium text-slate-300 group-hover/label:text-white transition-colors">Enforce strict boundary limits</span>
+              </label>
             </div>
-            <p className="text-sm text-slate-400 mb-4">
-              Set the maximum distance (km) to show services/products. Out of range items are pushed to the bottom.
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={systemConfig?.searchRadius || 50}
-                onChange={(e) => updateSystemConfig({ ...systemConfig, searchRadius: parseInt(e.target.value) || 50 })}
-                disabled={!hasTogglePermission}
-                className="w-24 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-indigo-500"
-              />
-              <span className="text-slate-400 flex items-center">km</span>
-            </div>
-            <label className="flex items-center gap-2 mt-4 text-sm text-slate-300">
-              <input 
-                type="checkbox" 
-                checked={systemConfig?.strictRadius || false} 
-                onChange={(e) => updateSystemConfig({ ...systemConfig, strictRadius: e.target.checked })}
-                disabled={!hasTogglePermission}
-                className="rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500"
-              />
-              Strict limit (hide items outside radius)
-            </label>
           </div>
         </div>
 
-        {/* Dynamic Sectors */}
-        {sectors.map(sector => (
-          <div key={sector.id} className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm flex flex-col justify-between h-full transition-all hover:-translate-y-1">
-            {editingSectorId === sector.id ? (
-              <div className="flex flex-col h-full">
-                <div className="mb-4 space-y-3">
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full bg-slate-900 border border-indigo-500 rounded-lg px-3 py-2 text-white font-bold focus:outline-none text-xl"
-                    placeholder="Sector Name"
-                  />
-                  <textarea
-                    value={editDesc}
-                    onChange={(e) => setEditDesc(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 text-sm focus:outline-none focus:border-indigo-500 h-24 resize-none"
-                    placeholder="Sector Description"
-                  />
-                </div>
-                <div className="mt-auto pt-4 border-t border-slate-700/50 flex justify-end gap-2">
-                  <button onClick={handleCancelEdit} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
-                    <X className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => handleSaveEdit(sector.id)} className="p-2 text-emerald-400 hover:text-white hover:bg-emerald-600 rounded-lg transition-colors">
-                    <Check className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-white capitalize">{sector.name}</h3>
-                    <div className="flex items-center gap-3">
-                      {hasTogglePermission && (
-                        <button onClick={() => handleEditClick(sector)} className="text-slate-500 hover:text-indigo-400 transition-colors">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => hasTogglePermission && toggleSector(sector.id, !sector.isActive)}
-                        disabled={!hasTogglePermission}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${sector.isActive ? 'bg-emerald-500' : 'bg-slate-600'}`}
-                      >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${sector.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+        {/* Sectors Grid Column */}
+        <div className="lg:col-span-8 flex flex-col">
+          <div className="flex items-center gap-3 mb-6 px-2">
+            <Zap className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-xl font-bold text-white tracking-wide">Platform Sectors</h2>
+            <div className="flex-1 border-b border-white/10 ml-4"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {sectors.map(sector => (
+              <div key={sector.id} className="group bg-slate-900/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/20 relative overflow-hidden flex flex-col h-full">
+                {sector.isActive && <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] pointer-events-none" />}
+                
+                {editingSectorId === sector.id ? (
+                  <div className="flex flex-col h-full relative z-10 animate-in fade-in duration-200">
+                    <div className="mb-5 space-y-4 flex-1">
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5 block">Sector Name</label>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="w-full bg-black/40 border border-indigo-500/50 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-indigo-400 transition-colors"
+                          placeholder="e.g. Retail"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5 block">Description</label>
+                        <textarea
+                          value={editDesc}
+                          onChange={(e) => setEditDesc(e.target.value)}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-slate-300 text-sm focus:outline-none focus:border-indigo-400 transition-colors h-28 resize-none"
+                          placeholder="Sector details..."
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <button onClick={handleCancelEdit} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                        <X className="w-4 h-4" /> Cancel
+                      </button>
+                      <button onClick={() => handleSaveEdit(sector.id)} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2">
+                        <Check className="w-4 h-4" /> Save Edit
                       </button>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-400 line-clamp-3">
-                    {sector.description || `Manage the settings and availability for the ${sector.name} sector of the platform.`}
-                  </p>
+                ) : (
+                  <div className="flex flex-col h-full relative z-10">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-2xl font-black text-white capitalize tracking-tight">{sector.name}</h3>
+                      <div className="flex items-center gap-3 bg-black/30 p-1.5 rounded-full border border-white/5">
+                        {hasTogglePermission && (
+                          <button onClick={() => handleEditClick(sector)} className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        <label className={`relative inline-flex items-center ${hasTogglePermission ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-50'} transition-transform`}>
+                          <input 
+                            type="checkbox" 
+                            className="sr-only peer" 
+                            checked={sector.isActive} 
+                            onChange={() => hasTogglePermission && toggleSector(sector.id, !sector.isActive)}
+                            disabled={!hasTogglePermission}
+                          />
+                          <div className="w-12 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 peer-checked:after:bg-white"></div>
+                        </label>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-400 leading-relaxed flex-1">
+                      {sector.description || `Controls global routing, merchant configurations, and consumer discovery mechanics for ${sector.name}.`}
+                    </p>
+                    
+                    <div className="mt-6 pt-5 border-t border-white/5 flex justify-between items-end">
+                      <div>
+                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Status</div>
+                        <div className={`text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-md border flex items-center gap-2 w-fit ${sector.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${sector.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
+                          {sector.isActive ? 'Online' : 'Offline'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Sector ID</div>
+                        <div className="text-xs font-mono text-slate-400 bg-black/30 px-2 py-1 rounded border border-white/5">
+                          {sector.id.slice(0,8)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {sectors.length === 0 && (
+              <div className="col-span-full py-20 bg-slate-900/30 backdrop-blur-md rounded-3xl border border-white/5 flex flex-col items-center justify-center border-dashed">
+                <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mb-6 border border-white/5 shadow-inner">
+                  <Database className="w-8 h-8 text-slate-500" />
                 </div>
-                <div className="mt-6 pt-4 border-t border-slate-700/50 flex justify-between items-center">
-                  <span className={`text-xs font-bold px-2 py-1 rounded ${sector.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                    {sector.isActive ? 'Live' : 'Maintenance'}
-                  </span>
-                  <span className="text-xs text-slate-500">ID: {sector.id.slice(-6)}</span>
-                </div>
-              </>
+                <h3 className="text-xl font-bold text-white mb-2">No Sectors Configured</h3>
+                <p className="text-slate-400 text-sm max-w-md text-center">
+                  The system requires backend connection to load dynamic sector configuration matrices.
+                </p>
+              </div>
             )}
           </div>
-        ))}
-
-        {sectors.length === 0 && (
-          <div className="col-span-full text-center py-12 bg-slate-800/50 rounded-2xl border border-slate-700 flex flex-col items-center justify-center">
-            <Info className="w-12 h-12 text-slate-500 mb-4" />
-            <p className="text-slate-400 font-medium text-lg">No platform sectors found.</p>
-            <p className="text-slate-500 text-sm mt-1">Make sure the backend is configured.</p>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

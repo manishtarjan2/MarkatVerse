@@ -8,10 +8,11 @@ export default function CommercialgtAdvertisementsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: '', title: '', mediaUrl: '', linkUrl: '', position: 'HOMEPAGE', status: 'ACTIVE' });
   const [isEditing, setIsEditing] = useState(false);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   const fetchItems = async () => {
     try {
-      const res = await fetch('http://localhost:3001/commercial/advertisements');
+      const res = await fetch(`${API_URL}/commercial/advertisements`);
       if (res.ok) {
         const data = await res.json();
         setItems(data);
@@ -45,8 +46,8 @@ export default function CommercialgtAdvertisementsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const url = isEditing 
-      ? `http://localhost:3001/commercial/advertisements/${formData.id}`
-      : 'http://localhost:3001/commercial/advertisements';
+      ? `${API_URL}/commercial/advertisements/${formData.id}`
+      : `${API_URL}/commercial/advertisements`;
     
     const method = isEditing ? 'PATCH' : 'POST';
 
@@ -69,7 +70,7 @@ export default function CommercialgtAdvertisementsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure?")) return;
     try {
-      const res = await fetch(`http://localhost:3001/commercial/advertisements/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/commercial/advertisements/${id}`, { method: 'DELETE' });
       if (res.ok) fetchItems();
     } catch (error) {
       console.error("Failed to delete", error);
@@ -79,7 +80,7 @@ export default function CommercialgtAdvertisementsPage() {
   const handleToggleStatus = async (item: any) => {
     const newStatus = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
-      const res = await fetch(`http://localhost:3001/commercial/advertisements/${item.id}`, {
+      const res = await fetch(`${API_URL}/commercial/advertisements/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -156,8 +157,45 @@ export default function CommercialgtAdvertisementsPage() {
                 <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="Enter title" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Image URL (Optional)</label>
-                <input type="text" value={formData.mediaUrl} onChange={e => setFormData({...formData, mediaUrl: e.target.value})} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="https://example.com/image.jpg" />
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Image (Drag & Drop or URL)</label>
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+                  <div 
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setFormData({...formData, mediaUrl: reader.result as string});
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="sm:w-48 border-2 border-dashed border-slate-600 rounded-xl flex items-center justify-center text-center hover:border-emerald-500 hover:bg-slate-800/50 transition-all group relative overflow-hidden"
+                  >
+                    {formData.mediaUrl && formData.mediaUrl.startsWith('data:image') ? (
+                      <img src={formData.mediaUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-30 transition-opacity" />
+                    ) : null}
+                    <div className="flex items-center gap-2 z-10 pointer-events-none px-2 py-3">
+                      <span className="text-xl drop-shadow-md">📸</span>
+                      <span className="text-[10px] font-bold text-slate-300 leading-tight drop-shadow-md">Drop image or<br/>click to upload</span>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setFormData({...formData, mediaUrl: reader.result as string});
+                          reader.readAsDataURL(file);
+                        }
+                      }} 
+                    />
+                  </div>
+                  <input type="text" value={formData.mediaUrl} onChange={e => setFormData({...formData, mediaUrl: e.target.value})} className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm min-w-0" placeholder="Or paste image URL here..." />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Link URL (Optional)</label>
@@ -165,7 +203,13 @@ export default function CommercialgtAdvertisementsPage() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Position</label>
-                <input type="text" value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all" placeholder="HOMEPAGE, SIDEBAR..." />
+                <select value={formData.position} onChange={e => setFormData({...formData, position: e.target.value})} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
+                  <option value="HOMEPAGE">Homepage</option>
+                  <option value="SIDEBAR">Sidebar</option>
+                  <option value="TOP_BAR">Top Bar</option>
+                  <option value="SEARCH_PAGE">Search Page</option>
+                  <option value="PRODUCT_PAGE">Product Page</option>
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Status</label>

@@ -106,7 +106,9 @@ export default function AdminBookingsPage() {
                       </div>
                       <div>
                         <div className="font-bold text-white text-sm">{queue.shopName || 'Unknown Shop'}</div>
-                        <div className="text-xs text-slate-500 mt-0.5 font-mono">Seller: {queue.sellerId?.slice(0,8)}...</div>
+                        <div className="text-[10px] mt-1 font-mono flex items-center">
+                          <span className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700/50">USR-{queue.seller?.markatId || queue.sellerId?.slice(0, 5)?.toUpperCase()}</span>
+                        </div>
                       </div>
                     </div>
                   </td>

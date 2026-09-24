@@ -92,8 +92,12 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
                       </div>
                       <div>
                         <div className="font-bold text-white text-sm">{user.name}</div>
-                        <div className="text-xs text-slate-500 mt-0.5 font-mono">
-                          {user.markatId || `${user.id.slice(0,8)}...`}
+                        <div className="text-[10px] mt-1 font-mono flex items-center gap-1.5">
+                          {user.markatId ? (
+                            <span className="text-blue-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">{user.markatId}</span>
+                          ) : (
+                            <span className="text-slate-500">ID: {user.id.slice(0,8)}...</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -116,13 +120,20 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
                         <option value="user">Regular User</option>
                       </select>
                     ) : (
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
-                        user.role.includes('admin') 
-                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
-                          : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                      }`}>
-                        {user.role.replace('_', ' ')}
-                      </span>
+                      <div className="flex flex-col items-start gap-1.5">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                          user.role.includes('admin') 
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                            : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                        }`}>
+                          {user.role.replace('_', ' ')}
+                        </span>
+                        {user.business?.businessCode && (
+                          <span className="text-[10px] text-emerald-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 font-mono">
+                            {user.business.businessCode}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </td>
                   {title.includes('Seller') && (

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useProducts } from '@/context/ProductContext';
 import { ChevronRight, Filter, Search } from 'lucide-react';
+import SidebarBannerWidget from '@/components/SidebarBannerWidget';
 
 export default function DynamicExplorePage({ params }: { params: Promise<{ slug?: string[] }> }) {
   const { products, categories } = useProducts();
@@ -258,6 +259,8 @@ export default function DynamicExplorePage({ params }: { params: Promise<{ slug?
                 </div>
               </div>
             </div>
+            
+            <SidebarBannerWidget />
           </div>
 
           {/* Listings Grid */}

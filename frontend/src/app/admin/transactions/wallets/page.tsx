@@ -107,10 +107,16 @@ export default function AdminWalletsPage() {
                   <button
                     key={seller.id}
                     onClick={() => loadWalletDetails(seller.id)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all ${selectedWallet?.businessId === seller.id ? 'bg-indigo-500/20 border-indigo-500/50 text-white' : 'bg-slate-900/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/30'}`}
+                    className={`w-full text-left p-4 rounded-xl border transition-all flex justify-between items-center ${selectedWallet?.businessId === seller.id ? 'bg-indigo-500/20 border-indigo-500/50 text-white' : 'bg-slate-900/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/30'}`}
                   >
-                    <div className="font-bold">{seller.name || seller.ownerName}</div>
-                    <div className="text-xs opacity-60 font-mono mt-1">ID: {seller.id.slice(0, 8)}</div>
+                    <div>
+                      <div className="font-bold">{seller.name || seller.ownerName}</div>
+                      <div className="text-[10px] text-slate-500 mt-1 font-mono flex items-center gap-1.5">
+                        <span className="text-emerald-400">{seller.businessCode || 'N/A'}</span>
+                        <span className="text-slate-600">|</span>
+                        <span className="text-blue-400">{seller.user?.markatId || 'N/A'}</span>
+                      </div>
+                    </div>
                   </button>
                 ))
               )}
@@ -127,13 +133,13 @@ export default function AdminWalletsPage() {
                 <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-6 rounded-2xl border border-emerald-500/20 shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl"></div>
                   <div className="text-emerald-400 text-sm font-semibold mb-2 flex items-center gap-2"><Wallet className="w-4 h-4"/> Available Balance</div>
-                  <div className="text-4xl font-black text-white">₹{selectedWallet.balance.toFixed(2)}</div>
+                  <div className="text-4xl font-black text-white">₹{(selectedWallet.balance || 0).toFixed(2)}</div>
                 </div>
                 
                 <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-6 rounded-2xl border border-amber-500/20 shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl"></div>
                   <div className="text-amber-400 text-sm font-semibold mb-2 flex items-center gap-2"><ArrowDownRight className="w-4 h-4"/> Pending Clearance</div>
-                  <div className="text-4xl font-black text-white">₹{selectedWallet.pendingBalance.toFixed(2)}</div>
+                  <div className="text-4xl font-black text-white">₹{(selectedWallet.pendingBalance || 0).toFixed(2)}</div>
                 </div>
               </div>
 
