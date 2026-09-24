@@ -21,6 +21,7 @@ export declare class AdminBusinessService {
         } | null;
     } & {
         businessType: string;
+        sector: string | null;
         id: string;
         name: string;
         createdAt: Date;
@@ -34,6 +35,8 @@ export declare class AdminBusinessService {
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
         address: string | null;
+        gstNumber: string | null;
+        businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
         capabilities: string[];
         maxListings: number;
@@ -49,6 +52,7 @@ export declare class AdminBusinessService {
         subscriptionEndDate: Date | null;
     }): Promise<{
         businessType: string;
+        sector: string | null;
         id: string;
         name: string;
         createdAt: Date;
@@ -62,6 +66,8 @@ export declare class AdminBusinessService {
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
         address: string | null;
+        gstNumber: string | null;
+        businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
         capabilities: string[];
         maxListings: number;
@@ -79,6 +85,7 @@ export declare class AdminBusinessService {
         subscriptionEndDate: Date | null;
     }): Promise<{
         businessType: string;
+        sector: string | null;
         id: string;
         name: string;
         createdAt: Date;
@@ -92,6 +99,8 @@ export declare class AdminBusinessService {
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
         address: string | null;
+        gstNumber: string | null;
+        businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
         capabilities: string[];
         maxListings: number;

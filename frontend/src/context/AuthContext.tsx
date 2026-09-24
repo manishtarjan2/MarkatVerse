@@ -118,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('token');
     localStorage.removeItem('user_cache');
     setUser(null);
+    window.location.replace('/');
   };
 
   const updateUserRole = (id: string, role: User['role']) => {

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
-import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp, Ticket, Clock, Ban, Search, Filter, Phone, Mail, FileText, Share2, Printer, MapPin, ChevronDown, Activity, Scissors, User, Sparkles, Palette, Droplet } from 'lucide-react';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp, Ticket, Clock, Ban, Search, Filter, Phone, Mail, FileText, Share2, Printer, MapPin, ChevronDown, Activity, Scissors, User, Sparkles, Palette, Droplet, Briefcase } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 import StaffResourceManagementModal from '@/components/StaffResourceManagementModal';
@@ -21,7 +21,7 @@ function DashboardContent() {
   const [isPremiumSeller, setIsPremiumSeller] = useState(true); // Mock state to demonstrate the paywall
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   
   // New State variables for Tokens & Bookings Dashboard
@@ -294,6 +294,56 @@ function DashboardContent() {
 
   // Settings Location States
   const [settingsPin, setSettingsPin] = useState('');
+  
+  // Profile Editing State
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    ownerName: '', phone: '', email: '', businessName: '', gstNumber: '', address: '', pincode: ''
+  });
+
+  const handleEditProfileInit = () => {
+    setProfileForm({
+      ownerName: user?.name || '',
+      phone: user?.phone || '',
+      email: user?.email || '',
+      businessName: user?.business?.name || '',
+      gstNumber: user?.business?.gstNumber || '',
+      address: user?.business?.address || '',
+      pincode: user?.business?.pincode || '',
+    });
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const res = await fetch(`${API_URL}/sellers/user/${user?.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileForm)
+      });
+      if (res.ok) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const userRes = await fetch(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+          if (userRes.ok) {
+             const data = await userRes.json();
+             login({
+               id: data.id, markatId: data.markatId, name: data.name, email: data.email,
+               phone: data.phone || '', role: data.role?.toLowerCase() as any, status: 'active',
+               business: data.business
+             }, token);
+          }
+        }
+        setIsEditingProfile(false);
+        toast.success("Profile updated successfully!");
+      } else {
+        toast.error("Failed to update profile");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred while updating profile");
+    }
+  };
   const [settingsAreas, setSettingsAreas] = useState<string[]>([]);
   const [settingsIsFetching, setSettingsIsFetching] = useState(false);
 
@@ -497,33 +547,25 @@ function DashboardContent() {
           >
             <BarChart3 className="w-5 h-5" /> Overview
           </button>
-          <button 
-            onClick={() => { setActiveTab('listings'); setIsMobileMenuOpen(false); }} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'listings' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-          >
-            <Store className="w-5 h-5" /> {isServiceProvider ? 'My Services' : 'My Listings'}
-          </button>
-          <button 
-            onClick={() => {
-              const maxAllowed = user?.business?.maxListings ?? 5;
-              if (myListings.length >= maxAllowed) {
-                alert(`You have reached the maximum allowed limit of ${maxAllowed} ${isServiceProvider ? 'services' : 'products'}. Please contact support to increase your limit.`);
-                return;
-              }
-              setEditingProductId(null);
-              setName('');
-              setPrice('');
-              setOriginalPrice('');
-              setDescription('');
-              setImageUrl('');
-              setUploadedImages([]);
-              setActiveTab('add');
-              setIsMobileMenuOpen(false);
-            }} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'add' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-          >
-            <PlusCircle className="w-5 h-5" /> {isServiceProvider ? 'Add Service' : 'Add Product'}
-          </button>
+          
+          {(isB2C || isB2B || (!isService && !isServiceProvider)) && (
+            <button 
+              onClick={() => { setActiveTab('listings'); setIsMobileMenuOpen(false); }} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'listings' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+            >
+              <Store className="w-5 h-5" /> My Shop
+            </button>
+          )}
+
+          {(isService || isServiceProvider) && (
+            <button 
+              onClick={() => { setActiveTab('services'); setIsMobileMenuOpen(false); }} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'services' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+            >
+              <Briefcase className="w-5 h-5" /> My Services
+            </button>
+          )}
+
           {/* Dynamic Workflow Tabs */}
           {(isCartFlow || isRfqFlow) && (
             <button 
@@ -586,6 +628,12 @@ function DashboardContent() {
             </>
           )}
           <button 
+            onClick={() => { setActiveTab('profile'); setIsMobileMenuOpen(false); }} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'profile' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+          >
+            <User className="w-5 h-5" /> Profile
+          </button>
+          <button 
             onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'settings' ? 'bg-red-50 text-red-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
@@ -623,7 +671,7 @@ function DashboardContent() {
                 </div>
                 <div className="text-2xl lg:text-3xl font-bold text-amber-500">
                   {isServiceProvider
-                    ? (queueData ? `${queueData.waitingCount ?? 0} waiting` : 'No queue')
+                    ? (queueData ? `${queueData.waitingCount ?? 0} waiting` : '0 waiting')
                     : (isB2B ? leads.length.toString() : orders.length.toString())}
                 </div>
                 <button onClick={() => { setActiveTab(isServiceProvider ? 'queue' : (isB2B ? 'leads' : 'orders')); setIsMobileMenuOpen(false); }}
@@ -634,7 +682,7 @@ function DashboardContent() {
             </div>
 
             {/* Quick Links */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4 mb-8 lg:mb-10">
+            <div className="mb-8 lg:mb-10">
               {(() => {
                 const quickActions = [
                   { label: isServiceProvider ? 'My Services' : (isB2B ? 'B2B Catalog' : 'My Listings'), icon: '🛍️', tab: 'listings' },
@@ -644,13 +692,19 @@ function DashboardContent() {
                 if (isB2B) quickActions.push({ label: 'Leads / RFQ', icon: '💬', tab: 'leads' });
                 if (isProjectFlow || isMeetingFlow || isService) quickActions.push({ label: 'Bookings', icon: '📅', tab: 'bookings' });
 
-                return quickActions.map(item => (
-                  <button key={item.tab} onClick={() => { setActiveTab(item.tab as any); setIsMobileMenuOpen(false); }}
-                    className="bg-white border border-slate-200 rounded-xl lg:rounded-2xl p-3 lg:p-5 flex flex-col items-center gap-2 lg:gap-3 hover:border-blue-300 hover:shadow-md transition-all group">
-                    <span className="text-2xl lg:text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                    <span className="text-xs lg:text-sm font-bold text-slate-700 text-center leading-tight">{item.label}</span>
-                  </button>
-                ));
+                const gridClass = quickActions.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4';
+
+                return (
+                  <div className={`grid grid-cols-2 ${gridClass} gap-3 lg:gap-4`}>
+                    {quickActions.map(item => (
+                      <button key={item.tab} onClick={() => { setActiveTab(item.tab as any); setIsMobileMenuOpen(false); }}
+                        className="bg-white border border-slate-200 rounded-xl lg:rounded-2xl p-4 lg:p-6 flex flex-col items-center gap-3 lg:gap-4 hover:border-blue-300 hover:shadow-md transition-all group">
+                        <span className="text-3xl lg:text-4xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                        <span className="text-sm lg:text-base font-bold text-slate-700 text-center leading-tight">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                );
               })()}
             </div>
 
@@ -716,26 +770,38 @@ function DashboardContent() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {queueAnalytics.staffPerformance.map((staff: any) => (
-                        <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="p-4 pl-6 font-bold text-slate-900 flex items-center gap-3">
-                            {staff.id === 'unassigned' ? (
-                              <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
-                                <Store className="w-4 h-4" />
-                              </div>
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
-                                {staff.name.charAt(0)}
-                              </div>
-                            )}
-                            {staff.name}
+                      {queueAnalytics.staffPerformance && queueAnalytics.staffPerformance.length > 0 ? (
+                        queueAnalytics.staffPerformance.map((staff: any) => (
+                          <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="p-4 pl-6 font-bold text-slate-900 flex items-center gap-3">
+                              {staff.id === 'unassigned' ? (
+                                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center border border-slate-200">
+                                  <Store className="w-4 h-4" />
+                                </div>
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+                                  {staff.name.charAt(0)}
+                                </div>
+                              )}
+                              {staff.name}
+                            </td>
+                            <td className="p-4 text-center font-bold text-slate-700">{staff.todayCustomers}</td>
+                            <td className="p-4 text-right font-black text-emerald-600">₹{staff.todayEarnings.toLocaleString('en-IN')}</td>
+                            <td className="p-4 text-center font-bold text-slate-700">{staff.monthCustomers}</td>
+                            <td className="p-4 text-right pr-6 font-black text-blue-600">₹{staff.monthEarnings.toLocaleString('en-IN')}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="p-10 text-center text-slate-500">
+                            <div className="flex flex-col items-center justify-center gap-3">
+                              <TrendingUp className="w-12 h-12 text-slate-200" />
+                              <p className="font-semibold text-slate-600">No performance data available yet.</p>
+                              <p className="text-sm">Earnings and customer counts will appear here once you start serving.</p>
+                            </div>
                           </td>
-                          <td className="p-4 text-center font-bold text-slate-700">{staff.todayCustomers}</td>
-                          <td className="p-4 text-right font-black text-emerald-600">₹{staff.todayEarnings.toLocaleString('en-IN')}</td>
-                          <td className="p-4 text-center font-bold text-slate-700">{staff.monthCustomers}</td>
-                          <td className="p-4 text-right pr-6 font-black text-blue-600">₹{staff.monthEarnings.toLocaleString('en-IN')}</td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -744,15 +810,15 @@ function DashboardContent() {
           </div>
         )}
 
-        {activeTab === 'listings' && (
+        {(activeTab === 'listings' || activeTab === 'services') && (
           <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
             <div className="flex justify-between items-center mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-slate-900">{isServiceProvider ? 'My Services' : 'My Listings'}</h1>
-                <p className="text-slate-500 mt-2">{isServiceProvider ? 'Manage your active services.' : 'Manage your active products and services.'}</p>
+                <h1 className="text-3xl font-bold text-slate-900">{activeTab === 'services' ? 'My Services' : 'My Shop Catalog'}</h1>
+                <p className="text-slate-500 mt-2">{activeTab === 'services' ? 'Manage your active services.' : 'Manage your active products.'}</p>
               </div>
               <button 
-                onClick={() => setActiveTab('add')}
+                onClick={() => setActiveTab(activeTab === 'services' ? 'add_service' : 'add_product')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-md shadow-blue-600/20 transition-colors flex items-center gap-2"
               >
                 <PlusCircle className="w-5 h-5" /> Add New
@@ -803,7 +869,11 @@ function DashboardContent() {
                               });
                               setParameters(newParams);
                             }
-                            setActiveTab('add');
+                            if (product.primaryType === 'SERVICE') {
+                              setActiveTab('add_service');
+                            } else {
+                              setActiveTab('add_product');
+                            }
                           }}
                           className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-medium text-sm transition-colors"
                         >
@@ -836,25 +906,37 @@ function DashboardContent() {
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mb-2">{isServiceProvider ? 'No services yet' : 'No listings yet'}</h3>
                   <p className="text-slate-500 mb-6">Start growing your business by adding your first {isServiceProvider ? 'service' : 'product'}.</p>
-                  <button 
-                    onClick={() => setActiveTab('add')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold transition-colors"
-                  >
-                    {isServiceProvider ? 'Add Service' : 'Add Product'}
-                  </button>
+                  <div className="flex gap-3 justify-center">
+                    {(isB2C || isB2B || isCartFlow || isRfqFlow || (!isService && !isServiceProvider)) && (
+                      <button 
+                        onClick={() => setActiveTab('add_product')}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold transition-colors"
+                      >
+                        Add Product
+                      </button>
+                    )}
+                    {(isService || isServiceProvider || isQueueFlow || isMeetingFlow || isProjectFlow) && (
+                      <button 
+                        onClick={() => setActiveTab('add_service')}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold transition-colors"
+                      >
+                        Add Service
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {activeTab === 'add' && (() => {
-          const isService = isServiceProvider || ['Services', 'Transport', 'Organizers'].includes(category);
+        {(activeTab === 'add_product' || activeTab === 'add_service') && (() => {
+          const isServiceMode = activeTab === 'add_service';
           return (
           <div className="max-w-3xl mx-auto animate-in fade-in duration-300">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-slate-900">
-                {editingProductId ? (isService ? 'Edit Service' : 'Edit Product') : (isService ? 'Add New Service' : 'Add New Product')}
+                {editingProductId ? (isServiceMode ? 'Edit Service' : 'Edit Product') : (isServiceMode ? 'Add New Service' : 'Add New Product')}
               </h1>
               <p className="text-slate-500 mt-2">{editingProductId ? 'Update the details for your listing.' : 'Create a new listing to start selling.'}</p>
             </div>
@@ -869,7 +951,7 @@ function DashboardContent() {
               </div>
             ) : (
               <DynamicFormEngine 
-                isService={isService} 
+                isService={isServiceMode} 
                 onSave={handleSaveListing} 
                 onCancel={() => setActiveTab('listings')} 
                 initialData={editingProductId ? products.find(p => p.id === editingProductId) : undefined}
@@ -975,28 +1057,28 @@ function DashboardContent() {
                       const servingTokens = Array.isArray(queueData.serving) ? queueData.serving : [];
                       const servingToken = servingTokens.find((s: any) => s.resourceId === resource.id);
                       return (
-                        <div key={resource.id} className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
+                        <div key={resource.id} className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-4 text-white shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
                           <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
                           <div className="relative z-10 text-center w-full">
-                            <div className="text-indigo-200 text-sm font-bold tracking-widest uppercase mb-2">{resource.name}</div>
+                            <div className="text-indigo-200 text-xs font-bold tracking-widest uppercase mb-1">{resource.name}</div>
                             {servingToken ? (
                               <>
-                                <div className="text-6xl font-black mb-2 text-white drop-shadow-md">
+                                <div className="text-5xl font-black mb-1 text-white drop-shadow-md">
                                   {servingToken.bookingMode === 'APPOINTMENT' ? 'Apt' : `#${servingToken.tokenNumber}`}
                                 </div>
-                                <div className="text-xl font-bold text-blue-100">{servingToken.customerName}</div>
-                                <div className="text-indigo-200 text-sm mt-1 mb-4">{servingToken.service}</div>
+                                <div className="text-lg font-bold text-blue-100">{servingToken.customerName}</div>
+                                <div className="text-indigo-200 text-xs mt-1 mb-3">{servingToken.service}</div>
                               </>
                             ) : (
-                              <div className="py-6">
-                                <div className="text-4xl font-black text-indigo-300/50 mb-4">—</div>
-                                <div className="text-indigo-200 mb-4">No one currently serving</div>
+                              <div className="py-4">
+                                <div className="text-3xl font-black text-indigo-300/50 mb-2">—</div>
+                                <div className="text-indigo-200 text-xs mb-3">No one currently serving</div>
                               </div>
                             )}
                             <button 
                               disabled={actionLoading === `next-${resource.id}`}
                               onClick={() => handleQueueAction(`next-${resource.id}`, `/service-queue/${queueData.queue.id}/next`, 'POST', { resourceId: resource.id })}
-                              className="bg-white/20 hover:bg-white/30 text-white w-full py-2 rounded-lg font-bold text-sm shadow-sm transition-colors border border-white/20 disabled:opacity-50"
+                              className="bg-white/20 hover:bg-white/30 text-white w-full py-1.5 rounded-lg font-bold text-sm shadow-sm transition-colors border border-white/20 disabled:opacity-50"
                             >
                               {actionLoading === `next-${resource.id}` ? 'Calling...' : 'Call Next'}
                             </button>
@@ -1006,32 +1088,32 @@ function DashboardContent() {
                     })}
                   </div>
                 ) : (
-                  <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
+                  <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-4 sm:p-5 text-white shadow-lg flex flex-col items-center justify-center relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
                     <div className="relative z-10 text-center w-full">
-                      <div className="text-indigo-200 text-xs sm:text-sm font-bold tracking-widest uppercase mb-2">NOW SERVING</div>
+                      <div className="text-indigo-200 text-xs font-bold tracking-widest uppercase mb-2">NOW SERVING</div>
                       {queueData.serving && queueData.serving.length > 0 ? (
                         <>
-                          <div className="text-8xl font-black mb-2 text-white drop-shadow-md">
+                          <div className="text-6xl sm:text-7xl font-black mb-2 text-white drop-shadow-md">
                             {queueData.serving[0].bookingMode === 'APPOINTMENT' ? 'Apt' : `#${queueData.serving[0].tokenNumber}`}
                           </div>
-                          <div className="text-xl font-bold text-blue-100">{queueData.serving[0].customerName}</div>
-                          <div className="text-indigo-200 text-sm mt-1">{queueData.serving[0].service}</div>
+                          <div className="text-lg font-bold text-blue-100">{queueData.serving[0].customerName}</div>
+                          <div className="text-indigo-200 text-xs mt-1">{queueData.serving[0].service}</div>
                         </>
                       ) : (
-                        <div className="py-6 sm:py-10">
-                          <div className="text-5xl sm:text-6xl font-black text-indigo-300/50 mb-4">—</div>
-                          <div className="text-indigo-200 text-sm sm:text-base">No one currently serving</div>
+                        <div className="py-2 sm:py-4">
+                          <div className="text-4xl sm:text-5xl font-black text-indigo-300/50 mb-2">—</div>
+                          <div className="text-indigo-200 text-sm">No one currently serving</div>
                         </div>
                       )}
-                      <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-indigo-500/30 w-full flex justify-between">
+                      <div className="mt-4 pt-4 border-t border-indigo-500/30 w-full flex justify-between">
                         <div className="text-center">
-                          <div className="text-3xl font-black">{queueData.waitingCount}</div>
-                          <div className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Waiting</div>
+                          <div className="text-2xl font-black">{queueData.waitingCount}</div>
+                          <div className="text-[9px] uppercase font-bold text-indigo-200 tracking-wider">Waiting</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-3xl font-black">{queueData.doneToday}</div>
-                          <div className="text-[10px] uppercase font-bold text-indigo-200 tracking-wider">Done Today</div>
+                          <div className="text-2xl font-black">{queueData.doneToday}</div>
+                          <div className="text-[9px] uppercase font-bold text-indigo-200 tracking-wider">Done Today</div>
                         </div>
                       </div>
                     </div>
@@ -1715,6 +1797,154 @@ function DashboardContent() {
             </div>
             <h2 className="text-3xl font-bold text-slate-800 mb-4 capitalize">{activeTab} Management</h2>
             <p className="text-slate-500">This feature is part of your sector's advanced workflow and is currently being built.</p>
+          </div>
+        )}
+
+        {activeTab === 'profile' && (
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8 flex justify-between items-end">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">Business Profile</h1>
+                <p className="text-slate-500 mt-2">View and manage your registered business details.</p>
+              </div>
+              {!isEditingProfile ? (
+                <button 
+                  onClick={handleEditProfileInit}
+                  className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setIsEditingProfile(false)}
+                    className="bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSaveProfile}
+                    className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-8 max-w-3xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">General Info</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-xs text-slate-400 mb-1">Owner Name</div>
+                      {isEditingProfile ? (
+                        <input value={profileForm.ownerName} onChange={e => setProfileForm({...profileForm, ownerName: e.target.value})} className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-indigo-400" />
+                      ) : (
+                        <div className="font-medium text-slate-900">{user?.name || 'N/A'}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-1">Phone Number</div>
+                      {isEditingProfile ? (
+                        <input value={profileForm.phone} onChange={e => setProfileForm({...profileForm, phone: e.target.value})} className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-indigo-400" />
+                      ) : (
+                        <div className="font-medium text-slate-900">{user?.phone || 'N/A'}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-1">Email Address</div>
+                      {isEditingProfile ? (
+                        <input value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-indigo-400" />
+                      ) : (
+                        <div className="font-medium text-slate-900">{user?.email || 'N/A'}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-1">Legal Business Name</div>
+                      {isEditingProfile ? (
+                        <input value={profileForm.businessName} onChange={e => setProfileForm({...profileForm, businessName: e.target.value})} className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-indigo-400" />
+                      ) : (
+                        <div className="font-medium text-slate-900">{user?.business?.name || 'N/A'}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-1">GST / PAN</div>
+                      {isEditingProfile ? (
+                        <input value={profileForm.gstNumber} onChange={e => setProfileForm({...profileForm, gstNumber: e.target.value})} className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-indigo-400" />
+                      ) : (
+                        <div className="font-medium text-slate-900">{user?.business?.gstNumber || 'Not provided'}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400">Business Type</div>
+                      <div className="font-medium text-slate-900">{user?.business?.businessType || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400">Sector</div>
+                      <div className="font-medium text-slate-900">{user?.business?.sector || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400">Models</div>
+                      <div className="font-medium text-slate-900">{user?.business?.capabilities?.join(', ') || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400">Revenue Model</div>
+                      <div className="font-medium text-slate-900 mt-1">
+                        {user?.business ? (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 inline-flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            {user.business.commissionType === 'PERCENTAGE' 
+                              ? `${user.business.commissionRate}% Commission`
+                              : `₹${user.business.commissionRate} Flat Fee`}
+                          </span>
+                        ) : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Location & Operations</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-xs text-slate-400 mb-1">Full Address</div>
+                      {isEditingProfile ? (
+                        <textarea rows={3} value={profileForm.address} onChange={e => setProfileForm({...profileForm, address: e.target.value})} className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-indigo-400" />
+                      ) : (
+                        <div className="font-medium text-slate-900">{user?.business?.address || 'N/A'}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400 mb-1">PIN Code</div>
+                      {isEditingProfile ? (
+                        <input value={profileForm.pincode} onChange={e => setProfileForm({...profileForm, pincode: e.target.value})} className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-indigo-400" />
+                      ) : (
+                        <div className="font-medium text-slate-900">{user?.business?.pincode || 'N/A'}</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-400">Business Hours</div>
+                      <div className="text-sm text-slate-700 mt-1">
+                        {user?.business?.businessHours ? (
+                          <div className="grid grid-cols-2 gap-2 mt-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            {Object.entries(user.business.businessHours as any).map(([day, hrs]: [string, any]) => (
+                              <div key={day} className="flex justify-between text-xs">
+                                <span className="capitalize font-medium">{day}:</span>
+                                <span>{hrs.closed ? <span className="text-rose-500 font-semibold">Closed</span> : `${hrs.open} - ${hrs.close}`}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-slate-500 italic">No schedule provided</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

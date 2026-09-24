@@ -5,14 +5,15 @@ export declare class SecurityService {
     private idGenerator;
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     getAuditLogs(): Promise<{
+        userMarkatId: string | null | undefined;
         id: string;
+        createdAt: Date;
+        userId: string | null;
         logId: string | null;
         action: string;
         resource: string;
         details: string | null;
-        userId: string | null;
         ipAddress: string | null;
-        createdAt: Date;
     }[]>;
     createAuditLog(data: {
         action: string;
@@ -22,12 +23,12 @@ export declare class SecurityService {
         ipAddress?: string;
     }): Promise<{
         id: string;
+        createdAt: Date;
+        userId: string | null;
         logId: string | null;
         action: string;
         resource: string;
         details: string | null;
-        userId: string | null;
         ipAddress: string | null;
-        createdAt: Date;
     }>;
 }

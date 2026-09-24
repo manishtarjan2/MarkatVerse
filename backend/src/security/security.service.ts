@@ -10,10 +10,23 @@ export class SecurityService {
   ) {}
 
   async getAuditLogs() {
-    return this.prisma.auditLog.findMany({
+    const logs = await this.prisma.auditLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 100, // Limit for performance
     });
+
+    const userIds = [...new Set(logs.map(l => l.userId).filter(Boolean))] as string[];
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, markatId: true }
+    });
+    
+    const userMap = new Map(users.map(u => [u.id, u.markatId]));
+
+    return logs.map(log => ({
+      ...log,
+      userMarkatId: log.userId ? userMap.get(log.userId) : null
+    }));
   }
 
   async createAuditLog(data: { action: string; resource: string; details?: string; userId?: string; ipAddress?: string }) {

@@ -78,6 +78,7 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
                 <th className="p-4 pl-6">User</th>
                 <th className="p-4">Contact</th>
                 <th className="p-4">Role</th>
+                {title.includes('Seller') && <th className="p-4">Revenue Model</th>}
                 <th className="p-4 pr-6 text-right">Actions</th>
               </tr>
             </thead>
@@ -124,6 +125,24 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
                       </span>
                     )}
                   </td>
+                  {title.includes('Seller') && (
+                    <td className="p-4">
+                      {user.business ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded w-max border border-emerald-500/20">
+                            {user.business.commissionType === 'PERCENTAGE' 
+                              ? `${user.business.commissionRate}% Commission`
+                              : `₹${user.business.commissionRate} Flat Fee`}
+                          </span>
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wide">
+                            Sub: {user.business.subscriptionStatus === 'ACTIVE' ? <span className="text-emerald-400 font-bold">Active</span> : 'Inactive'}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-500 italic">No Business Profile</span>
+                      )}
+                    </td>
+                  )}
                   <td className="p-4 pr-6 text-right">
                     {(() => {
                       const isRegularUser = ['seller', 'business', 'consumer', 'buyer', 'user'].includes(user.role?.toLowerCase() || '');

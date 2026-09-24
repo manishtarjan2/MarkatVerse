@@ -13,7 +13,7 @@ type NavItem = {
   subItems?: { name: string; href: string }[];
 };
 
-export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobileMenuOpen }: any) {
+export default function Sidebar({ currentAdminRole, setCurrentAdminRole, isMobileMenuOpen, setIsMobileMenuOpen }: any) {
   const pathname = usePathname();
   const { logout } = useAuth();
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({
@@ -197,18 +197,30 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
             <img src="/logo.png" alt="MarkatVerse" className="h-10 object-contain scale-[2.5] origin-left brightness-0 invert" />
           </Link>
           <div className="text-amber-400 text-xs font-bold tracking-widest mt-1">ADMIN PORTAL</div>
-          <Link href="/" className="text-emerald-500 flex items-center gap-2 hover:opacity-80 transition-opacity font-bold text-sm mt-2">
+          <Link href="/" className="text-emerald-500 flex items-center gap-2 hover:opacity-80 transition-opacity font-bold text-sm mt-2 mb-4">
             <ArrowLeft className="w-4 h-4" /> Back to Main Site
           </Link>
-        </div>
 
-        <div className="p-6 text-center">
-          <div className="w-20 h-20 rounded-full bg-emerald-900/50 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="w-10 h-10" />
-          </div>
-          <h3 className="text-lg font-bold text-white capitalize">{currentAdminRole.replace('_', ' ')}</h3>
-          <div className="flex items-center justify-center gap-1 text-emerald-500 text-sm font-medium mt-1">
-            System Online
+          {/* Inline Role Simulator / Dropdown */}
+          <div className="flex items-center justify-between bg-slate-900/60 p-1.5 pr-3 rounded-full border border-white/10 hover:border-emerald-500/30 transition-colors">
+            <div className="flex items-center gap-2 flex-1">
+              <div className="w-8 h-8 rounded-full bg-emerald-900/50 text-emerald-400 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <select
+                value={currentAdminRole}
+                onChange={(e) => setCurrentAdminRole(e.target.value)}
+                className="bg-transparent text-emerald-400 text-sm font-bold w-full cursor-pointer focus:outline-none appearance-none capitalize"
+              >
+                <option value="super_admin" className="bg-slate-900">Super Admin</option>
+                <option value="catalog_admin" className="bg-slate-900">Catalog Admin</option>
+                <option value="onboarding_admin" className="bg-slate-900">Onboarding Admin</option>
+                <option value="support_admin" className="bg-slate-900">Support Admin</option>
+              </select>
+            </div>
+            <div className="pointer-events-none text-emerald-500 shrink-0">
+               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import { User, Phone, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -23,7 +24,7 @@ export default function SellerOnboarding() {
     }
   }, [user, step]);
 
-  // Step 1: Account credentials
+  // State variables
   const [ownerName, setOwnerName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -31,30 +32,96 @@ export default function SellerOnboarding() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [registeredToken, setRegisteredToken] = useState('');
+  const [emailOtp, setEmailOtp] = useState('');
+  const [otpTimer, setOtpTimer] = useState(300);
 
+  // Business Info
+  const [businessName, setBusinessName] = useState('');
+  const [gstNumber, setGstNumber] = useState('');
+
+  // Business Type
   const [mainType, setMainType] = useState('');
+
+  // Operating Features
   const [sellerRole, setSellerRole] = useState('');
   const [businessSector, setBusinessSector] = useState('');
-  const [businessName, setBusinessName] = useState('');
+
+  // Location
   const [pinCode, setPinCode] = useState('');
+  const [city, setCity] = useState('');
+  const [stateName, setStateName] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
+  const [landmark, setLandmark] = useState('');
   const [areas, setAreas] = useState<string[]>([]);
   const [isFetchingPin, setIsFetchingPin] = useState(false);
-  const [gstNumber, setGstNumber] = useState('');
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+
+  // Business Hours
+  const [businessHours, setBusinessHours] = useState({
+    monday: { open: '09:00', close: '18:00', closed: false },
+    tuesday: { open: '09:00', close: '18:00', closed: false },
+    wednesday: { open: '09:00', close: '18:00', closed: false },
+    thursday: { open: '09:00', close: '18:00', closed: false },
+    friday: { open: '09:00', close: '18:00', closed: false },
+    saturday: { open: '09:00', close: '18:00', closed: false },
+    sunday: { open: '09:00', close: '18:00', closed: true },
+  });
+
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (step === 1.2 && otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step, otpTimer]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const handleAutoFetchLocation = () => {
     if (navigator.geolocation) {
       setIsFetchingPin(true);
       navigator.geolocation.getCurrentPosition(async (position) => {
         try {
-          const { latitude, longitude } = position.coords;
-          const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-          const data = await res.json();
-          if (data) {
-            const city = data.city || data.locality || data.principalSubdivision;
-            const newPin = data.postcode || '';
+          const { latitude: lat, longitude: lng } = position.coords;
+          setLatitude(lat);
+          setLongitude(lng);
+          const [nomRes, bdcRes] = await Promise.all([
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`),
+            fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
+          ]);
+          
+          const nomData = await nomRes.json();
+          const bdcData = await bdcRes.json();
+          
+          if (nomData && nomData.address && bdcData) {
+            // BigDataCloud is often more accurate for exact PIN codes in India
+            const newPin = bdcData.postcode || nomData.address.postcode || '';
+            const newCity = bdcData.city || nomData.address.city || bdcData.locality || '';
+            const newState = bdcData.principalSubdivision || nomData.address.state || '';
+            
+            const localParts = [];
+            if (nomData.address.house_number) localParts.push(nomData.address.house_number);
+            if (nomData.address.road) localParts.push(nomData.address.road);
+            if (nomData.address.neighbourhood) localParts.push(nomData.address.neighbourhood);
+            if (nomData.address.suburb) localParts.push(nomData.address.suburb);
+            
+            let shortAddress = localParts.join(', ');
+            if (!shortAddress && nomData.display_name) {
+              shortAddress = nomData.display_name.split(',').slice(0, 2).join(',').trim();
+            }
+            if (!shortAddress) shortAddress = bdcData.locality || '';
+            
             if (newPin) setPinCode(newPin);
-            setBusinessLocation(`${city}, ${newPin}`);
+            if (newCity) setCity(newCity);
+            if (newState) setStateName(newState);
+            if (shortAddress) setBusinessLocation(shortAddress);
             toast.success("Location fetched automatically!");
           }
         } catch (error) {
@@ -71,8 +138,6 @@ export default function SellerOnboarding() {
     }
   };
 
-  const [otpArray, setOtpArray] = useState(['', '', '', '']);
-
   React.useEffect(() => {
     if (pinCode.length === 6) {
       setIsFetchingPin(true);
@@ -84,9 +149,8 @@ export default function SellerOnboarding() {
             setAreas(fetchedAreas);
             const state = data[0].PostOffice[0].State;
             const district = data[0].PostOffice[0].District;
-            if (!businessLocation.includes(district)) {
-              setBusinessLocation(`${fetchedAreas[0]}, ${district}, ${state}`);
-            }
+            setStateName(state);
+            setCity(district);
           } else {
             setAreas([]);
           }
@@ -98,7 +162,6 @@ export default function SellerOnboarding() {
     }
   }, [pinCode]);
 
-  // Structured taxonomy mapping according to V2 architecture
   const mainTypeMapping: Record<string, string[]> = {
     'B2B': ['Manufacturer', 'Wholesaler'],
     'B2C': ['Retailer'],
@@ -108,68 +171,99 @@ export default function SellerOnboarding() {
 
   const taxonomy: Record<string, Record<string, string[]>> = {
     'Manufacturer': {
-      'Construction': ['All', 'Plumbing', 'Civil / Building', 'Electrical Fittings', 'Hardware Tools', 'Raw Materials (Cement/Steel)'],
-      'Electronics': ['All', 'Mobiles', 'Computers', 'Home Appliances', 'Accessories'],
-      'Fashion': ['All', 'Men\'s Wear', 'Women\'s Wear', 'Kids', 'Footwear'],
-      'Home & Kitchen': ['All', 'Furniture', 'Kitchenware', 'Decor', 'Bedding']
+      'Construction': ['All'],
+      'Electronics': ['All'],
+      'Fashion': ['All'],
+      'Home & Kitchen': ['All']
     },
     'Wholesaler': {
-      'Construction': ['All', 'Plumbing', 'Civil / Building', 'Electrical Fittings', 'Hardware Tools', 'Raw Materials (Cement/Steel)'],
-      'Electronics': ['All', 'Mobiles', 'Computers', 'Home Appliances', 'Accessories'],
-      'Fashion': ['All', 'Men\'s Wear', 'Women\'s Wear', 'Kids', 'Footwear'],
-      'FMCG & Groceries': ['All', 'Packaged Food', 'Beverages', 'Personal Care', 'Cleaning Supplies']
+      'Construction': ['All'],
+      'Electronics': ['All'],
+      'Fashion': ['All'],
+      'FMCG & Groceries': ['All']
     },
     'Retailer': {
-      'Electronics': ['All', 'Mobiles', 'Computers', 'Home Appliances', 'Accessories'],
-      'Fashion': ['All', 'Men\'s Wear', 'Women\'s Wear', 'Kids', 'Footwear'],
-      'Home & Kitchen': ['All', 'Furniture', 'Kitchenware', 'Decor', 'Bedding'],
-      'Grocery & Essentials': ['All', 'Fresh Produce', 'Dairy', 'Snacks', 'Household']
+      'Electronics': ['All'],
+      'Fashion': ['All'],
+      'Home & Kitchen': ['All'],
+      'Grocery & Essentials': ['All']
     },
     'Service Provider': {
-      'Salon & Parlor': ['All', 'Haircut', 'Hair Dye', 'Facial', 'Manicure & Pedicure', 'Bridal Makeup'],
-      'Home Repairs': ['All', 'AC Repair', 'Plumbing', 'Electrical', 'Appliance Repair', 'Carpentry'],
-      'Cleaning & Pest Control': ['All', 'Deep Cleaning', 'Sofa Cleaning', 'Pest Control', 'Disinfection'],
-      'Professional Services': ['All', 'IT & Software', 'Marketing Agency', 'Legal Consulting', 'Tax & Accounting']
+      'Salon & Parlor': ['All'],
+      'Home Repairs': ['All'],
+      'Cleaning & Pest Control': ['All'],
+      'Professional Services': ['All']
     },
     'Organizer': {
-      'Event & Party': ['All', 'Weddings', 'Corporate Events', 'Parties & Catering', 'Stage Decorators', 'Photography'],
-      'Transport & Logistics': ['All', 'Heavy Freight', 'Local Courier', 'Passenger Transport (Taxi/Auto)', 'Packers & Movers'],
-      'Travel & Tours': ['All', 'Domestic Packages', 'International Packages', 'Pilgrimage', 'Hotel Booking']
+      'Event & Party': ['All'],
+      'Transport & Logistics': ['All'],
+      'Travel & Tours': ['All']
     }
   };
 
   const currentRoles = mainTypeMapping[mainType] || [];
   const currentSectors = Object.keys(taxonomy[sellerRole] || {});
 
-  // Step 1: Create seller account
-  const handleAccountSetup = async (e: React.FormEvent) => {
+  // Handlers
+  const handleAccountInit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) { toast.error('Passwords do not match'); return; }
     if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
-    if (!email && !phone) { toast.error('Email or phone is required'); return; }
+    if (!email) { toast.error('Email Address is required'); return; }
     if (phone && !/^\d{10}$/.test(phone.replace(/\D/g, ''))) { toast.error('Phone number must be exactly 10 digits'); return; }
     setIsSubmitting(true);
     try {
-      // Register as SELLER role
+      const res = await fetch(`${API_URL}/auth/send-signup-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email, type: 'email', phone: phone || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to send Email OTP');
+      
+      toast.success(`OTP sent to ${email}`);
+      setOtpTimer(300);
+      setStep(1.2);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEmailVerifyAndSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (emailOtp.length !== 6) { toast.error("Enter a valid 6-digit code"); return; }
+    
+    setIsSubmitting(true);
+    try {
+      const verifyRes = await fetch(`${API_URL}/auth/verify-signup-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email, code: emailOtp, type: 'email' }),
+      });
+      if (!verifyRes.ok) throw new Error('Invalid Email OTP');
+
       const res = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: ownerName,
-          email: email || undefined,
-          phone: phone || undefined,
+          email: email,
+          phone: phone,
           password,
           role: 'SELLER',
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(Array.isArray(data.message) ? data.message[0] : data.message || 'Registration failed');
+      
       setRegisteredToken(data.access_token);
-      // Also log them in
       login(
         { id: data.user.id, name: data.user.name, email: data.user.email, role: 'business', phone: data.user.phone || '' },
         data.access_token
       );
+      toast.success("Account created successfully!");
       setStep(2);
     } catch (err: any) {
       toast.error(err.message);
@@ -178,58 +272,16 @@ export default function SellerOnboarding() {
     }
   };
 
-  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const value = e.target.value;
-    if (isNaN(Number(value))) return;
-    const newOtpArray = [...otpArray];
-    newOtpArray[index] = value.substring(value.length - 1);
-    setOtpArray(newOtpArray);
-    if (value && index < otpArray.length - 1) {
-      const nextSibling = document.getElementById(`otp-${index + 1}`);
-      if (nextSibling) (nextSibling as HTMLInputElement).focus();
-    }
-  };
-
-  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === 'Backspace' && !otpArray[index] && index > 0) {
-      const prevSibling = document.getElementById(`otp-${index - 1}`);
-      if (prevSibling) (prevSibling as HTMLInputElement).focus();
-    }
-  };
-
-  const otpString = otpArray.join('');
-
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setStep(2);
-    }, 1000);
-  };
-
-  const handleBusinessDetails = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!businessSector) {
-      toast.error('Please select Sector');
-      return;
-    }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setStep(3);
-    }, 500);
-  };
-
-  const handleDocumentUpload = async (e: React.FormEvent) => {
+  const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const token = registeredToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const res = await fetch(`${API_URL}/sellers`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(registeredToken || (typeof window !== 'undefined' && localStorage.getItem('token')) ? { Authorization: `Bearer ${registeredToken || localStorage.getItem('token')}` } : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           ownerName,
@@ -237,15 +289,37 @@ export default function SellerOnboarding() {
           businessType: sellerRole,
           mainType: mainType,
           sector: businessSector,
-          address: businessLocation,
+          address: `${businessLocation}${landmark ? ', ' + landmark : ''}, ${city}, ${stateName}`,
+          pincode: pinCode,
+          latitude,
+          longitude,
           email,
           phone,
           gstNumber,
+          businessHours,
         }),
       });
       if (res.ok) {
+        if (token) {
+          const userRes = await fetch(`${API_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (userRes.ok) {
+            const data = await userRes.json();
+            login({
+              id: data.id,
+              markatId: data.markatId,
+              name: data.name,
+              email: data.email,
+              phone: data.phone || '',
+              role: data.role?.toLowerCase() as any,
+              status: 'active',
+              business: data.business,
+            }, token);
+          }
+        }
         setIsSubmitting(false);
-        setStep(4);
+        setStep(6);
       } else {
         const data = await res.json();
         throw new Error(data.message || 'Failed to register. Please try again.');
@@ -256,441 +330,371 @@ export default function SellerOnboarding() {
     }
   };
 
-
-
-  const steps = [
-    { num: 1, label: 'Account Setup' },
-    { num: 2, label: 'Business Info' },
-    { num: 3, label: 'Documents' },
+  const stepsList = [
+    { num: 1, label: 'Account' },
+    { num: 2, label: 'Profile' },
+    { num: 3, label: 'Features' },
+    { num: 4, label: 'Hours' },
+    { num: 5, label: 'Submit' }
   ];
 
-  const inputClasses = "w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:bg-white transition-all placeholder:text-slate-400 text-sm";
-  const selectClasses = "w-full p-3.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:bg-white transition-all text-sm";
-  const labelClasses = "block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide";
-  const btnPrimary = "flex-1 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm";
+  const inputClasses = "w-full p-4 pl-12 rounded-2xl border border-slate-200 bg-white text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all placeholder:text-slate-400 text-sm";
+  const selectClasses = "w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all text-sm";
+  const labelClasses = "block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider";
+  const btnPrimary = "w-full py-4 bg-gradient-to-r from-indigo-400 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-2xl font-bold transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 flex">
-      
+    <div className="min-h-screen bg-[#f4f7fa] flex">
       {/* Left Side: Branding Panel */}
-      <div className="hidden lg:flex w-[420px] bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 relative overflow-hidden flex-col justify-between p-10 shrink-0">
-        {/* Background circles */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 border border-white/30 rounded-full"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 border border-white/20 rounded-full"></div>
+      <div className="hidden lg:flex w-[440px] bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 relative overflow-hidden flex-col justify-between p-12 shrink-0">
+        
+        {/* Back Button */}
+        <Link href="/" className="absolute top-8 left-8 text-emerald-100 hover:text-white flex items-center gap-2 text-sm font-semibold z-20 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Home
+        </Link>
+
+        {/* Decorative circles */}
+        <div className="absolute top-[-80px] left-[-80px] w-[360px] h-[360px] border border-white/10 rounded-full" />
+        <div className="absolute bottom-[-100px] right-[-100px] w-[440px] h-[440px] border border-white/10 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
+
+        <div className="relative z-10 mt-12">
+          <img src="/logo.png" alt="MarkatVerse" className="h-16 brightness-0 invert object-contain" />
+          <div className="mt-2 text-emerald-200 text-sm font-bold tracking-widest">SELLER PORTAL</div>
         </div>
 
-        {/* Logo */}
-        <div className="relative z-10">
-          <img src="/logo.png" alt="MarkatVerse" className="h-12 brightness-0 invert object-contain" />
-          <div className="mt-1 text-emerald-200 text-sm font-medium tracking-wider">SELLER PORTAL</div>
-        </div>
-
-        {/* Center Content */}
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold text-white leading-tight mb-6">
+        <div className="relative z-10 mb-8">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
+            <ShieldCheck className="w-5 h-5 text-amber-400" />
+            <span className="text-white/90 text-sm font-semibold">Join 50,000+ top sellers</span>
+          </div>
+          <h1 className="text-5xl font-extrabold text-white leading-tight mb-6">
             Grow your business<br />
-            <span className="text-amber-400">with MarkatVerse</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">with MarkatVerse</span>
           </h1>
-          <p className="text-emerald-100 text-base leading-relaxed mb-8">
-            Reach millions of customers across 200+ countries. List products, manage orders, and scale your business — all from one dashboard.
+          <p className="text-emerald-50 text-base leading-relaxed mb-10">
+            Reach millions of customers, manage your inventory seamlessly, and scale your business to new heights with our powerful seller tools.
           </p>
 
-          {/* Benefits */}
-          <div className="flex flex-col gap-4">
+          <div className="space-y-6">
             {[
-              { icon: '🚀', title: '0% Commission', desc: 'for first 3 months' },
-              { icon: '📦', title: 'Easy Logistics', desc: 'Pan-India shipping support' },
-              { icon: '💰', title: 'Fast Payouts', desc: 'Within 7 business days' },
-              { icon: '📊', title: 'Growth Tools', desc: 'Analytics & marketing support' },
-            ].map((b, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                <span className="text-xl">{b.icon}</span>
-                <div>
-                  <div className="text-white text-base font-medium">{b.title}</div>
-                  <div className="text-emerald-200 text-sm">{b.desc}</div>
-                </div>
+              { icon: '🚀', text: 'Reach a massive global audience' },
+              { icon: '📈', text: 'Powerful analytics and insights' },
+              { icon: '🛡️', text: 'Secure payments and guaranteed payouts' },
+            ].map((item, i) => (
+              <div className="flex items-center gap-4" key={i}>
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl shrink-0">{item.icon}</div>
+                <span className="text-emerald-50 text-base font-medium">{item.text}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Trust */}
-        <div className="relative z-10 flex items-center gap-4 text-emerald-200 text-sm">
-          <span>🛡️ TrustSEAL Verified</span>
-          <span>🔒 Secure Platform</span>
+        <div className="relative z-10 flex items-center gap-6 text-emerald-200/80 text-sm font-medium">
+          <span>🚀 Fast Setup</span>
+          <span>📈 High Reach</span>
+          <span>💸 Zero Hidden Fees</span>
         </div>
       </div>
 
       {/* Right Side: Form */}
-      <div className="flex-1 flex flex-col p-6 lg:p-10 overflow-y-auto">
-        <div className="w-full max-w-[600px] mx-auto">
-
-          {/* Mobile Logo */}
-          <div className="lg:hidden mb-6 text-center">
-            <img src="/logo.png" alt="MarkatVerse" className="h-10 mx-auto object-contain" />
-            <div className="text-emerald-600 text-sm font-medium mt-1">SELLER PORTAL</div>
-          </div>
-
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 overflow-y-auto">
+        <div className="w-full max-w-[440px]">
           {/* Step Progress */}
-          {step <= 3 && (
-            <div className="flex items-center justify-center gap-0 mb-10">
-              {steps.map((s, i) => (
+          {step <= 5 && (
+            <div className="flex items-center justify-between mb-10 overflow-x-auto pb-2">
+              {stepsList.map((s, i) => (
                 <React.Fragment key={s.num}>
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold transition-all ${
-                      step > s.num ? 'bg-emerald-600 text-white' :
-                      step === s.num ? 'bg-emerald-600 text-white ring-4 ring-emerald-100' :
+                  <div className="flex flex-col items-center gap-1.5 shrink-0">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                      Math.floor(step) > s.num ? 'bg-emerald-600 text-white' :
+                      Math.floor(step) === s.num ? 'bg-emerald-600 text-white ring-4 ring-emerald-100' :
                       'bg-slate-200 text-slate-400'
                     }`}>
-                      {step > s.num ? '✓' : s.num}
+                      {Math.floor(step) > s.num ? '✓' : s.num}
                     </div>
-                    <span className={`text-xs font-medium ${step >= s.num ? 'text-emerald-700' : 'text-slate-400'}`}>
+                    <span className={`text-[10px] font-medium ${Math.floor(step) >= s.num ? 'text-emerald-700' : 'text-slate-400'}`}>
                       {s.label}
                     </span>
                   </div>
-                  {i < steps.length - 1 && (
-                    <div className={`w-16 h-0.5 mb-5 mx-1 ${step > s.num ? 'bg-emerald-600' : 'bg-slate-200'}`}></div>
+                  {i < stepsList.length - 1 && (
+                    <div className={`flex-1 h-0.5 mx-2 ${Math.floor(step) > s.num ? 'bg-emerald-600' : 'bg-slate-200'}`}></div>
                   )}
                 </React.Fragment>
               ))}
             </div>
           )}
 
-          {/* ─── STEP 1: Account Setup ─── */}
+          {/* STEP 1 */}
           {step === 1 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <span className="text-2xl">👤</span>
+            <div className="bg-transparent py-4">
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-slate-900 mb-1">👤 Create Seller Account</h2>
+                <p className="text-slate-500 text-sm">Join MarkatVerse as a seller today</p>
               </div>
-              <h2 className="text-xl font-bold text-slate-900 text-center mb-1">Create Seller Account</h2>
-              <p className="text-slate-500 text-sm text-center mb-7">Set up your login credentials to get started</p>
 
               {/* Tabs */}
               <div className="flex bg-slate-100 rounded-xl p-1 mb-8">
-                <Link href="/seller/login" className="flex-1 py-2.5 text-sm font-semibold text-center text-slate-500 hover:text-slate-700 transition-all">
+                <Link href="/seller/login" className="flex-1 text-center py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">
                   Sign In
                 </Link>
-                <div className="flex-1 py-2.5 text-sm font-semibold text-center rounded-lg bg-white text-emerald-600 shadow-sm transition-all">
+                <div className="flex-1 text-center py-2.5 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition-all">
                   Register
                 </div>
               </div>
 
-              <form onSubmit={handleAccountSetup} className="flex flex-col gap-4">
+              <form onSubmit={handleAccountInit} className="flex flex-col gap-5">
                 <div>
-                  <label className={labelClasses}>Full Name (Owner)</label>
-                  <input required type="text" value={ownerName} onChange={e => setOwnerName(e.target.value)}
-                    placeholder="John Doe" className={inputClasses} />
-                </div>
-
-                <div>
-                  <label className={labelClasses}>Email Address</label>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                    placeholder="seller@example.com" className={inputClasses} />
-                </div>
-
-                <div>
-                  <label className={labelClasses}>Phone Number <span className="normal-case font-normal text-slate-400">(optional if email given)</span></label>
+                  <label className={labelClasses}>Full Name <span className="text-red-500">*</span></label>
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                      <span className="text-slate-500 font-medium ml-1">+91</span>
-                      <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                    </div>
-                    <input type="tel" maxLength={10} value={phone} onChange={e => {
-                        const val = e.target.value.replace(/\D/g, '');
-                        setPhone(val);
-                      }}
-                      placeholder="9876543210" className={`${inputClasses} pl-16`} />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input required type="text" value={ownerName} onChange={e => setOwnerName(e.target.value)} placeholder="John Doe" className={inputClasses} />
                   </div>
-                  {phone && phone.length > 0 && phone.length < 10 && (
-                    <p className="text-xs text-red-500 mt-1">Phone number must be 10 digits</p>
-                  )}
-                  {phone && phone.length === 10 && (
-                    <p className="text-xs text-emerald-500 mt-1">✅ Valid phone number</p>
-                  )}
                 </div>
-
                 <div>
-                  <label className={labelClasses}>Password</label>
+                  <label className={labelClasses}>Email Address <span className="text-red-500">*</span></label>
                   <div className="relative">
-                    <input required type={showPassword ? 'text' : 'password'} value={password}
-                      onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters"
-                      className={`${inputClasses} pr-11`} />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
-                      {showPassword ? '🙈' : '👁️'}
+                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@company.com" className={inputClasses} />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClasses}>Mobile Number <span className="text-slate-400 font-normal normal-case">(optional)</span></label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <span className="text-slate-700 font-medium">+91</span>
+                      <div className="w-px h-5 bg-slate-200"></div>
+                    </div>
+                    <input type="tel" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} className={`${inputClasses} pl-24`} placeholder="9876543210" />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClasses}>Password <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input required type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters" className={inputClasses} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
-
                 <div>
-                  <label className={labelClasses}>Confirm Password</label>
-                  <input required type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter password" className={inputClasses} />
-                  {confirmPassword && password !== confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">Passwords don't match</p>
-                  )}
-                  {confirmPassword && password === confirmPassword && password.length >= 6 && (
-                    <p className="text-xs text-emerald-500 mt-1">✅ Passwords match</p>
-                  )}
+                  <label className={labelClasses}>Confirm Password <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input required type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Re-enter password" className={inputClasses} />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
-
-                <button type="submit" disabled={isSubmitting || !ownerName || (!email && !phone)}
-                  className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm mt-2">
-                  {isSubmitting
-                    ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating account...</>
-                    : 'Create Account & Continue →'
-                  }
-                </button>
+                <div className="mt-2">
+                  <p className="text-[13px] text-slate-400 mb-4">
+                    By registering, you agree to our <a href="#" className="text-indigo-500 hover:underline">Terms of Service</a> and <a href="#" className="text-indigo-500 hover:underline">Privacy Policy</a>.
+                  </p>
+                  <button type="submit" disabled={isSubmitting} className={btnPrimary}>
+                    {isSubmitting ? 'Sending OTP...' : <><span className="text-[15px]">Verify Email</span> <ArrowRight className="w-5 h-5" /></>}
+                  </button>
+                </div>
               </form>
-
-              <p className="mt-6 text-center text-sm text-slate-400">
-                Already a seller?{' '}
-                <Link href="/seller/login" className="text-emerald-600 hover:underline font-semibold">Sign In</Link>
-              </p>
             </div>
           )}
 
-          {/* ─── STEP 2: Business Details ─── */}
+          {/* STEP 1.2 */}
+          {step === 1.2 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+              <button type="button" onClick={() => setStep(1)} className="text-slate-500 hover:text-slate-700 text-sm mb-4">← Back</button>
+              <h2 className="text-xl font-bold text-slate-900 text-center mb-1">✉️ Verify Email</h2>
+              <form onSubmit={handleEmailVerifyAndSignup} className="flex flex-col gap-4">
+                <div>
+                  <label className={labelClasses}>6-Digit OTP <span className="text-red-500">*</span></label>
+                  <input required type="text" maxLength={6} value={emailOtp} onChange={e => setEmailOtp(e.target.value.toUpperCase())} placeholder="- - - - - -" className={`${inputClasses} text-center text-xl tracking-widest`} />
+                </div>
+                <button type="submit" disabled={isSubmitting || emailOtp.length !== 6 || otpTimer === 0} className={btnPrimary}>Complete Setup ✓</button>
+                <div className="text-right text-sm text-slate-500">{otpTimer > 0 ? `Code expires in ${formatTime(otpTimer)}` : 'Code expired'}</div>
+              </form>
+            </div>
+          )}
+
+          {/* STEP 2: PROFILE */}
           {step === 2 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <span className="text-2xl">🏢</span>
+            <div className="bg-transparent py-4">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-slate-900 mb-1">🏢 Business Profile</h2>
+                <p className="text-slate-500 text-sm">Basic details about your business and location</p>
               </div>
-              <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Business Details</h2>
-              <p className="text-slate-500 text-base text-center mb-8">Tell us about your business so we can set up your store</p>
-
-              <form onSubmit={handleBusinessDetails} className="flex flex-col gap-5">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelClasses}>Main Business Model</label>
-                    <select required value={mainType} onChange={e => {
-                        setMainType(e.target.value);
-                        const roles = mainTypeMapping[e.target.value] || [];
-                        setSellerRole('');
-                        setBusinessSector('');
-                      }} className={`${selectClasses} ${!mainType ? '!text-slate-400' : ''}`}>
-                      <option className="text-slate-400" value="" disabled>Select Model...</option>
-                      <option className="text-slate-900" value="B2B">B2B (Business to Business)</option>
-                      <option className="text-slate-900" value="B2C">B2C (Business to Consumer)</option>
-                      <option className="text-slate-900" value="BOTH">Both B2B & B2C</option>
-                      <option className="text-slate-900" value="SERVICE">Service & Booking</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClasses}>Business Type</label>
-                    <select required value={sellerRole} onChange={e => { setSellerRole(e.target.value); setBusinessSector(''); }} className={`${selectClasses} ${!sellerRole ? '!text-slate-400' : ''}`}>
-                      <option className="text-slate-400" value="" disabled>Select Type...</option>
-                      {currentRoles.map(role => (
-                        <option className="text-slate-900" key={role} value={role}>{role}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelClasses}>Business Sector</label>
-                    <select required value={businessSector} onChange={e => { setBusinessSector(e.target.value); }} className={`${selectClasses} ${!businessSector ? '!text-slate-400' : ''}`}>
-                      <option className="text-slate-400" value="" disabled>Select sector...</option>
-                      {currentSectors.map(sec => (
-                        <option className="text-slate-900" key={sec} value={sec}>{sec}</option>
-                      ))}
-                    </select>
-                  </div>
+              <form onSubmit={e => { e.preventDefault(); setStep(3); }} className="flex flex-col gap-6">
+                <div><label className={labelClasses}>Legal Business Name <span className="text-red-500">*</span></label><input required type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="e.g. ACME Corp" className={inputClasses} /></div>
+                <div><label className={labelClasses}>GST / PAN Number (Optional)</label><input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value)} placeholder="e.g. 22AAAAA0000A1Z5" className={inputClasses} /></div>
+                <div className="flex justify-between items-center mt-2 border-t border-slate-100 pt-6">
+                  <h3 className="text-sm font-bold text-slate-800">Location Details</h3>
+                  <button type="button" onClick={handleAutoFetchLocation} className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1">
+                    📍 Auto Fetch Address
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={labelClasses}>Legal Business Name</label>
-                    <input required type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="e.g. Global Exports LLC" className={inputClasses} />
+                    <label className={labelClasses}>PIN Code <span className="text-red-500">*</span></label>
+                    <input required type="text" maxLength={6} value={pinCode} onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))} placeholder="e.g. 110001" className={inputClasses} />
                   </div>
                   <div>
-                    <label className={labelClasses}>PIN Code</label>
-                    <div className="relative">
-                      <input required type="text" maxLength={6} value={pinCode} onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))} placeholder="e.g. 110001" className={inputClasses} />
-                      {isFetchingPin && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>}
-                    </div>
+                    <label className={labelClasses}>State <span className="text-red-500">*</span></label>
+                    <input required type="text" value={stateName} onChange={e => setStateName(e.target.value)} placeholder="e.g. Delhi" className={inputClasses} />
                   </div>
-                </div>
-
-                {areas.length > 0 && (
                   <div>
-                    <label className={labelClasses}>Select Area / Locality</label>
-                    <select className={selectClasses} onChange={e => {
-                      const area = e.target.value;
-                      const parts = businessLocation.split(', ');
-                      if (parts.length >= 3) {
-                        setBusinessLocation(`${area}, ${parts[1]}, ${parts[2]}`);
-                      } else {
-                        setBusinessLocation(`${area}, ${businessLocation}`);
-                      }
-                    }}>
-                      {areas.map(a => <option key={a} value={a}>{a}</option>)}
-                    </select>
+                    <label className={labelClasses}>City / District <span className="text-red-500">*</span></label>
+                    <input required type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. New Delhi" className={inputClasses} />
                   </div>
-                )}
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Full Business Address</label>
-                    <button type="button" onClick={handleAutoFetchLocation} className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md">
-                      📍 Auto Fetch Location
-                    </button>
+                  <div>
+                    <label className={labelClasses}>Locality</label>
+                    {areas.length > 0 ? (
+                      <select className={selectClasses} onChange={e => setBusinessLocation(`${e.target.value}, ${businessLocation}`)} defaultValue="">
+                        <option value="" disabled>Select Locality</option>
+                        {areas.map(a => <option key={a} value={a}>{a}</option>)}
+                      </select>
+                    ) : (
+                      <input type="text" disabled placeholder="Enter PIN to fetch" className={`${inputClasses} bg-slate-50 opacity-70`} />
+                    )}
                   </div>
-                  <textarea required rows={2} value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Shop No 1, Connaught Place, New Delhi, Delhi" className={inputClasses} />
                 </div>
 
                 <div>
-                  <label className={labelClasses}>GST / PAN Number</label>
-                  <input required type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value)} placeholder="e.g. 22AAAAA0000A1Z5" className={inputClasses} />
+                  <label className={labelClasses}>Shop No. & Street Name <span className="text-red-500">*</span></label>
+                  <textarea required rows={2} value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Shop No. 12, Main Street" className={inputClasses} />
                 </div>
-
-                <div className="flex gap-3 mt-2">
-                  <button type="button" onClick={() => setStep(1)}
-                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-xl font-medium text-sm cursor-pointer hover:bg-slate-50 transition-colors bg-white">
-                    ← Back
-                  </button>
-                  <button type="submit" disabled={isSubmitting}
-                    className={btnPrimary}>
-                    {isSubmitting ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        Processing...
-                      </span>
-                    ) : 'Next: Upload Documents ->'}
-                  </button>
+                <div>
+                  <label className={labelClasses}>Nearby Landmark (Optional)</label>
+                  <input type="text" value={landmark} onChange={e => setLandmark(e.target.value)} placeholder="e.g. Near City Mall" className={inputClasses} />
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <button type="button" onClick={() => setStep(1)} className="px-6 py-4 border border-slate-300 text-slate-700 rounded-2xl font-bold text-sm bg-white hover:bg-slate-50">← Back</button>
+                  <button type="submit" className={btnPrimary}>Next: Features →</button>
                 </div>
               </form>
             </div>
           )}
 
-
-
-          {/* ─── STEP 3: Documents ─── */}
+          {/* STEP 3: FEATURES */}
           {step === 3 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                <span className="text-2xl">📄</span>
+            <div className="bg-transparent py-4">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-slate-900 mb-1">✨ Business Features</h2>
+                <p className="text-slate-500 text-sm">Select your primary business model and category</p>
               </div>
-              <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Upload Documents</h2>
-              <p className="text-slate-500 text-base text-center mb-8">Required for verification — your data is encrypted and secure</p>
-
-              <form onSubmit={handleDocumentUpload} className="flex flex-col gap-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {(() => {
-                    let docs = [];
-                    switch (mainType) {
-                      case 'B2B':
-                        docs = [
-                          { title: 'Business License', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '📋' },
-                          { title: 'GST Certificate', desc: 'Required for B2B wholesale', icon: '📝' },
-                          { title: 'Company Registration', desc: 'CIN / Incorporation proof', icon: '🏢' },
-                          { title: 'Factory / Warehouse Photos', desc: 'Up to 3 photos', icon: '🏭' },
-                        ];
-                        break;
-                      case 'B2C':
-                        docs = [
-                          { title: 'ID Proof (Aadhar/PAN)', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '🪪' },
-                          { title: 'Shop/Store Photos', desc: 'Inside and outside', icon: '🏪' },
-                          { title: 'Address Proof', desc: 'Electricity or Water bill', icon: '🧾' },
-                          { title: 'GST Certificate (Optional)', desc: 'If applicable', icon: '📋' },
-                        ];
-                        break;
-                      case 'SERVICE':
-                        docs = [
-                          { title: 'Professional License', desc: 'Medical, Trade, or Salon license', icon: '📜' },
-                          { title: 'ID Proof (Aadhar/PAN)', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '🪪' },
-                          { title: 'Business Certificate', desc: 'Proof of business', icon: '🏢' },
-                        ];
-                        break;
-                      case 'BOTH':
-                      default:
-                        docs = [
-                          { title: 'GST / Business Certificate', desc: 'Required for all trades', icon: '📋' },
-                          { title: 'ID Proof (Aadhar/PAN)', desc: 'PDF, JPG, PNG (Max 5MB)', icon: '🪪' },
-                          { title: 'Shop & Factory Photos', desc: 'Visual proof of premises', icon: '🏭' },
-                          { title: 'Cancelled Cheque', desc: 'Needed for payouts', icon: '🏦' },
-                        ];
-                    }
-                    return docs.map((doc, i) => (
-                    <div key={i} className="bg-slate-50 p-5 rounded-xl border border-slate-200 border-dashed hover:border-emerald-400 transition-colors">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-xl">{doc.icon}</span>
-                        <div className="font-medium text-sm text-slate-900">{doc.title}</div>
+              <form onSubmit={e => { e.preventDefault(); setStep(4); }} className="flex flex-col gap-6">
+                <div>
+                  <label className={labelClasses}>What do you provide? <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { id: 'B2C', title: 'Products (Retail)' },
+                      { id: 'B2B', title: 'Products (Wholesale)' },
+                      { id: 'SERVICE', title: 'Services' },
+                      { id: 'BOTH', title: 'Products + Services' }
+                    ].map(opt => (
+                      <div key={opt.id} onClick={() => setMainType(opt.id)} className={`p-4 border-2 rounded-2xl cursor-pointer transition-all ${mainType === opt.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white hover:border-indigo-300 text-slate-700'}`}>
+                        <h4 className="font-bold text-sm text-center">{opt.title}</h4>
                       </div>
-                      <input type="file" className="text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 file:cursor-pointer hover:file:bg-emerald-100" />
-                      <p className="text-xs text-slate-400 mt-2">{doc.desc}</p>
+                    ))}
+                  </div>
+                </div>
+                {mainType && (
+                  <>
+                    <div>
+                      <label className={labelClasses}>Business Type <span className="text-red-500">*</span></label>
+                      <select required value={sellerRole} onChange={e => { setSellerRole(e.target.value); setBusinessSector(''); }} className={selectClasses}>
+                        <option value="" disabled>Select Type...</option>
+                        {currentRoles.map(role => <option key={role} value={role}>{role}</option>)}
+                      </select>
                     </div>
-                    ));
-                  })()}
-                </div>
-
-                {/* Notice */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700 flex items-start gap-2">
-                  <span className="text-base mt-0.5">ℹ️</span>
-                  <span>By clicking complete, you agree to our <strong>Seller Verification Process</strong> and <strong>Terms of Service</strong>. Verification usually takes 24-48 hours.</span>
-                </div>
-
-                <div className="flex gap-3 mt-2">
-                  <button type="button" onClick={() => setStep(2)}
-                    className="px-6 py-3.5 border border-slate-300 text-slate-700 rounded-xl font-medium text-sm cursor-pointer hover:bg-slate-50 transition-colors bg-white">
-                    ← Back
-                  </button>
-                  <button type="submit" disabled={isSubmitting}
-                    className={btnPrimary}>
-                    {isSubmitting ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        Submitting & Verifying...
-                      </span>
-                    ) : 'Complete Verification ✓'}
-                  </button>
+                    <div>
+                      <label className={labelClasses}>Business Sector <span className="text-red-500">*</span></label>
+                      <select required value={businessSector} onChange={e => setBusinessSector(e.target.value)} className={selectClasses}>
+                        <option value="" disabled>Select sector...</option>
+                        {currentSectors.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                      </select>
+                    </div>
+                  </>
+                )}
+                <div className="flex gap-3 mt-4">
+                  <button type="button" onClick={() => setStep(2)} className="px-6 py-4 border border-slate-300 text-slate-700 rounded-2xl font-bold text-sm bg-white hover:bg-slate-50">← Back</button>
+                  <button type="submit" disabled={!mainType} className={btnPrimary}>Next: Final Step →</button>
                 </div>
               </form>
             </div>
           )}
 
-          {/* ─── STEP 4: Success ─── */}
+          {/* STEP 4: HOURS */}
           {step === 4 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 text-center">
-              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">🎉</span>
+            <div className="bg-transparent py-4">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-slate-900 mb-1">🕒 Business Hours</h2>
+                <p className="text-slate-500 text-sm">When is your business open?</p>
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-3">Registration Complete!</h2>
-              <p className="text-slate-500 text-base mb-2">
-                Your seller account for <strong className="text-slate-800">{businessName}</strong> has been submitted successfully.
-              </p>
-              <p className="text-slate-400 text-sm mb-8">
-                Our team will review your documents within 24-48 hours. You&apos;ll receive a notification once approved.
-              </p>
-
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 text-left max-w-sm mx-auto">
-                <h4 className="text-base font-medium text-emerald-800 mb-3">What happens next?</h4>
-                <div className="flex flex-col gap-2.5 text-sm text-emerald-700">
-                  <div className="flex items-center gap-2"><span>✅</span> Document verification (24-48 hrs)</div>
-                  <div className="flex items-center gap-2"><span>📧</span> Approval email notification</div>
-                  <div className="flex items-center gap-2"><span>🏪</span> Set up your storefront</div>
-                  <div className="flex items-center gap-2"><span>🚀</span> Start listing {['Service Provider', 'Organizer'].includes(sellerRole) ? 'services' : 'products'}!</div>
+              <form onSubmit={e => { e.preventDefault(); setStep(5); }} className="flex flex-col gap-6">
+                <div>
+                  <div className="flex flex-col gap-3">
+                    {Object.keys(businessHours).map(day => (
+                      <div key={day} className="flex items-center justify-between bg-white p-3 rounded-2xl border border-slate-200">
+                        <span className="capitalize w-24 text-sm font-semibold text-slate-700">{day}</span>
+                        <div className="flex gap-2">
+                          <input type="time" value={(businessHours as any)[day].open} onChange={e => setBusinessHours({...businessHours, [day]: {...(businessHours as any)[day], open: e.target.value}})} disabled={(businessHours as any)[day].closed} className="p-1.5 border border-slate-200 rounded text-xs outline-none focus:border-indigo-400 bg-slate-50" />
+                          <span className="text-slate-400 self-center">-</span>
+                          <input type="time" value={(businessHours as any)[day].close} onChange={e => setBusinessHours({...businessHours, [day]: {...(businessHours as any)[day], close: e.target.value}})} disabled={(businessHours as any)[day].closed} className="p-1.5 border border-slate-200 rounded text-xs outline-none focus:border-indigo-400 bg-slate-50" />
+                        </div>
+                        <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 cursor-pointer">
+                          <input type="checkbox" checked={(businessHours as any)[day].closed} onChange={e => setBusinessHours({...businessHours, [day]: {...(businessHours as any)[day], closed: e.target.checked}})} className="rounded" /> Closed
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex gap-3 justify-center">
-                <Link href="/">
-                  <button className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors border-none cursor-pointer text-base">
-                    Go to Homepage
-                  </button>
-                </Link>
-                <Link href="/seller/dashboard">
-                  <button className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg font-medium text-base cursor-pointer hover:bg-slate-50 transition-colors bg-white">
-                    Seller Dashboard
-                  </button>
-                </Link>
-              </div>
+                <div className="flex gap-3 mt-4">
+                  <button type="button" onClick={() => setStep(3)} className="px-6 py-4 border border-slate-300 text-slate-700 rounded-2xl font-bold text-sm bg-white hover:bg-slate-50">← Back</button>
+                  <button type="submit" className={btnPrimary}>Next: Final Step →</button>
+                </div>
+              </form>
             </div>
           )}
 
-          {/* Footer */}
-          <div className="mt-8 text-center text-sm text-slate-400">
-            Need help? <a href="#" className="text-emerald-600 hover:underline">Contact Seller Support</a>
-          </div>
+          {/* STEP 5: SUBMIT */}
+          {step === 5 && (
+            <div className="bg-transparent py-4">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-slate-900 mb-1">🚀 Final Step</h2>
+                <p className="text-slate-500 text-sm">Upload documents to verify your business</p>
+              </div>
+              <form onSubmit={handleFinalSubmit} className="flex flex-col gap-6">
+                <div>
+                  <label className={labelClasses}>ID Proof / License (Optional)</label>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 border-dashed text-center">
+                    <input type="file" className="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 file:cursor-pointer hover:file:bg-indigo-100" />
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <button type="button" onClick={() => setStep(4)} className="px-6 py-4 border border-slate-300 text-slate-700 rounded-2xl font-bold text-sm bg-white hover:bg-slate-50">← Back</button>
+                  <button type="submit" disabled={isSubmitting} className={btnPrimary}>{isSubmitting ? 'Submitting...' : 'Submit Registration ✓'}</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* STEP 6: SUCCESS */}
+          {step === 6 && (
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10 text-center mt-10">
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+                ⏳
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Admin Review Pending</h2>
+              <p className="text-slate-500 text-base mb-8">
+                Your seller application has been submitted and is currently under review by our Admin team. Once approved, your MarkatVerse Dashboard will be generated.
+              </p>
+              <Link href="/">
+                <button className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors">Return to Homepage</button>
+              </Link>
+            </div>
+          )}
 
         </div>
       </div>

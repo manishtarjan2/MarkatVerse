@@ -23,7 +23,7 @@ export class IdGeneratorService {
   }
 
   async generateUserId(): Promise<string> {
-    return this.getNextId('User', 'MV-', 100000);
+    return this.getNextId('User', 'MV-', 10000000);
   }
 
   async generateBusinessId(): Promise<string> {

@@ -48,4 +48,14 @@ export class AuthController {
   verifyResetCode(@Body() data: { identifier: string; code: string }) {
     return this.authService.verifyResetCode(data.identifier, data.code);
   }
+
+  @Post('send-signup-otp')
+  sendSignupOtp(@Body() data: { identifier: string; type: string; phone?: string }) {
+    return this.authService.sendSignupOtp(data.identifier, data.type, data.phone);
+  }
+
+  @Post('verify-signup-otp')
+  verifySignupOtp(@Body() data: { identifier: string; code: string; type: string }) {
+    return this.authService.verifySignupOtp(data.identifier, data.code, data.type);
+  }
 }

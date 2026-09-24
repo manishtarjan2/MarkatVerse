@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -76,6 +76,12 @@ export default function AdminLoginPage() {
       
       {/* ── Left Branding Panel ── */}
       <div className="hidden lg:flex w-[440px] bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 relative overflow-hidden flex-col justify-between p-12 shrink-0">
+        
+        {/* Back Button */}
+        <Link href="/" className="absolute top-8 left-8 text-slate-300 hover:text-white flex items-center gap-2 text-sm font-semibold z-20 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Home
+        </Link>
+
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 border border-amber-500/30 rounded-full"></div>
@@ -84,36 +90,36 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Logo */}
-        <div className="relative z-10">
-          <img src="/logo.png" alt="MarkatVerse" className="h-10 brightness-0 invert object-contain" />
-          <div className="mt-2 text-amber-400 text-xs font-bold tracking-widest uppercase">Admin Portal</div>
+        <div className="relative z-10 mt-12">
+          <img src="/logo.png" alt="MarkatVerse" className="h-16 brightness-0 invert object-contain" />
+          <div className="mt-2 text-amber-400 text-sm font-bold tracking-widest uppercase">Admin Portal</div>
         </div>
 
         {/* Center Content */}
-        <div className="relative z-10">
+        <div className="relative z-10 mb-8">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="text-white/90 text-xs font-semibold">Authorized Access Only</span>
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <span className="text-white/90 text-sm font-semibold">Authorized Access Only</span>
           </div>
-          <h1 className="text-4xl font-bold text-white leading-tight mb-5">
+          <h1 className="text-5xl font-extrabold text-white leading-tight mb-6">
             Command center for<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">MarkatVerse</span>
           </h1>
-          <p className="text-slate-300 text-sm leading-relaxed mb-10">
+          <p className="text-slate-200 text-base leading-relaxed mb-10">
             Manage sellers, moderate products, oversee finances, and keep the platform running smoothly — all from one dashboard.
           </p>
           
           {/* Features */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {[
               { icon: '🛡️', text: 'Review & verify new businesses' },
               { icon: '📊', text: 'Real-time platform metrics' },
               { icon: '👥', text: 'Full control over accounts' },
               { icon: '💰', text: 'Revenue & payout tracking' },
             ].map((f, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-base shrink-0">{f.icon}</div>
-                <span className="text-slate-300 text-sm">{f.text}</span>
+              <div key={i} className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl shrink-0">{f.icon}</div>
+                <span className="text-slate-200 text-base font-medium">{f.text}</span>
               </div>
             ))}
           </div>

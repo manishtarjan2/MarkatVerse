@@ -19,7 +19,7 @@ async function resetIds() {
   console.log('Resetting Users...');
   const users = await prisma.user.findMany({ orderBy: { createdAt: 'asc' } });
   for (const user of users) {
-    const markatId = await getNextId('User', 'MV-', 100000);
+    const markatId = await getNextId('User', 'MV-', 10000000);
     await prisma.user.update({
       where: { id: user.id },
       data: { markatId }
@@ -75,6 +75,17 @@ async function resetIds() {
     });
   }
   console.log(`Updated ${bookings.length} Bookings/Tokens`);
+
+  console.log('Resetting AuditLogs...');
+  const audits = await prisma.auditLog.findMany({ orderBy: { createdAt: 'asc' } });
+  for (const audit of audits) {
+    const logId = await getNextId('AuditLog', 'AUD-', 10000);
+    await prisma.auditLog.update({
+      where: { id: audit.id },
+      data: { logId }
+    });
+  }
+  console.log(`Updated ${audits.length} Audit Logs`);
 
   console.log('All IDs have been successfully reset to match the proper sequences!');
   await prisma.$disconnect();

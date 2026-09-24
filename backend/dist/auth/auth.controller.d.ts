@@ -51,10 +51,10 @@ export declare class AuthController {
     }>;
     getMe(authHeader: string): Promise<{
         id: string;
+        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
-        name: string;
         role: string;
         business: ({
             wallet: {
@@ -73,16 +73,19 @@ export declare class AuthController {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
             businessType: string;
+            sector: string | null;
             address: string | null;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
+            gstNumber: string | null;
+            businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;
             capabilities: string[];
             maxListings: number;
@@ -109,5 +112,21 @@ export declare class AuthController {
         code: string;
     }): Promise<{
         message: string;
+    }>;
+    sendSignupOtp(data: {
+        identifier: string;
+        type: string;
+        phone?: string;
+    }): Promise<{
+        message: string;
+        success: boolean;
+    }>;
+    verifySignupOtp(data: {
+        identifier: string;
+        code: string;
+        type: string;
+    }): Promise<{
+        message: string;
+        success: boolean;
     }>;
 }

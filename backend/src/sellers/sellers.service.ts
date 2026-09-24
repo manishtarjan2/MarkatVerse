@@ -62,7 +62,13 @@ export class SellersService {
         name: seller.businessName || seller.name || 'My Business',
         description: seller.description || null,
         businessType: seller.businessType || 'WHOLESALER',
+        sector: seller.sector || null,
         address: seller.address || null,
+        pincode: seller.pincode || null,
+        latitude: seller.latitude || null,
+        longitude: seller.longitude || null,
+        gstNumber: seller.gstNumber || null,
+        businessHours: seller.businessHours || null,
         verified: false,
         capabilities: seller.mainType === 'SERVICE' ? ['SERVICE'] : ['B2B', 'B2C'],
       },
@@ -142,11 +148,26 @@ export class SellersService {
   async updateUser(userId: string, data: any) {
     const business = await this.prisma.business.findUnique({ where: { userId } });
     if (!business) throw new Error('Business not found');
+    
+    // Also update user if needed
+    if (data.ownerName || data.phone || data.email) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          name: data.ownerName !== undefined ? data.ownerName : undefined,
+          phone: data.phone !== undefined ? data.phone : undefined,
+          email: data.email !== undefined ? data.email : undefined,
+        }
+      });
+    }
+
     return this.prisma.business.update({
       where: { userId },
       data: {
         name: data.businessName !== undefined ? data.businessName : undefined,
         address: data.address !== undefined ? data.address : undefined,
+        pincode: data.pincode !== undefined ? data.pincode : undefined,
+        gstNumber: data.gstNumber !== undefined ? data.gstNumber : undefined,
         maxListings: data.maxListings !== undefined ? Number(data.maxListings) : undefined,
         commissionType: data.commissionType !== undefined ? data.commissionType : undefined,
         commissionRate: data.commissionRate !== undefined ? Number(data.commissionRate) : undefined,

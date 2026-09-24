@@ -20,6 +20,7 @@ let AuthService = AuthService_1 = class AuthService {
     idGenerator;
     securityService;
     logger = new Logger(AuthService_1.name);
+    otpStore = new Map();
     constructor(prisma, jwtService, idGenerator, securityService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
@@ -74,6 +75,81 @@ let AuthService = AuthService_1 = class AuthService {
             userId: user.id,
         });
         return this.generateToken(user);
+    }
+    async sendSignupOtp(identifier, type, phone) {
+        if (type !== 'email') {
+            throw new BadRequestException('Only email OTP is supported currently');
+        }
+        const existing = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email: identifier },
+                    ...(phone ? [{ phone }] : [])
+                ]
+            }
+        });
+        if (existing) {
+            throw new BadRequestException('An account with this email or phone number already exists.');
+        }
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        const expires = new Date(Date.now() + 5 * 60 * 1000);
+        this.otpStore.set(identifier, { code, expires });
+        try {
+            const nodemailer = await import('nodemailer');
+            if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+                const transporter = nodemailer.createTransport({
+                    host: process.env.SMTP_HOST,
+                    port: parseInt(process.env.SMTP_PORT || '587'),
+                    secure: process.env.SMTP_SECURE === 'true',
+                    auth: {
+                        user: process.env.SMTP_USER,
+                        pass: process.env.SMTP_PASS,
+                    },
+                });
+                await transporter.sendMail({
+                    from: `"MarkatVerse Security" <${process.env.SMTP_USER}>`,
+                    to: identifier,
+                    subject: 'Your Registration Code - MarkatVerse',
+                    html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Welcome to MarkatVerse!</h2>
+              <p>You are one step away from creating your account. Please use the 6-character code below to verify your email address. This code will expire in 5 minutes.</p>
+              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #10b981;">${code}</span>
+              </div>
+              <p>If you did not request this, you can safely ignore this email.</p>
+            </div>
+          `
+                });
+                this.logger.log(`Signup OTP email sent to ${identifier}`);
+            }
+            else {
+                this.logger.warn(`No SMTP configuration found. Development mode signup OTP for ${identifier}: ${code}`);
+            }
+        }
+        catch (error) {
+            this.logger.error('Failed to send signup OTP email', error);
+        }
+        return { message: `OTP sent successfully to ${identifier}`, success: true };
+    }
+    async verifySignupOtp(identifier, code, type) {
+        const record = this.otpStore.get(identifier);
+        if (!record) {
+            throw new BadRequestException('No OTP request found for this email or it has expired');
+        }
+        if (record.code !== code.toUpperCase()) {
+            throw new BadRequestException('Invalid OTP code');
+        }
+        if (new Date() > record.expires) {
+            this.otpStore.delete(identifier);
+            throw new BadRequestException('OTP code has expired (valid for 5 minutes)');
+        }
+        this.otpStore.delete(identifier);
+        return { message: 'Code verified successfully', success: true };
     }
     async login(data) {
         const identifier = data.email || data.phone;

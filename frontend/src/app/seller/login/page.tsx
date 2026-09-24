@@ -157,25 +157,31 @@ export default function SellerLoginPage() {
 
       {/* ── Left Branding ── */}
       <div className="hidden lg:flex w-[440px] bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 relative overflow-hidden flex-col justify-between p-12 shrink-0">
+        
+        {/* Back Button */}
+        <Link href="/" className="absolute top-8 left-8 text-emerald-200 hover:text-white flex items-center gap-2 text-sm font-semibold z-20 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Home
+        </Link>
+
         <div className="absolute top-[-80px] left-[-80px] w-[360px] h-[360px] border border-white/10 rounded-full" />
         <div className="absolute bottom-[-100px] right-[-100px] w-[440px] h-[440px] border border-white/10 rounded-full" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
 
-        <div className="relative z-10">
-          <img src="/logo.png" alt="MarkatVerse" className="h-10 brightness-0 invert object-contain" />
-          <div className="mt-2 text-emerald-200 text-xs font-bold tracking-[0.2em] uppercase">Seller Portal</div>
+        <div className="relative z-10 mt-12">
+          <img src="/logo.png" alt="MarkatVerse" className="h-16 brightness-0 invert object-contain" />
+          <div className="mt-2 text-emerald-200 text-sm font-bold tracking-[0.2em] uppercase">Seller Portal</div>
         </div>
 
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
             <span className="text-amber-400 text-sm">⭐</span>
-            <span className="text-white/90 text-xs font-semibold">50,000+ active sellers</span>
+            <span className="text-white/90 text-sm font-semibold">50,000+ active sellers</span>
           </div>
-          <h1 className="text-4xl font-bold text-white leading-tight mb-5">
+          <h1 className="text-5xl font-extrabold text-white leading-tight mb-6">
             Grow your business<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">with MarkatVerse</span>
           </h1>
-          <p className="text-emerald-100/80 text-sm leading-relaxed mb-10">
+          <p className="text-emerald-50 text-base leading-relaxed mb-10">
             Reach millions of customers across India. Manage products, orders, and payouts — all from one powerful dashboard.
           </p>
 
@@ -352,7 +358,7 @@ export default function SellerLoginPage() {
                   <input
                     required type="text" value={fpOtp}
                     onChange={e => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    placeholder="● ● ● ●" maxLength={4}
+                    placeholder="- - - -" maxLength={4}
                     className="w-full py-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-center tracking-[16px] text-2xl font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:bg-white transition-all"
                   />
                 </div>

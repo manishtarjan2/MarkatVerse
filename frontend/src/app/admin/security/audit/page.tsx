@@ -112,8 +112,8 @@ export default function SecurityAuditPage() {
                     <td className="p-4 text-slate-400 text-sm max-w-[200px] truncate" title={log.details}>
                       {log.details || 'N/A'}
                     </td>
-                    <td className="p-4 text-slate-500 text-sm font-mono truncate" title={log.userId}>
-                      {log.userId || 'System'}
+                    <td className="p-4 text-slate-500 text-sm font-mono truncate" title={log.userMarkatId || log.userId}>
+                      {log.userMarkatId || log.userId || 'System'}
                     </td>
                     <td className="p-4 pr-6 text-right font-mono text-xs text-slate-500">
                       {log.ipAddress || 'Unknown'}

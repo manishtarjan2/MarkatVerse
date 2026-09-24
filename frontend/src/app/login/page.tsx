@@ -4,10 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Phone, Lock, User, ArrowRight, ArrowLeft, CheckCircle, ShieldCheck } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-type View = 'signin' | 'register' | 'forgot' | 'otp' | 'reset-password' | 'success';
+type View = 'signin' | 'register' | 'register-email-otp' | 'forgot' | 'otp' | 'reset-password' | 'success';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,12 +38,13 @@ export default function LoginPage() {
   const [siIdentifier, setSiIdentifier] = useState('');
   const [siPassword, setSiPassword] = useState('');
 
-  // Register fields
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [mobileOtp, setMobileOtp] = useState('');
+  const [emailOtp, setEmailOtp] = useState('');
 
   // Forgot password fields
   const [fpIdentifier, setFpIdentifier] = useState('');
@@ -54,7 +56,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (view === 'otp' && otpTimer > 0) {
+    if ((view === 'otp' || view === 'register-email-otp') && otpTimer > 0) {
       interval = setInterval(() => {
         setOtpTimer((prev) => prev - 1);
       }, 1000);
@@ -106,23 +108,59 @@ export default function LoginPage() {
   };
 
   // ── Register ─────────────────────────────────────────────────
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegisterInit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
     if (regPassword !== regConfirmPassword) { setError("Passwords do not match"); return; }
     if (regPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
-    if (!regEmail && !regPhone) { setError("Email or Phone is required"); return; }
+    if (!regEmail) { setError("Email Address is required"); return; }
     if (regPhone && !/^\d{10}$/.test(regPhone.replace(/\D/g, ''))) { setError("Phone number must be exactly 10 digits"); return; }
 
     setIsLoading(true);
     try {
+      // Send OTP to Email directly (Mobile OTP disabled by admin)
+      const res = await fetch(`${API_URL}/auth/send-signup-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: regEmail, type: 'email', phone: regPhone || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to send Email OTP');
+      
+      toast.success(`OTP sent to ${regEmail}`);
+      setOtpTimer(300);
+      setView('register-email-otp');
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEmailVerifyAndSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearErrors();
+    if (emailOtp.length !== 6) { setError("Enter a valid 6-digit code"); return; }
+    
+    setIsLoading(true);
+    try {
+      // Verify Email OTP
+      const verifyRes = await fetch(`${API_URL}/auth/verify-signup-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: regEmail, code: emailOtp, type: 'email' }),
+      });
+      if (!verifyRes.ok) throw new Error('Invalid Email OTP');
+
+      // Proceed with actual Signup
       const res = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: regName,
-          email: regEmail || undefined,
-          phone: regPhone || undefined,
+          email: regEmail,
+          phone: regPhone,
           password: regPassword,
           role: 'CONSUMER',
         }),
@@ -215,51 +253,58 @@ export default function LoginPage() {
     }
   };
 
-  const inputCls = "w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all text-sm";
-  const labelCls = "block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide";
-  const btnPrimary = "w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm";
+  const inputCls = "w-full p-4 pl-12 rounded-2xl border border-slate-200 bg-white text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all placeholder:text-slate-400 text-sm";
+  const labelCls = "block text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider";
+  const btnPrimary = "w-full py-4 bg-gradient-to-r from-indigo-400 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-2xl font-bold transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex">
+    <div className="min-h-screen bg-[#f4f7fa] flex">
+      <Toaster position="top-right" />
       {/* ── Left Branding Panel ── */}
       <div className="hidden lg:flex w-[440px] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden flex-col justify-between p-12 shrink-0">
+        
+        {/* Back Button */}
+        <Link href="/" className="absolute top-8 left-8 text-blue-200 hover:text-white flex items-center gap-2 text-sm font-semibold z-20 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back to Home
+        </Link>
+
         {/* Decorative circles */}
         <div className="absolute top-[-80px] left-[-80px] w-[360px] h-[360px] border border-white/10 rounded-full" />
         <div className="absolute bottom-[-100px] right-[-100px] w-[440px] h-[440px] border border-white/10 rounded-full" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
 
-        <div className="relative z-10">
-          <img src="/logo.png" alt="MarkatVerse" className="h-10 brightness-0 invert object-contain" />
+        <div className="relative z-10 mt-12">
+          <img src="/logo.png" alt="MarkatVerse" className="h-16 brightness-0 invert object-contain" />
         </div>
 
-        <div className="relative z-10">
+        <div className="relative z-10 mb-8">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span className="text-white/90 text-xs font-semibold">Trusted by 2M+ users</span>
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <span className="text-white/90 text-sm font-semibold">Trusted by 2M+ users</span>
           </div>
-          <h1 className="text-4xl font-bold text-white leading-tight mb-5">
+          <h1 className="text-5xl font-extrabold text-white leading-tight mb-6">
             Your gateway to the<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">global marketplace</span>
           </h1>
-          <p className="text-blue-100/80 text-sm leading-relaxed mb-10">
+          <p className="text-blue-50 text-base leading-relaxed mb-10">
             Join millions of buyers and sellers worldwide. Discover products, services, and opportunities — all in one place.
           </p>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {[
               { icon: '🛒', text: 'Shop from millions of products' },
               { icon: '💼', text: 'Sell and grow your business' },
               { icon: '🔒', text: 'Secure & encrypted payments' },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-base shrink-0">{item.icon}</div>
-                <span className="text-blue-100 text-sm">{item.text}</span>
+              <div key={i} className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl shrink-0">{item.icon}</div>
+                <span className="text-blue-50 text-base font-medium">{item.text}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center gap-6 text-blue-200/60 text-xs">
+        <div className="relative z-10 flex items-center gap-6 text-blue-200/80 text-sm font-medium">
           <span>🛡️ Secure Platform</span>
           <span>🔒 SSL Encrypted</span>
           <span>✅ Verified Sellers</span>
@@ -381,7 +426,7 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <form onSubmit={handleRegister} className="space-y-4">
+              <form onSubmit={handleRegisterInit} className="space-y-4">
                 <div>
                   <label className={labelCls}>Full Name</label>
                   <div className="relative">
@@ -395,24 +440,24 @@ export default function LoginPage() {
                   <label className={labelCls}>Email Address</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)}
-                      placeholder="john@example.com" className={inputCls} />
+                    <input required type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)}
+                      placeholder="john@gmail.com" className={inputCls} />
                   </div>
                 </div>
 
                 <div>
-                  <label className={labelCls}>Phone Number <span className="normal-case font-normal text-slate-400">(optional if email given)</span></label>
+                  <label className={labelCls}>Mobile Number <span className="normal-case font-normal text-slate-400">(optional)</span></label>
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                      <Phone className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-500 font-medium">+91</span>
-                      <div className="w-px h-4 bg-slate-200 ml-1"></div>
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                      <span className="text-slate-700 font-medium">+91</span>
+                      <div className="w-px h-5 bg-slate-200"></div>
                     </div>
                     <input type="tel" maxLength={10} value={regPhone} onChange={e => {
                         const val = e.target.value.replace(/\D/g, '');
                         setRegPhone(val);
                       }}
-                      placeholder="9876543210" className={`${inputCls} pl-[5.5rem]`} />
+                      placeholder="9876543210" className={`${inputCls} pl-24`} />
                   </div>
                   {regPhone && regPhone.length > 0 && regPhone.length < 10 && (
                     <p className="text-xs text-red-500 mt-1">Phone number must be 10 digits</p>
@@ -462,10 +507,10 @@ export default function LoginPage() {
                   <span className="text-blue-600 cursor-pointer hover:underline">Privacy Policy</span>.
                 </p>
 
-                <button type="submit" className={btnPrimary} disabled={isLoading || !regName}>
+                <button type="submit" className={btnPrimary} disabled={isLoading || !regName || !regEmail}>
                   {isLoading
-                    ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating account...</>
-                    : <>Create Account <ArrowRight className="w-4 h-4" /></>
+                    ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sending Email OTP...</>
+                    : <>Verify Email <ArrowRight className="w-4 h-4" /></>
                   }
                 </button>
               </form>
@@ -476,6 +521,71 @@ export default function LoginPage() {
                   Sign In
                 </button>
               </p>
+            </div>
+          )}
+
+          {/* ── Register Email OTP View ── */}
+          {view === 'register-email-otp' && (
+            <div>
+              <button onClick={() => { setView('register'); clearErrors(); }}
+                className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-8 transition-colors">
+                <ArrowLeft className="w-4 h-4" /> Back to Registration
+              </button>
+              <div className="mb-8">
+                <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center mb-4">
+                  <Mail className="w-7 h-7 text-indigo-600" />
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900 mb-1">Verify Email</h2>
+                <p className="text-slate-500 text-sm">
+                  We've sent an OTP to <span className="font-semibold text-slate-700">{regEmail}</span>
+                  <br /><span className="text-xs text-amber-600 mt-1 inline-block">If you don't see it in your inbox, please check your <strong>spam folder</strong>.</span>
+                </p>
+              </div>
+
+              {successMsg && (
+                <div className="mb-5 p-3.5 bg-emerald-50 text-emerald-700 rounded-xl text-sm border border-emerald-100">
+                  ✅ {successMsg}
+                </div>
+              )}
+              {error && (
+                <div className="mb-5 p-3.5 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 flex items-start gap-2">
+                  <span className="mt-0.5">⚠️</span> {error}
+                </div>
+              )}
+
+              <form onSubmit={handleEmailVerifyAndSignup} className="space-y-5">
+                <div>
+                  <label className={labelCls}>6-Digit Email OTP</label>
+                  <input
+                    required type="text" value={emailOtp} onChange={e => setEmailOtp(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6))}
+                    placeholder="- - - - - -" maxLength={6}
+                    className="w-full py-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-center tracking-[12px] text-2xl font-bold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:bg-white transition-all uppercase"
+                  />
+                </div>
+
+                <button type="submit" className={btnPrimary} disabled={emailOtp.length !== 6 || otpTimer === 0 || isLoading}>
+                  {isLoading
+                    ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating Account...</>
+                    : <>Verify Email & Finish <CheckCircle className="w-4 h-4" /></>
+                  }
+                </button>
+
+                <div className="flex items-center justify-between text-sm mt-4">
+                  <p className="text-slate-500">
+                    Didn't receive it?{' '}
+                    <button type="button" onClick={handleRegisterInit as any} className="text-blue-600 font-semibold hover:underline">
+                      Resend OTP
+                    </button>
+                  </p>
+                  <p className="text-slate-500 text-right">
+                    {otpTimer > 0 ? (
+                      <>Code expires in <span className="font-semibold text-rose-500">{formatTime(otpTimer)}</span></>
+                    ) : (
+                      <span className="text-red-500 font-semibold">Code has expired</span>
+                    )}
+                  </p>
+                </div>
+              </form>
             </div>
           )}
 
@@ -553,7 +663,7 @@ export default function LoginPage() {
                   <label className={labelCls}>6-Character Code</label>
                   <input
                     required type="text" value={fpOtp} onChange={e => setFpOtp(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6))}
-                    placeholder="● ● ● ● ● ●" maxLength={6}
+                    placeholder="- - - - - -" maxLength={6}
                     className="w-full py-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-center tracking-[12px] text-2xl font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all uppercase"
                   />
                 </div>

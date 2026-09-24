@@ -23,7 +23,7 @@ let IdGeneratorService = class IdGeneratorService {
         return `${prefix}${base + counter.seq}`;
     }
     async generateUserId() {
-        return this.getNextId('User', 'MV-', 100000);
+        return this.getNextId('User', 'MV-', 10000000);
     }
     async generateBusinessId() {
         return this.getNextId('Business', 'BUS-', 1000);

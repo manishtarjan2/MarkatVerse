@@ -24,7 +24,9 @@ let UsersService = class UsersService {
         });
     }
     findAll() {
-        return this.prisma.user.findMany();
+        return this.prisma.user.findMany({
+            include: { business: true }
+        });
     }
     findOne(id) {
         return this.prisma.user.findUnique({ where: { id } });

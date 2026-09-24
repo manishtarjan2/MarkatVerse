@@ -132,7 +132,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
   const canSellB2C = noModelRules || catRules.businessModels.some(m => B2C_LIKE.includes(m));
   const canSellB2B = noModelRules || catRules.businessModels.some(m => B2B_LIKE.includes(m));
 
-  const primaryTypes = ['PRODUCT', 'SERVICE', 'VEHICLE'];
+  const primaryTypes = isService ? ['SERVICE'] : ['PRODUCT', 'VEHICLE'];
   const availableCategories = categories.filter(c => c.primaryType === primaryType);
   const selectedCategory = availableCategories.find(c => c.name === category);
   const availableSubcategories = selectedCategory?.subcategories || [];

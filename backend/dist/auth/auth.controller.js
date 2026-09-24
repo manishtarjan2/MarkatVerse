@@ -45,6 +45,12 @@ let AuthController = class AuthController {
     verifyResetCode(data) {
         return this.authService.verifyResetCode(data.identifier, data.code);
     }
+    sendSignupOtp(data) {
+        return this.authService.sendSignupOtp(data.identifier, data.type, data.phone);
+    }
+    verifySignupOtp(data) {
+        return this.authService.verifySignupOtp(data.identifier, data.code, data.type);
+    }
 };
 __decorate([
     Post('signup'),
@@ -102,6 +108,20 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyResetCode", null);
+__decorate([
+    Post('send-signup-otp'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sendSignupOtp", null);
+__decorate([
+    Post('verify-signup-otp'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifySignupOtp", null);
 AuthController = __decorate([
     Controller('auth'),
     __metadata("design:paramtypes", [AuthService])

@@ -6,37 +6,65 @@ export declare class UsersService {
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     create(createUserDto: any): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
         resetCode: string | null;
         resetCodeExpires: Date | null;
     }>;
-    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
+    findAll(): import(".prisma/client").Prisma.PrismaPromise<({
+        business: {
+            id: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            businessCode: string | null;
+            userId: string;
+            logo: string | null;
+            description: string | null;
+            businessModel: import(".prisma/client").$Enums.MainType;
+            businessType: string;
+            sector: string | null;
+            address: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
+            gstNumber: string | null;
+            businessHours: import("@prisma/client/runtime/library").JsonValue | null;
+            verified: boolean;
+            capabilities: string[];
+            maxListings: number;
+            commissionType: string;
+            commissionRate: number;
+            subscriptionStatus: string;
+            subscriptionStartDate: Date | null;
+            subscriptionEndDate: Date | null;
+        } | null;
+    } & {
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
         resetCode: string | null;
         resetCodeExpires: Date | null;
-    }[]>;
+    })[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -45,11 +73,11 @@ export declare class UsersService {
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateUserDto: any): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -58,11 +86,11 @@ export declare class UsersService {
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;

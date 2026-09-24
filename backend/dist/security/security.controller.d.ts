@@ -3,23 +3,24 @@ export declare class SecurityController {
     private readonly securityService;
     constructor(securityService: SecurityService);
     getAuditLogs(): Promise<{
+        userMarkatId: string | null | undefined;
         id: string;
+        createdAt: Date;
+        userId: string | null;
         logId: string | null;
         action: string;
         resource: string;
         details: string | null;
-        userId: string | null;
         ipAddress: string | null;
-        createdAt: Date;
     }[]>;
     createAuditLog(body: any): Promise<{
         id: string;
+        createdAt: Date;
+        userId: string | null;
         logId: string | null;
         action: string;
         resource: string;
         details: string | null;
-        userId: string | null;
         ipAddress: string | null;
-        createdAt: Date;
     }>;
 }
