@@ -523,13 +523,13 @@ function DashboardContent() {
               {user?.business && (
                 <div className="flex justify-between items-center px-1">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Business ID</span>
-                  <span className="text-xs font-mono font-bold text-slate-700">{user.business.businessCode || user.business.id}</span>
+                  <span className="text-xs font-mono font-bold text-slate-700">{user.business.businessCode || 'Loading...'}</span>
                 </div>
               )}
               {user && (
                 <div className="flex justify-between items-center px-1">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">MV Account ID</span>
-                  <span className="text-xs font-mono font-bold text-slate-700">{user.markatId || user.id}</span>
+                  <span className="text-xs font-mono font-bold text-slate-700">{user.markatId || 'Loading...'}</span>
                 </div>
               )}
             </div>
