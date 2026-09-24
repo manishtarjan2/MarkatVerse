@@ -42,6 +42,35 @@ export default function SellerOnboarding() {
   const [isFetchingPin, setIsFetchingPin] = useState(false);
   const [gstNumber, setGstNumber] = useState('');
 
+  const handleAutoFetchLocation = () => {
+    if (navigator.geolocation) {
+      setIsFetchingPin(true);
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+          const data = await res.json();
+          if (data) {
+            const city = data.city || data.locality || data.principalSubdivision;
+            const newPin = data.postcode || '';
+            if (newPin) setPinCode(newPin);
+            setBusinessLocation(`${city}, ${newPin}`);
+            toast.success("Location fetched automatically!");
+          }
+        } catch (error) {
+          toast.error("Failed to fetch location");
+        } finally {
+          setIsFetchingPin(false);
+        }
+      }, (err) => {
+        toast.error("Location permission denied");
+        setIsFetchingPin(false);
+      }, { enableHighAccuracy: true });
+    } else {
+      toast.error("Geolocation not supported by this browser.");
+    }
+  };
+
   const [otpArray, setOtpArray] = useState(['', '', '', '']);
 
   React.useEffect(() => {
@@ -500,7 +529,12 @@ export default function SellerOnboarding() {
                 )}
 
                 <div>
-                  <label className={labelClasses}>Full Business Address</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Full Business Address</label>
+                    <button type="button" onClick={handleAutoFetchLocation} className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md">
+                      📍 Auto Fetch Location
+                    </button>
+                  </div>
                   <textarea required rows={2} value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Shop No 1, Connaught Place, New Delhi, Delhi" className={inputClasses} />
                 </div>
 

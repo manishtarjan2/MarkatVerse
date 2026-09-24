@@ -624,6 +624,7 @@ model Complaint {
 
 model AuditLog {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  logId     String?
   action    String
   resource  String
   details   String?

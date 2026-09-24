@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { MapPin, CreditCard, CheckCircle2, ChevronRight, Lock, Package, ArrowRight, Smartphone, Banknote, Building2 } from 'lucide-react';
 import MockPaymentGateway from '@/components/MockPaymentGateway';
 import { useAuth } from '@/context/AuthContext';
+import toast from 'react-hot-toast';
 
 type Address = {
   id: string;
@@ -25,14 +26,43 @@ export default function CheckoutPage() {
   const [showGateway, setShowGateway] = useState(false);
 
   // Form States
-  const [firstName, setFirstName] = useState('Amit');
-  const [lastName, setLastName] = useState('Verma');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [phone, setPhone] = useState('');
   const [areas, setAreas] = useState<string[]>([]);
   const [isFetchingPin, setIsFetchingPin] = useState(false);
+
+  const handleAutoFetchLocation = () => {
+    if (navigator.geolocation) {
+      setIsFetchingPin(true);
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+          const data = await res.json();
+          if (data) {
+            const cityName = data.city || data.locality || data.principalSubdivision;
+            const newPin = data.postcode || '';
+            if (newPin) setPinCode(newPin);
+            setCity(`${cityName}, ${data.principalSubdivision || ''}`);
+            toast.success("Location fetched automatically!");
+          }
+        } catch (error) {
+          toast.error("Failed to fetch location");
+        } finally {
+          setIsFetchingPin(false);
+        }
+      }, (err) => {
+        toast.error("Location permission denied");
+        setIsFetchingPin(false);
+      }, { enableHighAccuracy: true });
+    } else {
+      toast.error("Geolocation not supported by this browser.");
+    }
+  };
 
   // Address Selection States
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
@@ -296,7 +326,12 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">City & State</label>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">City & State</label>
+                          <button type="button" onClick={handleAutoFetchLocation} className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md">
+                            📍 Auto Fetch Location
+                          </button>
+                        </div>
                         <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. Bengaluru, Karnataka" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all" />
                       </div>
                     </div>

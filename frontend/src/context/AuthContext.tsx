@@ -37,7 +37,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // true until token is verified
+  const [isLoading, setIsLoading] = useState(true);
 
   // On mount: try to restore session from localStorage token
   useEffect(() => {
@@ -45,6 +45,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!token) {
       setIsLoading(false);
       return;
+    }
+
+    // Instantly load from cache to prevent loading screen flash
+    const cached = localStorage.getItem('user_cache');
+    if (cached) {
+      try {
+        setUser(JSON.parse(cached));
+        setIsLoading(false);
+      } catch (e) {}
     }
 
     fetch(`${API_URL}/auth/me`, {
@@ -61,16 +70,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .then(data => {
         if (!data) return;
-        setUser({
+        const userData = {
           id: data.id,
           markatId: data.markatId,
           name: data.name,
           email: data.email,
           phone: data.phone || '',
           role: data.role?.toLowerCase() as User['role'],
-          status: 'active',
+          status: 'active' as const,
           business: data.business,
-        });
+        };
+        setUser(userData);
+        localStorage.setItem('user_cache', JSON.stringify(userData));
       })
       .catch((e) => {
         console.warn('Auth verification failed:', e.message || e);
@@ -99,11 +110,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token) {
       localStorage.setItem('token', token);
     }
+    localStorage.setItem('user_cache', JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user_cache');
     setUser(null);
   };
 

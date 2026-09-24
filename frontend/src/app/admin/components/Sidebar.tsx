@@ -96,6 +96,7 @@ export default function Sidebar({ currentAdminRole, isMobileMenuOpen, setIsMobil
       icon: <Headset className="w-5 h-5" />,
       subItems: [
         { name: 'Tickets', href: '/admin/support/tickets' },
+        { name: 'Live Chat', href: '/admin/support/live-chat' },
         { name: 'Complaints', href: '/admin/support/complaints' },
         { name: 'Disputes', href: '/admin/support/disputes' },
       ],

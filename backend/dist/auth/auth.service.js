@@ -12,16 +12,19 @@ import { Injectable, UnauthorizedException, BadRequestException, Logger } from '
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { SecurityService } from '../security/security.service.js';
 import * as bcrypt from 'bcryptjs';
 let AuthService = AuthService_1 = class AuthService {
     prisma;
     jwtService;
     idGenerator;
+    securityService;
     logger = new Logger(AuthService_1.name);
-    constructor(prisma, jwtService, idGenerator) {
+    constructor(prisma, jwtService, idGenerator, securityService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
         this.idGenerator = idGenerator;
+        this.securityService = securityService;
     }
     async signup(data) {
         if (!data.email && !data.phone) {
@@ -64,6 +67,12 @@ let AuthService = AuthService_1 = class AuthService {
                 role: data.role || 'CONSUMER',
             },
         });
+        await this.securityService.createAuditLog({
+            action: 'SIGNUP',
+            resource: 'User',
+            details: `User ${user.name} registered as ${user.role}`,
+            userId: user.id,
+        });
         return this.generateToken(user);
     }
     async login(data) {
@@ -85,8 +94,19 @@ let AuthService = AuthService_1 = class AuthService {
         }
         const isMatch = await bcrypt.compare(data.password, user.password);
         if (!isMatch) {
+            await this.securityService.createAuditLog({
+                action: 'LOGIN_FAILED',
+                resource: 'User',
+                details: `Failed login attempt for ${identifier}`,
+            });
             throw new UnauthorizedException('Invalid credentials');
         }
+        await this.securityService.createAuditLog({
+            action: 'LOGIN',
+            resource: 'User',
+            details: `User logged in`,
+            userId: user.id,
+        });
         return this.generateToken(user);
     }
     async phoneLogin(phone) {
@@ -279,7 +299,8 @@ AuthService = AuthService_1 = __decorate([
     Injectable(),
     __metadata("design:paramtypes", [PrismaService,
         JwtService,
-        IdGeneratorService])
+        IdGeneratorService,
+        SecurityService])
 ], AuthService);
 export { AuthService };
 //# sourceMappingURL=auth.service.js.map

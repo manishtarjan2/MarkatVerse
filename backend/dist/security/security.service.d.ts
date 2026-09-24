@@ -1,15 +1,18 @@
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 export declare class SecurityService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private idGenerator;
+    constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     getAuditLogs(): Promise<{
         id: string;
-        createdAt: Date;
-        userId: string | null;
-        resource: string;
+        logId: string | null;
         action: string;
+        resource: string;
         details: string | null;
+        userId: string | null;
         ipAddress: string | null;
+        createdAt: Date;
     }[]>;
     createAuditLog(data: {
         action: string;
@@ -19,11 +22,12 @@ export declare class SecurityService {
         ipAddress?: string;
     }): Promise<{
         id: string;
-        createdAt: Date;
-        userId: string | null;
-        resource: string;
+        logId: string | null;
         action: string;
+        resource: string;
         details: string | null;
+        userId: string | null;
         ipAddress: string | null;
+        createdAt: Date;
     }>;
 }

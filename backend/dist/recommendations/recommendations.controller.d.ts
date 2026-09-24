@@ -12,9 +12,9 @@ export declare class RecommendationsController {
         id: string;
         createdAt: Date;
         userId: string | null;
+        type: string;
         productId: string | null;
         serviceId: string | null;
-        type: string;
         weight: number;
     }>;
 }

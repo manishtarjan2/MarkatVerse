@@ -4,20 +4,22 @@ export declare class SecurityController {
     constructor(securityService: SecurityService);
     getAuditLogs(): Promise<{
         id: string;
-        createdAt: Date;
-        userId: string | null;
-        resource: string;
+        logId: string | null;
         action: string;
+        resource: string;
         details: string | null;
+        userId: string | null;
         ipAddress: string | null;
+        createdAt: Date;
     }[]>;
     createAuditLog(body: any): Promise<{
         id: string;
-        createdAt: Date;
-        userId: string | null;
-        resource: string;
+        logId: string | null;
         action: string;
+        resource: string;
         details: string | null;
+        userId: string | null;
         ipAddress: string | null;
+        createdAt: Date;
     }>;
 }

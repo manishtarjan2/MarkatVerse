@@ -9,12 +9,14 @@ import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { PrismaModule } from '../prisma.module.js';
 import { JwtModule } from '@nestjs/jwt';
+import { SecurityModule } from '../security/security.module.js';
 let AuthModule = class AuthModule {
 };
 AuthModule = __decorate([
     Module({
         imports: [
             PrismaModule,
+            SecurityModule,
             JwtModule.register({
                 global: true,
                 secret: process.env.JWT_SECRET || 'markatverse_jwt_super_secret_2026_do_not_share',

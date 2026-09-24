@@ -98,7 +98,7 @@ export default function SecurityAuditPage() {
                 filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-700/50 transition-all group">
                     <td className="p-4 pl-6">
-                      <div className="font-mono text-xs text-slate-500">#{log.id.slice(-6)}</div>
+                      <div className="font-mono text-xs text-slate-500">#{log.logId || log.id.slice(-6)}</div>
                       <div className="text-xs text-slate-400 mt-1">{new Date(log.createdAt).toLocaleString()}</div>
                     </td>
                     <td className="p-4 font-bold text-white">

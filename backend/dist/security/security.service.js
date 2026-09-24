@@ -9,10 +9,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
+import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 let SecurityService = class SecurityService {
     prisma;
-    constructor(prisma) {
+    idGenerator;
+    constructor(prisma, idGenerator) {
         this.prisma = prisma;
+        this.idGenerator = idGenerator;
     }
     async getAuditLogs() {
         return this.prisma.auditLog.findMany({
@@ -21,14 +24,19 @@ let SecurityService = class SecurityService {
         });
     }
     async createAuditLog(data) {
+        const logId = await this.idGenerator.generateAuditLogId();
         return this.prisma.auditLog.create({
-            data,
+            data: {
+                ...data,
+                logId,
+            },
         });
     }
 };
 SecurityService = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [PrismaService])
+    __metadata("design:paramtypes", [PrismaService,
+        IdGeneratorService])
 ], SecurityService);
 export { SecurityService };
 //# sourceMappingURL=security.service.js.map

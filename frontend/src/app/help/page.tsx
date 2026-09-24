@@ -13,8 +13,11 @@ import {
   Mail, 
   ChevronRight,
   ChevronDown,
-  HelpCircle
+  HelpCircle,
+  X,
+  Send
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const faqs = [
   {
@@ -50,6 +53,185 @@ const categories = [
 export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{sender: 'user'|'admin', text: string, time?: string, isBotCallOffer?: boolean, botOptions?: string[]}[]>([]);
+  const [currentMessage, setCurrentMessage] = useState('');
+
+  React.useEffect(() => {
+    const loadMyChat = () => {
+      try {
+        const stored = localStorage.getItem('MV_LIVE_CHATS');
+        if (stored) {
+          let chats = JSON.parse(stored);
+          if (!Array.isArray(chats)) chats = [];
+          if (chats.some((c: any) => c.id === 'CH-1001' && c.customerName === 'Aarav Sharma')) {
+            chats = chats.filter((s: any) => !(s.id === 'CH-1001' || s.id === 'CH-1002' || s.id === 'CH-1003'));
+            localStorage.setItem('MV_LIVE_CHATS', JSON.stringify(chats));
+          }
+          const myChat = chats.find((c: any) => c.id === 'CH-ME');
+          if (myChat) {
+            setChatMessages(myChat.messages || []);
+          } else {
+            setChatMessages([]);
+          }
+        }
+      } catch (e) {
+        setChatMessages([]);
+      }
+    };
+    
+    loadMyChat();
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'MV_LIVE_CHATS' && e.newValue) {
+        try {
+          const chats = JSON.parse(e.newValue);
+          const myChat = Array.isArray(chats) ? chats.find((c: any) => c.id === 'CH-ME') : null;
+          if (myChat) {
+            setChatMessages(myChat.messages || []);
+          }
+        } catch(e) {}
+      }
+    };
+
+    const handleCustomSync = () => {
+      loadMyChat();
+    };
+
+    const syncInterval = setInterval(loadMyChat, 1000);
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('MV_CHAT_SYNC', handleCustomSync);
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('MV_CHAT_SYNC', handleCustomSync);
+    };
+  }, []);
+
+  const handleSendMessage = (overrideText?: string) => {
+    const textToSend = overrideText || currentMessage;
+    if (textToSend.trim()) {
+      const newMessage = { sender: 'user' as const, text: textToSend, time: 'Just now' };
+      const stored = localStorage.getItem('MV_LIVE_CHATS');
+      let chats = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(chats)) chats = [];
+      
+      const myChatIndex = chats.findIndex((c: any) => c.id === 'CH-ME');
+      
+      let currentMessages = [];
+      if (myChatIndex >= 0) {
+        currentMessages = chats[myChatIndex].messages || [];
+      }
+      
+      const newMessages = [...currentMessages, newMessage];
+      setChatMessages(newMessages);
+      setCurrentMessage('');
+      
+      if (myChatIndex >= 0) {
+        chats[myChatIndex].messages = newMessages;
+        chats[myChatIndex].lastMessage = textToSend;
+        chats[myChatIndex].unreadCount = (chats[myChatIndex].unreadCount || 0) + 1;
+      } else {
+        chats = [{
+          id: 'CH-ME',
+          customerName: 'Guest User',
+          type: 'chat',
+          status: 'active',
+          lastMessage: textToSend,
+          time: 'Just now',
+          unreadCount: 1,
+          phone: '+91 98765 43210',
+          messages: newMessages
+        }, ...chats];
+      }
+      
+      localStorage.setItem('MV_LIVE_CHATS', JSON.stringify(chats));
+      window.dispatchEvent(new Event('MV_CHAT_SYNC'));
+
+      const userMessageCount = newMessages.filter(m => m.sender === 'user').length;
+      
+      // Prevent bot from replying if there's an admin message after the last user message
+      const lastAdminIndex = [...newMessages].reverse().findIndex(m => m.sender === 'admin' && !m.isBotCallOffer && !m.botOptions);
+      const isLiveAdminActive = lastAdminIndex >= 0 && lastAdminIndex < 3; // admin replied recently
+
+      if (!isLiveAdminActive) {
+        setTimeout(() => {
+          let botReply: any = null;
+
+          if (userMessageCount === 1) {
+            botReply = { 
+              sender: 'admin' as const, 
+              text: "Hello! Welcome to MarkatVerse Support. Please select the category that best matches your query:",
+              time: 'Just now',
+              botOptions: ["Service Booking Issue", "Product Order Issue", "Convenience/Grocery", "Other"]
+            };
+          } else if (userMessageCount === 2) {
+            if (textToSend === "Service Booking Issue") {
+              botReply = { sender: 'admin' as const, text: "Are you facing issues with a professional (e.g., Plumber, Carpenter) arriving late or not responding?", time: 'Just now', botOptions: ["Pro is late/unresponsive", "Reschedule/Cancel"] };
+            } else if (textToSend === "Product Order Issue") {
+              botReply = { sender: 'admin' as const, text: "To track your product or report a damaged item, please visit your Profile > Orders. Do you still need to speak to someone?", time: 'Just now', botOptions: ["Yes", "No"] };
+            } else if (textToSend === "Convenience/Grocery") {
+              botReply = { sender: 'admin' as const, text: "We're sorry for any inconvenience with your quick delivery. Is the order delayed or are items missing?", time: 'Just now', botOptions: ["Order is Delayed", "Missing Items"] };
+            } else {
+              botReply = { sender: 'admin' as const, text: "I understand. I have notified our support executives about your query. If you need immediate assistance, you can request a callback.", time: 'Just now', isBotCallOffer: true };
+            }
+          } else if (userMessageCount >= 3) {
+            if (textToSend === "No") {
+               botReply = { sender: 'admin' as const, text: "Great! Let us know if you need anything else. Have a wonderful day!", time: 'Just now' };
+            } else {
+               botReply = { sender: 'admin' as const, text: "I apologize for the hassle. I've escalated your issue to a live MarkatVerse agent. If you'd prefer to speak on the phone, please request a callback below.", time: 'Just now', isBotCallOffer: true };
+            }
+          }
+
+          if (botReply) {
+            const updatedMessages = [...newMessages, botReply];
+            setChatMessages(updatedMessages);
+            
+            try {
+              const currentStored = localStorage.getItem('MV_LIVE_CHATS');
+              if (currentStored) {
+                let currentChats = JSON.parse(currentStored);
+                if (Array.isArray(currentChats)) {
+                  const idx = currentChats.findIndex((c: any) => c.id === 'CH-ME');
+                  if (idx >= 0) {
+                    currentChats[idx].messages = updatedMessages;
+                    currentChats[idx].lastMessage = "Automated reply sent.";
+                    localStorage.setItem('MV_LIVE_CHATS', JSON.stringify(currentChats));
+                    window.dispatchEvent(new Event('MV_CHAT_SYNC'));
+                  }
+                }
+              }
+            } catch(e) {}
+          }
+        }, 1000);
+      }
+    }
+  };
+
+  const handleRequestCall = () => {
+    toast.success('Your request has been received. An executive will call you shortly.', { duration: 5000, icon: '📞' });
+    
+    const stored = localStorage.getItem('MV_LIVE_CHATS');
+    let chats = stored ? JSON.parse(stored) : [];
+    if (!Array.isArray(chats)) chats = [];
+    
+    chats = [{
+      id: `CH-CALL-${Math.floor(Math.random() * 1000)}`,
+      customerName: 'Guest User (Callback)',
+      type: 'call',
+      status: 'waiting',
+      lastMessage: 'Requested a callback.',
+      time: 'Just now',
+      unreadCount: 1,
+      phone: '+91 98765 43210',
+      messages: [{ sender: 'user', text: 'User requested a call back. Please contact them.', time: 'Just now' }]
+    }, ...chats];
+    
+    localStorage.setItem('MV_LIVE_CHATS', JSON.stringify(chats));
+    window.dispatchEvent(new Event('MV_CHAT_SYNC'));
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-16">
@@ -151,13 +333,31 @@ export default function HelpCenterPage() {
               </p>
               
               <div className="space-y-4 relative z-10">
-                <button className="w-full bg-white hover:bg-slate-100 text-slate-800 font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => setIsChatOpen(true)}
+                  className="w-full bg-white hover:bg-slate-100 text-slate-800 font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
                   <MessageCircle className="w-5 h-5 text-blue-600" /> Start Live Chat
                 </button>
-                <button className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-600">
+                <button 
+                  onClick={handleRequestCall}
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 border border-slate-600"
+                >
                   <PhoneCall className="w-5 h-5 text-slate-300" /> Request a Call
                 </button>
               </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+              <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <PhoneCall className="w-4 h-4 text-slate-400" /> Direct Phone Support
+              </h4>
+              <p className="text-sm text-slate-500 mb-4">
+                Need immediate assistance? Call our toll-free number directly.
+              </p>
+              <a href="tel:+9118001234567" className="text-blue-600 font-bold hover:underline flex items-center gap-2 text-lg">
+                1800-123-4567
+              </a>
             </div>
 
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
@@ -175,6 +375,88 @@ export default function HelpCenterPage() {
           
         </div>
       </div>
+
+      {/* Live Chat Box Overlay */}
+      {isChatOpen && (
+        <div className="fixed bottom-4 right-4 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-[100] flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
+          {/* Chat Header */}
+          <div className="bg-blue-600 p-4 flex justify-between items-center text-white">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm">Customer Support</h3>
+                <p className="text-xs text-blue-200">Online</p>
+              </div>
+            </div>
+            <button onClick={() => setIsChatOpen(false)} className="text-blue-200 hover:text-white transition-colors p-1 bg-blue-700/50 rounded-lg">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Chat Messages */}
+          <div className="p-4 h-72 overflow-y-auto flex flex-col gap-3 bg-slate-50">
+            {chatMessages.length === 0 && (
+              <div className="text-center text-xs text-slate-400 my-4">
+                Send a message to start a conversation.
+              </div>
+            )}
+            {chatMessages.map((msg, idx) => (
+              <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sender === 'user' ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm'}`}>
+                  {msg.text}
+                  {msg.isBotCallOffer && (
+                    <div className="mt-3 border-t border-slate-100 pt-3">
+                      <button 
+                        onClick={handleRequestCall}
+                        className="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        <PhoneCall className="w-3 h-3" /> Request a Callback Now
+                      </button>
+                    </div>
+                  )}
+                  {msg.botOptions && msg.botOptions.length > 0 && (
+                    <div className="mt-3 border-t border-slate-100 pt-3 flex flex-col gap-2">
+                      {msg.botOptions.map((opt, oIdx) => (
+                        <button
+                          key={oIdx}
+                          onClick={() => handleSendMessage(opt)}
+                          className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 py-2 px-3 rounded-lg text-xs font-semibold transition-colors text-left"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-400 mt-1 mx-1">{msg.time}</span>
+              </div>
+            ))}
+          </div>
+          
+          {/* Chat Input */}
+          <div className="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
+            <input 
+              type="text" 
+              placeholder="Type your message..." 
+              value={currentMessage}
+              onChange={(e) => setCurrentMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSendMessage();
+              }}
+              className="flex-1 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all"
+            />
+            <button 
+              onClick={() => handleSendMessage()}
+              className="w-11 h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center justify-center transition-colors shrink-0 shadow-sm"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

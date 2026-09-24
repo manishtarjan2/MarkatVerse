@@ -102,36 +102,77 @@ export default function DynamicExplorePage({ params }: { params: Promise<{ slug?
 
   // View: Business Types (Level 1)
   if (slug.length === 1) {
-    const types = mainType === 'b2c' ? ['retailer', 'brand-store', 'home-business'] :
-                  mainType === 'b2b' ? ['manufacturer', 'wholesaler', 'distributor'] :
-                  ['salon-spa', 'consultant', 'contractor', 'freelancer'];
+    let types: string[] = [];
+    if (mainType === 'b2c') {
+      types = ['retailer', 'brand-store', 'home-business'];
+    } else if (mainType === 'b2b') {
+      types = ['manufacturer', 'wholesaler', 'distributor'];
+    } else if (mainType === 'services') {
+      types = ['plumber', 'carpenter', 'electrician', 'salon', 'spa', 'doctor', 'mechanic', 'cleaner', 'painter', 'tutor', 'photographer', 'event-planner', 'consultant', 'freelancer'];
+    }
+                  
+    const typeMeta: Record<string, { emoji: string, colorClass: string }> = {
+      'retailer': { emoji: '🛍️', colorClass: 'bg-blue-100 text-blue-600' },
+      'brand-store': { emoji: '💎', colorClass: 'bg-purple-100 text-purple-600' },
+      'home-business': { emoji: '🏠', colorClass: 'bg-amber-100 text-amber-600' },
+      'manufacturer': { emoji: '🏭', colorClass: 'bg-slate-200 text-slate-700' },
+      'wholesaler': { emoji: '📦', colorClass: 'bg-indigo-100 text-indigo-600' },
+      'distributor': { emoji: '🚚', colorClass: 'bg-emerald-100 text-emerald-600' },
+      'consultant': { emoji: '💼', colorClass: 'bg-blue-100 text-blue-600' },
+      'freelancer': { emoji: '💻', colorClass: 'bg-cyan-100 text-cyan-600' },
+      // New Services
+      'plumber': { emoji: '🔧', colorClass: 'bg-blue-100 text-blue-600' },
+      'carpenter': { emoji: '🪚', colorClass: 'bg-amber-100 text-amber-700' },
+      'electrician': { emoji: '⚡', colorClass: 'bg-yellow-100 text-yellow-600' },
+      'salon': { emoji: '💇‍♀️', colorClass: 'bg-pink-100 text-pink-600' },
+      'spa': { emoji: '💆‍♀️', colorClass: 'bg-rose-100 text-rose-500' },
+      'doctor': { emoji: '👨‍⚕️', colorClass: 'bg-emerald-100 text-emerald-600' },
+      'mechanic': { emoji: '🚗', colorClass: 'bg-slate-200 text-slate-700' },
+      'cleaner': { emoji: '🧹', colorClass: 'bg-teal-100 text-teal-600' },
+      'painter': { emoji: '🎨', colorClass: 'bg-purple-100 text-purple-600' },
+      'tutor': { emoji: '📚', colorClass: 'bg-indigo-100 text-indigo-600' },
+      'photographer': { emoji: '📸', colorClass: 'bg-neutral-100 text-neutral-800' },
+      'event-planner': { emoji: '🎉', colorClass: 'bg-fuchsia-100 text-fuchsia-600' },
+    };
                   
     return (
       <div className="max-w-7xl mx-auto p-6 lg:p-10 min-h-screen bg-slate-50">
         {renderBreadcrumbs()}
         <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-4 capitalize">{mainType} Marketplace</h1>
-        <p className="text-lg text-slate-500 mb-10 max-w-3xl">Select a business type to view specific categories.</p>
+        <p className="text-lg text-slate-500 mb-10 max-w-3xl">
+          {mainType === 'services' ? 'Select a service professional to view available experts and book appointments.' : 'Select a business type to view specific categories.'}
+        </p>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {types.map(type => (
-            <Link key={type} href={`/explore/${mainType}/${type}`} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center font-bold text-xl uppercase">
-                {type.charAt(0)}
-              </div>
-              <div className="font-bold text-slate-900 capitalize text-lg">{type.replace('-', ' ')}</div>
-            </Link>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {types.map(type => {
+            const meta = typeMeta[type] || { emoji: type.charAt(0).toUpperCase(), colorClass: 'bg-slate-100 text-slate-600' };
+            return (
+              <Link key={type} href={`/explore/${mainType}/${type}`} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all flex flex-col items-center text-center gap-4 group">
+                <div className={`w-16 h-16 ${meta.colorClass} rounded-2xl flex items-center justify-center font-bold text-3xl transition-transform group-hover:scale-110 group-hover:rotate-6 shadow-sm`}>
+                  {meta.emoji}
+                </div>
+                <div className="font-bold text-slate-900 capitalize text-sm group-hover:text-blue-600 transition-colors">{type.replace('-', ' ')}</div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     );
   }
 
   // View: Sectors / Categories (Level 2)
-  if (slug.length === 2) {
+  if (slug.length === 2 && mainType !== 'services') {
     // We map backend categories
-    const displayedCategories = mainType === 'services' 
-      ? categories.filter(c => ['Services', 'Beauty', 'Transport', 'Organizers'].includes(c.name))
-      : categories.filter(c => !['Services', 'Transport', 'Organizers'].includes(c.name));
+    const displayedCategories = categories.filter(c => !['Services', 'Transport', 'Organizers'].includes(c.name));
+
+    const gradients = [
+      'bg-gradient-to-br from-blue-100 to-indigo-100 border border-blue-200',
+      'bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200',
+      'bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200',
+      'bg-gradient-to-br from-purple-100 to-pink-100 border border-purple-200',
+      'bg-gradient-to-br from-rose-100 to-red-100 border border-rose-200',
+      'bg-gradient-to-br from-cyan-100 to-blue-100 border border-cyan-200',
+    ];
 
     return (
       <div className="max-w-7xl mx-auto p-6 lg:p-10 min-h-screen bg-slate-50">
@@ -139,20 +180,28 @@ export default function DynamicExplorePage({ params }: { params: Promise<{ slug?
         <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-4 capitalize">{businessType.replace('-', ' ')} Sectors</h1>
         <p className="text-lg text-slate-500 mb-10 max-w-3xl">Select a specific sector or category to view listings.</p>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {displayedCategories.map(cat => (
-            <Link key={cat.id} href={`/explore/${mainType}/${businessType}/${cat.name.toLowerCase()}`} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-1 transition-all flex flex-col items-center text-center gap-3 group">
-              <div className="text-4xl group-hover:scale-110 transition-transform">{cat.icon || '📁'}</div>
-              <div className="font-bold text-slate-900 text-sm">{cat.name}</div>
-            </Link>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {displayedCategories.map((cat, index) => {
+            const gradient = gradients[index % gradients.length];
+            return (
+              <Link key={cat.id} href={`/explore/${mainType}/${businessType}/${cat.name.toLowerCase()}`} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col items-center text-center gap-4 group">
+                <div className={`w-20 h-20 rounded-2xl ${gradient} flex items-center justify-center text-4xl group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 shadow-inner`}>
+                  {cat.icon || '📁'}
+                </div>
+                <div className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{cat.name}</div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     );
   }
 
-  // View: Listings (Level 3)
-  if (slug.length === 3) {
+  // View: Listings (Level 3 or Services Level 2)
+  if (slug.length === 3 || (slug.length === 2 && mainType === 'services')) {
+    const displayTitle = sector ? sector.replace('-', ' ') : businessType.replace('-', ' ');
+    const displaySubtitle = mainType === 'services' ? `Services / ${displayTitle}` : `${mainType} / ${businessType.replace('-', ' ')}`;
+    
     return (
       <div className="max-w-7xl mx-auto p-6 lg:p-10 min-h-screen bg-slate-50">
         {renderBreadcrumbs()}
@@ -161,8 +210,8 @@ export default function DynamicExplorePage({ params }: { params: Promise<{ slug?
           {/* Filters Sidebar */}
           <div className="w-full md:w-64 shrink-0 space-y-6">
             <div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight capitalize mb-2">{sector.replace('-', ' ')}</h1>
-              <p className="text-sm text-slate-500 capitalize">{mainType} / {businessType.replace('-', ' ')}</p>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight capitalize mb-2">{displayTitle}</h1>
+              <p className="text-sm text-slate-500 capitalize">{displaySubtitle}</p>
             </div>
             
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-6">

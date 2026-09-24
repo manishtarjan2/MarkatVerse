@@ -95,9 +95,9 @@ export declare class ServiceQueueController {
                 createdAt: Date;
                 updatedAt: Date;
                 status: string;
-                type: string;
                 queueId: string;
                 services: string[];
+                type: string;
                 capacity: number;
                 assignedStaffId: string | null;
             }[];
@@ -143,9 +143,9 @@ export declare class ServiceQueueController {
             createdAt: Date;
             updatedAt: Date;
             status: string;
-            type: string;
             queueId: string;
             services: string[];
+            type: string;
             capacity: number;
             assignedStaffId: string | null;
         }[];
@@ -605,9 +605,9 @@ export declare class ServiceQueueController {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        type: string;
         queueId: string;
         services: string[];
+        type: string;
         capacity: number;
         assignedStaffId: string | null;
     }>;
@@ -631,9 +631,9 @@ export declare class ServiceQueueController {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        type: string;
         queueId: string;
         services: string[];
+        type: string;
         capacity: number;
         assignedStaffId: string | null;
     }>;

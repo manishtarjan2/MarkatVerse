@@ -8,4 +8,5 @@ export declare class IdGeneratorService {
     generateStaffId(): Promise<string>;
     generateOrderId(): Promise<string>;
     generateBookingId(isToken?: boolean): Promise<string>;
+    generateAuditLogId(): Promise<string>;
 }

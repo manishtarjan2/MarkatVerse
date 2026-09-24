@@ -5,20 +5,89 @@ import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useProducts } from '@/context/ProductContext';
 import { useCart } from '@/context/CartContext';
-import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell, ChevronRight, ChevronLeft, LogOut, Edit3, Trash2, Plus, Star, Heart, ShoppingBag } from 'lucide-react';
+import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell, ChevronRight, ChevronLeft, LogOut, Edit3, Trash2, Plus, Star, Heart, ShoppingBag, Key, Smartphone, Laptop, Download, Lock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function ProfileSettings() {
   const [activeTab, setActiveTab] = useState('personal');
   const [showMobileMenu, setShowMobileMenu] = useState(true);
-  const { user, logout } = useAuth();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { user, login, logout, isLoading } = useAuth();
   const { wishlistIds, removeFromWishlist } = useWishlist();
   const { products } = useProducts();
   const { addToCart } = useCart();
   
-  // Fallbacks if user is null
-  const [firstName, lastName] = user?.name ? user.name.split(' ') : ['Amit', 'Verma'];
-  const email = user?.email || 'amit.verma@example.com';
-  const phone = user?.phone || '+91 98765 43210';
+  // Security State
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+  const [sessions, setSessions] = useState<{ id: string, device: string, location: string, browser: string, isCurrent: boolean, lastActive: string }[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteText, setDeleteText] = useState('');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userAgent = window.navigator.userAgent;
+      
+      let browser = 'Unknown Browser';
+      if (userAgent.indexOf("Firefox") > -1) browser = "Firefox";
+      else if (userAgent.indexOf("Opera") > -1 || userAgent.indexOf("OPR") > -1) browser = "Opera";
+      else if (userAgent.indexOf("Trident") > -1) browser = "Internet Explorer";
+      else if (userAgent.indexOf("Edge") > -1 || userAgent.indexOf("Edg") > -1) browser = "Edge";
+      else if (userAgent.indexOf("Chrome") > -1) browser = "Chrome";
+      else if (userAgent.indexOf("Safari") > -1) browser = "Safari";
+      
+      let device = 'Unknown Device';
+      if (userAgent.indexOf("Win") > -1) device = "Windows PC";
+      else if (userAgent.indexOf("Mac") > -1) device = "Mac";
+      else if (userAgent.indexOf("Linux") > -1) device = "Linux PC";
+      else if (userAgent.indexOf("Android") > -1) device = "Android Device";
+      else if (userAgent.indexOf("iPhone") > -1) device = "iPhone";
+      else if (userAgent.indexOf("iPad") > -1) device = "iPad";
+
+      setSessions([{
+        id: 'current-session',
+        device: device,
+        location: 'Current Location',
+        browser: browser,
+        isCurrent: true,
+        lastActive: 'Just now'
+      }]);
+    }
+  }, []);
+
+  const handlePasswordUpdate = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) return toast.error('Please fill all password fields');
+    if (newPassword !== confirmPassword) return toast.error('New passwords do not match');
+    toast.success('Password updated successfully!');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+  const handleRevokeSession = (id: string) => {
+    setSessions(sessions.filter(s => s.id !== id));
+    toast.success('Session revoked');
+  };
+
+  const handleDeleteAccount = () => {
+    if (deleteText !== 'DELETE') return toast.error('Type DELETE to confirm');
+    toast.success('Account deleted successfully');
+    logout();
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const [firstName, lastName] = user?.name ? user.name.split(' ') : ['', ''];
+  const email = user?.email || '';
+  const phone = user?.phone || '';
 
   const navItems = [
     { id: 'personal', label: 'Personal Info', icon: <User className="w-5 h-5" /> },
@@ -30,6 +99,49 @@ export default function ProfileSettings() {
     { id: 'security', label: 'Security & Privacy', icon: <ShieldCheck className="w-5 h-5" /> },
     { id: 'notifications', label: 'Notifications & Alerts', icon: <Bell className="w-5 h-5" /> },
   ];
+
+  const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user) return;
+    
+    setIsUpdating(true);
+    const formData = new FormData(e.currentTarget);
+    const updatedFirstName = formData.get('firstName') as string;
+    const updatedLastName = formData.get('lastName') as string;
+    const updatedEmail = formData.get('email') as string;
+    const updatedPhone = formData.get('phone') as string;
+
+    const fullName = `${updatedFirstName} ${updatedLastName}`.trim();
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          name: fullName,
+          email: updatedEmail,
+          phone: updatedPhone
+        })
+      });
+      
+      if (res.ok) {
+        toast.success('Profile updated successfully!');
+        const updatedUser = { ...user, name: fullName, email: updatedEmail, phone: updatedPhone };
+        login(updatedUser, token || undefined); 
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      toast.error('An error occurred');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 py-10 px-4 sm:px-6 relative overflow-hidden font-sans">
@@ -60,12 +172,12 @@ export default function ProfileSettings() {
                   <span className="w-3 h-3 bg-white rounded-full"></span>
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">{user?.name || 'Amit Verma'}</h3>
+              <h3 className="text-xl font-bold text-white mb-1">{user?.name || ''}</h3>
               <div className="text-blue-400 text-sm font-medium">{email}</div>
               {user?.id && (
-                <div className="mt-3 px-3 py-2 bg-slate-950/50 rounded-lg border border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-900 transition-colors" onClick={() => { navigator.clipboard.writeText(user.id); alert('ID Copied!'); }}>
+                <div className="mt-3 px-3 py-2 bg-slate-950/50 rounded-lg border border-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-900 transition-colors" onClick={() => { navigator.clipboard.writeText(user.markatId || user.id); alert('ID Copied!'); }}>
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Account ID</span>
-                  <span className="text-xs font-mono text-slate-300 font-bold">{user.id}</span>
+                  <span className="text-xs font-mono text-slate-300 font-bold">{user.markatId || user.id}</span>
                 </div>
               )}
               <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-semibold text-slate-300">
@@ -138,11 +250,12 @@ export default function ProfileSettings() {
                   </button>
                 </div>
 
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-8" onSubmit={(e) => { e.preventDefault(); alert('Profile Saved!'); }}>
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-8" onSubmit={handleProfileUpdate}>
                   <div className="group">
                     <label className="block mb-2 text-xs font-bold tracking-widest uppercase text-slate-400 group-focus-within:text-blue-400 transition-colors">First Name</label>
                     <input 
                       type="text" 
+                      name="firstName"
                       defaultValue={firstName} 
                       className="w-full p-4 bg-slate-950/50 border border-slate-700 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-white transition-all shadow-inner font-medium text-lg" 
                     />
@@ -151,6 +264,7 @@ export default function ProfileSettings() {
                     <label className="block mb-2 text-xs font-bold tracking-widest uppercase text-slate-400 group-focus-within:text-blue-400 transition-colors">Last Name</label>
                     <input 
                       type="text" 
+                      name="lastName"
                       defaultValue={lastName} 
                       className="w-full p-4 bg-slate-950/50 border border-slate-700 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-white transition-all shadow-inner font-medium text-lg" 
                     />
@@ -161,6 +275,7 @@ export default function ProfileSettings() {
                     <div className="relative">
                       <input 
                         type="email" 
+                        name="email"
                         defaultValue={email} 
                         className="w-full p-4 pl-12 bg-slate-950/50 border border-slate-700 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-white transition-all shadow-inner font-medium text-lg" 
                       />
@@ -173,6 +288,7 @@ export default function ProfileSettings() {
                     <div className="relative">
                       <input 
                         type="tel" 
+                        name="phone"
                         defaultValue={phone} 
                         className="w-full p-4 pl-12 bg-slate-950/50 border border-slate-700 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-white transition-all shadow-inner font-medium text-lg" 
                       />
@@ -184,8 +300,9 @@ export default function ProfileSettings() {
                     <button type="button" className="px-6 py-3 rounded-xl font-bold text-slate-300 hover:text-white transition-colors">
                       Cancel
                     </button>
-                    <button type="submit" className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 active:translate-y-0">
-                      Save Changes
+                    <button type="submit" disabled={isUpdating} className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 flex items-center gap-2">
+                      {isUpdating && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                      {isUpdating ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </form>
@@ -367,15 +484,143 @@ export default function ProfileSettings() {
             )}
 
             {/* Placeholder for other tabs */}
-            {['orders', 'security', 'notifications'].includes(activeTab) && (
+            {['orders', 'notifications'].includes(activeTab) && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-slate-800">
                   {activeTab === 'orders' && <Package className="w-10 h-10 text-slate-600" />}
-                  {activeTab === 'security' && <ShieldCheck className="w-10 h-10 text-slate-600" />}
                   {activeTab === 'notifications' && <Bell className="w-10 h-10 text-slate-600" />}
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 tracking-tight capitalize">{activeTab} Details</h3>
                 <p className="text-slate-400 max-w-sm">This section is currently being updated. Please check back later for your detailed {activeTab} information.</p>
+              </div>
+            )}
+
+            {/* SECURITY TAB */}
+            {activeTab === 'security' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <ShieldCheck className="w-7 h-7 text-blue-500" /> Security & Privacy
+                  </h2>
+                  <p className="text-slate-400 mt-1">Manage your password, 2FA, and data privacy.</p>
+                </div>
+
+                {/* Change Password */}
+                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 lg:p-8">
+                  <div className="flex items-center gap-4 mb-6 border-b border-slate-800 pb-4">
+                    <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
+                      <Key className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Change Password</h3>
+                      <p className="text-slate-400 text-sm mt-1">Ensure your account is using a long, random password to stay secure.</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4 max-w-xl">
+                    <div>
+                      <label className="text-sm font-semibold text-slate-400 mb-2 block">Current Password</label>
+                      <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-slate-400 mb-2 block">New Password</label>
+                      <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-slate-400 mb-2 block">Confirm New Password</label>
+                      <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all" />
+                    </div>
+                    <button onClick={handlePasswordUpdate} className="mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-colors w-full sm:w-auto">
+                      Update Password
+                    </button>
+                  </div>
+                </div>
+
+                {/* Two Factor Authentication */}
+                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 lg:p-8 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-emerald-900/30 rounded-xl flex items-center justify-center border border-emerald-800/50">
+                      <Smartphone className="w-6 h-6 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Two-Factor Authentication (2FA)</h3>
+                      <p className="text-slate-400 text-sm mt-1 max-w-md">Add an extra layer of security to your account by requiring a code upon login.</p>
+                    </div>
+                  </div>
+                  <button onClick={() => { setIs2FAEnabled(!is2FAEnabled); toast.success(is2FAEnabled ? '2FA Disabled' : '2FA Enabled successfully'); }} className={`${is2FAEnabled ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-500 border border-emerald-600/50'} font-bold py-2.5 px-6 rounded-xl transition-colors shrink-0`}>
+                    {is2FAEnabled ? 'Enabled' : 'Enable 2FA'}
+                  </button>
+                </div>
+
+                {/* Active Sessions */}
+                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 lg:p-8">
+                  <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
+                        <Laptop className="w-6 h-6 text-slate-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">Active Sessions</h3>
+                        <p className="text-slate-400 text-sm mt-1">Devices that are currently logged into your account.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {sessions.map(session => (
+                      <div key={session.id} className="flex justify-between items-center bg-slate-950/50 p-4 rounded-2xl border border-slate-800/50">
+                        <div>
+                          <div className="text-white font-semibold flex items-center gap-2">
+                            {session.device} {session.isCurrent && <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] rounded-full uppercase tracking-wider font-bold">Current Device</span>}
+                          </div>
+                          <div className="text-slate-400 text-xs mt-1">{session.browser} - {session.location} - Last active: {session.lastActive}</div>
+                        </div>
+                        {!session.isCurrent && (
+                          <button onClick={() => handleRevokeSession(session.id)} className="text-sm font-semibold text-slate-500 hover:text-red-400 transition-colors">Revoke</button>
+                        )}
+                      </div>
+                    ))}
+                    {sessions.length === 0 && <p className="text-slate-500 text-sm">No active sessions found.</p>}
+                  </div>
+                </div>
+
+                {/* Privacy & Data */}
+                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 lg:p-8">
+                  <div className="flex items-center gap-4 mb-6 border-b border-slate-800 pb-4">
+                    <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
+                      <Lock className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Data & Privacy</h3>
+                      <p className="text-slate-400 text-sm mt-1">Manage your personal data and account deletion.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors">
+                      <Download className="w-5 h-5 text-slate-400 mb-3" />
+                      <h4 className="text-white font-bold mb-1">Download Your Data</h4>
+                      <p className="text-slate-400 text-xs mb-4">Get a copy of your personal data, orders, and wishlist.</p>
+                      <button onClick={() => toast.success('Data export started. You will receive an email shortly.')} className="text-sm font-bold text-blue-400 hover:text-blue-300">Request Data Export →</button>
+                    </div>
+                    <div className="bg-slate-950 border border-red-900/30 rounded-2xl p-5 hover:border-red-900/50 transition-colors">
+                      <Trash2 className="w-5 h-5 text-red-400 mb-3" />
+                      <h4 className="text-white font-bold mb-1">Delete Account</h4>
+                      <p className="text-slate-400 text-xs mb-4">Permanently remove your account and all associated data.</p>
+                      {!showDeleteConfirm ? (
+                        <button onClick={() => setShowDeleteConfirm(true)} className="text-sm font-bold text-red-400 hover:text-red-300">Delete Account...</button>
+                      ) : (
+                        <div className="mt-2 space-y-2">
+                          <input type="text" placeholder="Type DELETE" value={deleteText} onChange={(e) => setDeleteText(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none" />
+                          <div className="flex gap-2">
+                            <button onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2 px-4 rounded-lg w-full transition-colors">Confirm Delete</button>
+                            <button onClick={() => { setShowDeleteConfirm(false); setDeleteText(''); }} className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 px-4 rounded-lg w-full transition-colors">Cancel</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
 

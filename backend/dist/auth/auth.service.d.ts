@@ -1,12 +1,14 @@
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { SecurityService } from '../security/security.service.js';
 export declare class AuthService {
     private prisma;
     private jwtService;
     private idGenerator;
+    private securityService;
     private readonly logger;
-    constructor(prisma: PrismaService, jwtService: JwtService, idGenerator: IdGeneratorService);
+    constructor(prisma: PrismaService, jwtService: JwtService, idGenerator: IdGeneratorService, securityService: SecurityService);
     signup(data: any): Promise<{
         access_token: string;
         user: {
@@ -52,6 +54,12 @@ export declare class AuthService {
         };
     }>;
     getMe(token: string): Promise<{
+        id: string;
+        markatId: string | null;
+        email: string | null;
+        phone: string | null;
+        name: string;
+        role: string;
         business: ({
             wallet: {
                 id: string;
@@ -65,20 +73,20 @@ export declare class AuthService {
                 owedToPlatform: number;
             } | null;
         } & {
-            businessType: string;
             id: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
+            businessType: string;
             address: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             verified: boolean;
             capabilities: string[];
             maxListings: number;
@@ -88,12 +96,6 @@ export declare class AuthService {
             subscriptionStartDate: Date | null;
             subscriptionEndDate: Date | null;
         }) | null;
-        id: string;
-        name: string;
-        markatId: string | null;
-        email: string | null;
-        phone: string | null;
-        role: string;
     }>;
     forgotPassword(identifier: string): Promise<{
         message: string;

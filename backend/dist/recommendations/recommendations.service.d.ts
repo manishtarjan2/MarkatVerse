@@ -9,12 +9,12 @@ export declare class RecommendationsService {
         type: string;
     }): Promise<{
         id: string;
+        createdAt: Date;
         userId: string | null;
+        type: string;
         productId: string | null;
         serviceId: string | null;
-        type: string;
         weight: number;
-        createdAt: Date;
     }>;
     getRecommendations(userId?: string): Promise<any[]>;
 }

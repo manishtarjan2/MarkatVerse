@@ -11,6 +11,32 @@ export default function AdminCategoriesPage() {
   const hasEditPermission = canEdit('categories');
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+  const getCategoryEmoji = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('electronic') || n.includes('tech') || n.includes('gadget')) return '📱';
+    if (n.includes('construct') || n.includes('build')) return '🏗️';
+    if (n.includes('agricultur') || n.includes('farm')) return '🚜';
+    if (n.includes('beaut') || n.includes('salon') || n.includes('cosmetic')) return '💅';
+    if (n.includes('health') || n.includes('medic')) return '⚕️';
+    if (n.includes('home') || n.includes('furniture')) return '🏠';
+    if (n.includes('fashion') || n.includes('cloth')) return '👕';
+    if (n.includes('vehicle') || n.includes('car')) return '🚗';
+    if (n.includes('food') || n.includes('grocery')) return '🍔';
+    if (n.includes('service')) return '🛠️';
+    return '📦';
+  };
+
+  const cleanTheme = (themeStr: string | undefined | null) => {
+    if (!themeStr) return 'slate';
+    const t = themeStr.toLowerCase();
+    if (t.includes('blue') || t.includes('indigo')) return 'indigo';
+    if (t.includes('green') || t.includes('emerald') || t.includes('lime')) return 'emerald';
+    if (t.includes('red') || t.includes('rose') || t.includes('pink')) return 'rose';
+    if (t.includes('yellow') || t.includes('amber') || t.includes('gold')) return 'amber';
+    if (t.includes('cyan') || t.includes('teal')) return 'cyan';
+    return 'slate';
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -331,12 +357,14 @@ export default function AdminCategoriesPage() {
                 <tr key={cat.id} className="hover:bg-slate-700/30 transition-all group">
                   <td className="p-4 pl-6">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl bg-${cat.theme}-500/20 flex items-center justify-center border border-${cat.theme}-500/30 text-${cat.theme}-400`}>
-                        <ListTree className="w-5 h-5" />
+                      <div className={`w-10 h-10 rounded-xl bg-${cleanTheme(cat.theme)}-500/20 flex items-center justify-center border border-${cleanTheme(cat.theme)}-500/30 text-${cleanTheme(cat.theme)}-400 text-xl shadow-inner shadow-${cleanTheme(cat.theme)}-500/10`}>
+                        {getCategoryEmoji(cat.name)}
                       </div>
                       <div>
                         <div className="font-bold text-white text-sm">{cat.name}</div>
-                        <div className="text-xs text-slate-500 mt-0.5 font-mono">ID: {cat.id.slice(0,8)}...</div>
+                        <div className="text-xs text-slate-500 mt-0.5 font-mono">
+                          #{cat.id.length > 20 ? `CAT-${cat.id.slice(-6).toUpperCase()}` : cat.id.toUpperCase()}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -347,8 +375,8 @@ export default function AdminCategoriesPage() {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full bg-${cat.theme}-500`}></div>
-                      <span className="text-xs font-semibold text-slate-400 capitalize">{cat.theme}</span>
+                      <div className={`w-3 h-3 rounded-full bg-${cleanTheme(cat.theme)}-500 shadow-[0_0_8px_currentColor] text-${cleanTheme(cat.theme)}-500`}></div>
+                      <span className="text-xs font-semibold text-slate-400 capitalize">{cleanTheme(cat.theme)}</span>
                     </div>
                   </td>
                   <td className="p-4 pr-6 text-right">

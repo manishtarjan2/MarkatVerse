@@ -12,10 +12,10 @@ export declare class OrdersService {
             createdAt: Date;
             updatedAt: Date;
             sellerId: string | null;
-            price: number;
             productId: string;
             productName: string | null;
             quantity: number;
+            price: number;
             orderId: string;
         }[];
     } & {

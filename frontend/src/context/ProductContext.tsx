@@ -538,7 +538,7 @@ const defaultCategories: Category[] = [
   {
     id: 's1',
     primaryType: 'SERVICE',
-    name: 'Beauty',
+    name: 'Salon',
     theme: 'bg-pink-50 text-pink-600',
     icon: 'Scissors',
     allowedListingTypes: ['Service'],
@@ -546,17 +546,25 @@ const defaultCategories: Category[] = [
     workflow: 'Salon Booking Workflow',
     allowedFeatures: ['Service', 'Appointment', 'Token', 'B2C'],
     notApplicable: ['Product Stock', 'Vehicle Test Drive', 'RFQ', 'B2B'],
-    optionalFeatures: ['Meeting'],
-    subcategories: [
-      { name: 'Salon', parameters: [{ name: 'Service Type', type: 'pricelist', options: ['Haircut', 'Coloring', 'Styling'] }] },
-      { name: 'Spa' },
-      { name: 'Beauty Parlour' }
-    ]
+    optionalFeatures: ['Meeting']
   },
   {
     id: 's2',
     primaryType: 'SERVICE',
-    name: 'Healthcare',
+    name: 'Spa',
+    theme: 'bg-rose-50 text-rose-500',
+    icon: 'Droplet',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'Appointment', 'Token'],
+    workflow: 'Salon Booking Workflow',
+    allowedFeatures: ['Service', 'Appointment', 'Token', 'B2C'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'RFQ', 'B2B'],
+    optionalFeatures: ['Meeting']
+  },
+  {
+    id: 's3',
+    primaryType: 'SERVICE',
+    name: 'Doctor',
     theme: 'bg-emerald-50 text-emerald-600',
     icon: 'Stethoscope',
     allowedListingTypes: ['Service'],
@@ -564,35 +572,51 @@ const defaultCategories: Category[] = [
     workflow: 'Doctor / Queue Workflow',
     allowedFeatures: ['Service', 'Appointment', 'Token', 'B2C'],
     notApplicable: ['Product Stock', 'Vehicle Test Drive', 'RFQ', 'Bulk Pricing', 'B2B'],
-    optionalFeatures: ['Meeting'],
-    subcategories: [
-      { name: 'Doctor', parameters: [{ name: 'Specialization', type: 'text', placeholder: 'e.g. Cardiologist' }, { name: 'Consultation', type: 'radio', options: ['In-Clinic', 'Online'] }] },
-      { name: 'Dentist' },
-      { name: 'Physiotherapy' }
-    ]
+    optionalFeatures: ['Meeting']
   },
   {
-    id: 's3',
+    id: 's4',
     primaryType: 'SERVICE',
-    name: 'Home',
-    theme: 'bg-teal-50 text-teal-600',
+    name: 'Plumber',
+    theme: 'bg-blue-50 text-blue-600',
     icon: 'Wrench',
     allowedListingTypes: ['Service'],
     businessModels: ['B2C', 'RFQ', 'Quote'],
     workflow: 'Home Services Workflow',
     allowedFeatures: ['Service', 'B2C', 'RFQ', 'Quote'],
     notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'B2B', 'MOQ'],
-    optionalFeatures: ['Appointment', 'Meeting'],
-    subcategories: [
-      { name: 'Electrician' },
-      { name: 'Plumber' },
-      { name: 'Carpenter' }
-    ]
+    optionalFeatures: ['Appointment', 'Meeting']
   },
   {
-    id: 's4',
+    id: 's5',
     primaryType: 'SERVICE',
-    name: 'Professional',
+    name: 'Electrician',
+    theme: 'bg-yellow-50 text-yellow-600',
+    icon: 'Zap',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'RFQ', 'Quote'],
+    workflow: 'Home Services Workflow',
+    allowedFeatures: ['Service', 'B2C', 'RFQ', 'Quote'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'B2B', 'MOQ'],
+    optionalFeatures: ['Appointment', 'Meeting']
+  },
+  {
+    id: 's6',
+    primaryType: 'SERVICE',
+    name: 'Carpenter',
+    theme: 'bg-amber-50 text-amber-700',
+    icon: 'Hammer',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'RFQ', 'Quote'],
+    workflow: 'Home Services Workflow',
+    allowedFeatures: ['Service', 'B2C', 'RFQ', 'Quote'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'B2B', 'MOQ'],
+    optionalFeatures: ['Appointment', 'Meeting']
+  },
+  {
+    id: 's7',
+    primaryType: 'SERVICE',
+    name: 'Consultant',
     theme: 'bg-indigo-50 text-indigo-600',
     icon: 'Briefcase',
     allowedListingTypes: ['Service'],
@@ -600,37 +624,98 @@ const defaultCategories: Category[] = [
     workflow: 'Meeting / Proposal Workflow',
     allowedFeatures: ['Service', 'B2C', 'B2B', 'Quote', 'Meeting'],
     notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'MOQ', 'Bulk Pricing'],
-    optionalFeatures: ['RFQ', 'Appointment'],
-    subcategories: [
-      { name: 'Consultant', parameters: [{ name: 'Field', type: 'text', placeholder: 'e.g. IT, Management' }] },
-      { name: 'Lawyer' },
-      { name: 'Accountant' }
-    ]
+    optionalFeatures: ['RFQ', 'Appointment']
   },
   {
-    id: 's5',
+    id: 's8',
     primaryType: 'SERVICE',
-    name: 'Car Wash',
-    theme: 'bg-blue-50 text-blue-600',
+    name: 'Freelancer',
+    theme: 'bg-cyan-50 text-cyan-600',
+    icon: 'Laptop',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'B2B', 'Quote', 'Meeting'],
+    workflow: 'Meeting / Proposal Workflow',
+    allowedFeatures: ['Service', 'B2C', 'B2B', 'Quote', 'Meeting'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'MOQ', 'Bulk Pricing'],
+    optionalFeatures: ['RFQ', 'Appointment']
+  },
+  {
+    id: 's9',
+    primaryType: 'SERVICE',
+    name: 'Mechanic',
+    theme: 'bg-slate-100 text-slate-700',
+    icon: 'Car',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'RFQ', 'Quote'],
+    workflow: 'Home Services Workflow',
+    allowedFeatures: ['Service', 'B2C', 'RFQ', 'Quote'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'B2B', 'MOQ'],
+    optionalFeatures: ['Appointment', 'Meeting']
+  },
+  {
+    id: 's10',
+    primaryType: 'SERVICE',
+    name: 'Cleaner',
+    theme: 'bg-teal-50 text-teal-600',
     icon: 'Droplet',
     allowedListingTypes: ['Service'],
-    businessModels: ['B2C', 'Appointment', 'Token'],
-    workflow: 'Queue Workflow',
-    allowedFeatures: ['Service', 'Appointment', 'Token', 'B2C'],
-    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'RFQ', 'B2B'],
-    optionalFeatures: ['Meeting'],
-    subcategories: [
-      { 
-        name: 'Car Washing Center', 
-        parameters: [
-          { 
-            name: 'Vehicle Type', 
-            type: 'pricelist', 
-            options: ['Mini Car', 'Car', 'Bike', 'Bus', 'Truck'] 
-          }
-        ] 
-      }
-    ]
+    businessModels: ['B2C', 'RFQ', 'Quote'],
+    workflow: 'Home Services Workflow',
+    allowedFeatures: ['Service', 'B2C', 'RFQ', 'Quote'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'B2B', 'MOQ'],
+    optionalFeatures: ['Appointment', 'Meeting']
+  },
+  {
+    id: 's11',
+    primaryType: 'SERVICE',
+    name: 'Painter',
+    theme: 'bg-purple-50 text-purple-600',
+    icon: 'Brush',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'RFQ', 'Quote'],
+    workflow: 'Home Services Workflow',
+    allowedFeatures: ['Service', 'B2C', 'RFQ', 'Quote'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'B2B', 'MOQ'],
+    optionalFeatures: ['Appointment', 'Meeting']
+  },
+  {
+    id: 's12',
+    primaryType: 'SERVICE',
+    name: 'Tutor',
+    theme: 'bg-indigo-50 text-indigo-600',
+    icon: 'BookOpen',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'Appointment'],
+    workflow: 'Appointment Workflow',
+    allowedFeatures: ['Service', 'B2C', 'Appointment'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'B2B', 'MOQ'],
+    optionalFeatures: ['Meeting']
+  },
+  {
+    id: 's13',
+    primaryType: 'SERVICE',
+    name: 'Photographer',
+    theme: 'bg-neutral-50 text-neutral-800',
+    icon: 'Camera',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'Appointment', 'Quote'],
+    workflow: 'Appointment Workflow',
+    allowedFeatures: ['Service', 'B2C', 'Appointment', 'Quote'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'B2B', 'MOQ'],
+    optionalFeatures: ['Meeting']
+  },
+  {
+    id: 's14',
+    primaryType: 'SERVICE',
+    name: 'Event Planner',
+    theme: 'bg-fuchsia-50 text-fuchsia-600',
+    icon: 'Calendar',
+    allowedListingTypes: ['Service'],
+    businessModels: ['B2C', 'B2B', 'Appointment', 'Quote'],
+    workflow: 'Meeting / Proposal Workflow',
+    allowedFeatures: ['Service', 'B2C', 'B2B', 'Appointment', 'Quote'],
+    notApplicable: ['Product Stock', 'Vehicle Test Drive', 'Token', 'MOQ'],
+    optionalFeatures: ['Meeting']
   },
 
   // ── VEHICLE ──

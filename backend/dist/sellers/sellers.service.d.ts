@@ -6,7 +6,6 @@ export declare class SellersService {
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     create(seller: any): Promise<{
         status: string;
-        businessType: string;
         id: string;
         name: string;
         createdAt: Date;
@@ -19,6 +18,7 @@ export declare class SellersService {
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
         address: string | null;
         verified: boolean;
         capabilities: string[];
@@ -33,7 +33,6 @@ export declare class SellersService {
         email: string | null;
         phone: string | null;
         status: string;
-        businessType: string;
         id: string;
         name: string;
         createdAt: Date;
@@ -46,6 +45,7 @@ export declare class SellersService {
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
         address: string | null;
         verified: boolean;
         capabilities: string[];
@@ -74,7 +74,6 @@ export declare class SellersService {
     }[]>;
     updateStatus(id: string, status: string): Promise<{
         status: string;
-        businessType: string;
         id: string;
         name: string;
         createdAt: Date;
@@ -87,6 +86,7 @@ export declare class SellersService {
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
         address: string | null;
         verified: boolean;
         capabilities: string[];
@@ -98,7 +98,6 @@ export declare class SellersService {
         subscriptionEndDate: Date | null;
     }>;
     updateUser(userId: string, data: any): Promise<{
-        businessType: string;
         id: string;
         name: string;
         createdAt: Date;
@@ -111,6 +110,7 @@ export declare class SellersService {
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
         address: string | null;
         verified: boolean;
         capabilities: string[];

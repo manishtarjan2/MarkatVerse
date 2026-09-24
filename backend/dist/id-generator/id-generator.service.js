@@ -40,6 +40,9 @@ let IdGeneratorService = class IdGeneratorService {
         }
         return this.getNextId('Booking', 'BOOK-', 8000);
     }
+    async generateAuditLogId() {
+        return this.getNextId('AuditLog', 'AUD-', 10000);
+    }
 };
 IdGeneratorService = __decorate([
     Injectable(),

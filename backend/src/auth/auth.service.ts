@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException, Logger } from '
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { SecurityService } from '../security/security.service.js';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -11,7 +12,8 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private idGenerator: IdGeneratorService
+    private idGenerator: IdGeneratorService,
+    private securityService: SecurityService
   ) {}
 
   async signup(data: any) {
@@ -61,6 +63,13 @@ export class AuthService {
       },
     });
 
+    await this.securityService.createAuditLog({
+      action: 'SIGNUP',
+      resource: 'User',
+      details: `User ${user.name} registered as ${user.role}`,
+      userId: user.id,
+    });
+
     return this.generateToken(user);
   }
 
@@ -86,8 +95,20 @@ export class AuthService {
 
     const isMatch = await bcrypt.compare(data.password, user.password);
     if (!isMatch) {
+      await this.securityService.createAuditLog({
+        action: 'LOGIN_FAILED',
+        resource: 'User',
+        details: `Failed login attempt for ${identifier}`,
+      });
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    await this.securityService.createAuditLog({
+      action: 'LOGIN',
+      resource: 'User',
+      details: `User logged in`,
+      userId: user.id,
+    });
 
     return this.generateToken(user);
   }

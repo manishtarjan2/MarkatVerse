@@ -44,4 +44,8 @@ export class IdGeneratorService {
     }
     return this.getNextId('Booking', 'BOOK-', 8000);
   }
+
+  async generateAuditLogId(): Promise<string> {
+    return this.getNextId('AuditLog', 'AUD-', 10000);
+  }
 }
