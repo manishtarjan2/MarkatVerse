@@ -117,11 +117,15 @@ export class AuthService {
         });
 
         await transporter.sendMail({
-          from: `"MarkatVerse Security" <${process.env.SMTP_USER}>`,
+          from: `"MarkatVerse" <${process.env.SMTP_USER}>`,
           to: identifier,
           subject: 'Your Registration Code - MarkatVerse',
+          text: `Welcome to MarkatVerse!\n\nYou are one step away from creating your account. Please use the 6-character code below to verify your email address. This code will expire in 5 minutes.\n\nCode: ${code}\n\nIf you did not request this, you can safely ignore this email.`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <img src="cid:logo" alt="MarkatVerse" style="height: 60px; max-width: 100%; object-fit: contain;">
+              </div>
               <h2>Welcome to MarkatVerse!</h2>
               <p>You are one step away from creating your account. Please use the 6-character code below to verify your email address. This code will expire in 5 minutes.</p>
               <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
@@ -129,7 +133,12 @@ export class AuthService {
               </div>
               <p>If you did not request this, you can safely ignore this email.</p>
             </div>
-          `
+          `,
+          attachments: [{
+            filename: 'hero-left-logo.png',
+            path: 'D:/MarkatVerse/frontend/public/hero-left-logo.png',
+            cid: 'logo'
+          }]
         });
         this.logger.log(`Signup OTP email sent to ${identifier}`);
       } else {
@@ -175,7 +184,8 @@ export class AuthService {
           { phone: identifier },
           { markatId: identifier }
         ]
-      }
+      },
+      include: { business: true }
     });
 
     if (!user) {
@@ -329,11 +339,15 @@ export class AuthService {
         });
 
         await transporter.sendMail({
-          from: `"MarkatVerse Security" <${process.env.SMTP_USER}>`,
+          from: `"MarkatVerse" <${process.env.SMTP_USER}>`,
           to: user.email || undefined,
           subject: 'Password Reset Code - MarkatVerse',
+          text: `Password Reset Request\n\nHi ${user.name},\n\nYou requested to reset your password. Please use the 6-character code below. This code will expire in 5 minutes.\n\nCode: ${resetCode}\n\nIf you did not request this, you can safely ignore this email.`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <img src="cid:logo" alt="MarkatVerse" style="height: 60px; max-width: 100%; object-fit: contain;">
+              </div>
               <h2>Password Reset Request</h2>
               <p>Hi ${user.name},</p>
               <p>You requested to reset your password. Please use the 6-character code below. This code will expire in 5 minutes.</p>
@@ -342,7 +356,12 @@ export class AuthService {
               </div>
               <p>If you did not request this, you can safely ignore this email.</p>
             </div>
-          `
+          `,
+          attachments: [{
+            filename: 'hero-left-logo.png',
+            path: 'D:/MarkatVerse/frontend/public/hero-left-logo.png',
+            cid: 'logo'
+          }]
         });
         this.logger.log(`Password reset email sent to ${user.email}`);
       } else {
@@ -429,7 +448,8 @@ export class AuthService {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        role: user.role
+        role: user.role,
+        business: user.business
       }
     };
   }

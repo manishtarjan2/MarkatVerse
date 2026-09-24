@@ -19,9 +19,8 @@ export default function LoginPage() {
       const role = user.role?.toUpperCase();
       if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
         router.replace('/admin');
-      } else if (role === 'SELLER' || role === 'BUSINESS') {
-        router.replace('/seller/dashboard');
       } else {
+        // Even if they are a Seller, if they log in via the customer portal, take them to the customer homepage
         router.replace('/');
       }
     }
@@ -96,7 +95,7 @@ export default function LoginPage() {
       }
 
       login(
-        { id: data.user.id, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '' },
+        { id: data.user.id, markatId: data.user.markatId, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '' },
         data.access_token
       );
       router.push('/');
@@ -170,7 +169,7 @@ export default function LoginPage() {
       if (!res.ok) throw new Error(Array.isArray(data.message) ? data.message[0] : data.message || 'Registration failed');
 
       login(
-        { id: data.user.id, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '' },
+        { id: data.user.id, markatId: data.user.markatId, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '' },
         data.access_token
       );
       router.push('/');

@@ -86,7 +86,7 @@ export default function SellerLoginPage() {
         { id: data.user.id, markatId: data.user.markatId, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '', business: data.user.business },
         data.access_token
       );
-      router.push('/seller/dashboard');
+      window.location.href = '/seller/dashboard';
     } catch (err: any) {
       setError(err.message);
     } finally {

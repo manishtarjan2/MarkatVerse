@@ -11,6 +11,7 @@ export declare class AuthController {
             email: any;
             phone: any;
             role: any;
+            business: any;
         };
     }>;
     login(data: any): Promise<{
@@ -22,6 +23,7 @@ export declare class AuthController {
             email: any;
             phone: any;
             role: any;
+            business: any;
         };
     }>;
     phoneLogin(data: any): Promise<{
@@ -33,6 +35,7 @@ export declare class AuthController {
             email: any;
             phone: any;
             role: any;
+            business: any;
         };
     }>;
     googleLogin(data: {
@@ -47,14 +50,15 @@ export declare class AuthController {
             email: any;
             phone: any;
             role: any;
+            business: any;
         };
     }>;
     getMe(authHeader: string): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
+        name: string;
         role: string;
         business: ({
             wallet: {
@@ -73,9 +77,6 @@ export declare class AuthController {
             name: string;
             createdAt: Date;
             updatedAt: Date;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
@@ -84,6 +85,9 @@ export declare class AuthController {
             businessType: string;
             sector: string | null;
             address: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;

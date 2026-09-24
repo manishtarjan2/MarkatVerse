@@ -21,7 +21,7 @@ function DashboardContent() {
   const [isPremiumSeller, setIsPremiumSeller] = useState(true); // Mock state to demonstrate the paywall
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  const { user, login } = useAuth();
+  const { user, login, logout, isLoading } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   
   // New State variables for Tokens & Bookings Dashboard
@@ -101,9 +101,9 @@ function DashboardContent() {
     }
   };
 
-  const fetchQueue = async (forceQueueId?: string) => {
+  const fetchQueue = async (forceQueueId?: string, isPolling = false) => {
     if (!user?.id || !isServiceProvider) return;
-    setIsQueueLoading(true);
+    if (!isPolling) setIsQueueLoading(true);
     try {
       const fallbackName = user.business?.name || user.name || '';
 
@@ -115,34 +115,17 @@ function DashboardContent() {
 
       let activeQueueId = forceQueueId || selectedQueueId;
 
-      // 2. Fallback: Search all queues by shopName (in case queue was auto-created by a customer)
-      if (queues.length === 0) {
-        const allRes = await fetch(`${API_URL}/service-queue/queues`);
-        const allText = await allRes.text();
-        const allQueues = allText ? JSON.parse(allText) : [];
-        const matched = Array.isArray(allQueues) ? allQueues.find((q: any) => q.shopName === fallbackName) : null;
-        
-        if (matched) {
-          activeQueueId = matched.id;
-          queues = [matched];
-          // Link this queue permanently to the seller
-          await fetch(`${API_URL}/service-queue/${activeQueueId}/settings`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sellerId: user.id })
-          });
-        } else {
-          // Auto create
-          const createRes = await fetch(`${API_URL}/service-queue/queue`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ shopName: fallbackName, sellerId: user.id })
-          });
-          const newData = await createRes.json();
-          if (newData?.id) {
-            queues = [newData];
-            activeQueueId = newData.id;
-          }
+      // 2. Auto-create if no queue exists (saves massive bandwidth instead of searching all queues)
+      if (queues.length === 0 && !isPolling) {
+        const createRes = await fetch(`${API_URL}/service-queue/queue`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shopName: fallbackName, sellerId: user.id })
+        });
+        const newData = await createRes.json();
+        if (newData?.id) {
+          queues = [newData];
+          activeQueueId = newData.id;
         }
       }
 
@@ -167,16 +150,16 @@ function DashboardContent() {
     } catch (err) {
       console.error(err);
     } finally {
-      setIsQueueLoading(false);
+      if (!isPolling) setIsQueueLoading(false);
     }
   };
 
   React.useEffect(() => {
-    fetchQueue();
+    fetchQueue(undefined, false);
     // Auto-poll for new tokens every 3 seconds for near real-time updates
     const interval = setInterval(() => {
       if (user?.id && isServiceProvider) {
-        fetchQueue();
+        fetchQueue(undefined, true);
       }
     }, 3000);
     return () => clearInterval(interval);
@@ -470,9 +453,14 @@ function DashboardContent() {
     }
   };
 
-
-
-
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 font-medium">Loading Workspace...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col lg:flex-row font-sans overflow-x-hidden relative">
@@ -520,18 +508,14 @@ function DashboardContent() {
             <h3 className="text-lg font-bold text-slate-900">{user?.business?.name || user?.name || 'Seller'}</h3>
             
             <div className="flex flex-col gap-1 mt-3 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
-              {user?.business && (
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Business ID</span>
-                  <span className="text-xs font-mono font-bold text-slate-700">{user.business.businessCode || 'Loading...'}</span>
-                </div>
-              )}
-              {user && (
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">MV Account ID</span>
-                  <span className="text-xs font-mono font-bold text-slate-700">{user.markatId || 'Loading...'}</span>
-                </div>
-              )}
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Business ID</span>
+                <span className="text-xs font-mono font-bold text-slate-700">{user?.business?.businessCode || 'Pending'}</span>
+              </div>
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">MV Account ID</span>
+                <span className="text-xs font-mono font-bold text-slate-700">{user?.markatId || 'Pending'}</span>
+              </div>
             </div>
 
           </div>
@@ -639,6 +623,18 @@ function DashboardContent() {
           >
             <Settings className="w-5 h-5" /> Settings
           </button>
+          
+          <div className="pt-4 mt-2 border-t border-slate-100">
+            <button 
+              onClick={() => logout()} 
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Log Out
+            </button>
+          </div>
         </nav>
       </aside>
 

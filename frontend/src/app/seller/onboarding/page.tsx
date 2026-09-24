@@ -260,7 +260,7 @@ export default function SellerOnboarding() {
       
       setRegisteredToken(data.access_token);
       login(
-        { id: data.user.id, name: data.user.name, email: data.user.email, role: 'business', phone: data.user.phone || '' },
+        { id: data.user.id, markatId: data.user.markatId, name: data.user.name, email: data.user.email, role: 'business', phone: data.user.phone || '', business: data.user.business },
         data.access_token
       );
       toast.success("Account created successfully!");
