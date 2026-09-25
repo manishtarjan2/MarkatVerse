@@ -483,15 +483,85 @@ export default function ProfileSettings() {
               </div>
             )}
 
-            {/* Placeholder for other tabs */}
-            {['orders', 'notifications'].includes(activeTab) && (
+            {/* ORDERS TAB (Placeholder) */}
+            {activeTab === 'orders' && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col items-center justify-center py-20 text-center">
                 <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mb-6 shadow-inner border border-slate-800">
-                  {activeTab === 'orders' && <Package className="w-10 h-10 text-slate-600" />}
-                  {activeTab === 'notifications' && <Bell className="w-10 h-10 text-slate-600" />}
+                  <Package className="w-10 h-10 text-slate-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight capitalize">{activeTab} Details</h3>
-                <p className="text-slate-400 max-w-sm">This section is currently being updated. Please check back later for your detailed {activeTab} information.</p>
+                <h3 className="text-2xl font-bold text-white mb-2 tracking-tight capitalize">Orders Details</h3>
+                <p className="text-slate-400 max-w-sm">This section is currently being updated. Please check back later for your detailed orders information.</p>
+              </div>
+            )}
+
+            {/* NOTIFICATIONS TAB */}
+            {activeTab === 'notifications' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex justify-between items-end mb-8 border-b border-slate-800 pb-6">
+                  <div>
+                    <h2 className="text-3xl font-bold text-white mb-2 tracking-tight flex items-center gap-3">
+                      <Bell className="w-7 h-7 text-blue-500" /> Notifications & Alerts
+                    </h2>
+                    <p className="text-slate-400 text-sm">Stay updated with your orders, messages, and account security.</p>
+                  </div>
+                  <button onClick={() => toast.success('All notifications marked as read!')} className="text-sm font-bold text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg border border-blue-500/20 active:scale-95">
+                    Mark All as Read
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Notification 1 */}
+                  <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors flex gap-4 items-start relative overflow-hidden group">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+                    <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/30">
+                      <Package className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="text-white font-bold text-base">Order Shipped!</h4>
+                        <span className="text-xs text-slate-500 font-medium">2 hours ago</span>
+                      </div>
+                      <p className="text-slate-400 text-sm leading-relaxed mb-3">Your order <span className="text-white font-semibold">#ORD-20260925-001</span> is on the way. Expected delivery by tomorrow evening.</p>
+                      <button className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md transition-colors">
+                        Track Order
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Notification 2 */}
+                  <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors flex gap-4 items-start">
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                      <ShieldCheck className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="text-white font-bold text-base">Security Alert: New Login</h4>
+                        <span className="text-xs text-slate-500 font-medium">Yesterday</span>
+                      </div>
+                      <p className="text-slate-400 text-sm leading-relaxed mb-3">We noticed a new login from a Windows PC device. If this was you, you can safely ignore this alert.</p>
+                      <button className="text-xs font-bold text-slate-400 hover:text-white underline transition-colors">
+                        Review Activity
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Notification 3 */}
+                  <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors flex gap-4 items-start">
+                    <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
+                      <Star className="w-6 h-6 text-amber-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="text-white font-bold text-base">Welcome to MarkatVerse!</h4>
+                        <span className="text-xs text-slate-500 font-medium">3 days ago</span>
+                      </div>
+                      <p className="text-slate-400 text-sm leading-relaxed mb-3">Thank you for joining MarkatVerse! Complete your profile settings to unlock all features.</p>
+                      <button className="text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md transition-colors shadow-lg shadow-blue-500/20">
+                        Complete Profile
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 

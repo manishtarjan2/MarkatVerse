@@ -121,28 +121,28 @@ export class AuthService {
         });
 
         await transporter.sendMail({
-          from: `"MarkatVerse" <${process.env.SMTP_USER}>`,
+          from: `"MarkatVerse Support" <${process.env.SMTP_USER}>`,
           to: identifier,
-          subject: 'Your Registration Code - MarkatVerse',
-          text: `Welcome to MarkatVerse!\n\nYou are one step away from creating your account. Please use the 6-character code below to verify your email address. This code will expire in 5 minutes.\n\nCode: ${code}\n\nIf you did not request this, you can safely ignore this email.`,
+          subject: 'MarkatVerse Code',
+          text: `Hello,\n\nYou recently requested a verification code for your MarkatVerse account. Please see your code below:\n\n${code}\n\nThis code will remain active for the next 5 minutes. If you did not request this, please let us know immediately.\n\nBest regards,\nMarkatVerse Support Team`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px 20px; color: #1f2937; line-height: 1.6;">
               <div style="text-align: center; margin-bottom: 30px;">
-                <img src="cid:logo" alt="MarkatVerse" style="height: 60px; max-width: 100%; object-fit: contain;">
+                <h1 style="color: #1e3a8a; font-size: 28px; font-weight: 800; letter-spacing: 2px; margin: 0;">MARKATVERSE</h1>
               </div>
-              <h2>Welcome to MarkatVerse!</h2>
-              <p>You are one step away from creating your account. Please use the 6-character code below to verify your email address. This code will expire in 5 minutes.</p>
-              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
-                <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #10b981;">${code}</span>
+              <h2 style="color: #111827; font-size: 22px; font-weight: 600; margin-bottom: 20px;">Verification Code</h2>
+              <p style="font-size: 16px; margin-bottom: 25px;">Hello,</p>
+              <p style="font-size: 16px; margin-bottom: 25px;">You recently requested a verification code for your MarkatVerse account. Please use the highly secure code below:</p>
+              
+              <div style="background-color: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+                <span style="font-family: monospace; font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #2563eb;">${code}</span>
               </div>
-              <p>If you did not request this, you can safely ignore this email.</p>
+              
+              <p style="font-size: 14px; color: #dc2626; margin-bottom: 30px;">For your security, this code will expire in exactly 5 minutes.</p>
+              <p style="font-size: 14px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 20px;">If you did not request this code, you can safely ignore this email.</p>
+              <p style="font-size: 14px; color: #6b7280;">Best regards,<br><strong>MarkatVerse Support Team</strong></p>
             </div>
-          `,
-          attachments: [{
-            filename: 'hero-left-logo.png',
-            path: 'D:/MarkatVerse/frontend/public/hero-left-logo.png',
-            cid: 'logo'
-          }]
+          `
         });
         this.logger.log(`Signup OTP email sent to ${identifier}`);
       } else {
@@ -343,29 +343,28 @@ export class AuthService {
         });
 
         await transporter.sendMail({
-          from: `"MarkatVerse" <${process.env.SMTP_USER}>`,
+          from: `"MarkatVerse Support" <${process.env.SMTP_USER}>`,
           to: user.email || undefined,
-          subject: 'Password Reset Code - MarkatVerse',
-          text: `Password Reset Request\n\nHi ${user.name},\n\nYou requested to reset your password. Please use the 6-character code below. This code will expire in 5 minutes.\n\nCode: ${resetCode}\n\nIf you did not request this, you can safely ignore this email.`,
+          subject: 'MarkatVerse Reset Code',
+          text: `Hello ${user.name},\n\nWe received a request to reset your password. Please find your secure authorization code below:\n\n${resetCode}\n\nFor your security, this code will expire in 5 minutes. If you did not request this change, please contact us or ignore this message.\n\nBest regards,\nMarkatVerse Support Team`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px 20px; color: #1f2937; line-height: 1.6;">
               <div style="text-align: center; margin-bottom: 30px;">
-                <img src="cid:logo" alt="MarkatVerse" style="height: 60px; max-width: 100%; object-fit: contain;">
+                <h1 style="color: #1e3a8a; font-size: 28px; font-weight: 800; letter-spacing: 2px; margin: 0;">MARKATVERSE</h1>
               </div>
-              <h2>Password Reset Request</h2>
-              <p>Hi ${user.name},</p>
-              <p>You requested to reset your password. Please use the 6-character code below. This code will expire in 5 minutes.</p>
-              <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0;">
-                <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #1e3a8a;">${resetCode}</span>
+              <h2 style="color: #111827; font-size: 22px; font-weight: 600; margin-bottom: 20px;">Password Reset Request</h2>
+              <p style="font-size: 16px; margin-bottom: 25px;">Hello ${user.name},</p>
+              <p style="font-size: 16px; margin-bottom: 25px;">We received a request to reset the password for your MarkatVerse account. Please use the highly secure authorization code below:</p>
+              
+              <div style="background-color: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+                <span style="font-family: monospace; font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #2563eb;">${resetCode}</span>
               </div>
-              <p>If you did not request this, you can safely ignore this email.</p>
+              
+              <p style="font-size: 14px; color: #dc2626; margin-bottom: 30px;">For your security, this code will expire in exactly 5 minutes.</p>
+              <p style="font-size: 14px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 20px;">If you did not request a password reset, please ignore this email or contact support.</p>
+              <p style="font-size: 14px; color: #6b7280;">Best regards,<br><strong>MarkatVerse Support Team</strong></p>
             </div>
-          `,
-          attachments: [{
-            filename: 'hero-left-logo.png',
-            path: 'D:/MarkatVerse/frontend/public/hero-left-logo.png',
-            cid: 'logo'
-          }]
+          `
         });
         this.logger.log(`Password reset email sent to ${user.email}`);
       } else {
