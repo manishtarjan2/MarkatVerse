@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function ContentBlogPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -10,7 +12,7 @@ export default function ContentBlogPage() {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch('http://localhost:3001/content/blog');
+      const res = await fetch(`${API_URL}/content/blog`);
       if (res.ok) {
         const data = await res.json();
         setPosts(data);
@@ -29,7 +31,7 @@ export default function ContentBlogPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this Blog post?')) {
       try {
-        await fetch(`http://localhost:3001/content/blog/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/content/blog/${id}`, { method: 'DELETE' });
         fetchPosts();
       } catch (e) {
         console.error(e);
@@ -41,8 +43,8 @@ export default function ContentBlogPage() {
     e.preventDefault();
     try {
       const url = editingId 
-        ? `http://localhost:3001/content/blog/${editingId}` 
-        : 'http://localhost:3001/content/blog';
+        ? `${API_URL}/content/blog/${editingId}` 
+        : `${API_URL}/content/blog`;
       const method = editingId ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
@@ -76,7 +78,7 @@ export default function ContentBlogPage() {
   const handleToggleStatus = async (post: any) => {
     const newStatus = post.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
     try {
-      await fetch(`http://localhost:3001/content/blog/${post.id}`, {
+      await fetch(`${API_URL}/content/blog/${post.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

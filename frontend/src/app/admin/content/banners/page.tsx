@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function ContentBannersPage() {
   const [banners, setBanners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -10,7 +12,7 @@ export default function ContentBannersPage() {
 
   const fetchBanners = async () => {
     try {
-      const res = await fetch('http://localhost:3001/content/banners');
+      const res = await fetch(`${API_URL}/content/banners`);
       if (res.ok) {
         const data = await res.json();
         setBanners(data);
@@ -29,7 +31,7 @@ export default function ContentBannersPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this Banner?')) {
       try {
-        await fetch(`http://localhost:3001/content/banners/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/content/banners/${id}`, { method: 'DELETE' });
         fetchBanners();
       } catch (e) {
         console.error(e);
@@ -41,8 +43,8 @@ export default function ContentBannersPage() {
     e.preventDefault();
     try {
       const url = editingId 
-        ? `http://localhost:3001/content/banners/${editingId}` 
-        : 'http://localhost:3001/content/banners';
+        ? `${API_URL}/content/banners/${editingId}` 
+        : `${API_URL}/content/banners`;
       const method = editingId ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
@@ -82,7 +84,7 @@ export default function ContentBannersPage() {
     );
 
     try {
-      const res = await fetch(`http://localhost:3001/content/banners/${banner.id}`, {
+      const res = await fetch(`${API_URL}/content/banners/${banner.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

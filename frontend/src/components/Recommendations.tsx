@@ -4,6 +4,8 @@ import { Star } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function Recommendations() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,8 +17,8 @@ export default function Recommendations() {
       try {
         setLoading(true);
         const url = user?.id
-          ? `http://localhost:3001/recommendations?userId=${user.id}`
-          : 'http://localhost:3001/recommendations';
+          ? `${API_URL}/recommendations?userId=${user.id}`
+          : `${API_URL}/recommendations`;
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
@@ -34,7 +36,7 @@ export default function Recommendations() {
   const handleClick = async (item: any) => {
     // Log interaction
     try {
-      await fetch('http://localhost:3001/recommendations/interactions', {
+      await fetch(`${API_URL}/recommendations/interactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -56,7 +58,7 @@ export default function Recommendations() {
   };
 
   const handleMouseEnter = (item: any) => {
-    fetch('http://localhost:3001/recommendations/interactions', {
+    fetch(`${API_URL}/recommendations/interactions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Edit } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function SecuritygtLoginsPage() {
   const [logins, setLogins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -9,7 +11,7 @@ export default function SecuritygtLoginsPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch('http://localhost:3001/users');
+        const res = await fetch(`${API_URL}/users`);
         if (res.ok) {
           const data = await res.json();
           setLogins(data);
@@ -26,7 +28,7 @@ export default function SecuritygtLoginsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this login?')) return;
     try {
-      await fetch(`http://localhost:3001/users/${id}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/users/${id}`, { method: 'DELETE' });
       setLogins(logins.filter(u => u.id !== id));
     } catch (err) {
       console.error(err);

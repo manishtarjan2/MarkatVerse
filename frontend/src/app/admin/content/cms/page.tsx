@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function ContentCmsPage() {
   const [pages, setPages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -10,7 +12,7 @@ export default function ContentCmsPage() {
 
   const fetchPages = async () => {
     try {
-      const res = await fetch('http://localhost:3001/content/cms');
+      const res = await fetch(`${API_URL}/content/cms`);
       if (res.ok) {
         const data = await res.json();
         setPages(data);
@@ -29,7 +31,7 @@ export default function ContentCmsPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this CMS page?')) {
       try {
-        await fetch(`http://localhost:3001/content/cms/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/content/cms/${id}`, { method: 'DELETE' });
         fetchPages();
       } catch (e) {
         console.error(e);
@@ -41,8 +43,8 @@ export default function ContentCmsPage() {
     e.preventDefault();
     try {
       const url = editingId 
-        ? `http://localhost:3001/content/cms/${editingId}` 
-        : 'http://localhost:3001/content/cms';
+        ? `${API_URL}/content/cms/${editingId}` 
+        : `${API_URL}/content/cms`;
       const method = editingId ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
@@ -75,7 +77,7 @@ export default function ContentCmsPage() {
   const handleToggleStatus = async (page: any) => {
     const newStatus = page.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
     try {
-      await fetch(`http://localhost:3001/content/cms/${page.id}`, {
+      await fetch(`${API_URL}/content/cms/${page.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

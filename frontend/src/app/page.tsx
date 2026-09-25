@@ -12,7 +12,8 @@ const ProductGrid = dynamic(() => import('@/components/ProductGrid'));
 
 async function getAdvertisements() {
   try {
-    const res = await fetch('http://localhost:3001/commercial/advertisements', { cache: 'no-store' });
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const res = await fetch(`${API_URL}/commercial/advertisements`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       return data.filter((ad: any) => ad.status === 'ACTIVE' && ad.position === 'HOMEPAGE');
@@ -25,7 +26,8 @@ async function getAdvertisements() {
 
 async function getBanners() {
   try {
-    const res = await fetch('http://localhost:3001/content/banners', { cache: 'no-store' });
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const res = await fetch(`${API_URL}/content/banners`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       return data.filter((banner: any) => banner.status === 'ACTIVE' && banner.position === 'HOME_HERO');
@@ -38,7 +40,8 @@ async function getBanners() {
 
 async function getBlogPosts() {
   try {
-    const res = await fetch('http://localhost:3001/content/blog', { cache: 'no-store' });
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const res = await fetch(`${API_URL}/content/blog`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       return data.filter((post: any) => post.status === 'PUBLISHED').slice(0, 3); // Top 3 latest posts

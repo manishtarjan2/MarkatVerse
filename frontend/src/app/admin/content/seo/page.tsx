@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function ContentSeoPage() {
   const [seoData, setSeoData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -10,7 +12,7 @@ export default function ContentSeoPage() {
 
   const fetchSeoData = async () => {
     try {
-      const res = await fetch('http://localhost:3001/content/seo');
+      const res = await fetch(`${API_URL}/content/seo`);
       if (res.ok) {
         const data = await res.json();
         setSeoData(data);
@@ -29,7 +31,7 @@ export default function ContentSeoPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this SEO entry?')) {
       try {
-        await fetch(`http://localhost:3001/content/seo/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/content/seo/${id}`, { method: 'DELETE' });
         fetchSeoData();
       } catch (e) {
         console.error(e);
@@ -41,8 +43,8 @@ export default function ContentSeoPage() {
     e.preventDefault();
     try {
       const url = editingId 
-        ? `http://localhost:3001/content/seo/${editingId}` 
-        : 'http://localhost:3001/content/seo';
+        ? `${API_URL}/content/seo/${editingId}` 
+        : `${API_URL}/content/seo`;
       const method = editingId ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
@@ -76,7 +78,7 @@ export default function ContentSeoPage() {
   const handleToggleStatus = async (seo: any) => {
     const newStatus = seo.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
-      await fetch(`http://localhost:3001/content/seo/${seo.id}`, {
+      await fetch(`${API_URL}/content/seo/${seo.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

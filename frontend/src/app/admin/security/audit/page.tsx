@@ -18,7 +18,8 @@ export default function SecurityAuditPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:3001/security/audit');
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${API_URL}/security/audit`);
       if (res.ok) {
         const data = await res.json();
         setLogs(data);

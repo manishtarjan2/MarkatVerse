@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { Mail, Phone, Globe, ShieldCheck } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function SettingsAuthenticationPage() {
   const [settings, setSettings] = useState({
     enableEmail: true,
@@ -15,7 +17,7 @@ export default function SettingsAuthenticationPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('http://localhost:3001/system-config/auth');
+        const res = await fetch(`${API_URL}/system-config/auth`);
         if (res.ok) {
           const data = await res.json();
           setSettings(data);
@@ -36,7 +38,7 @@ export default function SettingsAuthenticationPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch('http://localhost:3001/system-config/auth', {
+      await fetch(`${API_URL}/system-config/auth`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)

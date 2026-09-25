@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { Edit2, Trash2, X } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function SupportComplaintsPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -11,7 +13,7 @@ export default function SupportComplaintsPage() {
 
   const fetchItems = async () => {
     try {
-      const res = await fetch('http://localhost:3001/support/complaints');
+      const res = await fetch(`${API_URL}/support/complaints`);
       if (res.ok) {
         const data = await res.json();
         setItems(data);
@@ -30,7 +32,7 @@ export default function SupportComplaintsPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this complaint?')) {
       try {
-        await fetch(`http://localhost:3001/support/complaints/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/support/complaints/${id}`, { method: 'DELETE' });
         fetchItems();
       } catch (e) {
         console.error(e);
@@ -41,7 +43,7 @@ export default function SupportComplaintsPage() {
   const handleToggleStatus = async (item: any) => {
     const newStatus = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
-      const res = await fetch(`http://localhost:3001/support/complaints/${item.id}`, {
+      const res = await fetch(`${API_URL}/support/complaints/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -71,8 +73,8 @@ export default function SupportComplaintsPage() {
 
   const handleSave = async () => {
     const url = editingId 
-      ? `http://localhost:3001/support/complaints/${editingId}`
-      : 'http://localhost:3001/support/complaints';
+      ? `${API_URL}/support/complaints/${editingId}`
+      : `${API_URL}/support/complaints`;
     const method = editingId ? 'PATCH' : 'POST';
 
     try {
