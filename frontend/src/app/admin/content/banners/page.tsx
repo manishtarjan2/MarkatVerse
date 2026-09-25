@@ -75,15 +75,27 @@ export default function ContentBannersPage() {
 
   const handleToggleStatus = async (banner: any) => {
     const newStatus = banner.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    
+    // Optimistic UI update for instant feedback
+    setBanners(currentBanners => 
+      currentBanners.map(b => b.id === banner.id ? { ...b, status: newStatus } : b)
+    );
+
     try {
-      await fetch(`http://localhost:3001/content/banners/${banner.id}`, {
+      const res = await fetch(`http://localhost:3001/content/banners/${banner.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
-      fetchBanners();
+      
+      if (!res.ok) {
+        // Revert on server error
+        fetchBanners();
+      }
     } catch (e) {
-      console.error(e);
+      console.error("Failed to toggle status", e);
+      // Revert on network error
+      fetchBanners();
     }
   };
 
@@ -117,30 +129,50 @@ export default function ContentBannersPage() {
         
         <div className="overflow-x-auto">
           {loading ? (
-             <div className="p-8 text-center text-slate-400">Loading banners...</div>
+             <table className="w-full text-left border-collapse">
+               <thead className="bg-slate-900/80 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
+                 <tr>
+                   <th className="p-4 pl-6">Title</th>
+                   <th className="p-4">Banner Preview</th>
+                   <th className="p-4">Position</th>
+                   <th className="p-4">Status</th>
+                   <th className="p-4 pr-6 text-right">Actions</th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-slate-700/50">
+                 {Array.from({ length: 3 }).map((_, i) => (
+                   <tr key={`skeleton-${i}`} className="animate-pulse">
+                     <td className="p-4 pl-6"><div className="h-4 bg-slate-700/50 rounded w-32"></div></td>
+                     <td className="p-4"><div className="h-12 w-24 bg-slate-700/50 rounded-md"></div></td>
+                     <td className="p-4"><div className="h-6 bg-slate-700/50 rounded w-24"></div></td>
+                     <td className="p-4"><div className="h-6 bg-slate-700/50 rounded-full w-16"></div></td>
+                     <td className="p-4 pr-6 flex justify-end gap-2"><div className="h-8 w-16 bg-slate-700/50 rounded"></div><div className="h-8 w-12 bg-slate-700/50 rounded"></div><div className="h-8 w-16 bg-slate-700/50 rounded"></div></td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
           ) : banners.length === 0 ? (
              <div className="p-8 text-center text-slate-400">No Banners found.</div>
           ) : (
             <table className="w-full text-left border-collapse">
               <thead className="bg-slate-900/80 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
                 <tr>
-                  <th className="p-4 pl-6">ID</th>
+                  <th className="p-4 pl-6">Title</th>
                   <th className="p-4">Banner Preview</th>
-                  <th className="p-4">Title / Position</th>
+                  <th className="p-4">Position</th>
                   <th className="p-4">Status</th>
                   <th className="p-4 pr-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50">
                 {banners.map((banner) => (
-                  <tr key={banner.id} className="hover:bg-slate-700/50 transition-all">
-                    <td className="p-4 pl-6 font-mono text-xs text-slate-500">{banner.id.substring(0,8)}...</td>
+                  <tr key={banner.id} className="hover:bg-slate-700/50 transition-all group">
+                    <td className="p-4 pl-6 font-bold text-white text-base">{banner.title}</td>
                     <td className="p-4">
-                       <img src={banner.imageUrl} alt={banner.title} className="h-12 w-24 object-cover rounded-md border border-slate-700 bg-slate-900" />
+                       <img src={banner.imageUrl} alt={banner.title} className="h-12 w-24 object-cover rounded-md border border-slate-700 bg-slate-900 group-hover:border-emerald-500 transition-colors" />
                     </td>
                     <td className="p-4">
-                       <div className="font-bold text-white">{banner.title}</div>
-                       <div className="text-xs text-slate-400">Pos: {banner.position}</div>
+                       <div className="text-xs font-semibold bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg inline-block border border-slate-700">{banner.position}</div>
                     </td>
                     <td className="p-4">
                       {banner.status === 'ACTIVE' ? (
@@ -150,9 +182,15 @@ export default function ContentBannersPage() {
                       )}
                     </td>
                     <td className="p-4 pr-6 text-right space-x-2">
-                      <button onClick={() => handleToggleStatus(banner)} className="text-slate-500 hover:text-white px-2 transition-colors">Toggle</button>
-                      <button onClick={() => handleEdit(banner)} className="text-slate-500 hover:text-indigo-400 px-2 transition-colors">Edit</button>
-                      <button onClick={() => handleDelete(banner.id)} className="text-slate-500 hover:text-rose-400 px-2 transition-colors">Delete</button>
+                      <button onClick={() => handleToggleStatus(banner)} className="text-xs font-bold text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-all border border-slate-700/50">
+                        Toggle
+                      </button>
+                      <button onClick={() => handleEdit(banner)} className="text-xs font-bold text-slate-400 hover:text-indigo-400 bg-slate-800/50 hover:bg-indigo-500/10 px-3 py-1.5 rounded-lg transition-all border border-slate-700/50">
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete(banner.id)} className="text-xs font-bold text-slate-400 hover:text-rose-400 bg-slate-800/50 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition-all border border-slate-700/50">
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}

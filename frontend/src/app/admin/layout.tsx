@@ -8,6 +8,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAdminRole, AdminRole } from '@/context/AdminRoleContext';
 import { useAuth } from '@/context/AuthContext';
 
+import OmniSearch from './components/OmniSearch';
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { currentAdminRole, setCurrentAdminRole } = useAdminRole();
   const { user, isLoading } = useAuth();
@@ -37,8 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/2"></div>
       <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[150px] pointer-events-none translate-y-1/3"></div>
 
-      
-
+      <OmniSearch />
 
       {/* Mobile Header */}
       <div className="lg:hidden flex items-center justify-between p-4 bg-slate-950/80 backdrop-blur-md border-b border-white/5 shrink-0 sticky top-0 z-40">

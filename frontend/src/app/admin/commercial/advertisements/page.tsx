@@ -79,15 +79,27 @@ export default function CommercialgtAdvertisementsPage() {
 
   const handleToggleStatus = async (item: any) => {
     const newStatus = item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    
+    // Optimistic UI update for instant feedback
+    setItems(currentItems => 
+      currentItems.map(i => i.id === item.id ? { ...i, status: newStatus } : i)
+    );
+
     try {
       const res = await fetch(`${API_URL}/commercial/advertisements/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
-      if (res.ok) fetchItems();
+      
+      if (!res.ok) {
+        // Revert on server error
+        fetchItems();
+      }
     } catch (error) {
       console.error("Failed to toggle status", error);
+      // Revert on network error
+      fetchItems();
     }
   };
 
@@ -109,6 +121,7 @@ export default function CommercialgtAdvertisementsPage() {
             <thead className="bg-slate-900/80 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
               <tr>
                 <th className="p-4 pl-6">Title</th>
+                <th className="p-4">Advertisement Preview</th>
                 <th className="p-4">Position</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 pr-6 text-right">Actions</th>
@@ -116,23 +129,42 @@ export default function CommercialgtAdvertisementsPage() {
             </thead>
             <tbody className="divide-y divide-slate-700/50">
               {loading ? (
-                <tr><td colSpan={4} className="p-4 text-center text-slate-400">Loading...</td></tr>
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={`skeleton-${i}`} className="animate-pulse">
+                    <td className="p-4 pl-6"><div className="h-4 bg-slate-700/50 rounded w-32"></div></td>
+                    <td className="p-4"><div className="h-12 w-24 bg-slate-700/50 rounded-md"></div></td>
+                    <td className="p-4"><div className="h-6 bg-slate-700/50 rounded w-24"></div></td>
+                    <td className="p-4"><div className="h-6 bg-slate-700/50 rounded-full w-16"></div></td>
+                    <td className="p-4 pr-6 flex justify-end gap-2"><div className="h-8 w-16 bg-slate-700/50 rounded"></div><div className="h-8 w-12 bg-slate-700/50 rounded"></div><div className="h-8 w-16 bg-slate-700/50 rounded"></div></td>
+                  </tr>
+                ))
               ) : items.length === 0 ? (
-                <tr><td colSpan={4} className="p-4 text-center text-slate-400">No advertisements found.</td></tr>
+                <tr><td colSpan={5} className="p-4 text-center text-slate-400">No advertisements found.</td></tr>
               ) : (
                 items.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-700/50 transition-all">
-                    <td className="p-4 pl-6 font-bold text-white">{item.title}</td>
-                    <td className="p-4 text-slate-400">{item.position}</td>
+                  <tr key={item.id} className="hover:bg-slate-700/50 transition-all group">
+                    <td className="p-4 pl-6 font-bold text-white text-base">{item.title}</td>
+                    <td className="p-4">
+                       <img src={item.mediaUrl} alt={item.title} className="h-12 w-24 object-cover rounded-md border border-slate-700 bg-slate-900 group-hover:border-emerald-500 transition-colors" />
+                    </td>
+                    <td className="p-4">
+                       <div className="text-xs font-semibold bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg inline-block border border-slate-700">{item.position}</div>
+                    </td>
                     <td className="p-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${item.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
                         {item.status}
                       </span>
                     </td>
                     <td className="p-4 pr-6 text-right space-x-2">
-                      <button onClick={() => handleToggleStatus(item)} className="text-slate-500 hover:text-white px-2 transition-colors">Toggle</button>
-                      <button onClick={() => openModal(item)} className="text-slate-500 hover:text-blue-400 px-2 transition-colors"><Edit2 className="w-4 h-4 inline" /></button>
-                      <button onClick={() => handleDelete(item.id)} className="text-slate-500 hover:text-rose-400 px-2 transition-colors"><Trash2 className="w-4 h-4 inline" /></button>
+                      <button onClick={() => handleToggleStatus(item)} className="text-xs font-bold text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-all border border-slate-700/50">
+                        Toggle
+                      </button>
+                      <button onClick={() => openModal(item)} className="text-xs font-bold text-slate-400 hover:text-indigo-400 bg-slate-800/50 hover:bg-indigo-500/10 px-3 py-1.5 rounded-lg transition-all border border-slate-700/50">
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete(item.id)} className="text-xs font-bold text-slate-400 hover:text-rose-400 bg-slate-800/50 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition-all border border-slate-700/50">
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))

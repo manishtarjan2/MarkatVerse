@@ -54,7 +54,7 @@ export class SellersService {
       return { ...existingBusiness, status: 'Pending' };
     }
 
-    const businessCode = await this.idGenerator.generateBusinessId();
+    const businessCode = await this.idGenerator.generateBusinessId(seller.mainType);
     const business = await this.prisma.business.create({
       data: {
         businessCode,

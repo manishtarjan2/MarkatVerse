@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminRole } from '@/context/AdminRoleContext';
-import { ShieldAlert, Search, Trash2, Edit2, Check, X, User } from 'lucide-react';
+import { ShieldAlert, Search, Trash2, Edit2, Check, X, User, Plus } from 'lucide-react';
 
 export default function UserTable({ title, subtitle, allowedRoles }: { title: string, subtitle: string, allowedRoles?: string[] }) {
   const { allUsers, deleteUser, updateUserRole } = useAuth();
@@ -13,6 +13,10 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingRole, setEditingRole] = useState<string>('');
+  
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newStaff, setNewStaff] = useState({ name: '', email: '', password: '', role: 'super_admin' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredUsers = allUsers
     .filter(u => allowedRoles ? allowedRoles.some(r => r.toLowerCase() === u.role?.toLowerCase()) : true)
@@ -41,6 +45,29 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
     }
   };
 
+  const handleAddStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hasEditPermission) return;
+    setIsSubmitting(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStaff)
+      });
+      if (!res.ok) throw new Error('Failed to create staff');
+      
+      // Refresh page or we can rely on context, but let's just reload to fetch new data
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Error creating staff account');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full">
       <header className="flex justify-between items-center mb-8">
@@ -48,7 +75,57 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
           <h1 className="text-3xl font-bold text-white tracking-tight">{title}</h1>
           <p className="text-slate-400 mt-2 text-sm">{subtitle}</p>
         </div>
+        
+        {hasEditPermission && title.includes('Staff') && (
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-amber-500/20"
+          >
+            <Plus className="w-5 h-5" /> Add Staff
+          </button>
+        )}
       </header>
+
+      {/* Add Staff Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+            <button onClick={() => setShowAddModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-6">Add New Staff</h2>
+            <form onSubmit={handleAddStaff} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Name</label>
+                <input required type="text" value={newStaff.name} onChange={e => setNewStaff({...newStaff, name: e.target.value})} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500" placeholder="e.g. John Doe" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Email</label>
+                <input required type="email" value={newStaff.email} onChange={e => setNewStaff({...newStaff, email: e.target.value})} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500" placeholder="john@example.com" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Temporary Password</label>
+                <input required type="password" value={newStaff.password} onChange={e => setNewStaff({...newStaff, password: e.target.value})} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500" placeholder="••••••••" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase">Role</label>
+                <select value={newStaff.role} onChange={e => setNewStaff({...newStaff, role: e.target.value})} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500">
+                  <option value="super_admin">Super Admin</option>
+                  <option value="catalog_admin">Catalog Admin</option>
+                  <option value="onboarding_admin">Onboarding Admin</option>
+                  <option value="support_admin">Support Admin</option>
+                </select>
+              </div>
+              <div className="pt-4 flex gap-3 justify-end">
+                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 font-semibold transition-colors">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl font-bold transition-colors disabled:opacity-50">
+                  {isSubmitting ? 'Creating...' : 'Create Staff'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {!hasEditPermission && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl flex items-center gap-3 mb-8">

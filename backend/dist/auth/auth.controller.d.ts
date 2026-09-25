@@ -55,10 +55,10 @@ export declare class AuthController {
     }>;
     getMe(authHeader: string): Promise<{
         id: string;
+        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
-        name: string;
         role: string;
         business: ({
             wallet: {
@@ -77,6 +77,9 @@ export declare class AuthController {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
@@ -85,9 +88,6 @@ export declare class AuthController {
             businessType: string;
             sector: string | null;
             address: string | null;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;

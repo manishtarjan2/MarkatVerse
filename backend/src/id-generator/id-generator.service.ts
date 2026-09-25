@@ -12,40 +12,116 @@ export class IdGeneratorService {
    * @param base The base number to add the sequence to (e.g. 100000)
    * @returns The generated custom string ID
    */
-  private async getNextId(type: string, prefix: string, base: number = 0): Promise<string> {
+  private async getNextId(type: string, prefix: string, padLength: number = 6): Promise<string> {
     const counter = await this.prisma.counter.upsert({
       where: { id: type },
       update: { seq: { increment: 1 } },
       create: { id: type, seq: 1 },
     });
     
-    return `${prefix}${base + counter.seq}`;
+    // Pad the sequence with leading zeros
+    const paddedSeq = String(counter.seq).padStart(padLength, '0');
+    return `${prefix}${paddedSeq}`;
   }
 
+  private getDateString(): string {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
+  }
+
+  // --- ACCOUNTS & USERS ---
   async generateUserId(): Promise<string> {
-    return this.getNextId('User', 'MV-', 10000000);
+    return this.getNextId('User', 'MV-', 10);
   }
 
-  async generateBusinessId(): Promise<string> {
-    return this.getNextId('Business', 'BUS-', 1000);
+  async generateAdminId(): Promise<string> {
+    return this.getNextId('Admin', 'MV-ADM-', 6);
   }
 
   async generateStaffId(): Promise<string> {
-    return this.getNextId('Staff', 'STAFF-', 2000);
+    return this.getNextId('Staff', 'MV-STF-', 6);
   }
 
-  async generateOrderId(): Promise<string> {
-    return this.getNextId('Order', 'ORD-', 50000);
+  // --- BUSINESS PROFILES ---
+  async generateBusinessId(type: string = 'SELLER'): Promise<string> {
+    let prefix = 'MV-BIZ-';
+    if (type === 'SELLER') prefix = 'MV-SEL-';
+    else if (type === 'SERVICE') prefix = 'MV-SPR-';
+    else if (type === 'MANUFACTURER') prefix = 'MV-MFG-';
+    else if (type === 'DISTRIBUTOR' || type === 'WHOLESALER') prefix = 'MV-DIS-';
+    
+    return this.getNextId(`Business_${type}`, prefix, 6);
+  }
+
+  // --- COMMERCE & CATALOG ---
+  async generateProductId(): Promise<string> {
+    return this.getNextId('Product', 'MV-PRD-', 6);
+  }
+
+  async generateServiceId(): Promise<string> {
+    return this.getNextId('Service', 'MV-SRV-', 6);
+  }
+
+  async generateReviewId(): Promise<string> {
+    return this.getNextId('Review', 'MV-REV-', 6);
+  }
+
+  // --- B2B / NEGOTIATIONS ---
+  async generateRequirementId(): Promise<string> {
+    const dateStr = this.getDateString();
+    return this.getNextId('Requirement', `MV-REQ-${dateStr}-`, 6);
+  }
+
+  async generateRfqId(): Promise<string> {
+    const dateStr = this.getDateString();
+    return this.getNextId('RFQ', `MV-RFQ-${dateStr}-`, 6);
+  }
+
+  async generateQuotationId(): Promise<string> {
+    const dateStr = this.getDateString();
+    return this.getNextId('Quotation', `MV-QTN-${dateStr}-`, 6);
+  }
+
+  // --- APPOINTMENTS & TOKENS ---
+  async generateAppointmentId(): Promise<string> {
+    const dateStr = this.getDateString();
+    return this.getNextId('Appointment', `MV-APT-${dateStr}-`, 6);
   }
 
   async generateBookingId(isToken: boolean = false): Promise<string> {
+    const dateStr = this.getDateString();
     if (isToken) {
-      return this.getNextId('Token', 'TOKEN-', 3000);
+      return this.getNextId('Token', `MV-TKN-${dateStr}-`, 6);
     }
-    return this.getNextId('Booking', 'BOOK-', 8000);
+    return this.getNextId('Booking', `MV-BKG-${dateStr}-`, 6);
   }
 
+  // --- ORDERS & LOGISTICS ---
+  async generateOrderId(): Promise<string> {
+    const dateStr = this.getDateString();
+    return this.getNextId('Order', `MV-ORD-${dateStr}-`, 6);
+  }
+
+  async generatePaymentId(): Promise<string> {
+    const dateStr = this.getDateString();
+    return this.getNextId('Payment', `MV-PAY-${dateStr}-`, 6);
+  }
+
+  async generateInvoiceId(): Promise<string> {
+    const dateStr = this.getDateString();
+    return this.getNextId('Invoice', `MV-INV-${dateStr}-`, 6);
+  }
+
+  async generateShipmentId(): Promise<string> {
+    const dateStr = this.getDateString();
+    return this.getNextId('Shipment', `MV-SHP-${dateStr}-`, 6);
+  }
+
+  // --- SYSTEM LOGS ---
   async generateAuditLogId(): Promise<string> {
-    return this.getNextId('AuditLog', 'AUD-', 10000);
+    return this.getNextId('AuditLog', 'AUD-', 6);
   }
 }

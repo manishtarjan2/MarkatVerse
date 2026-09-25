@@ -8,9 +8,9 @@ import { useAdminRole } from '@/context/AdminRoleContext';
 
 const defaultSettings = {
   sectors: [
-    { id: 'b2b', name: 'B2B Wholesale', icon: '🏭', isActive: true },
-    { id: 'b2c', name: 'B2C Retail', icon: '🛍️', isActive: true },
-    { id: 'services', name: 'Services & Bookings', icon: '🔧', isActive: true }
+    { id: 'b2b', name: 'B2B Wholesale', isActive: true },
+    { id: 'b2c', name: 'B2C Retail', isActive: true },
+    { id: 'services', name: 'Services & Bookings', isActive: true }
   ]
 };
 

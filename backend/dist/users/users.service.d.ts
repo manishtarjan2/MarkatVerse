@@ -6,11 +6,11 @@ export declare class UsersService {
     constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
     create(createUserDto: any): Promise<{
         id: string;
+        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
-        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -23,6 +23,9 @@ export declare class UsersService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
@@ -31,9 +34,6 @@ export declare class UsersService {
             businessType: string;
             sector: string | null;
             address: string | null;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;
@@ -47,11 +47,11 @@ export declare class UsersService {
         } | null;
     } & {
         id: string;
+        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
-        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -60,11 +60,11 @@ export declare class UsersService {
     })[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
+        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
-        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -73,11 +73,11 @@ export declare class UsersService {
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateUserDto: any): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
+        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
-        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -86,11 +86,11 @@ export declare class UsersService {
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     remove(id: string): Promise<{
         id: string;
+        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
-        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;

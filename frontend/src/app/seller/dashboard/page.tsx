@@ -453,14 +453,7 @@ function DashboardContent() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-500 font-medium">Loading Workspace...</p>
-      </div>
-    );
-  }
+  // Removed full-screen loading spinner to eliminate perceived latency
 
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col lg:flex-row font-sans overflow-x-hidden relative">

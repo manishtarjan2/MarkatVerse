@@ -182,7 +182,12 @@ export default function Navbar() {
               <span className="text-[11px] font-medium">Help</span>
             </Link>
 
-            {!isLoading && !user && (
+            {isLoading ? (
+              <div className="flex flex-col items-center gap-1 ml-2 opacity-50">
+                <div className="w-5 h-5 bg-slate-200 rounded animate-pulse"></div>
+                <div className="hidden lg:block w-16 h-3 bg-slate-200 rounded animate-pulse mt-1"></div>
+              </div>
+            ) : !user && (
               // Not logged in: show Become a Seller
               <Link href="/seller/login" className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
                 <Store className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
@@ -201,7 +206,12 @@ export default function Navbar() {
 
         {(user?.role !== 'super_admin' && user?.role !== 'admin') && (
           <>
-            {user && (
+            {isLoading ? (
+              <div className="flex flex-col items-center gap-1 ml-2 opacity-50">
+                <div className="w-5 h-5 bg-slate-200 rounded animate-pulse"></div>
+                <div className="w-6 h-3 bg-slate-200 rounded animate-pulse mt-1"></div>
+              </div>
+            ) : user && (
               <>
                 <Link href="/cart" className="flex flex-col items-center gap-1 cursor-pointer relative hover:text-blue-600 transition-colors group ml-2">
                   {cartItemCount > 0 && (

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useProducts, Category } from '@/context/ProductContext';
 import { useAdminRole } from '@/context/AdminRoleContext';
-import { ShieldAlert, Search, Trash2, Edit2, Plus, ListTree, Check, X, RefreshCw } from 'lucide-react';
+import { ShieldAlert, Search, Trash2, Edit2, Plus, ListTree, Check, X, RefreshCw, Smartphone, Hammer, Tractor, Scissors, HeartPulse, Home, Shirt, Car, Pizza, Wrench, Box } from 'lucide-react';
 
 export default function AdminCategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory } = useProducts();
@@ -11,19 +11,19 @@ export default function AdminCategoriesPage() {
   const hasEditPermission = canEdit('categories');
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  const getCategoryEmoji = (name: string) => {
+  const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes('electronic') || n.includes('tech') || n.includes('gadget')) return '📱';
-    if (n.includes('construct') || n.includes('build')) return '🏗️';
-    if (n.includes('agricultur') || n.includes('farm')) return '🚜';
-    if (n.includes('beaut') || n.includes('salon') || n.includes('cosmetic')) return '💅';
-    if (n.includes('health') || n.includes('medic')) return '⚕️';
-    if (n.includes('home') || n.includes('furniture')) return '🏠';
-    if (n.includes('fashion') || n.includes('cloth')) return '👕';
-    if (n.includes('vehicle') || n.includes('car')) return '🚗';
-    if (n.includes('food') || n.includes('grocery')) return '🍔';
-    if (n.includes('service')) return '🛠️';
-    return '📦';
+    if (n.includes('electronic') || n.includes('tech') || n.includes('gadget')) return <Smartphone className="w-5 h-5" />;
+    if (n.includes('construct') || n.includes('build')) return <Hammer className="w-5 h-5" />;
+    if (n.includes('agricultur') || n.includes('farm')) return <Tractor className="w-5 h-5" />;
+    if (n.includes('beaut') || n.includes('salon') || n.includes('cosmetic')) return <Scissors className="w-5 h-5" />;
+    if (n.includes('health') || n.includes('medic')) return <HeartPulse className="w-5 h-5" />;
+    if (n.includes('home') || n.includes('furniture')) return <Home className="w-5 h-5" />;
+    if (n.includes('fashion') || n.includes('cloth')) return <Shirt className="w-5 h-5" />;
+    if (n.includes('vehicle') || n.includes('car')) return <Car className="w-5 h-5" />;
+    if (n.includes('food') || n.includes('grocery')) return <Pizza className="w-5 h-5" />;
+    if (n.includes('service')) return <Wrench className="w-5 h-5" />;
+    return <Box className="w-5 h-5" />;
   };
 
   const cleanTheme = (themeStr: string | undefined | null) => {
@@ -358,7 +358,7 @@ export default function AdminCategoriesPage() {
                   <td className="p-4 pl-6">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl bg-${cleanTheme(cat.theme)}-500/20 flex items-center justify-center border border-${cleanTheme(cat.theme)}-500/30 text-${cleanTheme(cat.theme)}-400 text-xl shadow-inner shadow-${cleanTheme(cat.theme)}-500/10`}>
-                        {getCategoryEmoji(cat.name)}
+                        {getCategoryIcon(cat.name)}
                       </div>
                       <div>
                         <div className="font-bold text-white text-sm">{cat.name}</div>

@@ -121,10 +121,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.replace('/');
   };
 
-  const updateUserRole = (id: string, role: User['role']) => {
+  const updateUserRole = async (id: string, role: User['role']) => {
+    // Optimistic update
     setAllUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
     if (user?.id === id) {
       setUser(prev => prev ? { ...prev, role } : null);
+    }
+    
+    // Persist to backend
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_URL}/users/${id}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ role })
+      });
+    } catch (e) {
+      console.error('Failed to update user role on server', e);
     }
   };
 

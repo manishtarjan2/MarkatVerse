@@ -57,7 +57,10 @@ let AuthService = AuthService_1 = class AuthService {
             throw new BadRequestException('User with this email or phone already exists');
         }
         const hashedPassword = await bcrypt.hash(data.password, 10);
-        const markatId = await this.idGenerator.generateUserId();
+        let markatId = await this.idGenerator.generateUserId();
+        if (data.role && data.role.toLowerCase().includes('admin')) {
+            markatId = await this.idGenerator.generateAdminId();
+        }
         const user = await this.prisma.user.create({
             data: {
                 markatId,

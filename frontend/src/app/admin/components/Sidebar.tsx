@@ -197,9 +197,25 @@ export default function Sidebar({ currentAdminRole, setCurrentAdminRole, isMobil
             <img src="/logo.png" alt="MarkatVerse" className="h-10 object-contain scale-[2.5] origin-left brightness-0 invert" />
           </Link>
           <div className="text-amber-400 text-xs font-bold tracking-widest mt-1">ADMIN PORTAL</div>
-          <Link href="/" className="text-emerald-500 flex items-center gap-2 hover:opacity-80 transition-opacity font-bold text-sm mt-2 mb-4">
+          <Link href="/" className="text-emerald-500 flex items-center gap-2 hover:opacity-80 transition-opacity font-bold text-sm mt-2 mb-2">
             <ArrowLeft className="w-4 h-4" /> Back to Main Site
           </Link>
+          
+          <button 
+            onClick={() => {
+              const e = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true });
+              window.dispatchEvent(e);
+            }}
+            className="flex items-center justify-between w-full gap-3 px-3 py-2 bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg text-sm text-slate-400 transition-colors mb-2 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span>Spotlight Search</span>
+            </div>
+            <div className="flex items-center gap-1 bg-slate-800 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-slate-300">
+              Ctrl+K
+            </div>
+          </button>
 
           {/* Inline Role Simulator / Dropdown */}
           <div className="flex items-center justify-between bg-slate-900/60 p-1.5 pr-3 rounded-full border border-white/10 hover:border-emerald-500/30 transition-colors">
