@@ -39,12 +39,6 @@ export default function LocationPicker({ latitude, longitude, onChange }: Locati
     });
   }, [latitude, longitude]);
 
-  useEffect(() => {
-    if (position) {
-      onChange(position.lat, position.lng);
-    }
-  }, [position, onChange]);
-
   if (!isClient) return <div className="h-64 bg-slate-100 rounded-2xl animate-pulse"></div>;
 
   return (
@@ -58,7 +52,10 @@ export default function LocationPicker({ latitude, longitude, onChange }: Locati
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <InnerMap position={position} setPosition={setPosition} />
+        <InnerMap position={position} setPosition={(pos: any) => {
+          setPosition(pos);
+          onChange(pos.lat, pos.lng);
+        }} />
       </MapContainer>
       <div className="absolute top-2 right-2 z-[1000]">
         <button 
@@ -69,6 +66,7 @@ export default function LocationPicker({ latitude, longitude, onChange }: Locati
               async (pos) => {
                 const L = await import('leaflet');
                 setPosition(new L.LatLng(pos.coords.latitude, pos.coords.longitude));
+                onChange(pos.coords.latitude, pos.coords.longitude);
               },
               (err) => alert('Could not get your location')
             );
