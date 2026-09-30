@@ -122,8 +122,14 @@ export class AuthService {
 
         await transporter.sendMail({
           from: `"MarkatVerse Support" <${process.env.SMTP_USER}>`,
+          replyTo: `"MarkatVerse No-Reply" <noreply@markatverse.com>`,
           to: identifier,
-          subject: 'MarkatVerse Code',
+          subject: 'Action Required: Your MarkatVerse Verification Code',
+          headers: {
+            'X-Priority': '1 (Highest)',
+            'X-Mailer': 'Nodemailer',
+            'List-Unsubscribe': '<mailto:unsubscribe@markatverse.com?subject=unsubscribe>',
+          },
           text: `Hello,\n\nYou recently requested a verification code for your MarkatVerse account. Please see your code below:\n\n${code}\n\nThis code will remain active for the next 5 minutes. If you did not request this, please let us know immediately.\n\nBest regards,\nMarkatVerse Support Team`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px 20px; color: #1f2937; line-height: 1.6;">
@@ -345,8 +351,14 @@ export class AuthService {
 
         await transporter.sendMail({
           from: `"MarkatVerse Support" <${process.env.SMTP_USER}>`,
+          replyTo: `"MarkatVerse No-Reply" <noreply@markatverse.com>`,
           to: user.email || undefined,
-          subject: 'MarkatVerse Reset Code',
+          subject: 'Action Required: MarkatVerse Password Reset Code',
+          headers: {
+            'X-Priority': '1 (Highest)',
+            'X-Mailer': 'Nodemailer',
+            'List-Unsubscribe': '<mailto:unsubscribe@markatverse.com?subject=unsubscribe>',
+          },
           text: `Hello ${user.name},\n\nWe received a request to reset your password. Please find your secure authorization code below:\n\n${resetCode}\n\nFor your security, this code will expire in 5 minutes. If you did not request this change, please contact us or ignore this message.\n\nBest regards,\nMarkatVerse Support Team`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px 20px; color: #1f2937; line-height: 1.6;">
