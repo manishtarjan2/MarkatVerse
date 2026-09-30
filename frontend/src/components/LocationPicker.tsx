@@ -2,15 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-
-// Fix Leaflet's default icon path issues in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
 
 // Use dynamic import so MapContainer and TileLayer don't crash on SSR
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
@@ -28,15 +19,25 @@ interface LocationPickerProps {
 const InnerMap = dynamic(() => import('./InnerMap'), { ssr: false });
 
 export default function LocationPicker({ latitude, longitude, onChange }: LocationPickerProps) {
-  const [position, setPosition] = useState<L.LatLng | null>(
-    latitude && longitude ? new L.LatLng(latitude, longitude) : null
-  );
+  const [position, setPosition] = useState<any | null>(null);
   
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    // Fix Leaflet's default icon path issues dynamically on client side
+    import('leaflet').then((L) => {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      });
+      if (latitude && longitude) {
+        setPosition(new L.LatLng(latitude, longitude));
+      }
+    });
+  }, [latitude, longitude]);
 
   useEffect(() => {
     if (position) {
@@ -65,7 +66,10 @@ export default function LocationPicker({ latitude, longitude, onChange }: Locati
           onClick={(e) => {
             e.preventDefault();
             navigator.geolocation.getCurrentPosition(
-              (pos) => setPosition(new L.LatLng(pos.coords.latitude, pos.coords.longitude)),
+              async (pos) => {
+                const L = await import('leaflet');
+                setPosition(new L.LatLng(pos.coords.latitude, pos.coords.longitude));
+              },
               (err) => alert('Could not get your location')
             );
           }}
