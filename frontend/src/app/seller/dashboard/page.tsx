@@ -1238,9 +1238,17 @@ function DashboardContent() {
                 <h1 className="text-3xl font-bold text-slate-900">Tokens & Bookings</h1>
                 <p className="text-slate-500 mt-1">Manage all your service tokens, appointments and bookings in one place.</p>
               </div>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
-                <PlusCircle className="w-5 h-5" /> Create Booking
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
+                  <UserPlus className="w-5 h-5" /> Walk In
+                </button>
+                <button className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
+                  <Users className="w-5 h-5" /> Manage Staff
+                </button>
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
+                  <PlusCircle className="w-5 h-5" /> Create Booking
+                </button>
+              </div>
             </div>
             
             {/* Metrics */}
@@ -1384,8 +1392,8 @@ function DashboardContent() {
                       ) : (
                         bookings.map((booking, index) => {
                           const isSelected = selectedBookingDetails?.rawId === booking.rawId;
-                          const idLabel = booking.id;
-                          const isToken = booking.id.startsWith('TOKEN') || booking.bookingMode === 'TOKEN';
+                          const isToken = booking.id.startsWith('TOKEN') || booking.id.startsWith('MV-TKN') || booking.bookingMode === 'TOKEN';
+                          const idLabel = isToken ? `Token #${booking.tokenNumber || '?'}` : booking.id;
                           
                           const badgeColor = isToken 
                             ? (booking.status === 'In Progress' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700')
@@ -1471,7 +1479,7 @@ function DashboardContent() {
                       </button>
                       <div className="flex items-center justify-between mb-2 pr-8">
                         <h2 className="text-xl font-black text-slate-900">
-                          {selectedBookingDetails.id.startsWith('Token') ? selectedBookingDetails.id.replace('Token ', 'Token #') : (selectedBookingDetails.bookingMode === 'APPOINTMENT' ? selectedBookingDetails.id : `Token #${selectedBookingDetails.tokenNumber || '?'}`)}
+                          {selectedBookingDetails.id}
                         </h2>
                         <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
                                 selectedBookingDetails.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
@@ -1612,7 +1620,7 @@ function DashboardContent() {
                   <div className="flex flex-col flex-1 overflow-hidden">
                     <div className="px-5 pb-4 border-b border-slate-100 flex items-center justify-between">
                       <h2 className="text-xl font-black text-slate-900">
-                        {selectedBookingDetails.id.startsWith('Token') ? selectedBookingDetails.id.replace('Token ', 'Token #') : (selectedBookingDetails.bookingMode === 'APPOINTMENT' ? selectedBookingDetails.id : `Token #${selectedBookingDetails.tokenNumber || '?'}`)}
+                        {selectedBookingDetails.id}
                       </h2>
                       <button onClick={() => setSelectedBookingDetails(null)} className="p-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full text-slate-500">
                         <X className="w-5 h-5" />
