@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useProducts, Product } from '@/context/ProductContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useSettings } from '@/context/SettingsContext';
 import { MapPin, Heart, Share2 } from 'lucide-react';
 
 import { useUserTrends } from '@/hooks/useUserTrends';
@@ -13,6 +14,7 @@ import ProductGridSkeleton from './ProductGridSkeleton';
 export default function ProductGrid({ products: propProducts, limit, category, personalized, recent, serviceOnly }: { products?: Product[], limit?: number, category?: string, personalized?: boolean, recent?: boolean, serviceOnly?: boolean }) {
   const { products: contextProducts, isLoading, userLocation, userLat, userLng, radiusFilter, setRadiusFilter } = useProducts();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { systemConfig } = useSettings();
   const { getTopCategories, trends } = useUserTrends();
   const router = useRouter();
   const [showLocationToast, setShowLocationToast] = useState(false);
@@ -56,6 +58,32 @@ export default function ProductGrid({ products: propProducts, limit, category, p
         }
       }
 
+      if (a._distance !== undefined && b._distance !== undefined) {
+        // Group into 2km buckets so similarly close shops compete on rating
+        const distBucketA = Math.floor(a._distance / 2);
+        const distBucketB = Math.floor(b._distance / 2);
+        
+        if (distBucketA !== distBucketB) {
+          return distBucketA - distBucketB;
+        } else {
+          // If in the same distance bucket, sort by rating
+          const ratingA = Number(a.rating || 0);
+          const ratingB = Number(b.rating || 0);
+          if (ratingA !== ratingB) {
+            return ratingB - ratingA;
+          }
+          // If ratings are the same, sort by number of reviews
+          const parseReviews = (str: string) => {
+            if (!str) return 0;
+            const num = parseFloat(str.replace(/[^0-9.]/g, ''));
+            if (str.toLowerCase().includes('k')) return num * 1000;
+            if (str.toLowerCase().includes('m')) return num * 1000000;
+            return num;
+          };
+          return parseReviews(b.reviews || '0') - parseReviews(a.reviews || '0');
+        }
+      }
+
       const aMatch = (a.location || '').toLowerCase().includes(userLocation.toLowerCase());
       const bMatch = (b.location || '').toLowerCase().includes(userLocation.toLowerCase());
       if (aMatch && !bMatch) return -1;
@@ -92,12 +120,14 @@ export default function ProductGrid({ products: propProducts, limit, category, p
                 onChange={(e) => setRadiusFilter(e.target.value ? Number(e.target.value) : null)}
                 className="bg-transparent border-none outline-none text-slate-800 font-medium cursor-pointer"
               >
-                <option value="">Admin Default</option>
+                <option value="">Admin Default ({systemConfig?.searchRadius || 50} km)</option>
                 <option value="5">Within 5 km</option>
                 <option value="10">Within 10 km</option>
                 <option value="25">Within 25 km</option>
-                <option value="50">Within 50 km</option>
-                <option value="100">Within 100 km</option>
+                {(!systemConfig?.strictRadius || (systemConfig?.searchRadius || 50) >= 50) && <option value="50">Within 50 km</option>}
+                {(!systemConfig?.strictRadius || (systemConfig?.searchRadius || 50) >= 100) && <option value="100">Within 100 km</option>}
+                {(!systemConfig?.strictRadius || (systemConfig?.searchRadius || 50) >= 250) && <option value="250">Within 250 km</option>}
+                {(!systemConfig?.strictRadius || (systemConfig?.searchRadius || 50) >= 500) && <option value="500">Within 500 km</option>}
               </select>
             </div>
           )}

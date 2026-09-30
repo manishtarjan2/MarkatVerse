@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import LocationPicker from '@/components/LocationPicker';
 import toast from 'react-hot-toast';
 import { User, Phone, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
 
@@ -608,11 +609,18 @@ export default function SellerOnboarding() {
               <form onSubmit={e => { e.preventDefault(); setStep(3); }} className="flex flex-col gap-6">
                 <div><label className={labelClasses}>Legal Business Name <span className="text-red-500">*</span></label><input required type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} placeholder="e.g. ACME Corp" className={inputClasses} /></div>
                 <div><label className={labelClasses}>GST / PAN Number (Optional)</label><input type="text" value={gstNumber} onChange={e => setGstNumber(e.target.value)} placeholder="e.g. 22AAAAA0000A1Z5" className={inputClasses} /></div>
-                <div className="flex justify-between items-center mt-2 border-t border-slate-100 pt-6">
-                  <h3 className="text-sm font-bold text-slate-800">Location Details</h3>
-                  <button type="button" onClick={handleAutoFetchLocation} className="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1">
-                    📍 Auto Fetch Address
-                  </button>
+                <div className="flex justify-between items-center mt-2 border-t border-slate-100 pt-6 mb-4">
+                  <h3 className="text-sm font-bold text-slate-800">Pinpoint your Location on Map</h3>
+                </div>
+                
+                <LocationPicker 
+                  latitude={latitude} 
+                  longitude={longitude} 
+                  onChange={(lat, lng) => { setLatitude(lat); setLongitude(lng); }} 
+                />
+
+                <div className="flex justify-between items-center mt-6">
+                  <h3 className="text-sm font-bold text-slate-800">Address Details</h3>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
