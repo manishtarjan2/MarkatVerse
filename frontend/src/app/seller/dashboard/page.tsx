@@ -1925,7 +1925,6 @@ function DashboardContent() {
                   <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Location & Operations</h3>
                   <div className="space-y-4">
                     <div>
-                    <div>
                       <div className="flex justify-between items-center mb-2">
                         <div className="text-xs text-slate-400 font-medium">Pinpoint Location</div>
                       </div>
