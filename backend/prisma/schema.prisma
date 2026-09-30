@@ -140,6 +140,12 @@ model Product {
   seller     User?       @relation(fields: [sellerId], references: [id])
   category   Category?   @relation(fields: [categoryId], references: [id])
   leads      Lead[]
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([isB2B])
+  @@index([categoryName])
 }
 
 model Lead {

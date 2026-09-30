@@ -6,15 +6,17 @@ export declare class SellersController {
     constructor(sellersService: SellersService, jwtService: JwtService);
     create(createSellerDto: any, authHeader?: string): Promise<{
         status: string;
+        businessType: string;
+        sector: string | null;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         businessCode: string | null;
         userId: string;
-        name: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
-        businessType: string;
-        sector: string | null;
         address: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -22,8 +24,6 @@ export declare class SellersController {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -36,15 +36,17 @@ export declare class SellersController {
         email: string | null;
         phone: string | null;
         status: string;
+        businessType: string;
+        sector: string | null;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         businessCode: string | null;
         userId: string;
-        name: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
-        businessType: string;
-        sector: string | null;
         address: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -52,8 +54,6 @@ export declare class SellersController {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -80,15 +80,17 @@ export declare class SellersController {
     }[]>;
     updateStatus(id: string, status: string): Promise<{
         status: string;
+        businessType: string;
+        sector: string | null;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         businessCode: string | null;
         userId: string;
-        name: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
-        businessType: string;
-        sector: string | null;
         address: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -96,8 +98,6 @@ export declare class SellersController {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -107,15 +107,17 @@ export declare class SellersController {
         subscriptionEndDate: Date | null;
     }>;
     updateUser(userId: string, data: any): Promise<{
+        businessType: string;
+        sector: string | null;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         businessCode: string | null;
         userId: string;
-        name: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
-        businessType: string;
-        sector: string | null;
         address: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -123,8 +125,6 @@ export declare class SellersController {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -136,13 +136,13 @@ export declare class SellersController {
     removeUser(userId: string): Promise<{
         id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
         role: string;
+        createdAt: Date;
+        updatedAt: Date;
         resetCode: string | null;
         resetCodeExpires: Date | null;
     }>;

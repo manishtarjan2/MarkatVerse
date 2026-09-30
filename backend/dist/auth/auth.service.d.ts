@@ -67,12 +67,6 @@ export declare class AuthService {
         };
     }>;
     getMe(token: string): Promise<{
-        id: string;
-        markatId: string | null;
-        email: string | null;
-        phone: string | null;
-        name: string;
-        role: string;
         business: ({
             wallet: {
                 id: string;
@@ -86,6 +80,8 @@ export declare class AuthService {
                 owedToPlatform: number;
             } | null;
         } & {
+            businessType: string;
+            sector: string | null;
             id: string;
             name: string;
             createdAt: Date;
@@ -95,8 +91,6 @@ export declare class AuthService {
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
-            businessType: string;
-            sector: string | null;
             address: string | null;
             pincode: string | null;
             latitude: number | null;
@@ -112,6 +106,12 @@ export declare class AuthService {
             subscriptionStartDate: Date | null;
             subscriptionEndDate: Date | null;
         }) | null;
+        id: string;
+        name: string;
+        markatId: string | null;
+        email: string | null;
+        phone: string | null;
+        role: string;
     }>;
     forgotPassword(identifier: string): Promise<{
         message: string;

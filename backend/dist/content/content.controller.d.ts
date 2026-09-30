@@ -161,8 +161,8 @@ export declare class ContentController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
+        status: string;
         title: string;
         pageUrl: string;
         keywords: string | null;
@@ -171,8 +171,8 @@ export declare class ContentController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
+        status: string;
         title: string;
         pageUrl: string;
         keywords: string | null;
@@ -181,8 +181,8 @@ export declare class ContentController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
+        status: string;
         title: string;
         pageUrl: string;
         keywords: string | null;
@@ -191,8 +191,8 @@ export declare class ContentController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
+        status: string;
         title: string;
         pageUrl: string;
         keywords: string | null;
@@ -201,8 +201,8 @@ export declare class ContentController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
+        status: string;
         title: string;
         pageUrl: string;
         keywords: string | null;

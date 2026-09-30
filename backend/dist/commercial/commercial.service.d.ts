@@ -106,8 +106,8 @@ export declare class CommercialService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         features: string[];
+        status: string;
         price: number;
         planName: string;
     }[]>;
@@ -115,8 +115,8 @@ export declare class CommercialService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         features: string[];
+        status: string;
         price: number;
         planName: string;
     }>;
@@ -124,8 +124,8 @@ export declare class CommercialService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         features: string[];
+        status: string;
         price: number;
         planName: string;
     }>;
@@ -133,8 +133,8 @@ export declare class CommercialService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         features: string[];
+        status: string;
         price: number;
         planName: string;
     }>;
@@ -142,8 +142,8 @@ export declare class CommercialService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         features: string[];
+        status: string;
         price: number;
         planName: string;
     }>;

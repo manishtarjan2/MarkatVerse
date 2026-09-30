@@ -10,10 +10,10 @@ export declare class OrdersController {
             createdAt: Date;
             updatedAt: Date;
             sellerId: string | null;
+            price: number;
             productId: string;
             productName: string | null;
             quantity: number;
-            price: number;
             orderId: string;
         }[];
     } & {
@@ -22,8 +22,8 @@ export declare class OrdersController {
         updatedAt: Date;
         status: string;
         buyerId: string | null;
-        orderNumber: string | null;
         total: number;
+        orderNumber: string | null;
     }>;
     findAll(): Promise<{
         id: string;
@@ -50,8 +50,8 @@ export declare class OrdersController {
         updatedAt: Date;
         status: string;
         buyerId: string | null;
-        orderNumber: string | null;
         total: number;
+        orderNumber: string | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
     update(id: string, updateOrderDto: UpdateOrderDto): Promise<{
         id: string;
@@ -59,8 +59,8 @@ export declare class OrdersController {
         updatedAt: Date;
         status: string;
         buyerId: string | null;
-        orderNumber: string | null;
         total: number;
+        orderNumber: string | null;
     }>;
     remove(id: string): import(".prisma/client").Prisma.Prisma__OrderClient<{
         id: string;
@@ -68,7 +68,7 @@ export declare class OrdersController {
         updatedAt: Date;
         status: string;
         buyerId: string | null;
-        orderNumber: string | null;
         total: number;
+        orderNumber: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }
