@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 import StaffResourceManagementModal from '@/components/StaffResourceManagementModal';
 import DynamicFormEngine from '@/components/DynamicFormEngine';
+import LocationPicker from '@/components/LocationPicker';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -281,7 +282,7 @@ function DashboardContent() {
   // Profile Editing State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
-    ownerName: '', phone: '', email: '', businessName: '', gstNumber: '', address: '', pincode: ''
+    ownerName: '', phone: '', email: '', businessName: '', gstNumber: '', address: '', pincode: '', latitude: null as number | null, longitude: null as number | null
   });
 
   const handleEditProfileInit = () => {
@@ -293,6 +294,8 @@ function DashboardContent() {
       gstNumber: user?.business?.gstNumber || '',
       address: user?.business?.address || '',
       pincode: user?.business?.pincode || '',
+      latitude: user?.business?.latitude || null,
+      longitude: user?.business?.longitude || null,
     });
     setIsEditingProfile(true);
   };
@@ -428,6 +431,8 @@ function DashboardContent() {
         seller: user?.name || user?.business?.name || 'Seller',
         sellerId: user?.id,
         location: location,
+        latitude: user?.business?.latitude || null,
+        longitude: user?.business?.longitude || null,
         badge: 'New Arrival',
         badgeColor: 'badge-gold',
         isPremium: isPremiumSeller,
@@ -1920,7 +1925,36 @@ function DashboardContent() {
                   <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Location & Operations</h3>
                   <div className="space-y-4">
                     <div>
-                      <div className="text-xs text-slate-400 mb-1">Full Address</div>
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-xs text-slate-400 font-medium">Pinpoint Location</div>
+                      </div>
+                      {isEditingProfile ? (
+                        <div className="mb-4">
+                          <LocationPicker 
+                            latitude={profileForm.latitude} 
+                            longitude={profileForm.longitude} 
+                            onChange={(lat, lng) => setProfileForm({ ...profileForm, latitude: lat, longitude: lng })} 
+                          />
+                        </div>
+                      ) : (
+                        <div className="mb-4 h-40 w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-50 relative flex items-center justify-center">
+                          {user?.business?.latitude ? (
+                            <div className="text-center">
+                              <MapPin className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                              <div className="text-xs font-bold text-slate-700">GPS Pinned Successfully</div>
+                              <div className="text-[10px] text-slate-500 mt-1">{user.business.latitude.toFixed(4)}, {user.business.longitude.toFixed(4)}</div>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                              <div className="text-xs font-medium text-slate-500">No GPS Pin Available</div>
+                              <div className="text-[10px] text-rose-500 mt-1">Customers cannot see your shop nearby</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="text-xs text-slate-400 mb-1 mt-4">Full Address</div>
                       {isEditingProfile ? (
                         <textarea rows={3} value={profileForm.address} onChange={e => setProfileForm({...profileForm, address: e.target.value})} className="w-full p-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-indigo-400" />
                       ) : (
