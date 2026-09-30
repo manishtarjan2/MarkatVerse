@@ -134,13 +134,22 @@ export default function AdminLoginPage() {
       </div>
 
       {/* ── Right Form Panel ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-start lg:justify-center p-6 pt-12 lg:p-12 overflow-y-auto relative">
         <div className="w-full max-w-[440px]">
           
-          <div className="mb-8">
-            <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center mb-4 lg:hidden">
-              <ShieldCheck className="w-7 h-7 text-amber-600" />
+          {/* Mobile Header (Logo & Back) */}
+          <div className="lg:hidden w-full flex items-center justify-between mb-10">
+            <Link href="/" className="text-slate-400 hover:text-amber-600 p-2 -ml-2">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <div className="flex flex-col items-center">
+              <img src="/logo.png" alt="MarkatVerse" className="h-12 object-contain" />
+              <div className="text-amber-600 text-[10px] font-bold tracking-[0.2em] uppercase mt-1">Admin Portal</div>
             </div>
+            <div className="w-10"></div> {/* Spacer to balance flex-between */}
+          </div>
+
+          <div className="mb-8">
             <h2 className="text-3xl font-bold text-slate-900 mb-1">Secure Admin Login</h2>
             <p className="text-slate-500 text-sm">Authorized Personnel Only</p>
           </div>

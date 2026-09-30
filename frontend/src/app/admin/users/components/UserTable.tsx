@@ -51,9 +51,13 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
     setIsSubmitting(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
         body: JSON.stringify(newStaff)
       });
       if (!res.ok) throw new Error('Failed to create staff');

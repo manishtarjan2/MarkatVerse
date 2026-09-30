@@ -226,13 +226,19 @@ export default function SellerLoginPage() {
       </div>
 
       {/* ── Right Form ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-start lg:justify-center p-6 pt-12 lg:p-12 overflow-y-auto relative">
         <div className="w-full max-w-[420px]">
 
-          {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8">
-            <img src="/logo.png" alt="MarkatVerse" className="h-8 mx-auto object-contain" />
-            <div className="text-emerald-600 text-xs font-bold tracking-[0.2em] uppercase mt-1">Seller Portal</div>
+          {/* Mobile Header (Logo & Back) */}
+          <div className="lg:hidden w-full flex items-center justify-between mb-10">
+            <Link href="/" className="text-slate-400 hover:text-emerald-600 p-2 -ml-2">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <div className="flex flex-col items-center">
+              <img src="/logo.png" alt="MarkatVerse" className="h-12 object-contain" />
+              <div className="text-emerald-600 text-[10px] font-bold tracking-[0.2em] uppercase mt-1">Seller Portal</div>
+            </div>
+            <div className="w-10"></div> {/* Spacer to balance flex-between */}
           </div>
 
           {/* ── Sign In View ── */}

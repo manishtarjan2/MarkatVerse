@@ -313,8 +313,17 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right Form Panel ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-start lg:justify-center p-6 pt-12 lg:p-12 overflow-y-auto relative">
         <div className="w-full max-w-[440px]">
+
+          {/* Mobile Header (Logo & Back) */}
+          <div className="lg:hidden w-full flex items-center justify-between mb-10">
+            <Link href="/" className="text-slate-400 hover:text-slate-800 p-2 -ml-2">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <img src="/logo.png" alt="MarkatVerse" className="h-12 object-contain" />
+            <div className="w-10"></div> {/* Spacer to balance flex-between */}
+          </div>
 
           {/* ── Sign In View ── */}
           {view === 'signin' && (
