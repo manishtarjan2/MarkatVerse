@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useProducts } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   MapPin, Star, ShieldCheck, Clock, Calendar, CheckCircle2, PhoneCall,
   Info, Camera, Users, Ticket, ChevronRight, Loader2, RefreshCw,
@@ -35,6 +35,7 @@ interface JoinResult {
 
 // ─── Queue Widget ─────────────────────────────────────────────────────────────
 export default function SmartQueueWidget({ service }: { service: any }) {
+  const router = useRouter();
   const { user } = useAuth();
   const isSeller = user && ['seller', 'SELLER', 'business'].includes(user.role);
   const [queues, setQueues] = useState<QueueSummary[]>([]);
@@ -43,14 +44,31 @@ export default function SmartQueueWidget({ service }: { service: any }) {
   const [loadingQ, setLoadingQ] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [step, setStep] = useState<'view' | 'join' | 'done'>('view');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone?.replace(/^\+\d+\s*/, '') || '');
+  const [countryCode, setCountryCode] = useState('+91');
   const [bookingMode, setBookingMode] = useState<'TOKEN' | 'APPOINTMENT'>('TOKEN');
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
   const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
   const [selectedResource, setSelectedResource] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
+
+  useEffect(() => {
+    if (user && !name) {
+      setName(user.name || '');
+      if (user.phone) {
+        // Simple extraction of country code vs phone number if it has a '+'
+        const match = user.phone.match(/^(\+\d+)\s*(.*)$/);
+        if (match) {
+          setCountryCode(match[1]);
+          setPhone(match[2].replace(/\D/g, ''));
+        } else {
+          setPhone(user.phone.replace(/\D/g, ''));
+        }
+      }
+    }
+  }, [user]);
   
   interface ServiceItem { label: string; price: number; originalPrice?: number; discount?: number; emoji: string; }
   const cat = service.category?.toLowerCase() || '';
@@ -171,6 +189,10 @@ export default function SmartQueueWidget({ service }: { service: any }) {
   }, [fetchStatus]);
 
   const join = async () => {
+    if (!user) {
+      router.push(`/login?redirect=${window.location.pathname}`);
+      return;
+    }
     if (!name.trim()) { setErr('Please enter your name'); return; }
     if (selectedServices.length === 0) { setErr('Please select at least one service'); return; }
     if (!selected) return;
@@ -178,7 +200,7 @@ export default function SmartQueueWidget({ service }: { service: any }) {
     try {
       const payload: any = {
         customerName: name.trim(),
-        phone: phone.trim() || undefined,
+        phone: phone.trim() ? `${countryCode}${phone.trim()}` : undefined,
         service: selectedServices.map(s => s.label).join(', '),
         bookingMode: bookingMode,
         price: selectedServices.reduce((sum, s) => sum + s.price, 0)
@@ -442,8 +464,22 @@ export default function SmartQueueWidget({ service }: { service: any }) {
 
       <input type="text" placeholder="Your name *" value={name} onChange={e => setName(e.target.value)}
         className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
-      <input type="tel" placeholder="Phone number (optional)" value={phone} onChange={e => setPhone(e.target.value)}
-        className="w-full px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
+      <div className="flex gap-2 w-full">
+        <select 
+          value={countryCode}
+          onChange={(e) => setCountryCode(e.target.value)}
+          className="w-1/3 px-3 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors appearance-none cursor-pointer"
+        >
+          <option value="+91">🇮🇳 +91</option>
+          <option value="+1">🇺🇸 +1</option>
+          <option value="+44">🇬🇧 +44</option>
+          <option value="+971">🇦🇪 +971</option>
+          <option value="+61">🇦🇺 +61</option>
+          <option value="+65">🇸🇬 +65</option>
+        </select>
+        <input type="tel" placeholder="Phone number (optional)" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+          className="w-2/3 px-4 py-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-900 font-medium bg-slate-50 transition-colors" />
+      </div>
       
       {bookingMode === 'APPOINTMENT' && (
         <div className="flex gap-3">

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Phone, Lock, User, ArrowRight, ArrowLeft, CheckCircle, ShieldCheck } from 'lucide-react';
@@ -12,6 +12,8 @@ type View = 'signin' | 'register' | 'register-email-otp' | 'forgot' | 'otp' | 'r
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
   const { user, login, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
@@ -20,11 +22,14 @@ export default function LoginPage() {
       if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
         router.replace('/admin');
       } else {
-        // Even if they are a Seller, if they log in via the customer portal, take them to the customer homepage
-        router.replace('/');
+        if (redirectUrl) {
+          router.replace(redirectUrl);
+        } else {
+          router.replace('/');
+        }
       }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, redirectUrl]);
 
   const [view, setView] = useState<View>('signin');
   const [showPassword, setShowPassword] = useState(false);

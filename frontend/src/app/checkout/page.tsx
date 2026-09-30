@@ -1,7 +1,8 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MapPin, CreditCard, CheckCircle2, ChevronRight, Lock, Package, ArrowRight, Smartphone, Banknote, Building2 } from 'lucide-react';
 import MockPaymentGateway from '@/components/MockPaymentGateway';
 import { useAuth } from '@/context/AuthContext';
@@ -19,11 +20,18 @@ type Address = {
 
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'cod'>('card');
   const [showGateway, setShowGateway] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/checkout');
+    }
+  }, [user, authLoading, router]);
 
   // Form States
   const [firstName, setFirstName] = useState('');

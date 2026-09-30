@@ -46,6 +46,14 @@ export default function ProductDetails() {
   const hasVehicleTestDrive = rules.allows('Vehicle Test Drive');
   const hasService         = rules.allows('Service');
 
+  const requireAuth = (action: () => void) => {
+    if (!user) {
+      router.push(`/login?redirect=/product/${id}`);
+    } else {
+      action();
+    }
+  };
+
   useEffect(() => {
     if (product) {
       trackCategory(product.category);
@@ -170,7 +178,7 @@ export default function ProductDetails() {
 
   const submitRfq = async () => {
     if (!user) {
-      alert("Please log in to request a quote.");
+      router.push(`/login?redirect=/product/${id}`);
       return;
     }
     if (!product?.sellerId) {
@@ -639,7 +647,7 @@ export default function ProductDetails() {
                   </div>
                   <button
                     className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors shadow-md shadow-blue-600/20 flex items-center justify-center gap-3"
-                    onClick={() => alert(`Appointment request sent to ${product.seller}! You will receive a confirmation shortly.`)}
+                    onClick={() => requireAuth(() => alert(`Appointment request sent to ${product.seller}! You will receive a confirmation shortly.`))}
                   >
                     <CalendarClock className="w-6 h-6" /> Book Appointment
                   </button>
@@ -669,7 +677,7 @@ export default function ProductDetails() {
                     </button>
                     <button
                       className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm transition-colors shadow-md shadow-red-600/20"
-                      onClick={() => alert(`Test drive request sent to ${product.seller}! They will contact you to confirm.`)}
+                      onClick={() => requireAuth(() => alert(`Test drive request sent to ${product.seller}! They will contact you to confirm.`))}
                     >
                       Schedule Test Drive
                     </button>
@@ -715,14 +723,14 @@ export default function ProductDetails() {
                     {isRetail && isElite ? (
                       <button
                         className="flex-1 px-6 py-4 bg-white border-2 border-slate-300 hover:border-amber-500 hover:bg-amber-50 text-slate-800 rounded-xl font-bold text-base transition-colors"
-                        onClick={() => { addToCart(product); alert(`Added ${rfqQuantity} of ${product.name} to cart!`); }}
+                        onClick={() => requireAuth(() => { addToCart(product); alert(`Added ${rfqQuantity} of ${product.name} to cart!`); })}
                       >
                         Add to Cart
                       </button>
                     ) : (
                       <button
                         className="flex-1 px-6 py-4 bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 rounded-xl font-bold text-base transition-colors"
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => requireAuth(() => setIsModalOpen(true))}
                       >
                         Contact Supplier
                       </button>
@@ -730,7 +738,7 @@ export default function ProductDetails() {
                     <div className="flex-1 flex flex-col gap-2">
                       <button
                         className={`w-full px-6 py-4 text-white rounded-xl font-bold text-base transition-colors shadow-md ${isRetail && isElite ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'}`}
-                        onClick={() => { if (isRetail && isElite) { alert(`Proceeding to checkout for ${rfqQuantity * bundleMultiplier} units...`); } else { setIsModalOpen(true); } }}
+                        onClick={() => requireAuth(() => { if (isRetail && isElite) { alert(`Proceeding to checkout for ${rfqQuantity * bundleMultiplier} units...`); } else { setIsModalOpen(true); } })}
                       >
                         {isRetail && isElite ? 'Buy Wholesale Now' : 'Request Quote'}
                       </button>
@@ -773,13 +781,13 @@ export default function ProductDetails() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       className="flex-1 px-6 py-4 bg-white border-2 border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50 text-indigo-800 rounded-xl font-bold text-base transition-colors"
-                      onClick={() => alert(`Requesting portfolio and quote from ${product.seller}...`)}
+                      onClick={() => requireAuth(() => alert(`Requesting portfolio and quote from ${product.seller}...`))}
                     >
                       Request a Quote
                     </button>
                     <button
                       className="flex-1 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-indigo-600/20"
-                      onClick={() => alert(`Connecting you with ${product.seller} to discuss your project.`)}
+                      onClick={() => requireAuth(() => alert(`Connecting you with ${product.seller} to discuss your project.`))}
                     >
                       Schedule Meeting
                     </button>
@@ -792,16 +800,16 @@ export default function ProductDetails() {
                 <div className="flex flex-col sm:flex-row gap-4 w-full">
                   <button
                     className="flex-1 px-6 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-amber-500/20"
-                    onClick={() => {
+                    onClick={() => requireAuth(() => {
                       addToCart(product);
                       router.push('/checkout');
-                    }}
+                    })}
                   >
                     Buy Now
                   </button>
                   <button
                     className="flex-1 px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-base transition-colors shadow-md"
-                    onClick={() => { addToCart(product); alert(`Added ${product.name} to cart!`); }}
+                    onClick={() => requireAuth(() => { addToCart(product); alert(`Added ${product.name} to cart!`); })}
                   >
                     Add to Cart
                   </button>

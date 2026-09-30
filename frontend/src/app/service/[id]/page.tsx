@@ -4,7 +4,7 @@ import { useProducts } from '@/context/ProductContext';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   MapPin, Star, ShieldCheck, Clock, Calendar, CheckCircle2, PhoneCall,
   Info, Camera, Users, Ticket, ChevronRight, Loader2, RefreshCw,
@@ -39,8 +39,18 @@ interface JoinResult {
 // ─── Service Detail Page ──────────────────────────────────────────────────────
 export default function ServiceDetails() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
   const { products, isLoading } = useProducts();
+  const { user } = useAuth();
+
+  const requireAuth = (action: () => void) => {
+    if (!user) {
+      router.push(`/login?redirect=/service/${id}`);
+    } else {
+      action();
+    }
+  };
   const { trackCategory, trackProductView } = useUserTrends();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -408,10 +418,10 @@ export default function ServiceDetails() {
                   </div>
 
                   <button
-                    onClick={() => {
+                    onClick={() => requireAuth(() => {
                       if (!selectedDate) { alert('Please select a date'); return; }
                       alert(`Meeting scheduled with ${service.seller} on ${selectedDate}`);
-                    }}
+                    })}
                     className="w-full mt-6 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-2xl font-black text-base transition-all shadow-xl shadow-violet-200 flex items-center justify-center gap-2 relative z-10 group">
                     Request Meeting <span className="group-hover:translate-x-1 transition-transform">→</span>
                   </button>
@@ -440,7 +450,9 @@ export default function ServiceDetails() {
                       <input type="time" className="p-3.5 border-2 border-slate-100 focus:border-violet-400 rounded-2xl outline-none text-slate-700 font-medium bg-slate-50 transition-colors" />
                     </div>
                   </div>
-                  <button className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-base transition-all shadow-xl shadow-slate-200">
+                  <button 
+                    onClick={() => requireAuth(() => alert('Estimate & booking generated!'))}
+                    className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-base transition-all shadow-xl shadow-slate-200">
                     Get Estimate &amp; Book
                   </button>
                 </>
@@ -469,10 +481,10 @@ export default function ServiceDetails() {
                     </div>
                   </div>
                   <button
-                    onClick={() => {
+                    onClick={() => requireAuth(() => {
                       if (!selectedDate || !selectedTime) { alert('Please select date & time'); return; }
                       alert(`Confirmed: ${service.name} on ${selectedDate} at ${selectedTime}`);
-                    }}
+                    })}
                     className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-base transition-all shadow-xl shadow-slate-200 mb-3">
                     Confirm Appointment
                   </button>
