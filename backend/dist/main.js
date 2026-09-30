@@ -4,13 +4,34 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
 import { join } from 'path';
 import compression from 'compression';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 const expressApp = express();
 expressApp.use('/public/uploads', express.static(join(process.cwd(), 'uploads')));
 let cachedServer;
 async function bootstrap() {
     if (!cachedServer) {
         const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp));
-        app.enableCors();
+        app.enableCors({
+            origin: [
+                'http://localhost:3000',
+                'http://localhost:3001',
+                'https://frontend-theta-roan-oszq1hmx7w.vercel.app',
+                'https://markatverse.vercel.app'
+            ],
+            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+            credentials: true,
+        });
+        app.use(helmet());
+        app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+        const limiter = rateLimit({
+            windowMs: 15 * 60 * 1000,
+            max: 1000,
+            message: 'Too many requests from this IP, please try again later.',
+            standardHeaders: true,
+            legacyHeaders: false,
+        });
+        app.use(limiter);
         app.use(express.json({ limit: '50mb' }));
         app.use(express.urlencoded({ limit: '50mb', extended: true }));
         app.use(compression());

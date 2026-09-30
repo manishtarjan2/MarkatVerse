@@ -5,6 +5,8 @@ import express from 'express';
 
 import { join } from 'path';
 import compression from 'compression';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 const expressApp = express();
 // Serve the uploads folder statically
@@ -18,7 +20,31 @@ async function bootstrap() {
       AppModule,
       new ExpressAdapter(expressApp),
     );
-    app.enableCors();
+    // Strict CORS Configuration
+    app.enableCors({
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'https://frontend-theta-roan-oszq1hmx7w.vercel.app',
+        'https://markatverse.vercel.app'
+      ],
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      credentials: true,
+    });
+    
+    // HTTP Headers Security (Helmet)
+    app.use(helmet());
+    app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" })); // Allow images to load on frontend
+
+    // Rate Limiting (DDoS Protection)
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 1000, // Limit each IP to 1000 requests per windowMs
+      message: 'Too many requests from this IP, please try again later.',
+      standardHeaders: true, 
+      legacyHeaders: false, 
+    });
+    app.use(limiter);
     
     // Increase JSON body payload size for Base64 image uploads
     app.use(express.json({ limit: '50mb' }));
