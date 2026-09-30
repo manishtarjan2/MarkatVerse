@@ -12,13 +12,14 @@ const useMapEvents = dynamic(() => import('react-leaflet').then(mod => mod.useMa
 interface LocationPickerProps {
   latitude: number | null;
   longitude: number | null;
-  onChange: (lat: number, lng: number) => void;
+  onChange?: (lat: number, lng: number) => void;
+  readOnly?: boolean;
 }
 
 // Since useMapEvents relies on context provided by MapContainer, we need a separate inner component dynamically loaded
 const InnerMap = dynamic(() => import('./InnerMap'), { ssr: false });
 
-export default function LocationPicker({ latitude, longitude, onChange }: LocationPickerProps) {
+export default function LocationPicker({ latitude, longitude, onChange, readOnly = false }: LocationPickerProps) {
   const [position, setPosition] = useState<any | null>(null);
   
   const [isClient, setIsClient] = useState(false);
@@ -52,12 +53,17 @@ export default function LocationPicker({ latitude, longitude, onChange }: Locati
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <InnerMap position={position} setPosition={(pos: any) => {
-          setPosition(pos);
-          onChange(pos.lat, pos.lng);
-        }} />
+        {!readOnly ? (
+          <InnerMap position={position} setPosition={(pos: any) => {
+            setPosition(pos);
+            if (onChange) onChange(pos.lat, pos.lng);
+          }} />
+        ) : (
+          position && <Marker position={position} />
+        )}
       </MapContainer>
-      <div className="absolute top-2 right-2 z-[1000]">
+      {!readOnly && (
+        <div className="absolute top-2 right-2 z-[1000]">
         <button 
           type="button"
           onClick={(e) => {
@@ -66,7 +72,7 @@ export default function LocationPicker({ latitude, longitude, onChange }: Locati
               async (pos) => {
                 const L = await import('leaflet');
                 setPosition(new L.LatLng(pos.coords.latitude, pos.coords.longitude));
-                onChange(pos.coords.latitude, pos.coords.longitude);
+                if (onChange) onChange(pos.coords.latitude, pos.coords.longitude);
               },
               (err) => alert('Could not get your location')
             );
@@ -76,6 +82,7 @@ export default function LocationPicker({ latitude, longitude, onChange }: Locati
           📍 Locate Me
         </button>
       </div>
+      )}
     </div>
   );
 }

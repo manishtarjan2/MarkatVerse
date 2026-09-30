@@ -1933,22 +1933,61 @@ function DashboardContent() {
                           <LocationPicker 
                             latitude={profileForm.latitude} 
                             longitude={profileForm.longitude} 
-                            onChange={(lat, lng) => setProfileForm({ ...profileForm, latitude: lat, longitude: lng })} 
+                            onChange={async (lat, lng) => {
+                              setProfileForm(prev => ({ ...prev, latitude: lat, longitude: lng }));
+                              try {
+                                const [nomRes, bdcRes] = await Promise.all([
+                                  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`),
+                                  fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
+                                ]);
+                                const nomData = await nomRes.json();
+                                const bdcData = await bdcRes.json();
+                                if (nomData && nomData.address && bdcData) {
+                                  const newPin = bdcData.postcode || nomData.address.postcode || '';
+                                  const localParts = [];
+                                  if (nomData.address.house_number) localParts.push(nomData.address.house_number);
+                                  if (nomData.address.road) localParts.push(nomData.address.road);
+                                  if (nomData.address.neighbourhood) localParts.push(nomData.address.neighbourhood);
+                                  if (nomData.address.suburb) localParts.push(nomData.address.suburb);
+                                  
+                                  let shortAddress = localParts.join(', ');
+                                  if (!shortAddress && nomData.display_name) {
+                                    shortAddress = nomData.display_name.split(',').slice(0, 2).join(',').trim();
+                                  }
+                                  if (!shortAddress) shortAddress = bdcData.locality || '';
+                                  const city = bdcData.city || nomData.address.city || bdcData.locality || '';
+                                  const state = bdcData.principalSubdivision || nomData.address.state || '';
+                                  const newAddress = shortAddress ? `${shortAddress}, ${city}, ${state}` : '';
+
+                                  setProfileForm(prev => ({
+                                    ...prev,
+                                    pincode: newPin || prev.pincode,
+                                    address: newAddress || prev.address
+                                  }));
+                                }
+                              } catch (err) {
+                                console.error('Geocoding error:', err);
+                              }
+                            }}
                           />
                         </div>
                       ) : (
-                        <div className="mb-4 h-40 w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-50 relative flex items-center justify-center">
+                        <div className="mb-4">
                           {user?.business?.latitude ? (
-                            <div className="text-center">
-                              <MapPin className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                              <div className="text-xs font-bold text-slate-700">GPS Pinned Successfully</div>
-                              <div className="text-[10px] text-slate-500 mt-1">{user.business.latitude.toFixed(4)}, {user.business.longitude.toFixed(4)}</div>
+                            <div className="pointer-events-none">
+                              <LocationPicker 
+                                latitude={user.business.latitude} 
+                                longitude={user.business.longitude} 
+                                readOnly={true} 
+                              />
                             </div>
                           ) : (
-                            <div className="text-center">
-                              <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                              <div className="text-xs font-medium text-slate-500">No GPS Pin Available</div>
-                              <div className="text-[10px] text-rose-500 mt-1">Customers cannot see your shop nearby</div>
+                            <div className="h-40 w-full rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-center">
+                              <div>
+                                <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                <div className="text-xs font-medium text-slate-500">No GPS Pin Available</div>
+                                <div className="text-[10px] text-rose-500 mt-1">Customers cannot see your shop nearby</div>
+                              </div>
                             </div>
                           )}
                         </div>
