@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function SellerRegistrationPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -18,9 +20,24 @@ export default function SellerRegistrationPage() {
   const [businessName, setBusinessName] = useState<string>('');
   const [businessPhone, setBusinessPhone] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const { user } = useAuth();
+  const { user, login, isLoading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  // Redirect to seller login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/seller/login');
+    }
+  }, [user, authLoading, router]);
+
+  // Redirect if already a seller
+  useEffect(() => {
+    if (user && (user.role?.toUpperCase() === 'SELLER' || user.business)) {
+      router.replace('/seller/dashboard');
+    }
+  }, [user, router]);
 
   // Fetch Business Types when Model changes
   useEffect(() => {
@@ -28,7 +45,7 @@ export default function SellerRegistrationPage() {
       setLoading(true);
       setSelectedType('');
       setSelectedSector('');
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/configuration/business-types?mainType=${businessModel}`)
+      fetch(`${API_URL}/configuration/business-types?mainType=${businessModel}`)
         .then(res => res.json())
         .then(data => setBusinessTypes(data))
         .finally(() => setLoading(false));
@@ -40,7 +57,7 @@ export default function SellerRegistrationPage() {
     if (selectedType) {
       setLoading(true);
       setSelectedSector('');
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/configuration/sectors?businessTypeId=${selectedType}`)
+      fetch(`${API_URL}/configuration/sectors?businessTypeId=${selectedType}`)
         .then(res => res.json())
         .then(data => setSectors(data))
         .finally(() => setLoading(false));
@@ -52,6 +69,12 @@ export default function SellerRegistrationPage() {
 
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => setStep(prev => prev - 1);
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-gray-500">Loading...</div></div>;
+  }
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -250,6 +273,12 @@ export default function SellerRegistrationPage() {
                 </p>
               </div>
 
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">
+                  ⚠️ {error}
+                </div>
+              )}
+
               <div className="flex gap-4">
                 <button
                   onClick={handleBack}
@@ -261,30 +290,58 @@ export default function SellerRegistrationPage() {
                 <button
                   onClick={async () => {
                     setSubmitting(true);
+                    setError('');
                     try {
-                      // Fetch sector details to pass name and type
-                      const sName = sectors.find(s => String(s.id) === String(selectedSector))?.name || 'My Business';
-                      
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+                      if (!token) {
+                        router.replace('/seller/login');
+                        return;
+                      }
+
                       const payload = {
                         email: user?.email,
                         phone: businessPhone || user?.phone,
                         ownerName: user?.name,
                         mainType: businessModel,
-                        businessType: selectedType, // e.g. WHOLESALER, DOCTOR, etc.
+                        businessType: selectedType,
                         businessName: businessName,
                       };
 
-                      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sellers`, {
+                      const res = await fetch(`${API_URL}/sellers`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`,
+                        },
                         body: JSON.stringify(payload)
                       });
-                      
-                      // Hard redirect to force AuthContext to re-fetch /auth/me and get new SELLER role and business data
+
+                      if (!res.ok) {
+                        const data = await res.json();
+                        throw new Error(data.message || 'Registration failed. Please try again.');
+                      }
+
+                      // Refresh user session to get updated SELLER role and business data
+                      const meRes = await fetch(`${API_URL}/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      if (meRes.ok) {
+                        const data = await meRes.json();
+                        login({
+                          id: data.id,
+                          markatId: data.markatId,
+                          name: data.name,
+                          email: data.email,
+                          phone: data.phone || '',
+                          role: data.role?.toLowerCase() as any,
+                          status: 'active',
+                          business: data.business,
+                        }, token);
+                      }
+
                       window.location.href = '/seller/dashboard';
-                    } catch (err) {
-                      console.error(err);
-                      alert('Registration failed. Please try again.');
+                    } catch (err: any) {
+                      setError(err.message || 'Registration failed. Please try again.');
                       setSubmitting(false);
                     }
                   }}

@@ -10,15 +10,27 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Headers } from '@nestjs/common';
 import { SellersService } from './sellers.service.js';
+import { JwtService } from '@nestjs/jwt';
 let SellersController = class SellersController {
     sellersService;
-    constructor(sellersService) {
+    jwtService;
+    constructor(sellersService, jwtService) {
         this.sellersService = sellersService;
+        this.jwtService = jwtService;
     }
-    create(createSellerDto) {
-        return this.sellersService.create(createSellerDto);
+    create(createSellerDto, authHeader) {
+        let userId;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const payload = this.jwtService.verify(token);
+                userId = payload.sub;
+            }
+            catch { }
+        }
+        return this.sellersService.create(createSellerDto, userId);
     }
     findAll() {
         return this.sellersService.findAll();
@@ -36,8 +48,9 @@ let SellersController = class SellersController {
 __decorate([
     Post(),
     __param(0, Body()),
+    __param(1, Headers('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], SellersController.prototype, "create", null);
 __decorate([
@@ -71,7 +84,8 @@ __decorate([
 ], SellersController.prototype, "removeUser", null);
 SellersController = __decorate([
     Controller('sellers'),
-    __metadata("design:paramtypes", [SellersService])
+    __metadata("design:paramtypes", [SellersService,
+        JwtService])
 ], SellersController);
 export { SellersController };
 //# sourceMappingURL=sellers.controller.js.map

@@ -118,7 +118,37 @@ export default function ContentCmsPage() {
 
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-8 text-center text-slate-400">Loading CMS pages...</div>
+            <div className="w-full">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-slate-900/80 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
+                  <tr>
+                    <th className="p-4 pl-6">ID</th>
+                    <th className="p-4">Title / Slug</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Date Modified</th>
+                    <th className="p-4 pr-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/50">
+                  {[...Array(5)].map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="p-4 pl-6"><div className="h-4 bg-slate-700 rounded w-16"></div></td>
+                      <td className="p-4">
+                        <div className="h-4 bg-slate-700 rounded w-48 mb-2"></div>
+                        <div className="h-3 bg-slate-700 rounded w-32"></div>
+                      </td>
+                      <td className="p-4"><div className="h-6 bg-slate-700 rounded-full w-20"></div></td>
+                      <td className="p-4"><div className="h-4 bg-slate-700 rounded w-24"></div></td>
+                      <td className="p-4 pr-6 flex justify-end gap-2">
+                        <div className="h-6 bg-slate-700 rounded w-12"></div>
+                        <div className="h-6 bg-slate-700 rounded w-12"></div>
+                        <div className="h-6 bg-slate-700 rounded w-12"></div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : pages.length === 0 ? (
             <div className="p-8 text-center text-slate-400">No CMS pages found.</div>
           ) : (

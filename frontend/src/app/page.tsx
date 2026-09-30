@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import ScrollReveal from "@/components/ScrollReveal";
 import Recommendations from "@/components/Recommendations";
 import BannerSlideshow from "@/components/BannerSlideshow";
+import AdSlideshow from "@/components/AdSlideshow";
 
 const ProductGrid = dynamic(() => import('@/components/ProductGrid'));
 
@@ -69,31 +70,7 @@ export default async function Home() {
         <BannerSlideshow banners={banners} />
 
         {/* Advertisements */}
-        {ads.length > 0 && (
-          <div className="w-full mb-6 flex flex-col gap-4">
-            {ads.map((ad: any) => (
-              <a key={ad.id} href={ad.linkUrl || '#'} className="block w-full bg-slate-900 rounded-2xl p-8 text-white shadow-md hover:shadow-lg transition-all relative overflow-hidden group min-h-[160px] flex items-center">
-                
-                {/* Background Image or Gradient */}
-                {ad.mediaUrl ? (
-                  <div className="absolute inset-0 z-0">
-                    <img src={ad.mediaUrl} alt={ad.title} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-transparent"></div>
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 z-0 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                )}
-                
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-0"></div>
-                
-                <div className="relative z-10 flex items-center justify-between w-full">
-                  <h3 className="text-3xl font-black tracking-tight drop-shadow-md w-2/3 leading-tight">{ad.title}</h3>
-                  <span className="bg-white text-emerald-600 px-5 py-2.5 rounded-xl font-bold text-sm shadow-xl group-hover:scale-105 transition-transform">Explore Now &rarr;</span>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
+        <AdSlideshow ads={ads} />
 
         {/* Live Token Status */}
         <LiveBookingWidget />
@@ -127,21 +104,24 @@ export default async function Home() {
           <div className="md:col-span-7 bg-white rounded-3xl p-5 sm:p-6 lg:p-10 flex flex-col items-start justify-center border border-slate-200 shadow-sm relative overflow-hidden group min-h-[300px] md:min-h-0">
             
             {/* Background Image seamlessly blended */}
-            <div className="absolute top-0 right-0 w-full sm:w-[55%] h-full z-0">
-              <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-transparent z-10 sm:block hidden"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10 sm:hidden block"></div>
-              <img src="/hero-left-graphic.jpg" alt="Online Store Cart and Phone" className="w-full h-full object-cover object-center sm:object-right opacity-40 sm:opacity-100" />
+            <div className="absolute top-0 right-0 w-[50%] sm:w-[55%] h-full z-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent z-10"></div>
+              <img src="/hero-left-graphic.jpg" alt="Online Store Cart and Phone" className="w-full h-full object-cover object-left sm:object-right opacity-90 sm:opacity-100" />
             </div>
 
-            <div className="flex flex-col z-10 w-full sm:w-[60%] relative h-full justify-center">
-              <h1 className="text-3xl sm:text-3xl lg:text-4xl xl:text-[2.8rem] font-black text-[#0f1928] leading-[1.1] mb-2 sm:mb-3 tracking-tight relative z-20">
-                One Platform.<br />Endless Possibilities.
-              </h1>
-              <p className="text-slate-600 font-medium mb-6 text-base relative z-20">
-                Shop, Sell & Grow with MarkatVerse
-              </p>
+            <div className="flex flex-col z-10 w-full relative h-full justify-center">
+              <div className="w-[65%] sm:w-[60%] pointer-events-none">
+                <div className="pointer-events-auto">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[2.8rem] font-black text-[#0f1928] leading-[1.1] mb-2 sm:mb-3 tracking-tight relative z-20">
+                    One Platform.<br />Endless Possibilities.
+                  </h1>
+                  <p className="text-slate-600 font-medium mb-6 text-sm sm:text-base relative z-20 pr-2">
+                    Shop, Sell & Grow with MarkatVerse
+                  </p>
+                </div>
+              </div>
               
-              <div className="flex flex-row flex-nowrap overflow-x-auto hide-scrollbar gap-3 mb-6 relative z-20 w-full pb-2">
+              <div className="flex flex-row flex-nowrap overflow-x-auto hide-scrollbar gap-3 mb-6 relative z-20 w-[95%] sm:w-full pb-2">
                 <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4 min-w-max">
                   <div className="text-blue-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg></div>
                   <div className="flex flex-col"><span className="text-xs font-bold text-slate-900 leading-tight">B2B</span><span className="text-[10px] text-slate-500 leading-tight">Business to<br/>Business</span></div>
@@ -156,7 +136,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="flex flex-row flex-nowrap gap-2 sm:gap-3 relative z-20 mt-auto w-full">
+              <div className="flex flex-row flex-nowrap gap-2 sm:gap-3 relative z-20 mt-auto w-[95%] sm:w-full">
                 <Link href="/search" className="flex-1 sm:flex-none">
                   <button className="w-full bg-[#0f1928] hover:bg-slate-800 text-white px-3 sm:px-6 py-3 rounded-xl font-bold text-sm sm:text-base transition-all flex items-center justify-center gap-1 sm:gap-2 whitespace-nowrap">
                     Shop Now <span className="font-normal">→</span>
@@ -226,14 +206,16 @@ export default async function Home() {
           
           {/* Categories Panel */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5 lg:p-8 flex flex-col md:flex-row justify-between items-center md:items-start gap-4 md:gap-8">
-            <div className="flex flex-col items-center text-center md:items-start md:text-left gap-3 md:gap-4 min-w-[150px] md:min-w-[200px] shrink-0">
-              <h2 className="text-xl md:text-2xl font-bold text-[#0f1928] leading-tight">
-                Everything You Need,<br/>All in One Place
-              </h2>
-              <div className="h-1 w-10 md:w-12 bg-gradient-to-r from-blue-500 via-teal-400 to-emerald-400 rounded-full mb-1 md:mb-2"></div>
-              <Link href="/explore" className="mx-auto md:mx-0 mt-1 md:mt-auto">
-                <button className="bg-[#0f1928] hover:bg-slate-800 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 w-fit">
-                  Explore Markets <span className="font-normal">→</span>
+            <div className="flex flex-row md:flex-col justify-between items-center md:items-start text-left gap-4 md:gap-4 w-full md:w-auto md:min-w-[200px] shrink-0">
+              <div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-[#0f1928] leading-tight">
+                  Everything You Need, <br className="hidden md:block"/>All in One Place
+                </h2>
+                <div className="hidden md:block h-1 w-10 md:w-12 bg-gradient-to-r from-blue-500 via-teal-400 to-emerald-400 rounded-full mt-2 mb-1 md:mb-2"></div>
+              </div>
+              <Link href="/explore" className="shrink-0">
+                <button className="bg-[#0f1928] hover:bg-slate-800 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-extrabold text-xs md:text-sm transition-all flex items-center justify-center gap-1 md:gap-2 w-fit">
+                  Explore Markets <span className="font-bold">→</span>
                 </button>
               </Link>
             </div>
@@ -262,14 +244,16 @@ export default async function Home() {
             {/* Dot pattern background */}
             <div className="absolute right-0 top-0 bottom-0 w-48 bg-[radial-gradient(#a7f3d0_2px,transparent_2px)] [background-size:16px_16px] opacity-40 z-0 mask-image-linear-gradient"></div>
             
-            <div className="flex flex-col items-center text-center md:items-start md:text-left gap-1 md:gap-2 min-w-[150px] md:min-w-[200px] shrink-0 relative z-10">
-              <span className="text-emerald-600 font-bold text-xs md:text-sm">Services</span>
-              <h2 className="text-xl md:text-2xl font-bold text-[#0f1928] leading-tight mb-2 md:mb-4">
-                Solutions That<br/>Drive Your Success
-              </h2>
-              <Link href="/explore/services" className="mx-auto md:mx-0 mt-1 md:mt-0">
-                <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2 w-fit">
-                  Explore Services <span className="font-normal">→</span>
+            <div className="flex flex-row md:flex-col justify-between items-center md:items-start text-left gap-4 md:gap-2 w-full md:w-auto md:min-w-[200px] shrink-0 relative z-10">
+              <div>
+                <span className="text-emerald-600 font-bold text-xs md:text-sm block mb-1">Services</span>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-[#0f1928] leading-tight mb-0 md:mb-4">
+                  Solutions That <br className="hidden md:block"/>Drive Your Success
+                </h2>
+              </div>
+              <Link href="/explore/services" className="shrink-0">
+                <button className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-extrabold text-xs md:text-sm transition-all flex items-center justify-center gap-1 md:gap-2 w-fit">
+                  Explore Services <span className="font-bold">→</span>
                 </button>
               </Link>
             </div>

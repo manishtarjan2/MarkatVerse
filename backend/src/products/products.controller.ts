@@ -16,8 +16,17 @@ export class ProductsController {
     @Query('lat') lat?: string,
     @Query('lng') lng?: string,
     @Query('radius') radius?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.productsService.findAll(location, lat ? parseFloat(lat) : undefined, lng ? parseFloat(lng) : undefined, radius ? parseFloat(radius) : undefined);
+    return this.productsService.findAll(
+      location, 
+      lat ? parseFloat(lat) : undefined, 
+      lng ? parseFloat(lng) : undefined, 
+      radius ? parseFloat(radius) : undefined,
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 50
+    );
   }
 
   @Get('dummy-status')

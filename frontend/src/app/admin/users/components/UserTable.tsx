@@ -181,7 +181,9 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
                   </td>
                   <td className="p-4">
                     <div className="text-sm text-slate-300">{user.email || 'No email provided'}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">{user.phone || 'No phone provided'}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      {user.phone && !user.phone.startsWith('missing-phone') ? user.phone : 'No phone provided'}
+                    </div>
                   </td>
                   <td className="p-4">
                     {editingUserId === user.id ? (

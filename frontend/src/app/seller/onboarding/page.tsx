@@ -10,19 +10,27 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function SellerOnboarding() {
   const router = useRouter();
-  const { user, login } = useAuth();
-  const [step, setStep] = useState(1);
+  const { user, login, isLoading: authLoading } = useAuth();
+  // 'new'  = email is fresh, needs OTP signup
+  // 'existing' = email belongs to existing account, needs password login
+  const [accountMode, setAccountMode] = useState<'new' | 'existing'>('new');
+  // step 1 = account (new or login), 1.2 = OTP verify (new only), 2+ = business steps
+  const [step, setStep] = useState<number>(authLoading ? -1 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Auto-skip step 1 if already logged in as a consumer
+  // Once auth loads: if already logged in, skip straight to step 2
   React.useEffect(() => {
-    if (user && step === 1) {
+    if (authLoading) return;
+    if (user) {
       setOwnerName(user.name);
       setEmail(user.email || '');
       setPhone(user.phone || '');
       setStep(2);
+    } else if (step === -1) {
+      setStep(1);
     }
-  }, [user, step]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
 
   // State variables
   const [ownerName, setOwnerName] = useState('');
@@ -207,19 +215,49 @@ export default function SellerOnboarding() {
   // Handlers
   const handleAccountInit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) { toast.error('Passwords do not match'); return; }
-    if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
     if (!email) { toast.error('Email Address is required'); return; }
-    if (phone && !/^\d{10}$/.test(phone.replace(/\D/g, ''))) { toast.error('Phone number must be exactly 10 digits'); return; }
+    if (accountMode === 'new') {
+      if (password !== confirmPassword) { toast.error('Passwords do not match'); return; }
+      if (password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+      if (!phone || !/^\d{10}$/.test(phone.replace(/\D/g, ''))) { toast.error('Phone number is required and must be exactly 10 digits'); return; }
+    }
     setIsSubmitting(true);
     try {
+      if (accountMode === 'existing') {
+        // Log in with existing account, then proceed
+        const res = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Login failed. Check your password.');
+        login(
+          { id: data.user.id, markatId: data.user.markatId, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '', business: data.user.business },
+          data.access_token
+        );
+        setRegisteredToken(data.access_token);
+        toast.success('Logged in! Continuing with your existing account.');
+        setStep(2);
+        return;
+      }
+
+      // New account: send OTP
       const res = await fetch(`${API_URL}/auth/send-signup-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: email, type: 'email', phone: phone || undefined }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to send Email OTP');
+      if (!res.ok) {
+        // Email already registered → switch to login mode
+        if (data.message && (data.message.includes('already exists') || data.message.includes('already registered'))) {
+          setAccountMode('existing');
+          toast('This email is already registered. Enter your password to continue.', { icon: 'ℹ️' });
+          return;
+        }
+        throw new Error(data.message || 'Failed to send Email OTP');
+      }
       
       toast.success(`OTP sent to ${email}`);
       setOtpTimer(300);
@@ -401,24 +439,25 @@ export default function SellerOnboarding() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 overflow-y-auto">
         <div className="w-full max-w-[440px]">
           {/* Step Progress */}
-          {step <= 5 && (
+          {step >= 2 && step <= 5 && (
             <div className="flex items-center justify-between mb-10 overflow-x-auto pb-2">
               {stepsList.map((s, i) => (
                 <React.Fragment key={s.num}>
                   <div className="flex flex-col items-center gap-1.5 shrink-0">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                      Math.floor(step) > s.num ? 'bg-emerald-600 text-white' :
+                      // Step 1 is always done when we're at step 2+
+                      (s.num === 1 && step >= 2) || Math.floor(step) > s.num ? 'bg-emerald-600 text-white' :
                       Math.floor(step) === s.num ? 'bg-emerald-600 text-white ring-4 ring-emerald-100' :
                       'bg-slate-200 text-slate-400'
                     }`}>
-                      {Math.floor(step) > s.num ? '✓' : s.num}
+                      {(s.num === 1 && step >= 2) || Math.floor(step) > s.num ? '✓' : s.num}
                     </div>
-                    <span className={`text-[10px] font-medium ${Math.floor(step) >= s.num ? 'text-emerald-700' : 'text-slate-400'}`}>
+                    <span className={`text-[10px] font-medium ${(s.num === 1 && step >= 2) || Math.floor(step) >= s.num ? 'text-emerald-700' : 'text-slate-400'}`}>
                       {s.label}
                     </span>
                   </div>
                   {i < stepsList.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-2 ${Math.floor(step) > s.num ? 'bg-emerald-600' : 'bg-slate-200'}`}></div>
+                    <div className={`flex-1 h-0.5 mx-2 ${(s.num === 1 && step >= 2) || Math.floor(step) > s.num ? 'bg-emerald-600' : 'bg-slate-200'}`}></div>
                   )}
                 </React.Fragment>
               ))}
@@ -426,11 +465,23 @@ export default function SellerOnboarding() {
           )}
 
           {/* STEP 1 */}
+          {step === -1 && (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+            </div>
+          )}
+
           {step === 1 && (
             <div className="bg-transparent py-4">
               <div className="mb-8">
-                <h2 className="text-3xl font-bold text-slate-900 mb-1">👤 Create Seller Account</h2>
-                <p className="text-slate-500 text-sm">Join MarkatVerse as a seller today</p>
+                <h2 className="text-3xl font-bold text-slate-900 mb-1">
+                  {accountMode === 'existing' ? '🔑 Continue with Existing Account' : '👤 Create Seller Account'}
+                </h2>
+                <p className="text-slate-500 text-sm">
+                  {accountMode === 'existing'
+                    ? 'Your email is already registered. Sign in to link your existing account as a seller.'
+                    : 'Join MarkatVerse as a seller today'}
+                </p>
               </div>
 
               {/* Tabs */}
@@ -443,58 +494,88 @@ export default function SellerOnboarding() {
                 </div>
               </div>
 
-              <form onSubmit={handleAccountInit} className="flex flex-col gap-5">
-                <div>
-                  <label className={labelClasses}>Full Name <span className="text-red-500">*</span></label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input required type="text" value={ownerName} onChange={e => setOwnerName(e.target.value)} placeholder="John Doe" className={inputClasses} />
-                  </div>
+              {accountMode === 'existing' && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl text-sm text-blue-700">
+                  <p className="font-semibold mb-1">✅ Account found for <span className="text-blue-900">{email}</span></p>
+                  <p className="text-xs text-blue-600">Your MarkatVerse ID will be preserved. Enter your existing password to continue as a seller.</p>
                 </div>
+              )}
+
+              <form onSubmit={handleAccountInit} className="flex flex-col gap-5">
+                {accountMode === 'new' && (
+                  <div>
+                    <label className={labelClasses}>Full Name <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <input required type="text" value={ownerName} onChange={e => setOwnerName(e.target.value)} placeholder="John Doe" className={inputClasses} />
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className={labelClasses}>Email Address <span className="text-red-500">*</span></label>
                   <div className="relative">
                     <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@company.com" className={inputClasses} />
+                    <input
+                      required type="email" value={email}
+                      onChange={e => { setEmail(e.target.value); if (accountMode === 'existing') setAccountMode('new'); }}
+                      placeholder="name@company.com" className={inputClasses}
+                      disabled={accountMode === 'existing'}
+                    />
+                    {accountMode === 'existing' && (
+                      <button type="button" onClick={() => { setAccountMode('new'); setPassword(''); }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-indigo-600 font-semibold hover:underline">
+                        Change
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div>
-                  <label className={labelClasses}>Mobile Number <span className="text-slate-400 font-normal normal-case">(optional)</span></label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                      <span className="text-slate-700 font-medium">+91</span>
-                      <div className="w-px h-5 bg-slate-200"></div>
+                {accountMode === 'new' && (
+                  <div>
+                    <label className={labelClasses}>Mobile Number <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                        <span className="text-slate-700 font-medium">+91</span>
+                        <div className="w-px h-5 bg-slate-200"></div>
+                      </div>
+                      <input required type="tel" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} className={`${inputClasses} pl-24`} placeholder="9876543210" />
                     </div>
-                    <input type="tel" maxLength={10} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} className={`${inputClasses} pl-24`} placeholder="9876543210" />
                   </div>
-                </div>
+                )}
                 <div>
                   <label className={labelClasses}>Password <span className="text-red-500">*</span></label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input required type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters" className={inputClasses} />
+                    <input required type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                      placeholder={accountMode === 'existing' ? 'Your existing password' : 'Min. 6 characters'} className={inputClasses} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
-                <div>
-                  <label className={labelClasses}>Confirm Password <span className="text-red-500">*</span></label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input required type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Re-enter password" className={inputClasses} />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
+                {accountMode === 'new' && (
+                  <div>
+                    <label className={labelClasses}>Confirm Password <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <input required type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Re-enter password" className={inputClasses} />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="mt-2">
                   <p className="text-[13px] text-slate-400 mb-4">
                     By registering, you agree to our <a href="#" className="text-indigo-500 hover:underline">Terms of Service</a> and <a href="#" className="text-indigo-500 hover:underline">Privacy Policy</a>.
                   </p>
                   <button type="submit" disabled={isSubmitting} className={btnPrimary}>
-                    {isSubmitting ? 'Sending OTP...' : <><span className="text-[15px]">Verify Email</span> <ArrowRight className="w-5 h-5" /></>}
+                    {isSubmitting
+                      ? (accountMode === 'existing' ? 'Signing in...' : 'Sending OTP...')
+                      : accountMode === 'existing'
+                        ? <><span className="text-[15px]">Sign In & Continue</span> <ArrowRight className="w-5 h-5" /></>
+                        : <><span className="text-[15px]">Verify Email</span> <ArrowRight className="w-5 h-5" /></>
+                    }
                   </button>
                 </div>
               </form>
@@ -569,7 +650,9 @@ export default function SellerOnboarding() {
                   <input type="text" value={landmark} onChange={e => setLandmark(e.target.value)} placeholder="e.g. Near City Mall" className={inputClasses} />
                 </div>
                 <div className="flex gap-3 mt-4">
-                  <button type="button" onClick={() => setStep(1)} className="px-6 py-4 border border-slate-300 text-slate-700 rounded-2xl font-bold text-sm bg-white hover:bg-slate-50">← Back</button>
+                  {!user && (
+                    <button type="button" onClick={() => setStep(1)} className="px-6 py-4 border border-slate-300 text-slate-700 rounded-2xl font-bold text-sm bg-white hover:bg-slate-50">← Back</button>
+                  )}
                   <button type="submit" className={btnPrimary}>Next: Features →</button>
                 </div>
               </form>

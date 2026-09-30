@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('Ensuring ONLY manishtarjan2@gmail.com is super_admin...');
-  
+
   // Find all users who are currently super_admin
   const superAdmins = await prisma.user.findMany({
     where: { role: 'super_admin' }
@@ -23,14 +23,14 @@ async function main() {
   console.log('Targeting manishtarjan9798.mk@gmail.com directly...');
   try {
     await prisma.user.updateMany({
-      where: { 
+      where: {
         email: {
           in: ['manishtarjan9798.mk@gmail.com', 'maniddhterjan9798.mk@gmail.com']
         }
       },
       data: { role: 'SELLER' }
     });
-  } catch(e) {
+  } catch (e) {
     console.error(e);
   }
 

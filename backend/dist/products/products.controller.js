@@ -20,8 +20,8 @@ let ProductsController = class ProductsController {
     create(data) {
         return this.productsService.create(data);
     }
-    findAll(location, lat, lng, radius) {
-        return this.productsService.findAll(location, lat ? parseFloat(lat) : undefined, lng ? parseFloat(lng) : undefined, radius ? parseFloat(radius) : undefined);
+    findAll(location, lat, lng, radius, page, limit) {
+        return this.productsService.findAll(location, lat ? parseFloat(lat) : undefined, lng ? parseFloat(lng) : undefined, radius ? parseFloat(radius) : undefined, page ? parseInt(page) : 1, limit ? parseInt(limit) : 50);
     }
     getDummyStatus() {
         return this.productsService.getDummyStatus();
@@ -55,8 +55,10 @@ __decorate([
     __param(1, Query('lat')),
     __param(2, Query('lng')),
     __param(3, Query('radius')),
+    __param(4, Query('page')),
+    __param(5, Query('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "findAll", null);
 __decorate([

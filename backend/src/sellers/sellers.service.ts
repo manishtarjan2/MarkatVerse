@@ -9,10 +9,15 @@ export class SellersService {
     private idGenerator: IdGeneratorService
   ) {}
 
-  async create(seller: any) {
-    // Find user by email or phone to link business to user
+  async create(seller: any, userId?: string) {
+    // Find user: prefer looking up by JWT userId (most reliable)
     let user = null;
-    if (seller.email || seller.phone) {
+    if (userId) {
+      user = await this.prisma.user.findUnique({ where: { id: userId } });
+    }
+
+    // Fallback: find by email or phone from payload
+    if (!user && (seller.email || seller.phone)) {
       user = await this.prisma.user.findFirst({
         where: {
           OR: [

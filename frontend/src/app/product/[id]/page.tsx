@@ -21,7 +21,7 @@ export default function ProductDetails() {
   const id = params?.id as string;
   const { trackCategory, trackProductView } = useUserTrends();
   const { addToCart } = useCart();
-  const { products } = useProducts();
+  const { products, isLoading } = useProducts();
   const { user, updateUserRole, login } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [activeImage, setActiveImage] = useState(0);
@@ -117,6 +117,27 @@ export default function ProductDetails() {
         }
       }
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-[1400px] mx-auto p-6 lg:p-10 bg-white relative animate-pulse">
+        <div className="w-full h-32 bg-slate-200 rounded-2xl mb-8"></div>
+        <div className="flex flex-col lg:flex-row gap-10">
+          <div className="flex-1">
+            <div className="w-full h-[500px] bg-slate-200 rounded-2xl"></div>
+            <div className="mt-8 p-6 bg-slate-100 rounded-2xl h-48"></div>
+          </div>
+          <div className="flex-1 space-y-4">
+            <div className="w-1/3 h-4 bg-slate-200 rounded"></div>
+            <div className="w-3/4 h-10 bg-slate-200 rounded"></div>
+            <div className="w-1/2 h-6 bg-slate-200 rounded"></div>
+            <div className="w-full h-32 bg-slate-100 rounded-2xl mt-8"></div>
+            <div className="w-full h-64 bg-slate-100 rounded-2xl mt-4"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!product) {

@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MapPin, Star, Shield, Phone, Mail, Clock, CheckCircle, Ticket, ShoppingCart, ArrowRight, Calendar, Stethoscope, Scissors, Wrench } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import ProductGridSkeleton from '@/components/ProductGridSkeleton';
+
 
 export default function PublicShopPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params);
@@ -133,8 +135,8 @@ export default function PublicShopPage({ params }: { params: Promise<{ id: strin
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center p-20">
-            <div className={`w-10 h-10 border-4 border-slate-200 border-t-${themeColor}-600 rounded-full animate-spin`}></div>
+          <div className="mt-8">
+            <ProductGridSkeleton count={10} />
           </div>
         ) : (
           <div className="space-y-12">

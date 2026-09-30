@@ -8,9 +8,10 @@ import { MapPin, Heart, Share2 } from 'lucide-react';
 
 import { useUserTrends } from '@/hooks/useUserTrends';
 import StarRating from './StarRating';
+import ProductGridSkeleton from './ProductGridSkeleton';
 
 export default function ProductGrid({ products: propProducts, limit, category, personalized, recent, serviceOnly }: { products?: Product[], limit?: number, category?: string, personalized?: boolean, recent?: boolean, serviceOnly?: boolean }) {
-  const { products: contextProducts, userLocation, userLat, userLng, radiusFilter, setRadiusFilter } = useProducts();
+  const { products: contextProducts, isLoading, userLocation, userLat, userLng, radiusFilter, setRadiusFilter } = useProducts();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { getTopCategories, trends } = useUserTrends();
   const router = useRouter();
@@ -65,6 +66,10 @@ export default function ProductGrid({ products: propProducts, limit, category, p
 
   // Limit items if specified
   const finalProducts = limit ? productsToRender.slice(0, limit) : productsToRender;
+
+  if (isLoading) {
+    return <ProductGridSkeleton count={limit || 8} />;
+  }
 
   if (finalProducts.length === 0) {
     return <div className="text-center p-10 text-slate-400">No products found.</div>;
@@ -141,9 +146,9 @@ export default function ProductGrid({ products: propProducts, limit, category, p
               </div>
               
               {product.image ? (
-                <img src={product.image} alt={product.name} className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${product._outOfRange ? 'grayscale opacity-70' : ''}`} />
+                <img src={product.image} alt={product.name} loading="lazy" className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${product._outOfRange ? 'grayscale opacity-70' : ''}`} />
               ) : (
-                <img src="/hero-left-logo.png" alt={product.name} className={`w-full h-full object-contain opacity-50 group-hover:scale-105 transition-transform duration-300 p-4 ${product._outOfRange ? 'grayscale' : ''}`} />
+                <img src="/hero-left-logo.png" alt={product.name} loading="lazy" className={`w-full h-full object-contain opacity-50 group-hover:scale-105 transition-transform duration-300 p-4 ${product._outOfRange ? 'grayscale' : ''}`} />
               )}
               {product._outOfRange && (
                 <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center backdrop-blur-[1px] z-10">

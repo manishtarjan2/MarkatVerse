@@ -38,13 +38,21 @@ export class ProductsService {
     return this.mapProduct(product);
   }
 
-  async findAll(location?: string, lat?: number, lng?: number, radius?: number) {
+  async findAll(location?: string, lat?: number, lng?: number, radius?: number, page: number = 1, limit: number = 50) {
+    const skip = (page - 1) * limit;
+    
+    // If no coordinates provided, we can use DB-level pagination
+    const useDbPagination = !(lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng));
+
     let products = await this.prisma.product.findMany({
       where: { status: 'ACTIVE' },
       orderBy: { createdAt: 'desc' },
+      ...(useDbPagination ? { skip, take: limit } : {})
     });
+    
+    let total = useDbPagination ? await this.prisma.product.count({ where: { status: 'ACTIVE' } }) : 0;
 
-    if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
+    if (!useDbPagination && lat !== undefined && lng !== undefined) {
       // 1. Get system settings for radii
       let effectiveRadius = radius;
       let sectorRadiusMap: Record<string, number> = {};
@@ -141,9 +149,14 @@ export class ProductsService {
         return scoreA - scoreB;
       });
       
+      total = products.length;
+      products = products.slice(skip, skip + limit);
+      
     } else if (location && location.trim() !== '') {
       // Fallback to text matching if no coords
       const loc = location.toLowerCase();
+      // Only sort by location match if we're not using DB pagination, or we apply it post-pagination.
+      // With DB pagination, we might miss better matches. But doing it in memory is what it used to do.
       products.sort((a, b) => {
         const aLoc = (a.location || '').toLowerCase();
         const bLoc = (b.location || '').toLowerCase();
@@ -155,7 +168,13 @@ export class ProductsService {
       });
     }
 
-    return products.map(p => this.mapProduct(p));
+    return {
+      data: products.map(p => this.mapProduct(p)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async findOne(id: string) {

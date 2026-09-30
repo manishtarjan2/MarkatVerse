@@ -17,9 +17,12 @@ let SellersService = class SellersService {
         this.prisma = prisma;
         this.idGenerator = idGenerator;
     }
-    async create(seller) {
+    async create(seller, userId) {
         let user = null;
-        if (seller.email || seller.phone) {
+        if (userId) {
+            user = await this.prisma.user.findUnique({ where: { id: userId } });
+        }
+        if (!user && (seller.email || seller.phone)) {
             user = await this.prisma.user.findFirst({
                 where: {
                     OR: [

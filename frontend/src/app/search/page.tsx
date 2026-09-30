@@ -14,7 +14,7 @@ function SearchContent() {
   const initialLoc = searchParams.get('loc') || '';
   const initialCat = searchParams.get('cat') || '';
   
-  const { products, categories } = useProducts();
+  const { products, categories, isLoading } = useProducts();
   
   // Local filter states
   const [q, setQ] = useState(initialQ);
@@ -356,8 +356,9 @@ function SearchContent() {
             </select>
           </div>
         </div>
-        
-        {selectedCategory === 'Services' || selectedCategory === 'Home Services' ? (
+        {isLoading ? (
+          <ProductGridSkeleton count={12} />
+        ) : selectedCategory === 'Services' || selectedCategory === 'Home Services' ? (
           <ServiceDirectoryList products={filteredProducts} />
         ) : (
           <ProductGrid products={filteredProducts} />
@@ -369,9 +370,16 @@ function SearchContent() {
   );
 }
 
+import ProductGridSkeleton from '@/components/ProductGridSkeleton';
+
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="p-10 text-slate-500 text-center font-medium">Loading search results...</div>}>
+    <Suspense fallback={
+      <div className="max-w-[1400px] mx-auto p-5 min-h-[calc(100vh-80px)] bg-slate-50">
+        <div className="mb-6"><div className="h-10 w-48 bg-slate-200 rounded animate-pulse"></div></div>
+        <ProductGridSkeleton count={12} />
+      </div>
+    }>
       <SearchContent />
     </Suspense>
   );

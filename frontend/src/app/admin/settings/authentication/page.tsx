@@ -4,6 +4,28 @@ import { Mail, Phone, Globe, ShieldCheck } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+const ConfigOption = ({ title, desc, icon: Icon, isActive, onToggle }: any) => {
+  return (
+    <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 flex items-center justify-between shadow-lg">
+      <div className="flex items-center gap-4">
+        <div className={`p-3 rounded-xl ${isActive ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-700 text-slate-400'}`}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <div>
+          <h3 className="text-white font-bold">{title}</h3>
+          <p className="text-slate-400 text-sm mt-1">{desc}</p>
+        </div>
+      </div>
+      <button 
+        onClick={onToggle}
+        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${isActive ? 'bg-indigo-500' : 'bg-slate-600'}`}
+      >
+        <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+      </button>
+    </div>
+  );
+};
+
 export default function SettingsAuthenticationPage() {
   const [settings, setSettings] = useState({
     enableEmail: true,
@@ -38,11 +60,14 @@ export default function SettingsAuthenticationPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch(`${API_URL}/system-config/auth`, {
+      const response = await fetch(`${API_URL}/system-config/auth`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)
       });
+      if (!response.ok) {
+        throw new Error(`Failed to save: HTTP ${response.status}`);
+      }
       alert('Authentication settings saved successfully!');
     } catch (e) {
       console.error(e);
@@ -50,29 +75,6 @@ export default function SettingsAuthenticationPage() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const ConfigOption = ({ title, desc, icon: Icon, configKey }: any) => {
-    const isActive = settings[configKey as keyof typeof settings];
-    return (
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 flex items-center justify-between shadow-lg">
-        <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-xl ${isActive ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-700 text-slate-400'}`}>
-            <Icon className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-white font-bold">{title}</h3>
-            <p className="text-slate-400 text-sm mt-1">{desc}</p>
-          </div>
-        </div>
-        <button 
-          onClick={() => handleToggle(configKey as keyof typeof settings)}
-          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${isActive ? 'bg-indigo-500' : 'bg-slate-600'}`}
-        >
-          <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`} />
-        </button>
-      </div>
-    );
   };
 
   if (loading) {
@@ -99,25 +101,29 @@ export default function SettingsAuthenticationPage() {
           title="Email / Password Login" 
           desc="Allow users to sign up and log in using their email address and a password." 
           icon={Mail} 
-          configKey="enableEmail" 
+          isActive={settings.enableEmail}
+          onToggle={() => handleToggle('enableEmail')} 
         />
         <ConfigOption 
           title="Phone / SMS Login" 
           desc="Allow users to authenticate via SMS One-Time Passwords (OTP)." 
           icon={Phone} 
-          configKey="enablePhone" 
+          isActive={settings.enablePhone}
+          onToggle={() => handleToggle('enablePhone')} 
         />
         <ConfigOption 
           title="Google Single Sign-On" 
           desc="Allow 1-click registration and login via Google accounts." 
           icon={Globe} 
-          configKey="enableGoogle" 
+          isActive={settings.enableGoogle}
+          onToggle={() => handleToggle('enableGoogle')} 
         />
         <ConfigOption 
           title="Require 2FA for Admin" 
           desc="Enforce Two-Factor Authentication for all Admin and Super Admin roles." 
           icon={ShieldCheck} 
-          configKey="require2FA" 
+          isActive={settings.require2FA}
+          onToggle={() => handleToggle('require2FA')} 
         />
       </div>
     </div>

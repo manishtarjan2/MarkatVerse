@@ -46,12 +46,16 @@ let ProductsService = class ProductsService {
         });
         return this.mapProduct(product);
     }
-    async findAll(location, lat, lng, radius) {
+    async findAll(location, lat, lng, radius, page = 1, limit = 50) {
+        const skip = (page - 1) * limit;
+        const useDbPagination = !(lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng));
         let products = await this.prisma.product.findMany({
             where: { status: 'ACTIVE' },
             orderBy: { createdAt: 'desc' },
+            ...(useDbPagination ? { skip, take: limit } : {})
         });
-        if (lat !== undefined && lng !== undefined && !isNaN(lat) && !isNaN(lng)) {
+        let total = useDbPagination ? await this.prisma.product.count({ where: { status: 'ACTIVE' } }) : 0;
+        if (!useDbPagination && lat !== undefined && lng !== undefined) {
             let effectiveRadius = radius;
             let sectorRadiusMap = {};
             const settings = await this.prisma.configuration.findFirst({
@@ -129,6 +133,8 @@ let ProductsService = class ProductsService {
                 const scoreB = (normDistB * wDist) - (normRatB * wRat);
                 return scoreA - scoreB;
             });
+            total = products.length;
+            products = products.slice(skip, skip + limit);
         }
         else if (location && location.trim() !== '') {
             const loc = location.toLowerCase();
@@ -144,7 +150,13 @@ let ProductsService = class ProductsService {
                 return 0;
             });
         }
-        return products.map(p => this.mapProduct(p));
+        return {
+            data: products.map(p => this.mapProduct(p)),
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        };
     }
     async findOne(id) {
         const p = await this.prisma.product.findUnique({ where: { id } });

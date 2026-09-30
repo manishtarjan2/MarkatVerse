@@ -18,8 +18,8 @@ export class AuthService {
   ) {}
 
   async signup(data: any) {
-    if (!data.email && !data.phone) {
-      throw new BadRequestException('Email or Phone is required');
+    if (!data.email || !data.phone) {
+      throw new BadRequestException('Email and Phone are required');
     }
 
     const existing = await this.prisma.user.findFirst({
@@ -61,8 +61,8 @@ export class AuthService {
       data: {
         markatId,
         name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
+        email: data.email || `missing-email-${markatId}@markat.local`,
+        phone: data.phone,
         password: hashedPassword,
         role: data.role || 'CONSUMER',
       },
@@ -272,6 +272,7 @@ export class AuthService {
             markatId,
             name: name,
             email: email,
+            phone: `google-phone-${markatId}`,
             password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
             role: role.toUpperCase(),
           },

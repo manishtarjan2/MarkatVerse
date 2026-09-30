@@ -1,13 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Headers } from '@nestjs/common';
 import { SellersService } from './sellers.service.js';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('sellers')
 export class SellersController {
-  constructor(private readonly sellersService: SellersService) {}
+  constructor(
+    private readonly sellersService: SellersService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post()
-  create(@Body() createSellerDto: any) {
-    return this.sellersService.create(createSellerDto);
+  create(@Body() createSellerDto: any, @Headers('authorization') authHeader?: string) {
+    let userId: string | undefined;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const payload = this.jwtService.verify(token);
+        userId = payload.sub;
+      } catch {}
+    }
+    return this.sellersService.create(createSellerDto, userId);
   }
 
   @Get()

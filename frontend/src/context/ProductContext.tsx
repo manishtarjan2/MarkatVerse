@@ -86,6 +86,7 @@ export type Category = {
 type ProductContextType = {
   products: Product[];
   allProducts: Product[];
+  isLoading: boolean;
   addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
   editProduct: (id: string, updated: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
@@ -752,6 +753,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const { isSectorActive } = useSettings();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [userLocation, setUserLocation] = useState<string>('');
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
@@ -786,6 +788,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    setIsLoading(true);
     // Fetch products
     console.log('Fetching products for location:', userLocation, userLat, userLng, radiusFilter);
     let url = `${API_URL}/products?location=${encodeURIComponent(userLocation)}`;
@@ -799,7 +802,21 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     fetch(url)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
+        if (data && Array.isArray(data.data)) {
+          const mappedData = data.data.map((item: any) => ({
+            ...item,
+            seller: item.sellerName,
+            category: item.categoryName,
+            subcategory: item.subcategory,
+            image: item.image || item.sku || undefined,
+            images: item.images || (item.image ? [item.image] : []),
+            isPremium: false,
+            isB2B: item.isB2B,
+            moq: item.moq,
+            status: item.status
+          }));
+          setProducts(mappedData);
+        } else if (Array.isArray(data)) {
           const mappedData = data.map(item => ({
             ...item,
             seller: item.sellerName,
@@ -820,7 +837,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
       .catch(err => {
         console.error('Failed to fetch products:', err);
         setProducts([]);
-      });
+      })
+      .finally(() => setIsLoading(false));
 
     // Fetch categories
     console.log('Fetching categories from:', `${API_URL}/categories`);
@@ -976,7 +994,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   }, [products, isSectorActive]);
 
   return (
-    <ProductContext.Provider value={{ products: activeProducts, allProducts: products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories: activeCategories, addCategory,      updateCategory,
+    <ProductContext.Provider value={{ isLoading, products: activeProducts, allProducts: products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories: activeCategories, addCategory,      updateCategory,
       deleteCategory,
       userLat,
       setUserLat,

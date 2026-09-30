@@ -318,13 +318,13 @@ function DashboardContent() {
           }
         }
         setIsEditingProfile(false);
-        toast.success("Profile updated successfully!");
+        alert("Profile updated successfully!");
       } else {
-        toast.error("Failed to update profile");
+        alert("Failed to update profile");
       }
     } catch (err) {
       console.error(err);
-      toast.error("An error occurred while updating profile");
+      alert("An error occurred while updating profile");
     }
   };
   const [settingsAreas, setSettingsAreas] = useState<string[]>([]);
@@ -453,7 +453,24 @@ function DashboardContent() {
     }
   };
 
-  // Removed full-screen loading spinner to eliminate perceived latency
+  // Guard: seller has no business record yet — redirect to complete onboarding
+  if (!isLoading && user && !user.business) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10 max-w-md w-full text-center">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">🏪</div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-3">Business Setup Incomplete</h2>
+          <p className="text-slate-500 text-base mb-2">
+            Your seller account is active (<span className="font-semibold text-slate-700">{user.markatId}</span>), but your business profile hasn't been created yet.
+          </p>
+          <p className="text-slate-400 text-sm mb-8">Complete the quick setup to start selling on MarkatVerse.</p>
+          <a href="/seller/onboarding" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-base hover:opacity-90 transition-opacity shadow-md">
+            Complete Business Setup →
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col lg:flex-row font-sans overflow-x-hidden relative">
@@ -503,7 +520,12 @@ function DashboardContent() {
             <div className="flex flex-col gap-1 mt-3 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
               <div className="flex justify-between items-center px-1">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Business ID</span>
-                <span className="text-xs font-mono font-bold text-slate-700">{user?.business?.businessCode || 'Pending'}</span>
+                <span className="text-xs font-mono font-bold text-slate-700">
+                  {user?.business?.businessCode
+                    ? user.business.businessCode
+                    : <a href="/seller/onboarding" className="text-amber-600 font-bold text-xs hover:underline">Complete Setup →</a>
+                  }
+                </span>
               </div>
               <div className="flex justify-between items-center px-1">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">MV Account ID</span>

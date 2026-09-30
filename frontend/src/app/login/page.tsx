@@ -94,6 +94,8 @@ export default function LoginPage() {
         throw new Error('Admin accounts must log in via the Admin Portal.');
       }
 
+      // Sellers can also log in here — they land on the customer homepage.
+      // To access the seller dashboard, use /seller/login instead.
       login(
         { id: data.user.id, markatId: data.user.markatId, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '' },
         data.access_token
@@ -113,7 +115,7 @@ export default function LoginPage() {
     if (regPassword !== regConfirmPassword) { setError("Passwords do not match"); return; }
     if (regPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
     if (!regEmail) { setError("Email Address is required"); return; }
-    if (regPhone && !/^\d{10}$/.test(regPhone.replace(/\D/g, ''))) { setError("Phone number must be exactly 10 digits"); return; }
+    if (!regPhone || !/^\d{10}$/.test(regPhone.replace(/\D/g, ''))) { setError("Phone number is required and must be exactly 10 digits"); return; }
 
     setIsLoading(true);
     try {
@@ -337,7 +339,8 @@ export default function LoginPage() {
 
               {error && (
                 <div className="mb-5 p-3.5 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 flex items-start gap-2">
-                  <span className="text-red-500 mt-0.5">⚠️</span> {error}
+                  <span className="text-red-500 mt-0.5 shrink-0">⚠️</span>
+                  <span>{error}</span>
                 </div>
               )}
 
@@ -390,7 +393,11 @@ export default function LoginPage() {
                 </button>
               </p>
 
-              <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+              <div className="mt-8 pt-6 border-t border-slate-100 text-center space-y-2">
+                <p className="text-sm text-slate-500">
+                  Are you a seller?{' '}
+                  <Link href="/seller/login" className="text-emerald-600 font-semibold hover:underline">Seller Login →</Link>
+                </p>
                 <Link href="/admin/login" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
                   Admin Portal →
                 </Link>
@@ -445,14 +452,14 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className={labelCls}>Mobile Number <span className="normal-case font-normal text-slate-400">(optional)</span></label>
+                  <label className={labelCls}>Mobile Number <span className="text-red-500">*</span></label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
                       <span className="text-slate-700 font-medium">+91</span>
                       <div className="w-px h-5 bg-slate-200"></div>
                     </div>
-                    <input type="tel" maxLength={10} value={regPhone} onChange={e => {
+                    <input required type="tel" maxLength={10} value={regPhone} onChange={e => {
                         const val = e.target.value.replace(/\D/g, '');
                         setRegPhone(val);
                       }}
@@ -506,7 +513,7 @@ export default function LoginPage() {
                   <span className="text-blue-600 cursor-pointer hover:underline">Privacy Policy</span>.
                 </p>
 
-                <button type="submit" className={btnPrimary} disabled={isLoading || !regName || !regEmail}>
+                <button type="submit" className={btnPrimary} disabled={isLoading || !regName || !regEmail || !regPhone || regPhone.length !== 10}>
                   {isLoading
                     ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sending Email OTP...</>
                     : <>Verify Email <ArrowRight className="w-4 h-4" /></>

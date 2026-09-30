@@ -40,7 +40,7 @@ interface JoinResult {
 export default function ServiceDetails() {
   const params = useParams();
   const id = params?.id as string;
-  const { products } = useProducts();
+  const { products, isLoading } = useProducts();
   const { trackCategory, trackProductView } = useUserTrends();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -55,6 +55,24 @@ export default function ServiceDetails() {
       trackProductView(service.id);
     }
   }, [service?.id, service?.category]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc] animate-pulse">
+        <div className="w-full h-80 bg-slate-800"></div>
+        <div className="max-w-[1200px] mx-auto px-4 py-10 flex flex-col lg:flex-row gap-8">
+          <div className="flex-1">
+            <div className="w-full h-20 bg-slate-200 rounded-2xl mb-8"></div>
+            <div className="w-full h-64 bg-slate-200 rounded-3xl mb-8"></div>
+            <div className="w-full h-40 bg-slate-200 rounded-3xl"></div>
+          </div>
+          <div className="w-full lg:w-[380px] shrink-0">
+            <div className="w-full h-96 bg-slate-200 rounded-3xl"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!service) return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-10">

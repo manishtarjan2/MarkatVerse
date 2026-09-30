@@ -86,6 +86,13 @@ export default function SellerLoginPage() {
         { id: data.user.id, markatId: data.user.markatId, name: data.user.name, email: data.user.email, role: data.user.role.toLowerCase() as any, phone: data.user.phone || '', business: data.user.business },
         data.access_token
       );
+
+      // If seller role but no business record yet, send to onboarding to complete setup
+      if (!data.user.business) {
+        window.location.href = '/seller/onboarding';
+        return;
+      }
+
       window.location.href = '/seller/dashboard';
     } catch (err: any) {
       setError(err.message);
@@ -119,11 +126,25 @@ export default function SellerLoginPage() {
     }
   };
 
-  const handleOtpVerify = (e: React.FormEvent) => {
+  const handleOtpVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
-    if (fpOtp.length < 4) { setError('Please enter a valid 4-digit OTP'); return; }
-    setView('reset');
+    if (fpOtp.length < 6) { setError('Please enter the full 6-character code'); return; }
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/verify-reset-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: fpIdentifier, code: fpOtp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Invalid or expired code');
+      setView('reset');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -136,7 +157,7 @@ export default function SellerLoginPage() {
       const res = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reset_token: fpResetToken, new_password: fpNewPassword }),
+        body: JSON.stringify({ identifier: fpIdentifier, code: fpOtp, new_password: fpNewPassword }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to reset password');
@@ -354,16 +375,16 @@ export default function SellerLoginPage() {
 
               <form onSubmit={handleOtpVerify} className="space-y-5">
                 <div>
-                  <label className={labelCls}>4-Digit OTP</label>
+                  <label className={labelCls}>6-Character Code</label>
                   <input
                     required type="text" value={fpOtp}
-                    onChange={e => setFpOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    placeholder="- - - -" maxLength={4}
-                    className="w-full py-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-center tracking-[16px] text-2xl font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:bg-white transition-all"
+                    onChange={e => setFpOtp(e.target.value.toUpperCase().slice(0, 6))}
+                    placeholder="- - - - - -" maxLength={6}
+                    className="w-full py-4 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-center tracking-[12px] text-2xl font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 focus:bg-white transition-all"
                   />
                 </div>
-                <button type="submit" className={btnPrimary} disabled={fpOtp.length < 4}>
-                  Verify OTP <ArrowRight className="w-4 h-4" />
+                <button type="submit" className={btnPrimary} disabled={isLoading || fpOtp.length < 6}>
+                  {isLoading ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verifying...</> : <>Verify Code <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </form>
             </div>

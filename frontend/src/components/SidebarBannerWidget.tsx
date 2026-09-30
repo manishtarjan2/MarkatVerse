@@ -4,9 +4,11 @@ import Link from 'next/link';
 
 export default function SidebarBannerWidget() {
   const [banners, setBanners] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchBanners = async () => {
+      setIsLoading(true);
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const res = await fetch(`${API_URL}/content/banners`);
@@ -17,10 +19,20 @@ export default function SidebarBannerWidget() {
         }
       } catch (e) {
         console.error("Failed to fetch sidebar banners", e);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchBanners();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4 mt-6">
+        <div className="w-full bg-slate-200 animate-pulse rounded-2xl h-[200px]"></div>
+      </div>
+    );
+  }
 
   if (!banners || banners.length === 0) return null;
 
@@ -29,7 +41,7 @@ export default function SidebarBannerWidget() {
       {banners.map((banner) => (
         <div key={banner.id} className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group">
           <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
-            <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <img src={banner.imageUrl} alt={banner.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div className="absolute bottom-4 left-4 right-4 text-white">
               <h3 className="font-bold text-lg leading-tight mb-1">{banner.title}</h3>
