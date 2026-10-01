@@ -1,0 +1,106 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { NotificationsService } from './notifications.service.js';
+let NotificationsController = class NotificationsController {
+    notificationsService;
+    constructor(notificationsService) {
+        this.notificationsService = notificationsService;
+    }
+    async getSmsTemplates() {
+        return this.notificationsService.getSmsTemplates();
+    }
+    async createSmsTemplate(data) {
+        return this.notificationsService.createSmsTemplate(data);
+    }
+    async updateSmsTemplate(id, data) {
+        return this.notificationsService.updateSmsTemplate(id, data);
+    }
+    async deleteSmsTemplate(id) {
+        return this.notificationsService.deleteSmsTemplate(id);
+    }
+    async getPushTemplates() {
+        return this.notificationsService.getPushTemplates();
+    }
+    async createPushTemplate(data) {
+        return this.notificationsService.createPushTemplate(data);
+    }
+    async updatePushTemplate(id, data) {
+        return this.notificationsService.updatePushTemplate(id, data);
+    }
+    async deletePushTemplate(id) {
+        return this.notificationsService.deletePushTemplate(id);
+    }
+};
+__decorate([
+    Get('sms'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "getSmsTemplates", null);
+__decorate([
+    Post('sms'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "createSmsTemplate", null);
+__decorate([
+    Put('sms/:id'),
+    __param(0, Param('id')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "updateSmsTemplate", null);
+__decorate([
+    Delete('sms/:id'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "deleteSmsTemplate", null);
+__decorate([
+    Get('push'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "getPushTemplates", null);
+__decorate([
+    Post('push'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "createPushTemplate", null);
+__decorate([
+    Put('push/:id'),
+    __param(0, Param('id')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "updatePushTemplate", null);
+__decorate([
+    Delete('push/:id'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "deletePushTemplate", null);
+NotificationsController = __decorate([
+    Controller('admin/notifications'),
+    __metadata("design:paramtypes", [NotificationsService])
+], NotificationsController);
+export { NotificationsController };
+//# sourceMappingURL=notifications.controller.js.map

@@ -1,67 +1,92 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Save, Loader2, CheckCircle2 } from 'lucide-react';
 
-export default function SettingsgtBookingPage() {
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+
+export default function SettingsBookingPage() {
+  const [config, setConfig] = useState({ travelSpeedKmh: 30, notificationBufferMin: 5 });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    fetch(`${API}/system-config/queue`)
+      .then(res => res.json())
+      .then(data => {
+        setConfig({ travelSpeedKmh: data.travelSpeedKmh, notificationBufferMin: data.notificationBufferMin });
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await fetch(`${API}/system-config/queue`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-10 text-slate-400 flex items-center gap-2"><Loader2 className="animate-spin w-5 h-5"/> Loading config...</div>;
+  }
+
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full">
+    <div className="max-w-4xl mx-auto animate-in fade-in duration-300 w-full">
       <header className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Settings &gt; Booking</h1>
-          <p className="text-slate-400 mt-2 text-sm">Manage and configure settings &gt; booking.</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Queue & Smart Booking</h1>
+          <p className="text-slate-400 mt-2 text-sm">Configure global parameters for smart queues, geofencing, and automated notifications.</p>
         </div>
-        <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center gap-2">
-          + Add New
+        <button 
+          onClick={handleSave}
+          disabled={saving}
+          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 disabled:opacity-50">
+          {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : (success ? <CheckCircle2 className="w-5 h-5 text-green-300" /> : <Save className="w-5 h-5" />)}
+          {saving ? 'Saving...' : (success ? 'Saved!' : 'Save Config')}
         </button>
       </header>
 
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden">
-        <div className="p-4 border-b border-slate-700 flex justify-between">
-          <input type="text" placeholder="Search..." className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 w-64" />
-          <select className="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500">
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
-          </select>
-        </div>
+      <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden p-6">
+        <h2 className="text-xl font-bold text-white mb-6 border-b border-slate-700 pb-4">Smart Push Notifications (Location Based)</h2>
         
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-900/80 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
-              <tr>
-                <th className="p-4 pl-6">ID</th>
-                <th className="p-4">Name / Title</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Date Modified</th>
-                <th className="p-4 pr-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700/50">
-              <tr className="hover:bg-slate-700/50 transition-all">
-                <td className="p-4 pl-6 font-mono text-xs text-slate-500">#1001</td>
-                <td className="p-4 font-bold text-white">Sample Entry A</td>
-                <td className="p-4">
-                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full text-xs font-bold">Active</span>
-                </td>
-                <td className="p-4 text-slate-400 text-sm">Just now</td>
-                <td className="p-4 pr-6 text-right">
-                  <button className="text-slate-500 hover:text-blue-400 px-2">Edit</button>
-                  <button className="text-slate-500 hover:text-rose-400 px-2">Delete</button>
-                </td>
-              </tr>
-              <tr className="hover:bg-slate-700/50 transition-all">
-                <td className="p-4 pl-6 font-mono text-xs text-slate-500">#1002</td>
-                <td className="p-4 font-bold text-white">Sample Entry B</td>
-                <td className="p-4">
-                  <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-full text-xs font-bold">Inactive</span>
-                </td>
-                <td className="p-4 text-slate-400 text-sm">2 hours ago</td>
-                <td className="p-4 pr-6 text-right">
-                  <button className="text-slate-500 hover:text-blue-400 px-2">Edit</button>
-                  <button className="text-slate-500 hover:text-rose-400 px-2">Delete</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <label className="block text-slate-300 text-sm font-bold mb-2">Estimated City Travel Speed (km/h)</label>
+              <p className="text-slate-500 text-xs mb-3">Used to estimate how long it will take a customer to travel from their current location to the shop.</p>
+              <input 
+                type="number" 
+                value={config.travelSpeedKmh}
+                onChange={e => setConfig({...config, travelSpeedKmh: parseInt(e.target.value) || 0})}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-300 text-sm font-bold mb-2">Notification Buffer (Minutes)</label>
+              <p className="text-slate-500 text-xs mb-3">Alerts the customer this many minutes before their travel time exactly matches the wait time (gives them time to put shoes on).</p>
+              <input 
+                type="number" 
+                value={config.notificationBufferMin}
+                onChange={e => setConfig({...config, notificationBufferMin: parseInt(e.target.value) || 0})}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

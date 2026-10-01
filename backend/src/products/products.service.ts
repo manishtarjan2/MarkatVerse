@@ -10,6 +10,7 @@ export class ProductsService {
     const product = await this.prisma.product.create({
       data: {
         name: data.name,
+        type: data.primaryType || data.type || 'PRODUCT',
         price: parseFloat(data.price),
         originalPrice: data.originalPrice ? parseFloat(data.originalPrice) : null,
         description: data.description || null,
@@ -187,6 +188,7 @@ export class ProductsService {
       where: { id },
       data: {
         name: data.name,
+        type: data.primaryType || data.type,
         price: data.price ? parseFloat(data.price) : undefined,
         originalPrice: data.originalPrice ? parseFloat(data.originalPrice) : undefined,
         description: data.description,
@@ -246,6 +248,9 @@ export class ProductsService {
   }
 
   async remove(id: string) {
+    // Delete related leads first to prevent relation errors
+    await this.prisma.lead.deleteMany({ where: { productId: id } });
+    
     await this.prisma.product.delete({ where: { id } });
     return { success: true };
   }
@@ -257,6 +262,7 @@ export class ProductsService {
       seller: p.sellerName,
       sellerId: p.sellerId,
       category: p.categoryName,
+      primaryType: p.type,
       images: p.images && p.images.length > 0 ? p.images : (p.image ? [p.image] : []),
     };
   }

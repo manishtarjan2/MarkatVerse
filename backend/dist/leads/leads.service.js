@@ -21,7 +21,7 @@ let LeadsService = class LeadsService {
                 sellerId: data.sellerId,
                 productId: data.productId,
                 message: data.message,
-                quantityRequested: parseInt(data.quantityRequested, 10),
+                quantityRequested: parseInt(data.quantityRequested, 10) || 1,
                 status: 'PENDING'
             }
         });

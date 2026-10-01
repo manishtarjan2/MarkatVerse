@@ -99,6 +99,7 @@ type ProductContextType = {
   radiusFilter: number | null;
   setRadiusFilter: (radius: number | null) => void;
   categories: Category[];
+  allCategories: Category[];
   addCategory: (cat: Category) => void;
   updateCategory: (id: string, updated: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
@@ -994,7 +995,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   }, [products, isSectorActive]);
 
   return (
-    <ProductContext.Provider value={{ isLoading, products: activeProducts, allProducts: products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories: activeCategories, addCategory,      updateCategory,
+    <ProductContext.Provider value={{ isLoading, products: activeProducts, allProducts: products, addProduct, editProduct, deleteProduct, userLocation, setUserLocation, categories: activeCategories, allCategories: categories, addCategory, updateCategory,
       deleteCategory,
       userLat,
       setUserLat,

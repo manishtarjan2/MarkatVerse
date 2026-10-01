@@ -2,7 +2,7 @@ import { AuthService } from './auth.service.js';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
-    signup(data: any): Promise<{
+    signup(data: any, authHeader: string): Promise<{
         access_token: string;
         user: {
             id: any;
@@ -54,12 +54,6 @@ export declare class AuthController {
         };
     }>;
     getMe(authHeader: string): Promise<{
-        id: string;
-        markatId: string | null;
-        email: string | null;
-        phone: string | null;
-        name: string;
-        role: string;
         business: ({
             wallet: {
                 id: string;
@@ -73,21 +67,21 @@ export declare class AuthController {
                 owedToPlatform: number;
             } | null;
         } & {
+            businessType: string;
+            sector: string | null;
             id: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
-            businessType: string;
-            sector: string | null;
             address: string | null;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;
@@ -99,6 +93,12 @@ export declare class AuthController {
             subscriptionStartDate: Date | null;
             subscriptionEndDate: Date | null;
         }) | null;
+        id: string;
+        name: string;
+        markatId: string | null;
+        email: string | null;
+        phone: string | null;
+        role: string;
     }>;
     forgotPassword(identifier: string): Promise<{
         message: string;

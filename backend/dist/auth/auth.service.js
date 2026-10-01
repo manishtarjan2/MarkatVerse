@@ -27,9 +27,25 @@ let AuthService = AuthService_1 = class AuthService {
         this.idGenerator = idGenerator;
         this.securityService = securityService;
     }
-    async signup(data) {
+    async signup(data, authHeader) {
         if (!data.email || !data.phone) {
             throw new BadRequestException('Email and Phone are required');
+        }
+        const requestedRole = data.role?.toUpperCase() || 'CONSUMER';
+        if (requestedRole.includes('ADMIN') || requestedRole === 'SUPER_ADMIN') {
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                throw new UnauthorizedException('Admin privileges required to create staff accounts.');
+            }
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const decoded = this.jwtService.verify(token);
+                if (decoded.role !== 'SUPER_ADMIN' && decoded.role !== 'ADMIN') {
+                    throw new UnauthorizedException('Insufficient privileges to create staff accounts.');
+                }
+            }
+            catch (err) {
+                throw new UnauthorizedException('Invalid or expired admin token.');
+            }
         }
         const existing = await this.prisma.user.findFirst({
             where: {
@@ -117,10 +133,8 @@ let AuthService = AuthService_1 = class AuthService {
                     from: `"MarkatVerse Support" <${process.env.SMTP_USER}>`,
                     replyTo: `"MarkatVerse No-Reply" <noreply@markatverse.com>`,
                     to: identifier,
-                    subject: 'Action Required: Your MarkatVerse Verification Code',
+                    subject: 'Your MarkatVerse Verification Code',
                     headers: {
-                        'X-Priority': '1 (Highest)',
-                        'X-Mailer': 'Nodemailer',
                         'List-Unsubscribe': '<mailto:unsubscribe@markatverse.com?subject=unsubscribe>',
                     },
                     text: `Hello,\n\nYou recently requested a verification code for your MarkatVerse account. Please see your code below:\n\n${code}\n\nThis code will remain active for the next 5 minutes. If you did not request this, please let us know immediately.\n\nBest regards,\nMarkatVerse Support Team`,
@@ -312,10 +326,8 @@ let AuthService = AuthService_1 = class AuthService {
                     from: `"MarkatVerse Support" <${process.env.SMTP_USER}>`,
                     replyTo: `"MarkatVerse No-Reply" <noreply@markatverse.com>`,
                     to: user.email || undefined,
-                    subject: 'Action Required: MarkatVerse Password Reset Code',
+                    subject: 'MarkatVerse Password Reset Code',
                     headers: {
-                        'X-Priority': '1 (Highest)',
-                        'X-Mailer': 'Nodemailer',
                         'List-Unsubscribe': '<mailto:unsubscribe@markatverse.com?subject=unsubscribe>',
                     },
                     text: `Hello ${user.name},\n\nWe received a request to reset your password. Please find your secure authorization code below:\n\n${resetCode}\n\nFor your security, this code will expire in 5 minutes. If you did not request this change, please contact us or ignore this message.\n\nBest regards,\nMarkatVerse Support Team`,

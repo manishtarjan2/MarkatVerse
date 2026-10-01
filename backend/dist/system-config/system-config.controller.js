@@ -29,6 +29,12 @@ let SystemConfigController = class SystemConfigController {
     updateAuth(body) {
         return this.systemConfigService.updateAuthConfig(body);
     }
+    getQueueConfig() {
+        return this.systemConfigService.getQueueConfig();
+    }
+    updateQueueConfig(body) {
+        return this.systemConfigService.updateQueueConfig(body);
+    }
     getPayment() {
         return this.systemConfigService.getPaymentMethods();
     }
@@ -68,6 +74,19 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], SystemConfigController.prototype, "updateAuth", null);
+__decorate([
+    Get('queue'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "getQueueConfig", null);
+__decorate([
+    Patch('queue'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "updateQueueConfig", null);
 __decorate([
     Get('payment'),
     __metadata("design:type", Function),

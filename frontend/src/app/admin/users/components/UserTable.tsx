@@ -6,7 +6,7 @@ import { useAdminRole } from '@/context/AdminRoleContext';
 import { ShieldAlert, Search, Trash2, Edit2, Check, X, User, Plus } from 'lucide-react';
 
 export default function UserTable({ title, subtitle, allowedRoles }: { title: string, subtitle: string, allowedRoles?: string[] }) {
-  const { allUsers, deleteUser, updateUserRole } = useAuth();
+  const { allUsers, deleteUser, updateUserRole, addUser } = useAuth();
   const { canEdit } = useAdminRole();
   const hasEditPermission = canEdit('users');
 
@@ -50,7 +50,7 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
     if (!hasEditPermission) return;
     setIsSubmitting(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
@@ -62,8 +62,10 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
       });
       if (!res.ok) throw new Error('Failed to create staff');
       
-      // Refresh page or we can rely on context, but let's just reload to fetch new data
-      window.location.reload();
+      const data = await res.json();
+      if (data && data.user) addUser(data.user);
+      setShowAddModal(false);
+      setNewStaff({ name: '', email: '', password: '', role: 'super_admin' });
     } catch (err) {
       console.error(err);
       alert('Error creating staff account');

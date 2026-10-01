@@ -21,17 +21,15 @@ export declare class AdminBusinessService {
             withdrawn: number;
             owedToPlatform: number;
         } | null;
-        businessType: string;
-        sector: string | null;
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
         businessCode: string | null;
         userId: string;
+        name: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
+        sector: string | null;
         address: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -39,6 +37,8 @@ export declare class AdminBusinessService {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -52,17 +52,15 @@ export declare class AdminBusinessService {
         subscriptionStartDate: Date | null;
         subscriptionEndDate: Date | null;
     }): Promise<{
-        businessType: string;
-        sector: string | null;
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
         businessCode: string | null;
         userId: string;
+        name: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
+        sector: string | null;
         address: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -70,6 +68,8 @@ export declare class AdminBusinessService {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -85,17 +85,15 @@ export declare class AdminBusinessService {
         subscriptionStartDate: Date | null;
         subscriptionEndDate: Date | null;
     }): Promise<{
-        businessType: string;
-        sector: string | null;
         id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
         businessCode: string | null;
         userId: string;
+        name: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
+        businessType: string;
+        sector: string | null;
         address: string | null;
         pincode: string | null;
         latitude: number | null;
@@ -103,6 +101,8 @@ export declare class AdminBusinessService {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -110,5 +110,73 @@ export declare class AdminBusinessService {
         subscriptionStatus: string;
         subscriptionStartDate: Date | null;
         subscriptionEndDate: Date | null;
+    }>;
+    getAllBranches(): Promise<({
+        business: {
+            id: string;
+            businessCode: string | null;
+            userId: string;
+            name: string;
+            logo: string | null;
+            description: string | null;
+            businessModel: import(".prisma/client").$Enums.MainType;
+            businessType: string;
+            sector: string | null;
+            address: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
+            gstNumber: string | null;
+            businessHours: import("@prisma/client/runtime/library").JsonValue | null;
+            verified: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            capabilities: string[];
+            maxListings: number;
+            commissionType: string;
+            commissionRate: number;
+            subscriptionStatus: string;
+            subscriptionStartDate: Date | null;
+            subscriptionEndDate: Date | null;
+        };
+    } & {
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        businessId: string;
+        status: string;
+    })[]>;
+    createBranch(data: {
+        name: string;
+        status: string;
+        businessId: string;
+    }): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        businessId: string;
+        status: string;
+    }>;
+    updateBranch(id: string, data: {
+        name?: string;
+        status?: string;
+        businessId?: string;
+    }): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        businessId: string;
+        status: string;
+    }>;
+    deleteBranch(id: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        businessId: string;
+        status: string;
     }>;
 }

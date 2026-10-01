@@ -24,7 +24,7 @@ export default function AdminDashboardPage() {
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
   // Calculate Users
   const activeSellers = allUsers.filter(u => u.role === 'business' || u.role === 'seller' || u.role === 'SELLER').length;
@@ -92,62 +92,62 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
         <div>
-          <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">Platform Health</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">Platform Health</h1>
           <p className="text-slate-400 mt-2 text-sm font-medium">Real-time metrics for MarkatVerse ecosystem.</p>
         </div>
       </header>
 
       {/* Top Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
-        <div className="group bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 hover:from-indigo-500/20 hover:to-indigo-600/10 p-6 rounded-3xl border border-indigo-500/20 hover:border-indigo-500/40 shadow-xl hover:shadow-indigo-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-10 relative z-10">
+        <div className="group bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 hover:from-indigo-500/20 hover:to-indigo-600/10 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-indigo-500/20 hover:border-indigo-500/40 shadow-xl hover:shadow-indigo-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/30 transition-colors"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="text-indigo-400 font-bold text-sm flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" /> Total Gross Volume
+          <div className="flex justify-between items-start mb-2 md:mb-4 relative z-10">
+            <div className="text-indigo-400 font-bold text-[10px] md:text-sm flex items-center gap-1 md:gap-2">
+              <TrendingUp className="w-3 h-3 md:w-5 md:h-5" /> Gross Vol
             </div>
           </div>
-          <div className="text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">₹{totalVolume.toLocaleString()}</div>
-          <div className="text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-400 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_8px_rgba(129,140,248,0.8)]"></span> Live Data
+          <div className="text-xl md:text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">₹{totalVolume.toLocaleString()}</div>
+          <div className="text-[8px] md:text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
+            <span className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_8px_rgba(129,140,248,0.8)]"></span> Live
           </div>
         </div>
         
-        <div className="group bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 hover:from-emerald-500/20 hover:to-emerald-600/10 p-6 rounded-3xl border border-emerald-500/20 hover:border-emerald-500/40 shadow-xl hover:shadow-emerald-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+        <div className="group bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 hover:from-emerald-500/20 hover:to-emerald-600/10 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-emerald-500/20 hover:border-emerald-500/40 shadow-xl hover:shadow-emerald-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-500/30 transition-colors"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="text-emerald-400 font-bold text-sm flex items-center gap-2">
-              <DollarSign className="w-5 h-5" /> Est. Platform Revenue
+          <div className="flex justify-between items-start mb-2 md:mb-4 relative z-10">
+            <div className="text-emerald-400 font-bold text-[10px] md:text-sm flex items-center gap-1 md:gap-2">
+              <DollarSign className="w-3 h-3 md:w-5 md:h-5" /> Revenue
             </div>
           </div>
-          <div className="text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">₹{totalPlatformRevenue.toLocaleString()}</div>
-          <div className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span> @ 5% Commission
+          <div className="text-xl md:text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">₹{totalPlatformRevenue.toLocaleString()}</div>
+          <div className="text-[8px] md:text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
+            <span className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span> @ 5%
           </div>
         </div>
 
-        <div className="group bg-gradient-to-br from-amber-500/10 to-amber-600/5 hover:from-amber-500/20 hover:to-amber-600/10 p-6 rounded-3xl border border-amber-500/20 hover:border-amber-500/40 shadow-xl hover:shadow-amber-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+        <div className="group bg-gradient-to-br from-amber-500/10 to-amber-600/5 hover:from-amber-500/20 hover:to-amber-600/10 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-amber-500/20 hover:border-amber-500/40 shadow-xl hover:shadow-amber-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl group-hover:bg-amber-500/30 transition-colors"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="text-amber-400 font-bold text-sm flex items-center gap-2">
-              <Store className="w-5 h-5" /> Active Sellers
+          <div className="flex justify-between items-start mb-2 md:mb-4 relative z-10">
+            <div className="text-amber-400 font-bold text-[10px] md:text-sm flex items-center gap-1 md:gap-2">
+              <Store className="w-3 h-3 md:w-5 md:h-5" /> Sellers
             </div>
           </div>
-          <div className="text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">{activeSellers}</div>
-          <div className="text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]"></span> Live Data
+          <div className="text-xl md:text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">{activeSellers}</div>
+          <div className="text-[8px] md:text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 px-2 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
+            <span className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.8)]"></span> Live
           </div>
         </div>
 
-        <div className="group bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 hover:from-cyan-500/20 hover:to-cyan-600/10 p-6 rounded-3xl border border-cyan-500/20 hover:border-cyan-500/40 shadow-xl hover:shadow-cyan-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
+        <div className="group bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 hover:from-cyan-500/20 hover:to-cyan-600/10 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-cyan-500/20 hover:border-cyan-500/40 shadow-xl hover:shadow-cyan-500/20 relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/30 transition-colors"></div>
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="text-cyan-400 font-bold text-sm flex items-center gap-2">
-              <Users className="w-5 h-5" /> Total Buyers
+          <div className="flex justify-between items-start mb-2 md:mb-4 relative z-10">
+            <div className="text-cyan-400 font-bold text-[10px] md:text-sm flex items-center gap-1 md:gap-2">
+              <Users className="w-3 h-3 md:w-5 md:h-5" /> Buyers
             </div>
           </div>
-          <div className="text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">{activeBuyers}</div>
-          <div className="text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 px-2.5 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span> Live Data
+          <div className="text-xl md:text-3xl font-black text-white mb-2 relative z-10 drop-shadow-md">{activeBuyers}</div>
+          <div className="text-[8px] md:text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded-full w-fit flex items-center gap-1.5 relative z-10">
+            <span className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span> Live
           </div>
         </div>
       </div>
@@ -161,8 +161,8 @@ export default function AdminDashboardPage() {
             backgroundSize: '40px 40px'
           }}></div>
           
-          <div className="p-6 border-b border-white/5 bg-slate-900/50 relative z-10 flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white flex items-center gap-3">
+          <div className="p-4 md:p-6 border-b border-white/5 bg-slate-900/50 relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <h3 className="text-lg md:text-xl font-bold text-white flex items-center gap-3">
               Recent Transactions 
               <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_15px_rgba(52,211,153,0.15)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span> LIVE
@@ -170,32 +170,32 @@ export default function AdminDashboardPage() {
             </h3>
           </div>
 
-          <div className="p-0 overflow-y-auto relative z-10 flex-1">
+          <div className="p-0 overflow-x-auto relative z-10 flex-1">
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center h-full opacity-50 py-20">
+              <div className="flex flex-col items-center justify-center h-full opacity-50 py-20 min-w-[500px]">
                 <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <div className="font-bold text-white">Aggregating live ledgers...</div>
               </div>
             ) : recentTransactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full opacity-50 py-20">
+              <div className="flex flex-col items-center justify-center h-full opacity-50 py-20 min-w-[500px]">
                 <Activity className="w-12 h-12 mb-4 text-slate-500" />
                 <div className="font-bold text-white">Waiting for transactions</div>
-                <div className="text-sm text-slate-400 mt-1">New transactions will appear here in real-time as they are processed on the platform.</div>
+                <div className="text-sm text-slate-400 mt-1 text-center px-4">New transactions will appear here in real-time as they are processed on the platform.</div>
               </div>
             ) : (
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[500px]">
                 <thead className="bg-slate-900/80 sticky top-0 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
                   <tr>
-                    <th className="p-4 pl-6">Seller</th>
+                    <th className="p-4 pl-4 md:pl-6">Seller</th>
                     <th className="p-4">Type</th>
                     <th className="p-4">Amount</th>
-                    <th className="p-4 pr-6 text-right">Time</th>
+                    <th className="p-4 pr-4 md:pr-6 text-right">Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {recentTransactions.map(tx => (
                     <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors group">
-                      <td className="p-4 pl-6 relative">
+                      <td className="p-4 pl-4 md:pl-6 relative">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-indigo-500 transition-colors"></div>
                         <div className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">{tx.sellerName}</div>
                         <div className="text-[10px] mt-1 font-mono flex items-center">
@@ -218,7 +218,7 @@ export default function AdminDashboardPage() {
                           {tx.type === 'EARNING' ? '+' : '-'}₹{tx.amount}
                         </div>
                       </td>
-                      <td className="p-4 pr-6 text-right text-xs font-medium text-slate-500">
+                      <td className="p-4 pr-4 md:pr-6 text-right text-xs font-medium text-slate-500">
                         {new Date(tx.createdAt).toLocaleTimeString()}
                       </td>
                     </tr>

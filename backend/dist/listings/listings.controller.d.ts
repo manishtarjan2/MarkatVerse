@@ -15,6 +15,7 @@ export declare class ListingsController {
             primaryType: string | null;
             allowedListingTypes: string[];
             businessModels: string[];
+            workflowId: string | null;
             allowedFeatures: string[];
             notApplicable: string[];
             optionalFeatures: string[];
@@ -50,9 +51,9 @@ export declare class ListingsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         sellerId: string;
         status: string;
+        description: string | null;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
@@ -75,6 +76,7 @@ export declare class ListingsController {
             primaryType: string | null;
             allowedListingTypes: string[];
             businessModels: string[];
+            workflowId: string | null;
             allowedFeatures: string[];
             notApplicable: string[];
             optionalFeatures: string[];
@@ -110,9 +112,9 @@ export declare class ListingsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         sellerId: string;
         status: string;
+        description: string | null;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
@@ -126,9 +128,9 @@ export declare class ListingsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         sellerId: string;
         status: string;
+        description: string | null;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
@@ -142,9 +144,9 @@ export declare class ListingsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         sellerId: string;
         status: string;
+        description: string | null;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
@@ -158,9 +160,9 @@ export declare class ListingsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         sellerId: string;
         status: string;
+        description: string | null;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;

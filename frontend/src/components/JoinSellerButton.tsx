@@ -6,8 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 export default function JoinSellerButton() {
   const { user, isLoading } = useAuth();
 
-  // role can be stored as 'seller', 'SELLER', or 'business' depending on login path
-  const isSeller = ['seller', 'SELLER', 'business'].includes(user?.role ?? '');
+  // role can be stored as 'seller', 'SELLER', 'business', or 'elite' depending on login path
+  const isSeller = ['seller', 'SELLER', 'business', 'elite', 'ELITE'].includes(user?.role ?? '');
   const targetUrl = isSeller ? '/seller/dashboard' : '/seller/onboarding';
 
   // While auth is resolving, show a skeleton so no wrong label flashes

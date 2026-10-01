@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Edit } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
 export default function SecuritygtLoginsPage() {
   const [logins, setLogins] = useState<any[]>([]);
@@ -108,3 +108,4 @@ export default function SecuritygtLoginsPage() {
     </div>
   );
 }
+

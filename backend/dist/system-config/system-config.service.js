@@ -63,6 +63,27 @@ let SystemConfigService = class SystemConfigService {
         }
         return this.getAuthConfig();
     }
+    async getQueueConfig() {
+        const speed = await this.prisma.systemConfig.findUnique({ where: { key: 'QUEUE_TRAVEL_SPEED_KMH' } });
+        const buffer = await this.prisma.systemConfig.findUnique({ where: { key: 'QUEUE_NOTIFICATION_BUFFER_MIN' } });
+        return {
+            travelSpeedKmh: speed?.value ? parseInt(speed.value) : 30,
+            notificationBufferMin: buffer?.value ? parseInt(buffer.value) : 5,
+        };
+    }
+    async updateQueueConfig(data) {
+        await this.prisma.systemConfig.upsert({
+            where: { key: 'QUEUE_TRAVEL_SPEED_KMH' },
+            update: { value: String(data.travelSpeedKmh) },
+            create: { key: 'QUEUE_TRAVEL_SPEED_KMH', value: String(data.travelSpeedKmh), description: 'Average city travel speed (km/h)' },
+        });
+        await this.prisma.systemConfig.upsert({
+            where: { key: 'QUEUE_NOTIFICATION_BUFFER_MIN' },
+            update: { value: String(data.notificationBufferMin) },
+            create: { key: 'QUEUE_NOTIFICATION_BUFFER_MIN', value: String(data.notificationBufferMin), description: 'Buffer time (minutes) for queue notifications' },
+        });
+        return this.getQueueConfig();
+    }
     async getPaymentMethods() {
         const record = await this.prisma.systemConfig.findUnique({ where: { key: 'PAYMENT_METHODS' } });
         if (!record)

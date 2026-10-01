@@ -17,8 +17,8 @@ let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    signup(data) {
-        return this.authService.signup(data);
+    signup(data, authHeader) {
+        return this.authService.signup(data, authHeader);
     }
     login(data) {
         return this.authService.login(data);
@@ -55,8 +55,9 @@ let AuthController = class AuthController {
 __decorate([
     Post('signup'),
     __param(0, Body()),
+    __param(1, Headers('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "signup", null);
 __decorate([

@@ -25,6 +25,17 @@ export class SystemConfigController {
     return this.systemConfigService.updateAuthConfig(body);
   }
 
+  // --- Queue Config ---
+  @Get('queue')
+  getQueueConfig() {
+    return this.systemConfigService.getQueueConfig();
+  }
+
+  @Patch('queue')
+  updateQueueConfig(@Body() body: { travelSpeedKmh: number; notificationBufferMin: number }) {
+    return this.systemConfigService.updateQueueConfig(body);
+  }
+
   // --- Payment Endpoints ---
 
   @Get('payment')

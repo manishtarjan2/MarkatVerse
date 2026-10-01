@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, X, Check, Search, CreditCard } from 'lucide-react';
 
 export default function SettingsPaymentPage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
   const [methods, setMethods] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -266,3 +266,4 @@ export default function SettingsPaymentPage() {
     </div>
   );
 }
+

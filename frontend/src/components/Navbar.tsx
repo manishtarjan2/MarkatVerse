@@ -96,7 +96,7 @@ export default function Navbar() {
                         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`, {
                           headers: { 'User-Agent': 'MarkatVerse/1.0' }
                         });
-                        const data = await res.json();
+                        const data = res.ok ? await res.json() : null;
 
                         if (data && data.address) {
                           const houseNumber = data.address.house_number || data.address.building || '';
@@ -187,9 +187,16 @@ export default function Navbar() {
                 <div className="w-5 h-5 bg-slate-200 rounded animate-pulse"></div>
                 <div className="hidden lg:block w-16 h-3 bg-slate-200 rounded animate-pulse mt-1"></div>
               </div>
-            ) : !user && (
-              // Not logged in: show Become a Seller
-              <Link href="/seller/login" className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
+            ) : user && (user.role === 'seller' || user.role === 'business' || user.role === 'SELLER' || user.role === 'elite' || user.role === 'ELITE') ? (
+              // Logged in as Seller
+              <Link href="/seller/dashboard" className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
+                <Store className="w-5 h-5 group-hover:scale-110 transition-transform text-indigo-600" strokeWidth={1.5} />
+                <span className="hidden lg:block text-[11px] font-bold text-indigo-600">Seller Dashboard</span>
+                <span className="lg:hidden text-[10px] font-bold text-indigo-600">Dashboard</span>
+              </Link>
+            ) : (
+              // Not logged in or Logged in as Buyer: show Become a Seller
+              <Link href={user ? "/seller/onboarding" : "/seller/login"} className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors group ml-2">
                 <Store className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
                 <span className="hidden lg:block text-[11px] font-medium">Become a Seller</span>
                 <span className="lg:hidden text-[10px] font-medium">Seller</span>

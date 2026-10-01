@@ -20,7 +20,7 @@ export default function SettingsPlatformPage() {
   React.useEffect(() => {
     const fetchDummyStatus = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
         const res = await fetch(`${API_URL}/products/dummy-status`);
         if (res.ok) {
           const data = await res.json();
@@ -58,12 +58,17 @@ export default function SettingsPlatformPage() {
     if (!hasTogglePermission) return;
     const enable = !isDummyActive;
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    await fetch(`${API_URL}/products/toggle-dummy`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enable })
-    });
-    window.location.reload();
+    setIsDummyActive(enable);
+    try {
+      await fetch(`${API_URL}/products/toggle-dummy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enable })
+      });
+    } catch (e) {
+      setIsDummyActive(!enable);
+      alert('Failed to toggle dummy data');
+    }
   };
 
   return (

@@ -166,18 +166,32 @@ export class SellersService {
       });
     }
 
-    return this.prisma.business.update({
+    const updatedBusiness = await this.prisma.business.update({
       where: { userId },
       data: {
         name: data.businessName !== undefined ? data.businessName : undefined,
         address: data.address !== undefined ? data.address : undefined,
         pincode: data.pincode !== undefined ? data.pincode : undefined,
+        latitude: data.latitude !== undefined ? data.latitude : undefined,
+        longitude: data.longitude !== undefined ? data.longitude : undefined,
         gstNumber: data.gstNumber !== undefined ? data.gstNumber : undefined,
         maxListings: data.maxListings !== undefined ? Number(data.maxListings) : undefined,
         commissionType: data.commissionType !== undefined ? data.commissionType : undefined,
         commissionRate: data.commissionRate !== undefined ? Number(data.commissionRate) : undefined,
       }
     });
+
+    if (data.latitude !== undefined || data.longitude !== undefined) {
+      await this.prisma.product.updateMany({
+        where: { sellerId: userId },
+        data: {
+          latitude: data.latitude,
+          longitude: data.longitude
+        }
+      });
+    }
+
+    return updatedBusiness;
   }
 
   async removeUser(userId: string) {

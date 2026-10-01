@@ -17,6 +17,9 @@ let AnalyticsController = class AnalyticsController {
     getSummary() {
         return this.analyticsService.getSummary();
     }
+    getFinanceData() {
+        return this.analyticsService.getFinanceData();
+    }
 };
 __decorate([
     Get('summary'),
@@ -24,6 +27,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AnalyticsController.prototype, "getSummary", null);
+__decorate([
+    Get('finance'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AnalyticsController.prototype, "getFinanceData", null);
 AnalyticsController = __decorate([
     Controller('admin/analytics'),
     __metadata("design:paramtypes", [AnalyticsService])

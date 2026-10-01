@@ -57,6 +57,21 @@ let AdminBusinessService = class AdminBusinessService {
             data
         });
     }
+    async getAllBranches() {
+        return this.prisma.branch.findMany({
+            include: { business: true },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+    async createBranch(data) {
+        return this.prisma.branch.create({ data });
+    }
+    async updateBranch(id, data) {
+        return this.prisma.branch.update({ where: { id }, data });
+    }
+    async deleteBranch(id) {
+        return this.prisma.branch.delete({ where: { id } });
+    }
 };
 AdminBusinessService = __decorate([
     Injectable(),

@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { AdminBusinessService } from './admin-business.service.js';
 
 @Controller('admin/businesses')
@@ -9,6 +9,28 @@ export class AdminBusinessController {
   getAllBusinesses() {
     return this.adminBusinessService.getAllBusinesses();
   }
+
+  // --- BRANCHES ---
+  @Get('branches')
+  getAllBranches() {
+    return this.adminBusinessService.getAllBranches();
+  }
+
+  @Post('branches')
+  createBranch(@Body() body: { name: string, status: string, businessId: string }) {
+    return this.adminBusinessService.createBranch(body);
+  }
+
+  @Patch('branches/:id')
+  updateBranch(@Param('id') id: string, @Body() body: { name?: string, status?: string, businessId?: string }) {
+    return this.adminBusinessService.updateBranch(id, body);
+  }
+
+  @Delete('branches/:id')
+  deleteBranch(@Param('id') id: string) {
+    return this.adminBusinessService.deleteBranch(id);
+  }
+  // ----------------
 
   @Patch(':id/subscription')
   updateSubscription(

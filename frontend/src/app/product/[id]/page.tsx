@@ -13,7 +13,14 @@ import ReviewsSection from '@/components/ReviewsSection';
 import StarRating from '@/components/StarRating';
 import AdvertisementWidget from '@/components/AdvertisementWidget';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const getApiUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== 'undefined') {
+    return `http://${window.location.hostname}:3001`;
+  }
+  return 'http://localhost:3001';
+};
+const API_URL = getApiUrl();
 
 export default function ProductDetails() {
   const params = useParams();
@@ -26,7 +33,7 @@ export default function ProductDetails() {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [activeImage, setActiveImage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rfqQuantity, setRfqQuantity] = useState(1);
+  const [rfqQuantity, setRfqQuantity] = useState<number | ''>(1);
   const [bundleMultiplier, setBundleMultiplier] = useState(1);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [rfqMessage, setRfqMessage] = useState('');
@@ -39,12 +46,13 @@ export default function ProductDetails() {
   const hasProductStock    = rules.allows('Product Stock');
   const hasB2B             = rules.allows('B2B');
   const hasBulkPricing     = rules.allows('Bulk Pricing') || rules.allows('MOQ');
-  const hasToken           = rules.allows('Token');
-  const hasAppointment     = rules.allows('Appointment');
+  const sellerBookingModel = (product?.parameters as any)?.bookingModel;
+  const hasToken           = rules.allows('Token') || sellerBookingModel === 'TOKEN';
+  const hasAppointment     = rules.allows('Appointment') || sellerBookingModel === 'APPOINTMENT';
   const hasRFQ             = rules.allows('RFQ') || rules.allows('Quote');
   const hasMeeting         = rules.allows('Meeting') || rules.isOptional('Meeting');
   const hasVehicleTestDrive = rules.allows('Vehicle Test Drive');
-  const hasService         = rules.allows('Service');
+  const hasService         = rules.allows('Service') || product?.primaryType === 'SERVICE';
 
   const requireAuth = (action: () => void) => {
     if (!user) {
@@ -98,12 +106,12 @@ export default function ProductDetails() {
   const WALK_IN_CATEGORIES = ['salon', 'saloon', 'beauty', 'hair', 'barber', 'spa', 'nail', 'massage', 'pedicure', 'doctor', 'clinic', 'medical', 'hospital', 'dentist'];
   const isServiceQueue = product ? WALK_IN_CATEGORIES.some(c => product.category?.toLowerCase().includes(c) || product.subcategory?.toLowerCase().includes(c)) : false;
 
-  const isRetail = noRulesDefined
+  const isRetail = product?.primaryType === 'SERVICE' ? false : (noRulesDefined
     ? !['Services', 'Home Services', 'Organizers', 'Transport', 'Rentals', 'Subscriptions', 'B2B', 'Construction Materials'].includes(product?.category || '')
-    : hasProductStock;
-  const isWholesaleConfig = noRulesDefined
+    : hasProductStock);
+  const isWholesaleConfig = product?.primaryType === 'SERVICE' ? false : (noRulesDefined
     ? (product?.category === 'B2B' || product?.category === 'Construction Materials' || (isRetail && isElite))
-    : ((hasB2B && hasBulkPricing) || (isRetail && isElite));
+    : ((hasB2B && hasBulkPricing) || (isRetail && isElite)));
   
   if (product && !activeOption) { // Only apply wholesale logic if not using dynamic options
     if (isWholesaleConfig) {
@@ -694,7 +702,7 @@ export default function ProductDetails() {
                       <select
                         className="h-[48px] px-4 font-bold text-slate-800 bg-white border border-slate-300 rounded-xl outline-none focus:border-blue-500 cursor-pointer shadow-sm w-full sm:w-auto"
                         value={rfqQuantity}
-                        onChange={(e) => { setRfqQuantity(parseInt(e.target.value)); setBundleMultiplier(1); }}
+                        onChange={(e) => { setRfqQuantity(e.target.value === '' ? '' : parseInt(e.target.value)); setBundleMultiplier(1); }}
                       >
                         {isRetail && isElite && <option value={1}>1 Unit (Retail)</option>}
                         {product.wholesaleTiers && product.wholesaleTiers.length > 0 ? (
@@ -756,7 +764,7 @@ export default function ProductDetails() {
                   <div className="text-amber-900 font-bold text-sm mb-1">Request for Quotation</div>
                   <div className="flex gap-2 items-center bg-white border border-amber-200 p-2 rounded-xl shadow-sm">
                     <label className="text-xs font-semibold text-slate-600 px-2 whitespace-nowrap">Qty Needed:</label>
-                    <input type="number" value={rfqQuantity} onChange={e => setRfqQuantity(parseInt(e.target.value) || 1)} min="1" className="flex-1 p-2 outline-none text-slate-800 font-bold bg-transparent" />
+                    <input type="number" value={rfqQuantity} onChange={e => setRfqQuantity(e.target.value === '' ? '' : parseInt(e.target.value))} min="1" className="flex-1 p-2 outline-none text-slate-800 font-bold bg-transparent" />
                   </div>
                   <textarea
                     value={rfqMessage}
@@ -834,12 +842,11 @@ export default function ProductDetails() {
           <div className="mb-10">
             <h3 className="text-lg font-bold text-slate-900 mb-4">Important Details</h3>
             <ul className="pl-5 text-slate-600 leading-loose list-disc">
-              {isServiceQueue ? (
+              {(isServiceQueue || product?.primaryType === 'SERVICE') ? (
                 <>
                   <li>Please arrive 5 minutes prior to your booking.</li>
                   <li>Rescheduling is allowed up to 1 hour before the time.</li>
                   <li>Cancellations are subject to standard policies.</li>
-                  <li>You can track your live queue status directly on your dashboard.</li>
                   <li>Ensure you provide the correct contact details while booking.</li>
                 </>
               ) : (
@@ -908,7 +915,7 @@ export default function ProductDetails() {
                 <input 
                   type="number" 
                   value={rfqQuantity}
-                  onChange={(e) => setRfqQuantity(parseInt(e.target.value) || 1)}
+                  onChange={(e) => setRfqQuantity(e.target.value === '' ? '' : parseInt(e.target.value))}
                   min={product.moq || 1}
                   className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-blue-500" 
                 />

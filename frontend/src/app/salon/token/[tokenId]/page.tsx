@@ -72,6 +72,69 @@ export default function TokenTrackerPage() {
     return () => { clearInterval(interval); clearInterval(tick); };
   }, [fetchStatus]);
 
+  // ── Smart Notifications (Distance & Travel Time) ────────────────────────────────
+  const [hasNotified, setHasNotified] = useState(false);
+  const [queueConfig, setQueueConfig] = useState({ travelSpeedKmh: 30, notificationBufferMin: 5 });
+
+  useEffect(() => {
+    // Fetch dynamic config from admin settings
+    fetch(`${API}/system-config/queue`)
+      .then(res => res.json())
+      .then(cfg => {
+        if (cfg) setQueueConfig({ travelSpeedKmh: cfg.travelSpeedKmh || 30, notificationBufferMin: cfg.notificationBufferMin || 5 });
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!data || !data.queue || hasNotified) return;
+    
+    // Only proceed if queue has location and user is waiting
+    if (data.token.status !== 'WAITING' && data.token.status !== 'CHECKED_IN') return;
+    const shopLat = (data.queue as any).latitude;
+    const shopLng = (data.queue as any).longitude;
+    if (!shopLat || !shopLng) return;
+
+    const checkDistance = () => {
+      if ('geolocation' in navigator && 'Notification' in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            navigator.geolocation.getCurrentPosition(position => {
+              const userLat = position.coords.latitude;
+              const userLng = position.coords.longitude;
+              
+              // Haversine formula
+              const R = 6371; // km
+              const dLat = (shopLat - userLat) * Math.PI / 180;
+              const dLng = (shopLng - userLng) * Math.PI / 180;
+              const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(userLat * Math.PI / 180) * Math.cos(shopLat * Math.PI / 180) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              const distanceKm = R * c;
+              
+              // Estimate travel time
+              const travelTimeMin = Math.ceil((distanceKm / queueConfig.travelSpeedKmh) * 60);
+              
+              // If it takes longer to travel than the wait time (with buffer), notify!
+              if (travelTimeMin + queueConfig.notificationBufferMin >= data.estimatedWaitMin) {
+                new Notification('Time to go! 🏃', {
+                  body: `Your token #${data.token.tokenNumber} is approaching. Travel time is ~${travelTimeMin} mins, and your wait is ${data.estimatedWaitMin} mins.`,
+                  icon: '/favicon.ico'
+                });
+                setHasNotified(true);
+              }
+            });
+          }
+        });
+      }
+    };
+    
+    checkDistance();
+    const locInterval = setInterval(checkDistance, 60000); // Check every minute
+    return () => clearInterval(locInterval);
+  }, [data, hasNotified, queueConfig]);
+
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">

@@ -19,7 +19,7 @@ export default function DynamicExplorePage({ params }: { params: Promise<{ slug?
   const businessType = slug[1];
   const sector = slug[2];
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
   
   const [hierarchy, setHierarchy] = useState<any>(null);
   const [listings, setListings] = useState<any[]>([]);

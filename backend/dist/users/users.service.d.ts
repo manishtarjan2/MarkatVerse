@@ -25,15 +25,15 @@ export declare class UsersService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
             address: string | null;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;

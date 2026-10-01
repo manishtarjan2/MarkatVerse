@@ -4,12 +4,13 @@ import React, { useState } from 'react';
 import { useProducts, Category } from '@/context/ProductContext';
 import { useAdminRole } from '@/context/AdminRoleContext';
 import { ShieldAlert, Search, Trash2, Edit2, Plus, ListTree, Check, X, RefreshCw, Smartphone, Hammer, Tractor, Scissors, HeartPulse, Home, Shirt, Car, Pizza, Wrench, Box } from 'lucide-react';
+import HierarchyBuilder from './HierarchyBuilder';
 
 export default function AdminCategoriesPage() {
-  const { categories, addCategory, updateCategory, deleteCategory } = useProducts();
+  const { allCategories, addCategory, updateCategory, deleteCategory } = useProducts();
   const { canEdit } = useAdminRole();
   const hasEditPermission = canEdit('categories');
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase();
@@ -59,17 +60,15 @@ export default function AdminCategoriesPage() {
   
   // Local state for JSON editor strings
   const [parametersJson, setParametersJson] = useState('[]');
-  const [subcategoriesJson, setSubcategoriesJson] = useState('[]');
 
-  const filteredCategories = categories.filter(c => 
+  const filteredCategories = allCategories.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleStartAdd = () => {
     if (!hasEditPermission) return;
-    setDraft({ name: '', theme: 'slate', icon: '', primaryType: 'PRODUCT', defaultCommissionRate: 5.0, defaultFlatRate: 999.0, parameters: [], subcategories: [] });
+    setDraft({ name: '', theme: 'slate', icon: '', primaryType: 'PRODUCT', defaultCommissionRate: 5.0, defaultFlatRate: 999.0, parameters: [], subcategories: [], businessModels: [], allowedListingTypes: [] });
     setParametersJson('[]');
-    setSubcategoriesJson('[]');
     setIsAdding(true);
     setEditingId(null);
   };
@@ -78,7 +77,6 @@ export default function AdminCategoriesPage() {
     if (!hasEditPermission) return;
     setDraft({ ...cat });
     setParametersJson(JSON.stringify(cat.parameters || [], null, 2));
-    setSubcategoriesJson(JSON.stringify(cat.subcategories || [], null, 2));
     setEditingId(cat.id);
     setIsAdding(false);
   };
@@ -88,10 +86,8 @@ export default function AdminCategoriesPage() {
     if (!draft.name) return alert('Name is required');
 
     let parsedParameters = [];
-    let parsedSubcategories = [];
     try {
       parsedParameters = JSON.parse(parametersJson);
-      parsedSubcategories = JSON.parse(subcategoriesJson);
     } catch (e) {
       return alert('Invalid JSON in Parameters or Subcategories. Please fix the formatting.');
     }
@@ -99,7 +95,6 @@ export default function AdminCategoriesPage() {
     const payloadToSave = {
       ...draft,
       parameters: parsedParameters,
-      subcategories: parsedSubcategories
     };
 
     if (isAdding) {
@@ -234,45 +229,47 @@ export default function AdminCategoriesPage() {
             <div className="col-span-1 sm:col-span-2 lg:col-span-4 border-t border-slate-700 pt-4 mt-2">
               <h4 className="text-sm font-bold text-slate-300 mb-3">Relationship Rules</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Business Models (comma separated)</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. B2C, B2B, Appointment"
-                    value={draft.businessModels?.join(', ') || ''}
-                    onChange={e => setDraft(d => ({ ...d, businessModels: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) as any }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
-                  />
+                <div className="col-span-1 sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-400 mb-2 uppercase">Business Models</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['B2C', 'B2B', 'Appointment', 'Quote'].map(model => (
+                      <label key={model} className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 cursor-pointer hover:border-indigo-500 transition-colors">
+                        <input 
+                          type="checkbox"
+                          checked={draft.businessModels?.includes(model as any) || false}
+                          onChange={e => {
+                            const newModels = new Set(draft.businessModels || []);
+                            if (e.target.checked) newModels.add(model as any);
+                            else newModels.delete(model as any);
+                            setDraft(d => ({ ...d, businessModels: Array.from(newModels) as any }));
+                          }}
+                          className="accent-indigo-500"
+                        />
+                        <span className="text-sm text-slate-300">{model}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Workflow</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Standard Delivery, Booking"
-                    value={draft.workflow || ''}
-                    onChange={e => setDraft(d => ({ ...d, workflow: e.target.value }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Allowed Features (comma separated)</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Service, Token"
-                    value={draft.allowedFeatures?.join(', ') || ''}
-                    onChange={e => setDraft(d => ({ ...d, allowedFeatures: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) as any }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Listing Types (comma separated)</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Product, Service"
-                    value={draft.allowedListingTypes?.join(', ') || ''}
-                    onChange={e => setDraft(d => ({ ...d, allowedListingTypes: e.target.value.split(',').map(s=>s.trim()).filter(Boolean) as any }))}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" 
-                  />
+                <div className="col-span-1 sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-400 mb-2 uppercase">Seller Roles (Listing Types)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Wholesaler', 'Manufacturer', 'Retailer', 'Service Provider'].map(role => (
+                      <label key={role} className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 cursor-pointer hover:border-indigo-500 transition-colors">
+                        <input 
+                          type="checkbox"
+                          checked={draft.allowedListingTypes?.includes(role as any) || false}
+                          onChange={e => {
+                            const newRoles = new Set(draft.allowedListingTypes || []);
+                            if (e.target.checked) newRoles.add(role as any);
+                            else newRoles.delete(role as any);
+                            setDraft(d => ({ ...d, allowedListingTypes: Array.from(newRoles) as any }));
+                          }}
+                          className="accent-indigo-500"
+                        />
+                        <span className="text-sm text-slate-300">{role}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -299,19 +296,13 @@ export default function AdminCategoriesPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase flex justify-between">
-                    <span>Subcategories (JSON)</span>
-                    <button type="button" onClick={() => {
-                      try { setSubcategoriesJson(JSON.stringify(JSON.parse(subcategoriesJson), null, 2)); } catch(e) { alert("Invalid JSON"); }
-                    }} className="text-indigo-400 hover:text-indigo-300 normal-case">Format JSON</button>
+                    <span>Hierarchy (Subcategories & Specializations)</span>
                   </label>
-                  <textarea
-                    rows={8}
-                    value={subcategoriesJson}
-                    onChange={e => setSubcategoriesJson(e.target.value)}
-                    placeholder='[\n  {\n    "name": "Smartphones",\n    "parameters": []\n  }\n]'
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 font-mono text-xs focus:outline-none focus:border-indigo-500"
+                  <HierarchyBuilder 
+                    subcategories={draft.subcategories || []} 
+                    onChange={subcats => setDraft(d => ({ ...d, subcategories: subcats }))} 
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">Defines the subcategory hierarchy and their specific parameters.</p>
+                  <p className="text-[10px] text-slate-500 mt-1">Visually structure your Subcategories and their Nested Specializations.</p>
                 </div>
               </div>
             </div>
@@ -381,7 +372,7 @@ export default function AdminCategoriesPage() {
                   </td>
                   <td className="p-4 pr-6 text-right">
                     {hasEditPermission && (
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-2 transition-opacity">
                         <button 
                           onClick={() => handleSyncBilling(cat.id)}
                           title="Apply Billing Defaults to Sellers"

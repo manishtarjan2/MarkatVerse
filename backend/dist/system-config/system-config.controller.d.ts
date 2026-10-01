@@ -25,6 +25,17 @@ export declare class SystemConfigController {
         enableGoogle: boolean;
         require2FA: boolean;
     }>;
+    getQueueConfig(): Promise<{
+        travelSpeedKmh: number;
+        notificationBufferMin: number;
+    }>;
+    updateQueueConfig(body: {
+        travelSpeedKmh: number;
+        notificationBufferMin: number;
+    }): Promise<{
+        travelSpeedKmh: number;
+        notificationBufferMin: number;
+    }>;
     getPayment(): Promise<any>;
     addPaymentMethod(body: any): Promise<any[]>;
     updatePaymentMethod(id: string, body: any): Promise<any[]>;

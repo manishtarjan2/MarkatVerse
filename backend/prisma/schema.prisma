@@ -64,6 +64,18 @@ model Business {
   wallet     Wallet?
   features   BusinessFeature[]
   bankAccounts BankAccount[]
+  branches   Branch[]
+}
+
+model Branch {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  businessId   String   @db.ObjectId
+  name         String
+  status       String   @default("Active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business     Business @relation(fields: [businessId], references: [id])
 }
 
 model Category {
@@ -77,6 +89,8 @@ model Category {
   allowedListingTypes String[] @default([])
   businessModels      String[] @default([])
   workflow            String?
+  workflowId          String?  @db.ObjectId
+  workflowRef         Workflow? @relation(fields: [workflowId], references: [id])
   allowedFeatures     String[] @default([])
   notApplicable       String[] @default([])
   optionalFeatures    String[] @default([])
@@ -120,6 +134,7 @@ model Product {
   latitude      Float?
   longitude     Float?
   categoryName  String?
+  type          String   @default("PRODUCT")
   subcategory   String?
   parameters    Json?
   options       Json?
@@ -352,6 +367,7 @@ model Workflow {
   steps       Json     // Array of workflow steps and rules
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  categories  Category[]
 }
 
 model Interface {
@@ -654,5 +670,23 @@ model UserInteraction {
   type      String   // "VIEW" or "CLICK"
   weight    Int      @default(1)
   createdAt DateTime @default(now())
+}
+
+model SmsTemplate {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PushTemplate {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 

@@ -9,4 +9,9 @@ export class AnalyticsController {
   getSummary() {
     return this.analyticsService.getSummary();
   }
+
+  @Get('finance')
+  getFinanceData() {
+    return this.analyticsService.getFinanceData();
+  }
 }

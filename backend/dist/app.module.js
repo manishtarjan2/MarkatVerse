@@ -32,11 +32,12 @@ import { CommercialModule } from './commercial/commercial.module.js';
 import { SupportModule } from './support/support.module.js';
 import { SecurityModule } from './security/security.module.js';
 import { RecommendationsModule } from './recommendations/recommendations.module.js';
+import { NotificationsModule } from './notifications/notifications.module.js';
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
     Module({
-        imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule, AdminModule, WorkflowsModule, IdGeneratorModule, ReviewsModule, SystemConfigModule, ContentModule, CommercialModule, SupportModule, SecurityModule, RecommendationsModule],
+        imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule, AdminModule, WorkflowsModule, IdGeneratorModule, ReviewsModule, SystemConfigModule, ContentModule, CommercialModule, SupportModule, SecurityModule, RecommendationsModule, NotificationsModule],
         controllers: [AppController],
         providers: [AppService],
     })

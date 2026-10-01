@@ -60,4 +60,24 @@ export class AdminBusinessService {
       data
     });
   }
+
+  // Branches
+  async getAllBranches() {
+    return this.prisma.branch.findMany({
+      include: { business: true },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async createBranch(data: { name: string, status: string, businessId: string }) {
+    return this.prisma.branch.create({ data });
+  }
+
+  async updateBranch(id: string, data: { name?: string, status?: string, businessId?: string }) {
+    return this.prisma.branch.update({ where: { id }, data });
+  }
+
+  async deleteBranch(id: string) {
+    return this.prisma.branch.delete({ where: { id } });
+  }
 }

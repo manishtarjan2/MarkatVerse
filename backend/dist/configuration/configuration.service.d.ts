@@ -48,6 +48,7 @@ export declare class ConfigurationService {
             primaryType: string | null;
             allowedListingTypes: string[];
             businessModels: string[];
+            workflowId: string | null;
             allowedFeatures: string[];
             notApplicable: string[];
             optionalFeatures: string[];
@@ -104,6 +105,7 @@ export declare class ConfigurationService {
         primaryType: string | null;
         allowedListingTypes: string[];
         businessModels: string[];
+        workflowId: string | null;
         allowedFeatures: string[];
         notApplicable: string[];
         optionalFeatures: string[];
@@ -129,6 +131,7 @@ export declare class ConfigurationService {
         primaryType: string | null;
         allowedListingTypes: string[];
         businessModels: string[];
+        workflowId: string | null;
         allowedFeatures: string[];
         notApplicable: string[];
         optionalFeatures: string[];

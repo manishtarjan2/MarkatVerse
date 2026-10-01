@@ -13,8 +13,8 @@ export declare class ReviewsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         rating: number;
+        userId: string;
         comment: string | null;
         entityId: string;
         entityType: string;
@@ -24,8 +24,8 @@ export declare class ReviewsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        userId: string;
         rating: number;
+        userId: string;
         comment: string | null;
         entityId: string;
         entityType: string;

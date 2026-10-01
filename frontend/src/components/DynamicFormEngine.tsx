@@ -25,6 +25,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
   const [subcategory, setSubcategory] = useState(initialData?.subcategory || '');
   const [nestedSubcategory, setNestedSubcategory] = useState(initialData?.nestedSubcategory || '');
 
+
   // Pricing
   const [sellingType, setSellingType] = useState<'B2C'|'B2B'>(initialData?.isB2B ? 'B2B' : 'B2C');
   const [costPrice, setCostPrice] = useState(initialData?.originalPrice?.toString() || '');
@@ -93,7 +94,7 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, {
               headers: { 'User-Agent': 'MarkatVerse/1.0' }
             });
-            const data = await res.json();
+            const data = res.ok ? await res.json() : null;
             if (data && data.address) {
               setLocState(data.address.state || '');
               setLocDistrict(data.address.state_district || data.address.county || '');
@@ -130,10 +131,33 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
   const B2B_LIKE: BusinessModel[] = ['B2B', 'Bulk Pricing', 'MOQ', 'RFQ', 'Quote', 'Sample'];
   const noModelRules = catRules.businessModels.length === 0;
   const canSellB2C = noModelRules || catRules.businessModels.some(m => B2C_LIKE.includes(m));
-  const canSellB2B = noModelRules || catRules.businessModels.some(m => B2B_LIKE.includes(m));
+  const canSellB2B = !isService && (noModelRules || catRules.businessModels.some(m => B2B_LIKE.includes(m)));
 
   const primaryTypes = isService ? ['SERVICE'] : ['PRODUCT', 'VEHICLE'];
-  const availableCategories = categories.filter(c => c.primaryType === primaryType);
+  
+  const userSector = user?.business?.sector;
+
+  const availableCategories = categories.filter(c => {
+    if (c.primaryType !== primaryType) return false;
+    return true;
+  });
+
+  // Auto-select category based on user sector or registration restriction
+  useEffect(() => {
+    if (userSector && !category) {
+      const match = availableCategories.find(c => c.name.toLowerCase() === userSector.toLowerCase());
+      if (match) {
+        setCategory(match.name);
+        return;
+      }
+    }
+    if (availableCategories.length === 1 && !category) {
+      setCategory(availableCategories[0].name);
+    }
+  }, [availableCategories, category, userSector]);
+
+  const isCategoryLocked = !!(userSector && availableCategories.some(c => c.name.toLowerCase() === userSector.toLowerCase()));
+
   const selectedCategory = availableCategories.find(c => c.name === category);
   const availableSubcategories = selectedCategory?.subcategories || [];
   const selectedSubcategory = availableSubcategories.find(s => s.name === subcategory);
@@ -145,6 +169,18 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
     || selectedCategory?.parameters 
     || [];
   const hasPricelist = activeParameters.some(p => p.type === 'pricelist');
+
+  useEffect(() => {
+    if (availableSubcategories.length === 1 && !subcategory) {
+      setSubcategory(availableSubcategories[0].name);
+    }
+  }, [availableSubcategories, subcategory]);
+
+  useEffect(() => {
+    if (availableNestedSubcategories.length === 1 && !nestedSubcategory) {
+      setNestedSubcategory(availableNestedSubcategories[0].name);
+    }
+  }, [availableNestedSubcategories, nestedSubcategory]);
 
   // Reset downstream selections when a parent changes
   useEffect(() => {
@@ -261,37 +297,40 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
-      
       {/* 1. CLASSIFICATION BLOCK */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b pb-2">1. Classification</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-600">Primary Type</label>
-            <select 
-              value={primaryType} 
-              onChange={e => setPrimaryType(e.target.value as any)} 
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 outline-none text-sm bg-slate-50"
-            >
-              {primaryTypes.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
+      {(!isCategoryLocked || availableSubcategories.length > 1 || availableNestedSubcategories.length > 1) && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b pb-2">1. Classification</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            
+            {/* Primary Type is inferred and locked by the dashboard context */}
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-600">Category</label>
-            <select 
-              required
-              value={category} 
-              onChange={e => setCategory(e.target.value)} 
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 outline-none text-sm bg-slate-50"
-            >
-              <option value="">Select Category...</option>
-              {availableCategories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
-          </div>
+            {availableCategories.length > 0 && !isCategoryLocked && (
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">Category</label>
+                <select 
+                  required
+                  value={category} 
+                  onChange={e => setCategory(e.target.value)} 
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 outline-none text-sm bg-slate-50"
+                >
+                  <option value="">Select Category...</option>
+                  {availableCategories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
+            )}
 
-          {availableSubcategories.length > 0 && (
+            {availableCategories.length > 0 && isCategoryLocked && (
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">Category</label>
+                <div className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 text-sm font-medium flex items-center gap-2">
+                  <span>{category}</span>
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Locked to Sector</span>
+                </div>
+              </div>
+            )}
+
+          {availableSubcategories.length > 1 && (
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-600">Subcategory</label>
               <select 
@@ -304,8 +343,17 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
               </select>
             </div>
           )}
+          {availableSubcategories.length === 1 && (
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-600">Subcategory</label>
+              <div className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 text-sm font-medium flex items-center gap-2">
+                <span>{subcategory || availableSubcategories[0].name}</span>
+                <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Locked</span>
+              </div>
+            </div>
+          )}
 
-          {availableNestedSubcategories.length > 0 && (
+          {availableNestedSubcategories.length > 1 && (
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-600">Type</label>
               <select 
@@ -318,7 +366,15 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
               </select>
             </div>
           )}
-
+          {availableNestedSubcategories.length === 1 && (
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-slate-600">Type</label>
+              <div className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 text-sm font-medium flex items-center gap-2">
+                <span>{nestedSubcategory || availableNestedSubcategories[0].name}</span>
+                <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Locked</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Workflow & Optional Features badge — powered by Admin Relationship Manager */}
@@ -338,62 +394,19 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
         )}
 
       </div>
+      )}
 
       {/* 2. BASIC INFO */}
       <div className="space-y-4">
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b pb-2">2. Basic Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">Listing Title</label>
-            <input required type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Samsung Galaxy S23 Ultra" className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900" />
+            <label className="text-sm font-semibold text-slate-700">{isService ? 'Service Title' : 'Listing Title'}</label>
+            <input required type="text" value={name} onChange={e => setName(e.target.value)} placeholder={isService ? "e.g. AC Repair & Servicing" : "e.g. Samsung Galaxy S23 Ultra"} className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900" />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700">Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Detailed description..." rows={1} className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 resize-none" />
-          </div>
-          <div className="space-y-2 md:col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-            <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-semibold text-slate-700">Location Details</label>
-              <button 
-                type="button" 
-                disabled={isLocating}
-                onClick={handleGetLocation}
-                className={`text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 shadow-sm ${isLocating ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isLocating ? (
-                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                )}
-                {isLocating ? 'Locating...' : 'Pin My Location'}
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 flex justify-between">
-                  <span>PIN Code <span className="text-red-500">*</span></span>
-                  {isVerifyingPin && <span className="text-blue-500 animate-pulse text-[10px]">Verifying...</span>}
-                </label>
-                <input required type="text" maxLength={6} value={pincode} onChange={e => setPincode(e.target.value.replace(/\D/g, ''))} placeholder="e.g. 400001" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500">State <span className="text-red-500">*</span></label>
-                <input required type="text" value={locState} onChange={e => setLocState(e.target.value)} placeholder="e.g. Maharashtra" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500">District <span className="text-red-500">*</span></label>
-                <input required type="text" value={locDistrict} onChange={e => setLocDistrict(e.target.value)} placeholder="e.g. Mumbai" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500">City / Region <span className="text-red-500">*</span></label>
-                <input required type="text" value={locCity} onChange={e => setLocCity(e.target.value)} placeholder="e.g. Andheri" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
-              </div>
-              <div className="space-y-1 lg:col-span-2">
-                <label className="text-xs font-semibold text-slate-500">Local Area (Road, Gali, House No) <span className="text-red-500">*</span></label>
-                <input required type="text" value={locArea} onChange={e => setLocArea(e.target.value)} placeholder="e.g. Shop No 4, Main Road, Gali 2" className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 bg-white" />
-              </div>
-            </div>
-            <p className="text-[10px] text-slate-500 mt-2">Entering your PIN code will automatically fetch your State, District, and City. Pinning your location helps local customers find you in the 'Near Me' section.</p>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder={isService ? "Describe your service, what's included, etc." : "Detailed description..."} rows={1} className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 outline-none text-slate-900 resize-none" />
           </div>
         </div>
       </div>
@@ -507,21 +520,51 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
         </div>
       )}
 
+      {/* DOCTOR SPECIFIC FIELDS */}
+      {(category === 'Doctor' || category === 'Healthcare' || category.includes('Doctor')) ? (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-indigo-700 uppercase tracking-wider border-b border-indigo-100 pb-2 flex items-center gap-2">
+            <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px]">Medical Workflow</span>
+            Professional Details
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Medical Registration No (MCI/SMC) *</label>
+              <input required type="text" value={parameters['MCI Number'] as string || ''} onChange={e => setParameters(p => ({...p, 'MCI Number': e.target.value}))} placeholder="e.g. MCI-12345" className="w-full px-4 py-3 rounded-xl border border-indigo-200 focus:border-indigo-500 outline-none text-slate-900" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Specialization *</label>
+              <select required value={parameters['Specialization'] as string || ''} onChange={e => setParameters(p => ({...p, 'Specialization': e.target.value}))} className="w-full px-4 py-3 rounded-xl border border-indigo-200 focus:border-indigo-500 outline-none text-slate-900 bg-white">
+                <option value="">Select Specialization...</option>
+                <option value="General Physician">General Physician</option>
+                <option value="Cardiologist">Cardiologist</option>
+                <option value="Dermatologist">Dermatologist</option>
+                <option value="Pediatrician">Pediatrician</option>
+                <option value="Dentist">Dentist</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">Years of Experience *</label>
+              <input required type="number" min="0" value={parameters['Experience'] as string || ''} onChange={e => setParameters(p => ({...p, 'Experience': e.target.value}))} placeholder="e.g. 5" className="w-full px-4 py-3 rounded-xl border border-indigo-200 focus:border-indigo-500 outline-none text-slate-900" />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* 4. PRICING & SELLING TYPE */}
       <div className="space-y-4">
         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b pb-2">4. Pricing & Sales Model</h3>
         
-        <div className="flex gap-4 mb-4">
-          {canSellB2C && (
+        {(canSellB2C && canSellB2B) && (
+          <div className="flex gap-4 mb-4">
             <label className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${sellingType === 'B2C' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-500'}`}>
               <input type="radio" name="sellingType" value="B2C" checked={sellingType === 'B2C'} onChange={() => setSellingType('B2C')} className="hidden" />
               <div className="text-center">
-                <div className="font-bold text-lg">B2C / Service</div>
-                <div className="text-xs opacity-80">Fixed Price per Unit / Session</div>
+                <div className="font-bold text-lg">B2C / Retail</div>
+                <div className="text-xs opacity-80">Fixed Price per Unit</div>
               </div>
             </label>
-          )}
-          {canSellB2B && (
             <label className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${sellingType === 'B2B' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'}`}>
               <input type="radio" name="sellingType" value="B2B" checked={sellingType === 'B2B'} onChange={() => setSellingType('B2B')} className="hidden" />
               <div className="text-center">
@@ -529,8 +572,8 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
                 <div className="text-xs opacity-80">Tiered Bulk Pricing</div>
               </div>
             </label>
-          )}
-        </div>
+          </div>
+        )}
         {/* Admin-allowed business models info row */}
         {catRules.businessModels.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-4 px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-100">
@@ -543,34 +586,34 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
 
         {sellingType === 'B2C' ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Cost Price / MRP (₹)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
-                <input type="number" min="0" value={costPrice} onChange={e => {
-                  const val = e.target.value; 
-                  setCostPrice(val === '' ? '' : Math.max(0, Number(val)).toString());
-                  // Auto-calculate discount if selling price exists
-                  if (val && b2cPrice) {
-                    const cost = Number(val);
-                    const sell = Number(b2cPrice);
-                    if (cost > 0 && cost >= sell) {
-                      setDiscountPct(((cost - sell) / cost * 100).toFixed(0));
+            {!isService && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Cost Price / MRP (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                  <input type="number" min="0" value={costPrice} onChange={e => {
+                    const val = e.target.value; 
+                    setCostPrice(val === '' ? '' : Math.max(0, Number(val)).toString());
+                    if (val && b2cPrice) {
+                      const cost = Number(val);
+                      const sell = Number(b2cPrice);
+                      if (cost > 0 && cost >= sell) {
+                        setDiscountPct(((cost - sell) / cost * 100).toFixed(0));
+                      }
                     }
-                  }
-                }} placeholder="0.00" className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+                  }} placeholder="0.00" className="w-full pl-8 pr-4 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+                </div>
               </div>
-            </div>
+            )}
             
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Final Selling Price (₹)</label>
+            <div className={`space-y-2 ${isService ? 'md:col-span-3 lg:col-span-1' : ''}`}>
+              <label className="text-sm font-semibold text-slate-700">{isService ? 'Service Charge / Price (₹)' : 'Final Selling Price (₹)'}</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
                 <input required={options.length === 0} type="number" min="0" value={b2cPrice} onChange={e => {
                   const val = e.target.value; 
                   setB2cPrice(val === '' ? '' : Math.max(0, Number(val)).toString());
-                  // Auto-calculate discount if cost price exists
-                  if (val && costPrice) {
+                  if (!isService && val && costPrice) {
                     const cost = Number(costPrice);
                     const sell = Number(val);
                     if (cost > 0 && cost >= sell) {
@@ -581,22 +624,46 @@ export default function DynamicFormEngine({ initialData, onSave, onCancel, isSer
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Discount (%)</label>
-              <div className="relative">
-                <input type="number" min="0" max="100" value={discountPct} onChange={e => {
-                  const val = e.target.value; 
-                  const numVal = Math.min(100, Math.max(0, Number(val)));
-                  setDiscountPct(val === '' ? '' : numVal.toString());
-                  // Auto-calculate selling price based on cost price
-                  if (val && costPrice) {
-                    const cost = Number(costPrice);
-                    setB2cPrice((cost - (cost * numVal / 100)).toFixed(2));
-                  }
-                }} placeholder="0" className="w-full pl-4 pr-8 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+            {!isService && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700">Discount (%)</label>
+                <div className="relative">
+                  <input type="number" min="0" max="100" value={discountPct} onChange={e => {
+                    const val = e.target.value; 
+                    const numVal = Math.min(100, Math.max(0, Number(val)));
+                    setDiscountPct(val === '' ? '' : numVal.toString());
+                    if (val && costPrice) {
+                      const cost = Number(costPrice);
+                      setB2cPrice((cost - (cost * numVal / 100)).toFixed(2));
+                    }
+                  }} placeholder="0" className="w-full pl-4 pr-8 py-3 rounded-xl border border-slate-300 focus:border-blue-500 outline-none text-slate-900 font-medium" />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+                </div>
               </div>
-            </div>
+            )}
+            
+            {isService && (
+              <div className="col-span-1 md:col-span-3 mt-4 space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <label className="text-sm font-semibold text-slate-700">Service Booking Model</label>
+                <div className="flex gap-4">
+                  <label className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${(parameters['bookingModel'] as string) === 'TOKEN' || !parameters['bookingModel'] ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'}`}>
+                    <input type="radio" name="bookingModel" value="TOKEN" checked={(parameters['bookingModel'] as string) === 'TOKEN' || !parameters['bookingModel']} onChange={() => setParameters(p => ({...p, bookingModel: 'TOKEN'}))} className="hidden" />
+                    <div className="text-center">
+                      <div className="font-bold">Live Token (Queue)</div>
+                      <div className="text-[10px] opacity-80 mt-1">Walk-ins & Live Tracking</div>
+                    </div>
+                  </label>
+                  <label className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${(parameters['bookingModel'] as string) === 'APPOINTMENT' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white text-slate-500'}`}>
+                    <input type="radio" name="bookingModel" value="APPOINTMENT" checked={(parameters['bookingModel'] as string) === 'APPOINTMENT'} onChange={() => setParameters(p => ({...p, bookingModel: 'APPOINTMENT'}))} className="hidden" />
+                    <div className="text-center">
+                      <div className="font-bold">Scheduled Appointment</div>
+                      <div className="text-[10px] opacity-80 mt-1">Fixed time slots</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+            
           </div>
         ) : (
           <div className="space-y-4">

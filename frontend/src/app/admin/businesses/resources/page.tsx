@@ -7,7 +7,7 @@ import { ShieldAlert, MonitorPlay, Plus, Trash2, Search, Zap } from 'lucide-reac
 export default function AdminResourcesPage() {
   const { canEdit } = useAdminRole();
   const hasEditPermission = canEdit('businesses');
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
   const [queues, setQueues] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

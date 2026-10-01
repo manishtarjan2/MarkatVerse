@@ -7,7 +7,7 @@ import LocationPicker from '@/components/LocationPicker';
 import toast from 'react-hot-toast';
 import { User, Phone, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
 export default function SellerOnboarding() {
   const router = useRouter();
@@ -22,16 +22,20 @@ export default function SellerOnboarding() {
   // Once auth loads: if already logged in, skip straight to step 2
   React.useEffect(() => {
     if (authLoading) return;
-    if (user) {
+    if (user && (user.role?.toUpperCase() === 'SELLER' || user.role?.toUpperCase() === 'BUSINESS') && user.business) {
+      router.replace('/seller/dashboard');
+      return;
+    }
+    if (user && (step === 1 || step === -1 || step === 1.2)) {
       setOwnerName(user.name);
       setEmail(user.email || '');
       setPhone(user.phone || '');
       setStep(2);
-    } else if (step === -1) {
+    } else if (!user && step === -1) {
       setStep(1);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user]);
+  }, [authLoading, user, router]);
 
   // State variables
   const [ownerName, setOwnerName] = useState('');
@@ -49,6 +53,7 @@ export default function SellerOnboarding() {
   const [gstNumber, setGstNumber] = useState('');
 
   // Business Type
+  const [primaryOffering, setPrimaryOffering] = useState('');
   const [mainType, setMainType] = useState('');
 
   // Operating Features
@@ -60,6 +65,7 @@ export default function SellerOnboarding() {
   const [city, setCity] = useState('');
   const [stateName, setStateName] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
+  const [locality, setLocality] = useState('');
   const [landmark, setLandmark] = useState('');
   const [areas, setAreas] = useState<string[]>([]);
   const [isFetchingPin, setIsFetchingPin] = useState(false);
@@ -93,63 +99,58 @@ export default function SellerOnboarding() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleAutoFetchLocation = () => {
-    if (navigator.geolocation) {
-      setIsFetchingPin(true);
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        try {
-          const { latitude: lat, longitude: lng } = position.coords;
-          setLatitude(lat);
-          setLongitude(lng);
-          const [nomRes, bdcRes] = await Promise.all([
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`),
-            fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
-          ]);
-          
-          const nomData = await nomRes.json();
-          const bdcData = await bdcRes.json();
-          
-          if (nomData && nomData.address && bdcData) {
-            // BigDataCloud is often more accurate for exact PIN codes in India
-            const newPin = bdcData.postcode || nomData.address.postcode || '';
-            const newCity = bdcData.city || nomData.address.city || bdcData.locality || '';
-            const newState = bdcData.principalSubdivision || nomData.address.state || '';
-            
-            const localParts = [];
-            if (nomData.address.house_number) localParts.push(nomData.address.house_number);
-            if (nomData.address.road) localParts.push(nomData.address.road);
-            if (nomData.address.neighbourhood) localParts.push(nomData.address.neighbourhood);
-            if (nomData.address.suburb) localParts.push(nomData.address.suburb);
-            
-            let shortAddress = localParts.join(', ');
-            if (!shortAddress && nomData.display_name) {
-              shortAddress = nomData.display_name.split(',').slice(0, 2).join(',').trim();
-            }
-            if (!shortAddress) shortAddress = bdcData.locality || '';
-            
-            if (newPin) setPinCode(newPin);
-            if (newCity) setCity(newCity);
-            if (newState) setStateName(newState);
-            if (shortAddress) setBusinessLocation(shortAddress);
-            toast.success("Location fetched automatically!");
-          }
-        } catch (error) {
-          toast.error("Failed to fetch location");
-        } finally {
-          setIsFetchingPin(false);
+  const handleLocationChange = async (lat: number, lng: number) => {
+    setLatitude(lat);
+    setLongitude(lng);
+    setIsFetchingPin(true);
+    try {
+      const [nomRes, bdcRes] = await Promise.all([
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`),
+        fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
+      ]);
+      
+      const nomData = nomRes.ok ? await nomRes.json() : null;
+      const bdcData = bdcRes.ok ? await bdcRes.json() : null;
+      
+      if (nomData && nomData.address && bdcData) {
+        const newPin = bdcData.postcode || nomData.address.postcode || '';
+        const newCity = bdcData.city || nomData.address.city || bdcData.locality || '';
+        const newState = bdcData.principalSubdivision || nomData.address.state || '';
+        
+        // Exact locality from BigDataCloud or Nominatim
+        let exactLocality = nomData.address.neighbourhood || nomData.address.suburb || bdcData.locality || '';
+        if (!exactLocality && nomData.display_name) {
+          exactLocality = nomData.display_name.split(',')[1]?.trim() || '';
         }
-      }, (err) => {
-        toast.error("Location permission denied");
-        setIsFetchingPin(false);
-      }, { enableHighAccuracy: true });
-    } else {
-      toast.error("Geolocation not supported by this browser.");
+        
+        // Street info for the business location field
+        const localParts = [];
+        if (nomData.address.house_number) localParts.push(nomData.address.house_number);
+        if (nomData.address.road) localParts.push(nomData.address.road);
+        else if (nomData.address.pedestrian) localParts.push(nomData.address.pedestrian);
+        else if (nomData.address.path) localParts.push(nomData.address.path);
+        else if (nomData.address.footway) localParts.push(nomData.address.footway);
+        
+        let streetAddress = localParts.join(', ');
+        
+        if (newPin) setPinCode(newPin);
+        if (newCity) setCity(newCity);
+        if (newState) setStateName(newState);
+        if (exactLocality) setLocality(exactLocality);
+        if (streetAddress) setBusinessLocation(streetAddress);
+      }
+    } catch (error) {
+      console.error("Failed to reverse geocode location", error);
+    } finally {
+      setIsFetchingPin(false);
     }
   };
 
   React.useEffect(() => {
     if (pinCode.length === 6) {
       setIsFetchingPin(true);
+      
+      // 1. Fetch Area Details
       fetch(`https://api.postalpincode.in/pincode/${pinCode}`)
         .then(res => res.json())
         .then(data => {
@@ -166,6 +167,17 @@ export default function SellerOnboarding() {
         })
         .catch(() => setAreas([]))
         .finally(() => setIsFetchingPin(false));
+
+      // 2. Forward Geocode to update Map Pin
+      fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pinCode}&country=india&format=json`)
+        .then(res => res.ok ? res.json() : Promise.reject(new Error('Rate limited')))
+        .then(data => {
+          if (data && data.length > 0) {
+            setLatitude(parseFloat(data[0].lat));
+            setLongitude(parseFloat(data[0].lon));
+          }
+        })
+        .catch(err => console.error("Geocoding failed", err));
     } else {
       setAreas([]);
     }
@@ -199,6 +211,7 @@ export default function SellerOnboarding() {
     },
     'Service Provider': {
       'Salon & Parlor': ['All'],
+      'Healthcare & Doctor': ['All'],
       'Home Repairs': ['All'],
       'Cleaning & Pest Control': ['All'],
       'Professional Services': ['All']
@@ -328,7 +341,7 @@ export default function SellerOnboarding() {
           businessType: sellerRole,
           mainType: mainType,
           sector: businessSector,
-          address: `${businessLocation}${landmark ? ', ' + landmark : ''}, ${city}, ${stateName}`,
+          address: `${businessLocation}${locality ? ', ' + locality : ''}${landmark ? ', ' + landmark : ''}, ${city}, ${stateName}`,
           pincode: pinCode,
           latitude,
           longitude,
@@ -616,7 +629,7 @@ export default function SellerOnboarding() {
                 <LocationPicker 
                   latitude={latitude} 
                   longitude={longitude} 
-                  onChange={(lat, lng) => { setLatitude(lat); setLongitude(lng); }} 
+                  onChange={handleLocationChange} 
                 />
 
                 <div className="flex justify-between items-center mt-6">
@@ -639,19 +652,19 @@ export default function SellerOnboarding() {
                   <div>
                     <label className={labelClasses}>Locality</label>
                     {areas.length > 0 ? (
-                      <select className={selectClasses} onChange={e => setBusinessLocation(`${e.target.value}, ${businessLocation}`)} defaultValue="">
+                      <select className={selectClasses} value={locality} onChange={e => setLocality(e.target.value)}>
                         <option value="" disabled>Select Locality</option>
                         {areas.map(a => <option key={a} value={a}>{a}</option>)}
                       </select>
                     ) : (
-                      <input type="text" disabled placeholder="Enter PIN to fetch" className={`${inputClasses} bg-slate-50 opacity-70`} />
+                      <input type="text" value={locality} onChange={e => setLocality(e.target.value)} placeholder="Enter PIN or map pin to fetch" className={`${inputClasses} bg-slate-50`} />
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label className={labelClasses}>Shop No. & Street Name <span className="text-red-500">*</span></label>
-                  <textarea required rows={2} value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Shop No. 12, Main Street" className={inputClasses} />
+                  <label className={labelClasses}>Shop No. & Street / Gali Name <span className="text-red-500">*</span></label>
+                  <textarea required rows={2} value={businessLocation} onChange={e => setBusinessLocation(e.target.value)} placeholder="e.g. Shop No. 12, Main Street / Gali No. 4" className={inputClasses} />
                 </div>
                 <div>
                   <label className={labelClasses}>Nearby Landmark (Optional)</label>
@@ -676,20 +689,42 @@ export default function SellerOnboarding() {
               </div>
               <form onSubmit={e => { e.preventDefault(); setStep(4); }} className="flex flex-col gap-6">
                 <div>
-                  <label className={labelClasses}>What do you provide? <span className="text-red-500">*</span></label>
+                  <label className={labelClasses}>What do you want to offer? <span className="text-red-500">*</span></label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
-                      { id: 'B2C', title: 'Products (Retail)' },
-                      { id: 'B2B', title: 'Products (Wholesale)' },
+                      { id: 'PRODUCT', title: 'Products' },
                       { id: 'SERVICE', title: 'Services' },
-                      { id: 'BOTH', title: 'Products + Services' }
                     ].map(opt => (
-                      <div key={opt.id} onClick={() => setMainType(opt.id)} className={`p-4 border-2 rounded-2xl cursor-pointer transition-all ${mainType === opt.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white hover:border-indigo-300 text-slate-700'}`}>
+                      <div key={opt.id} onClick={() => { 
+                          setPrimaryOffering(opt.id); 
+                          setMainType(opt.id === 'SERVICE' ? 'SERVICE' : ''); 
+                          setSellerRole('');
+                          setBusinessSector('');
+                        }} 
+                        className={`p-4 border-2 rounded-2xl cursor-pointer transition-all ${primaryOffering === opt.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white hover:border-indigo-300 text-slate-700'}`}>
                         <h4 className="font-bold text-sm text-center">{opt.title}</h4>
                       </div>
                     ))}
                   </div>
                 </div>
+                
+                {primaryOffering === 'PRODUCT' && (
+                  <div>
+                    <label className={labelClasses}>Business Model <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {[
+                        { id: 'B2C', title: 'B2C (Retail)' },
+                        { id: 'B2B', title: 'B2B (Wholesale)' },
+                        { id: 'BOTH', title: 'Both (B2B + B2C)' },
+                      ].map(opt => (
+                        <div key={opt.id} onClick={() => { setMainType(opt.id); setSellerRole(''); setBusinessSector(''); }} 
+                          className={`p-4 border-2 rounded-2xl cursor-pointer transition-all flex items-center justify-center ${mainType === opt.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-white hover:border-indigo-300 text-slate-700'}`}>
+                          <h4 className="font-bold text-sm text-center">{opt.title}</h4>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {mainType && (
                   <>
                     <div>
@@ -775,11 +810,11 @@ export default function SellerOnboarding() {
           {step === 6 && (
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10 text-center mt-10">
               <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
-                ⏳
+                ✅
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-3">Admin Review Pending</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Registration Complete!</h2>
               <p className="text-slate-500 text-base mb-8">
-                Your seller application has been submitted and is currently under review by our Admin team. Once approved, your MarkatVerse Dashboard will be generated.
+                Your registration is complete. Your seller dashboard will be ready within 24 hours once our Admin team reviews your details.
               </p>
               <Link href="/">
                 <button className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors">Return to Homepage</button>

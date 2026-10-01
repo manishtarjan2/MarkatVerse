@@ -3,14 +3,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
-import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp, Ticket, Clock, Ban, Search, Filter, Phone, Mail, FileText, Share2, Printer, MapPin, ChevronDown, Activity, Scissors, User, Sparkles, Palette, Droplet, Briefcase } from 'lucide-react';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp, Ticket, Clock, Ban, Search, Filter, Phone, Mail, FileText, Share2, Printer, MapPin, ChevronDown, Activity, Scissors, User, UserPlus, Sparkles, Palette, Droplet, Briefcase, Eye } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 import StaffResourceManagementModal from '@/components/StaffResourceManagementModal';
 import DynamicFormEngine from '@/components/DynamicFormEngine';
 import LocationPicker from '@/components/LocationPicker';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -110,6 +110,10 @@ function DashboardContent() {
 
       // 1. Fetch all queues by sellerId
       let res = await fetch(`${API_URL}/service-queue/seller/${user.id}`);
+      if (!res.ok) {
+        if (res.status === 429) return; // Rate limited, ignore and retry later
+        throw new Error(`Failed to fetch queues: ${res.statusText}`);
+      }
       let text = await res.text();
       let data = text ? JSON.parse(text) : null;
       let queues = Array.isArray(data) ? data : (data ? [data] : []);
@@ -143,7 +147,9 @@ function DashboardContent() {
           fetch(`${API_URL}/service-queue/${activeQueueId}/status`),
           fetch(`${API_URL}/service-queue/${activeQueueId}/analytics`)
         ]);
-        setQueueData(await statusRes.json());
+        if (statusRes.ok) {
+          setQueueData(await statusRes.json());
+        }
         if (analyticsRes.ok) {
           setQueueAnalytics(await analyticsRes.json());
         }
@@ -461,7 +467,10 @@ function DashboardContent() {
   // Guard: seller has no business record yet — redirect to complete onboarding
   if (!isLoading && user && !user.business) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative">
+        <Link href="/" className="absolute top-6 left-6 text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2 font-semibold">
+          <ArrowLeft className="w-5 h-5" /> Back to Home
+        </Link>
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10 max-w-md w-full text-center">
           <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">🏪</div>
           <h2 className="text-2xl font-bold text-slate-900 mb-3">Business Setup Incomplete</h2>
@@ -472,6 +481,40 @@ function DashboardContent() {
           <a href="/seller/onboarding" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-bold text-base hover:opacity-90 transition-opacity shadow-md">
             Complete Business Setup →
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  // Guard: seller's business is created but not yet verified
+  if (!isLoading && user && user.business && user.business.verified === false) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative">
+        <Link href="/" className="absolute top-6 left-6 text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-2 font-semibold">
+          <ArrowLeft className="w-5 h-5" /> Back to Home
+        </Link>
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10 max-w-md w-full text-center">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Clock className="w-10 h-10 text-amber-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-3">Approval Pending</h2>
+          <p className="text-slate-500 text-base mb-2">
+            Your business profile (<span className="font-semibold text-slate-700">{user.business.name}</span>) is currently under review by our team.
+          </p>
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-left my-6">
+            <h3 className="font-semibold text-slate-800 text-sm mb-2">What happens next?</h3>
+            <p className="text-sm text-slate-600">
+              Our team is verifying your details. <strong>Within 24 to 48 hours, you will be ready to use your seller account</strong> and start listing your products and services on MarkatVerse. We will send you an email as soon as you are approved.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => logout()} className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold text-sm transition-colors">
+              Log Out
+            </button>
+            <button onClick={() => window.location.href = 'mailto:support@markatverse.com'} className="flex-1 px-4 py-3 bg-blue-600 text-white hover:bg-blue-500 rounded-xl font-bold text-sm transition-colors shadow-md shadow-blue-500/20">
+              Contact Support
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -549,7 +592,7 @@ function DashboardContent() {
             onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'overview' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
           >
-            <BarChart3 className="w-5 h-5" /> Overview
+            <BarChart3 className="w-5 h-5" /> Dashboard
           </button>
           
           {(isB2C || isB2B || (!isService && !isServiceProvider)) && (
@@ -561,17 +604,57 @@ function DashboardContent() {
             </button>
           )}
 
+          {/* SERVICE PROVIDER FLOW (Phase 1 MVP) */}
           {(isService || isServiceProvider) && (
-            <button 
-              onClick={() => { setActiveTab('services'); setIsMobileMenuOpen(false); }} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'services' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-            >
-              <Briefcase className="w-5 h-5" /> My Services
-            </button>
+            <>
+              <button 
+                onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} 
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'bookings' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <CalendarClock className="w-5 h-5" /> Bookings
+                </div>
+              </button>
+
+              <button 
+                onClick={() => { setActiveTab('queue'); setIsMobileMenuOpen(false); }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'queue' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <span className="w-5 h-5 flex items-center justify-center text-lg">🎟️</span> Live Queue
+              </button>
+
+              <button 
+                onClick={() => { setActiveTab('customers'); setIsMobileMenuOpen(false); }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'customers' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <Users className="w-5 h-5" /> Customers
+              </button>
+
+              <button 
+                onClick={() => { setActiveTab('services'); setIsMobileMenuOpen(false); }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'services' ? 'bg-purple-50 text-purple-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <Briefcase className="w-5 h-5" /> Services
+              </button>
+
+              <button 
+                onClick={() => { setActiveTab('staff'); setIsMobileMenuOpen(false); }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'staff' ? 'bg-rose-50 text-rose-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <UserPlus className="w-5 h-5" /> Staff
+              </button>
+
+              <button 
+                onClick={() => { setActiveTab('earnings'); setIsMobileMenuOpen(false); }} 
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'earnings' ? 'bg-green-50 text-green-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <TrendingUp className="w-5 h-5" /> Earnings
+              </button>
+            </>
           )}
 
-          {/* Dynamic Workflow Tabs */}
-          {(isCartFlow || isRfqFlow) && (
+          {/* PRODUCT SPECIFIC TABS */}
+          {(!isService && !isServiceProvider) && isCartFlow && (
             <button 
               onClick={() => { setActiveTab('orders'); setIsMobileMenuOpen(false); }} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'orders' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
@@ -580,16 +663,7 @@ function DashboardContent() {
             </button>
           )}
 
-          {isQueueFlow && (
-            <button 
-              onClick={() => { setActiveTab('queue'); setIsMobileMenuOpen(false); }} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'queue' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-            >
-              <span className="w-5 h-5 flex items-center justify-center text-lg">🎟️</span> Queue & Tokens
-            </button>
-          )}
-
-          {isRfqFlow && (
+          {(!isService && !isServiceProvider) && isRfqFlow && (
             <button 
               onClick={() => { setActiveTab('leads'); setIsMobileMenuOpen(false); }} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'leads' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
@@ -598,27 +672,13 @@ function DashboardContent() {
             </button>
           )}
 
-          {(isQueueFlow || isMeetingFlow) && (
+          {(!isService && !isServiceProvider) && isProjectFlow && (
             <button 
-              onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} 
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'bookings' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              onClick={() => { setActiveTab('projects'); setIsMobileMenuOpen(false); }} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'projects' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
             >
-              <div className="flex items-center gap-3">
-                <CalendarClock className="w-5 h-5" /> Bookings
-              </div>
-              <Crown className="w-4 h-4 text-amber-500" />
+              <span className="w-5 h-5 flex items-center justify-center text-lg">🏗️</span> Projects
             </button>
-          )}
-
-          {isProjectFlow && (
-            <>
-              <button 
-                onClick={() => { setActiveTab('projects'); setIsMobileMenuOpen(false); }} 
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'projects' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
-              >
-                <span className="w-5 h-5 flex items-center justify-center text-lg">🏗️</span> Projects
-              </button>
-            </>
           )}
 
           {isAssetFlow && (
@@ -668,112 +728,150 @@ function DashboardContent() {
               <p className="text-slate-500 mt-2">Welcome back, {user?.name || user?.business?.name || 'Seller'}. Here's what's happening today.</p>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6 mb-6 lg:mb-10">
-              <div className="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-slate-500 text-xs lg:text-sm font-medium mb-1 lg:mb-2">{isB2B ? 'B2B Trade Volume' : 'Total Sales'}</div>
-                <div className="text-2xl lg:text-3xl font-bold text-slate-900">₹0</div>
-                <div className="text-slate-400 text-xs lg:text-sm font-medium mt-1 lg:mt-2 flex items-center gap-1">No sales yet</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-12">
+              <div className="relative bg-gradient-to-br from-emerald-500 to-teal-600 p-6 lg:p-8 rounded-3xl text-white shadow-lg overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-30 transition-opacity transform group-hover:scale-110">
+                  <TrendingUp className="w-24 h-24" />
+                </div>
+                <div className="text-emerald-100 text-sm font-bold tracking-widest uppercase mb-2 relative z-10">{isB2B ? 'B2B Trade Volume' : 'Total Sales'}</div>
+                <div className="text-4xl lg:text-5xl font-black mb-4 relative z-10 drop-shadow-md">₹0</div>
+                <div className="text-emerald-50 text-sm font-medium flex items-center gap-1.5 relative z-10 bg-black/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-md">
+                  <CheckCircle2 className="w-4 h-4" /> No sales yet
+                </div>
               </div>
-              <div className="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="text-slate-500 text-xs lg:text-sm font-medium mb-1 lg:mb-2">{isServiceProvider ? 'Active Services' : (isB2B ? 'B2B Catalog' : 'Active Listings')}</div>
-                <div className="text-2xl lg:text-3xl font-bold text-slate-900">{myListings.length}</div>
-                <button onClick={() => { setActiveTab('listings'); setIsMobileMenuOpen(false); }} className="text-blue-600 text-xs lg:text-sm font-medium mt-1 lg:mt-2 hover:underline">
-                  {isServiceProvider ? 'View services →' : 'View catalog →'}
+
+              <div className="relative bg-gradient-to-br from-blue-500 to-indigo-600 p-6 lg:p-8 rounded-3xl text-white shadow-lg overflow-hidden group hover:-translate-y-1 transition-all duration-300">
+                <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-30 transition-opacity transform group-hover:scale-110">
+                  <Store className="w-24 h-24" />
+                </div>
+                <div className="text-blue-100 text-sm font-bold tracking-widest uppercase mb-2 relative z-10">{isServiceProvider ? 'Active Services' : (isB2B ? 'B2B Catalog' : 'Active Listings')}</div>
+                <div className="text-4xl lg:text-5xl font-black mb-4 relative z-10 drop-shadow-md">{myListings.length}</div>
+                <button onClick={() => { setActiveTab(isServiceProvider ? 'services' : 'listings'); setIsMobileMenuOpen(false); }} className="text-blue-50 text-sm font-medium flex items-center gap-1.5 relative z-10 bg-black/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-md hover:bg-black/20 transition-colors">
+                  <Eye className="w-4 h-4" /> {isServiceProvider ? 'View services →' : 'View catalog →'}
                 </button>
               </div>
-              <div className="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm col-span-2 lg:col-span-1">
-                <div className="text-slate-500 text-xs lg:text-sm font-medium mb-1 lg:mb-2">
-                  {isServiceProvider ? 'Queue / Tokens' : (isB2B ? 'Pending RFQs' : 'Pending Orders')}
+
+              <div className="relative bg-gradient-to-br from-orange-400 to-amber-500 p-6 lg:p-8 rounded-3xl text-white shadow-lg overflow-hidden group hover:-translate-y-1 transition-all duration-300 md:col-span-2 lg:col-span-1">
+                <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-30 transition-opacity transform group-hover:scale-110">
+                  <Users className="w-24 h-24" />
                 </div>
-                <div className="text-2xl lg:text-3xl font-bold text-amber-500">
+                <div className="text-orange-100 text-sm font-bold tracking-widest uppercase mb-2 relative z-10">
+                  {isServiceProvider ? 'Live Queue / Tokens' : (isB2B ? 'Pending RFQs' : 'Pending Orders')}
+                </div>
+                <div className="text-4xl lg:text-5xl font-black mb-4 relative z-10 drop-shadow-md">
                   {isServiceProvider
-                    ? (queueData ? `${queueData.waitingCount ?? 0} waiting` : '0 waiting')
+                    ? (queueData ? `${queueData.waitingCount ?? 0}` : '0')
                     : (isB2B ? leads.length.toString() : orders.length.toString())}
                 </div>
                 <button onClick={() => { setActiveTab(isServiceProvider ? 'queue' : (isB2B ? 'leads' : 'orders')); setIsMobileMenuOpen(false); }}
-                  className="text-slate-400 text-xs lg:text-sm font-medium mt-1 lg:mt-2 cursor-pointer hover:text-blue-600 transition-colors">
-                  View details →
+                  className="text-orange-50 text-sm font-medium flex items-center gap-1.5 relative z-10 bg-black/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-md hover:bg-black/20 transition-colors">
+                  <Clock className="w-4 h-4" /> {isServiceProvider ? 'Waiting now →' : 'View pending →'}
                 </button>
               </div>
             </div>
 
             {/* Quick Links */}
-            <div className="mb-8 lg:mb-10">
+            <div className="mb-8 lg:mb-12">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h3>
               {(() => {
                 const quickActions = [
-                  { label: isServiceProvider ? 'My Services' : (isB2B ? 'B2B Catalog' : 'My Listings'), icon: '🛍️', tab: 'listings' },
+                  { label: isServiceProvider ? 'My Services' : (isB2B ? 'B2B Catalog' : 'My Listings'), icon: '🛍️', tab: isServiceProvider ? 'services' : 'listings' },
                 ];
                 if (isQueueFlow) quickActions.push({ label: 'Queue & Tokens', icon: '🎟️', tab: 'queue' });
                 if (isB2C || isCartFlow) quickActions.push({ label: 'Retail Orders', icon: '📦', tab: 'orders' });
                 if (isB2B) quickActions.push({ label: 'Leads / RFQ', icon: '💬', tab: 'leads' });
                 if (isProjectFlow || isMeetingFlow || isService) quickActions.push({ label: 'Bookings', icon: '📅', tab: 'bookings' });
 
-                const gridClass = quickActions.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4';
-
                 return (
-                  <div className={`grid grid-cols-2 ${gridClass} gap-3 lg:gap-4`}>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
                     {quickActions.map(item => (
                       <button key={item.tab} onClick={() => { setActiveTab(item.tab as any); setIsMobileMenuOpen(false); }}
-                        className="bg-white border border-slate-200 rounded-xl lg:rounded-2xl p-4 lg:p-6 flex flex-col items-center gap-3 lg:gap-4 hover:border-blue-300 hover:shadow-md transition-all group">
-                        <span className="text-3xl lg:text-4xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                        <span className="text-sm lg:text-base font-bold text-slate-700 text-center leading-tight">{item.label}</span>
+                        className="bg-white border-2 border-slate-100 rounded-3xl p-6 lg:p-8 flex flex-col items-center gap-4 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-100/50 transition-all duration-300 group relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <span className="text-4xl lg:text-5xl group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 relative z-10 drop-shadow-sm">{item.icon}</span>
+                        <span className="text-base lg:text-lg font-bold text-slate-700 text-center leading-tight relative z-10 group-hover:text-indigo-700">{item.label}</span>
                       </button>
                     ))}
                   </div>
                 );
               })()}
             </div>
+          </div>
+        )}
 
+        {activeTab === 'earnings' && (
+          <div className="max-w-6xl mx-auto animate-in fade-in duration-300">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-slate-900">Earnings & Performance</h1>
+              <p className="text-slate-500 mt-2">Track your shop's revenue, collections, and staff performance.</p>
+            </div>
+            
             {/* Performance Analytics Section */}
-            {queueAnalytics && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8 lg:mb-10">
-                <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 bg-slate-50/30">
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-emerald-500 shrink-0" />
-                      Shop Performance & Earnings
-                    </h2>
-                    <p className="text-sm text-slate-500 mt-1">Daily and monthly overview of staff collections.</p>
+            {queueAnalytics ? (
+              <div className="space-y-6 mb-10">
+                {/* Top Metrics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-emerald-300 hover:shadow-md transition-all">
+                    <div className="absolute -top-4 -right-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110"><TrendingUp className="w-32 h-32 text-emerald-500" /></div>
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">Today's Collection</div>
+                    <div className="text-4xl font-black text-emerald-600 relative z-10">₹{queueAnalytics.totalTodayCollection.toLocaleString('en-IN')}</div>
+                    <div className="text-xs font-semibold text-emerald-500/70 mt-3 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5"/> Live updates</div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-4 text-left xl:text-right w-full xl:w-auto">
-                    <div>
-                      <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Today's Collection</div>
-                      <div className="text-2xl font-black text-emerald-600">₹{queueAnalytics.totalTodayCollection.toLocaleString('en-IN')}</div>
-                    </div>
-                    <div className="w-px bg-slate-200 h-10 my-auto"></div>
-                    <div>
-                      <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Month's Collection</div>
-                      <div className="text-2xl font-black text-blue-600">₹{queueAnalytics.totalMonthCollection.toLocaleString('en-IN')}</div>
-                    </div>
-                    {(user?.business?.wallet?.owedToPlatform ?? 0) > 0 && (
-                      <>
-                        <div className="w-px bg-slate-200 h-10 my-auto"></div>
-                        <div>
-                          <div className="text-xs font-bold text-orange-500 uppercase tracking-widest">Owed to Platform</div>
-                          <div className="text-2xl font-black text-orange-600 flex items-center gap-3">
-                            ₹{(user?.business?.wallet?.owedToPlatform || 0).toLocaleString('en-IN')}
-                            <button 
-                              onClick={async () => {
-                                if(confirm('Proceed to pay platform fees?')) {
-                                  try {
-                                    await fetch(`${API_URL}/wallet/business/${user?.business?.id}/pay-platform`, { method: 'POST' });
-                                    alert('Payment successful!');
-                                    window.location.reload();
-                                  } catch (e) {
-                                    console.error(e);
-                                  }
+                  
+                  <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-blue-300 hover:shadow-md transition-all">
+                    <div className="absolute -top-4 -right-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110"><BarChart3 className="w-32 h-32 text-blue-500" /></div>
+                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 relative z-10">Month's Collection</div>
+                    <div className="text-4xl font-black text-blue-600 relative z-10">₹{queueAnalytics.totalMonthCollection.toLocaleString('en-IN')}</div>
+                    <div className="text-xs font-semibold text-blue-500/70 mt-3 flex items-center gap-1.5"><CalendarClock className="w-3.5 h-3.5"/> This month</div>
+                  </div>
+
+                  {(user?.business?.wallet?.owedToPlatform ?? 0) > 0 && (
+                    <div className="bg-orange-50 rounded-2xl border border-orange-200 p-6 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-orange-300 hover:shadow-md transition-all">
+                      <div className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-2 relative z-10">Owed to Platform</div>
+                      <div className="text-4xl font-black text-orange-600 relative z-10 flex items-center justify-between">
+                        <span>₹{(user?.business?.wallet?.owedToPlatform || 0).toLocaleString('en-IN')}</span>
+                        <button 
+                          onClick={async () => {
+                            if(confirm('Proceed to pay platform fees?')) {
+                              try {
+                                await fetch(`${API_URL}/wallet/business/${user?.business?.id}/pay-platform`, { method: 'POST' });
+                                alert('Payment successful!');
+                                if (user?.business?.wallet) {
+                                  login({
+                                    ...user,
+                                    business: {
+                                      ...user.business,
+                                      wallet: {
+                                        ...user.business.wallet,
+                                        owedToPlatform: 0
+                                      }
+                                    }
+                                  });
                                 }
-                              }}
-                              className="text-xs bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-600 transition-colors"
-                            >
-                              Pay Now
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                              } catch (e) {
+                                console.error(e);
+                              }
+                            }
+                          }}
+                          className="text-xs bg-orange-500 text-white px-4 py-2.5 rounded-xl shadow-sm hover:bg-orange-600 hover:-translate-y-0.5 transition-all font-bold"
+                        >
+                          Pay Now
+                        </button>
+                      </div>
+                      <div className="text-xs font-semibold text-orange-500/70 mt-3">Platform fees pending settlement</div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Staff Breakdown Table */}
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-slate-100 bg-slate-50/30">
+                    <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-indigo-500 shrink-0" />
+                      Staff Performance Breakdown
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">Detailed view of customers served and revenue generated by each staff member.</p>
+                  </div>
                 <div className="p-0 overflow-x-auto w-full">
                   <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
@@ -821,6 +919,13 @@ function DashboardContent() {
                     </tbody>
                   </table>
                 </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                <TrendingUp className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-slate-700 mb-1">No earning data yet</h3>
+                <p className="text-slate-500 text-sm">Your earnings will appear here once you start receiving tokens and bookings.</p>
               </div>
             )}
           </div>
@@ -969,7 +1074,7 @@ function DashboardContent() {
               <DynamicFormEngine 
                 isService={isServiceMode} 
                 onSave={handleSaveListing} 
-                onCancel={() => setActiveTab('listings')} 
+                onCancel={() => setActiveTab(isServiceProvider ? 'services' : 'listings')} 
                 initialData={editingProductId ? products.find(p => p.id === editingProductId) : undefined}
               />
             )}
@@ -1239,10 +1344,10 @@ function DashboardContent() {
                 <p className="text-slate-500 mt-1">Manage all your service tokens, appointments and bookings in one place.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <button className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
+                <button onClick={() => setShowWalkInForm(true)} className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
                   <UserPlus className="w-5 h-5" /> Walk In
                 </button>
-                <button className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
+                <button onClick={() => setShowStaffModal(true)} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
                   <Users className="w-5 h-5" /> Manage Staff
                 </button>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm flex items-center gap-2">
@@ -1948,8 +2053,8 @@ function DashboardContent() {
                                   fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`),
                                   fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`)
                                 ]);
-                                const nomData = await nomRes.json();
-                                const bdcData = await bdcRes.json();
+                                const nomData = nomRes.ok ? await nomRes.json() : null;
+                                const bdcData = bdcRes.ok ? await bdcRes.json() : null;
                                 if (nomData && nomData.address && bdcData) {
                                   const newPin = bdcData.postcode || nomData.address.postcode || '';
                                   const localParts = [];

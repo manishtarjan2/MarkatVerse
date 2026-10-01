@@ -37,7 +37,7 @@ interface JoinResult {
 export default function SmartQueueWidget({ service }: { service: any }) {
   const router = useRouter();
   const { user } = useAuth();
-  const isSeller = user && ['seller', 'SELLER', 'business'].includes(user.role);
+  const isSeller = user && ['seller', 'SELLER', 'business', 'elite', 'ELITE'].includes(user.role);
   const [queues, setQueues] = useState<QueueSummary[]>([]);
   const [selected, setSelected] = useState<QueueSummary | null>(null);
   const [status, setStatus] = useState<QueueStatus | null>(null);

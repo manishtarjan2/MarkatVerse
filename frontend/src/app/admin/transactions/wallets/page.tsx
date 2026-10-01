@@ -7,7 +7,7 @@ import { ShieldAlert, Search, Wallet, ArrowDownRight, ArrowUpRight, Building2, C
 export default function AdminWalletsPage() {
   const { canEdit } = useAdminRole();
   const hasEditPermission = canEdit('transactions'); // Re-using transactions permission
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
   const [sellers, setSellers] = useState<any[]>([]);
   const [selectedWallet, setSelectedWallet] = useState<any>(null);

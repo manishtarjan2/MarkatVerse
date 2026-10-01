@@ -14,6 +14,7 @@ export declare class CategoriesController {
         primaryType: string | null;
         allowedListingTypes: string[];
         businessModels: string[];
+        workflowId: string | null;
         allowedFeatures: string[];
         notApplicable: string[];
         optionalFeatures: string[];
@@ -35,6 +36,7 @@ export declare class CategoriesController {
         primaryType: string | null;
         allowedListingTypes: string[];
         businessModels: string[];
+        workflowId: string | null;
         allowedFeatures: string[];
         notApplicable: string[];
         optionalFeatures: string[];
@@ -56,6 +58,7 @@ export declare class CategoriesController {
         primaryType: string | null;
         allowedListingTypes: string[];
         businessModels: string[];
+        workflowId: string | null;
         allowedFeatures: string[];
         notApplicable: string[];
         optionalFeatures: string[];
@@ -77,6 +80,7 @@ export declare class CategoriesController {
         primaryType: string | null;
         allowedListingTypes: string[];
         businessModels: string[];
+        workflowId: string | null;
         allowedFeatures: string[];
         notApplicable: string[];
         optionalFeatures: string[];
@@ -101,6 +105,7 @@ export declare class CategoriesController {
         primaryType: string | null;
         allowedListingTypes: string[];
         businessModels: string[];
+        workflowId: string | null;
         allowedFeatures: string[];
         notApplicable: string[];
         optionalFeatures: string[];

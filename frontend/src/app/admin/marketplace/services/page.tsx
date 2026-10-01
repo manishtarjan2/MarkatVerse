@@ -44,17 +44,21 @@ export default function MarketplaceServicesPage() {
   const handleToggleStatus = async (service: Product) => {
     if (!hasEditPermission) return;
     const newStatus = service.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    // Optimistic update
+    setProducts(products.map(p => p.id === service.id ? { ...p, status: newStatus } : p));
+    
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
       const res = await fetch(`${API_URL}/products/${service.id}/admin-status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
       if (!res.ok) throw new Error('Failed to update status');
-      window.location.reload();
     } catch (e) {
       console.error(e);
+      // Revert optimistic update on error
+      setProducts(products.map(p => p.id === service.id ? { ...p, status: service.status } : p));
       alert('Error updating status');
     }
   };

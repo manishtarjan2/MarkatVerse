@@ -8,7 +8,7 @@ export default function CommercialgtCouponsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: '', code: '', discount: 0, type: 'PERCENTAGE', status: 'ACTIVE' });
   const [isEditing, setIsEditing] = useState(false);
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
   const fetchItems = async () => {
     try {
@@ -190,3 +190,4 @@ export default function CommercialgtCouponsPage() {
     </div>
   );
 }
+

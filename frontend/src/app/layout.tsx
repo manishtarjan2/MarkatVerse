@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   let description = "The global marketplace connecting people, businesses and opportunities.";
 
   try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
     // Revalidate every 60 seconds so SEO updates reflect relatively quickly
     const res = await fetch(`${API_URL}/system-config/seo`, { next: { revalidate: 60 } });
     if (res.ok) {
