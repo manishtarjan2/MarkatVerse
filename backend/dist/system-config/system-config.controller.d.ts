@@ -40,4 +40,40 @@ export declare class SystemConfigController {
     addPaymentMethod(body: any): Promise<any[]>;
     updatePaymentMethod(id: string, body: any): Promise<any[]>;
     deletePaymentMethod(id: string): Promise<any[]>;
+    getTaxRules(): Promise<{
+        id: string;
+        name: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rate: number;
+    }[]>;
+    addTaxRule(body: {
+        name: string;
+        rate: number;
+        status?: string;
+    }): Promise<{
+        id: string;
+        name: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rate: number;
+    }>;
+    updateTaxRule(id: string, body: any): Promise<{
+        id: string;
+        name: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rate: number;
+    }>;
+    deleteTaxRule(id: string): Promise<{
+        id: string;
+        name: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rate: number;
+    }>;
 }

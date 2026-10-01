@@ -59,7 +59,7 @@ export default function Sidebar({ currentAdminRole, setCurrentAdminRole, isMobil
     {
       name: 'Customer Support',
       icon: <Headset className="w-5 h-5" />,
-      href: '/admin/support/tickets',
+      href: '/admin/support/inbox',
     },
     {
       name: 'Content',

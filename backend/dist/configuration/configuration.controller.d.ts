@@ -169,7 +169,7 @@ export declare class ConfigurationController {
         name: string;
         data: import("@prisma/client/runtime/library").JsonValue;
         createdAt: Date;
-        updatedAt: Date;
         type: string;
+        updatedAt: Date;
     }>;
 }

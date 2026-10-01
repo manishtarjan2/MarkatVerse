@@ -2,14 +2,16 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 import { SecurityService } from '../security/security.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 export declare class AuthService {
     private prisma;
     private jwtService;
     private idGenerator;
     private securityService;
+    private notificationsService;
     private readonly logger;
     private readonly otpStore;
-    constructor(prisma: PrismaService, jwtService: JwtService, idGenerator: IdGeneratorService, securityService: SecurityService);
+    constructor(prisma: PrismaService, jwtService: JwtService, idGenerator: IdGeneratorService, securityService: SecurityService, notificationsService: NotificationsService);
     signup(data: any, authHeader?: string): Promise<{
         access_token: string;
         user: {
@@ -67,6 +69,9 @@ export declare class AuthService {
         };
     }>;
     getMe(token: string): Promise<{
+        id: string;
+        name: string;
+        email: string | null;
         business: ({
             wallet: {
                 id: string;
@@ -80,21 +85,21 @@ export declare class AuthService {
                 owedToPlatform: number;
             } | null;
         } & {
-            businessType: string;
-            sector: string | null;
             id: string;
-            name: string;
             createdAt: Date;
             updatedAt: Date;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
-            businessCode: string | null;
+            name: string;
+            businessType: string;
+            sector: string | null;
             userId: string;
+            businessCode: string | null;
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
             address: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;
@@ -109,10 +114,7 @@ export declare class AuthService {
             subscriptionStartDate: Date | null;
             subscriptionEndDate: Date | null;
         }) | null;
-        id: string;
-        name: string;
         markatId: string | null;
-        email: string | null;
         phone: string | null;
         role: string;
     }>;

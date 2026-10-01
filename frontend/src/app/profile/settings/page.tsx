@@ -9,8 +9,11 @@ import { useCart } from '@/context/CartContext';
 import { User, CreditCard, MapPin, Package, Settings, Camera, ShieldCheck, Bell, ChevronRight, ChevronLeft, LogOut, Edit3, Trash2, Plus, Star, Heart, ShoppingBag, Key, Smartphone, Laptop, Download, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
+
 export default function ProfileSettings() {
   const [activeTab, setActiveTab] = useState('personal');
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [showMobileMenu, setShowMobileMenu] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const { user, login, logout, isLoading } = useAuth();
@@ -33,6 +36,24 @@ export default function ProfileSettings() {
       router.replace('/login?redirect=/profile/settings');
     }
   }, [isLoading, user, router]);
+
+  React.useEffect(() => {
+    if (activeTab === 'notifications' && user) {
+      const fetchNotifications = async () => {
+        try {
+          const res = await fetch(`${API_URL}/admin/notifications/history`);
+          if (res.ok) {
+            const data = await res.json();
+            const myLogs = data.filter((n: any) => n.userId === user.id || n.userId === user.markatId).slice(0, 10);
+            setNotifications(myLogs);
+          }
+        } catch (error) {
+          console.error("Failed to load notifications", error);
+        }
+      };
+      fetchNotifications();
+    }
+  }, [activeTab, user]);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -173,7 +194,11 @@ export default function ProfileSettings() {
             {/* Glossy top edge highlight */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
 
-            <div className="text-center mb-10 relative">
+            <Link href="/" className="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors p-2 bg-slate-800/50 hover:bg-blue-600/20 rounded-full border border-slate-700/50 hover:border-blue-500/50 group z-20" title="Back to Home">
+              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+            </Link>
+
+            <div className="text-center mb-10 relative mt-4">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 p-1 mx-auto mb-4 relative shadow-lg shadow-blue-500/20 group cursor-pointer">
                 <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center relative overflow-hidden">
                   <span className="text-3xl font-bold text-white tracking-widest">
@@ -526,57 +551,37 @@ export default function ProfileSettings() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Notification 1 */}
-                  <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors flex gap-4 items-start relative overflow-hidden group">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
-                    <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/30">
-                      <Package className="w-6 h-6 text-blue-400" />
+                  {notifications.length === 0 ? (
+                    <div className="text-center text-slate-400 py-10">
+                      No notifications yet.
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="text-white font-bold text-base">Order Shipped!</h4>
-                        <span className="text-xs text-slate-500 font-medium">2 hours ago</span>
-                      </div>
-                      <p className="text-slate-400 text-sm leading-relaxed mb-3">Your order <span className="text-white font-semibold">#ORD-20260925-001</span> is on the way. Expected delivery by tomorrow evening.</p>
-                      <button className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md transition-colors">
-                        Track Order
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Notification 2 */}
-                  <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors flex gap-4 items-start">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
-                      <ShieldCheck className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="text-white font-bold text-base">Security Alert: New Login</h4>
-                        <span className="text-xs text-slate-500 font-medium">Yesterday</span>
-                      </div>
-                      <p className="text-slate-400 text-sm leading-relaxed mb-3">We noticed a new login from a Windows PC device. If this was you, you can safely ignore this alert.</p>
-                      <button className="text-xs font-bold text-slate-400 hover:text-white underline transition-colors">
-                        Review Activity
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Notification 3 */}
-                  <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors flex gap-4 items-start">
-                    <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
-                      <Star className="w-6 h-6 text-amber-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="text-white font-bold text-base">Welcome to MarkatVerse!</h4>
-                        <span className="text-xs text-slate-500 font-medium">3 days ago</span>
-                      </div>
-                      <p className="text-slate-400 text-sm leading-relaxed mb-3">Thank you for joining MarkatVerse! Complete your profile settings to unlock all features.</p>
-                      <button className="text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md transition-colors shadow-lg shadow-blue-500/20">
-                        Complete Profile
-                      </button>
-                    </div>
-                  </div>
+                  ) : (
+                    notifications.map((notif: any, i: number) => {
+                      const isSecurity = notif.triggerType.includes('LOGIN') || notif.triggerType.includes('SECURITY');
+                      const isOrder = notif.triggerType.includes('ORDER');
+                      return (
+                        <div key={i} className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors flex gap-4 items-start relative overflow-hidden group">
+                          {isOrder && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>}
+                          {isSecurity && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>}
+                          
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 border 
+                            ${isSecurity ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' 
+                            : isOrder ? 'bg-blue-500/20 border-blue-500/30 text-blue-400' 
+                            : 'bg-amber-500/20 border-amber-500/30 text-amber-400'}`}>
+                            {isSecurity ? <ShieldCheck className="w-6 h-6" /> : isOrder ? <Package className="w-6 h-6" /> : <Star className="w-6 h-6" />}
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start mb-1">
+                              <h4 className="text-white font-bold text-base">{notif.title || notif.triggerType}</h4>
+                              <span className="text-xs text-slate-500 font-medium">{new Date(notif.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-slate-400 text-sm leading-relaxed mb-3">{notif.message}</p>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               </div>
             )}

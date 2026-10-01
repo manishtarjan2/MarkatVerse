@@ -57,4 +57,25 @@ export class SystemConfigController {
   deletePaymentMethod(@Param('id') id: string) {
     return this.systemConfigService.deletePaymentMethod(id);
   }
+
+  // --- Tax Endpoints ---
+  @Get('tax')
+  getTaxRules() {
+    return this.systemConfigService.getTaxRules();
+  }
+
+  @Post('tax')
+  addTaxRule(@Body() body: { name: string; rate: number; status?: string }) {
+    return this.systemConfigService.addTaxRule(body);
+  }
+
+  @Patch('tax/:id')
+  updateTaxRule(@Param('id') id: string, @Body() body: any) {
+    return this.systemConfigService.updateTaxRule(id, body);
+  }
+
+  @Delete('tax/:id')
+  deleteTaxRule(@Param('id') id: string) {
+    return this.systemConfigService.deleteTaxRule(id);
+  }
 }

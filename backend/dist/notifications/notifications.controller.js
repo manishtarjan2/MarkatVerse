@@ -41,6 +41,18 @@ let NotificationsController = class NotificationsController {
     async deletePushTemplate(id) {
         return this.notificationsService.deletePushTemplate(id);
     }
+    async getEmailTemplates() {
+        return this.notificationsService.getEmailTemplates();
+    }
+    async createEmailTemplate(data) {
+        return this.notificationsService.createEmailTemplate(data);
+    }
+    async updateEmailTemplate(id, data) {
+        return this.notificationsService.updateEmailTemplate(id, data);
+    }
+    async deleteEmailTemplate(id) {
+        return this.notificationsService.deleteEmailTemplate(id);
+    }
 };
 __decorate([
     Get('sms'),
@@ -98,6 +110,34 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], NotificationsController.prototype, "deletePushTemplate", null);
+__decorate([
+    Get('email'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "getEmailTemplates", null);
+__decorate([
+    Post('email'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "createEmailTemplate", null);
+__decorate([
+    Put('email/:id'),
+    __param(0, Param('id')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "updateEmailTemplate", null);
+__decorate([
+    Delete('email/:id'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "deleteEmailTemplate", null);
 NotificationsController = __decorate([
     Controller('admin/notifications'),
     __metadata("design:paramtypes", [NotificationsService])

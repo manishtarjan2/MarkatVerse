@@ -7,18 +7,15 @@ export default function SupportLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname();
 
   const tabs = [
-    { name: 'Tickets', href: '/admin/support/tickets' },
+    { name: 'Unified Inbox', href: '/admin/support/inbox' },
     { name: 'Live Chat', href: '/admin/support/live-chat' },
-    { name: 'Complaints', href: '/admin/support/complaints' },
-    { name: 'Disputes', href: '/admin/support/disputes' },
-    { name: 'Action Logs', href: '/admin/support/action-logs' },
   ];
 
   return (
     <div className="max-w-6xl mx-auto w-full animate-in fade-in duration-300 pb-20">
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-white tracking-tight">Customer Support</h1>
-        <p className="text-slate-400 mt-2 text-sm">Manage tickets, live chat, complaints, and user disputes.</p>
+        <p className="text-slate-400 mt-2 text-sm">Unified omnichannel case management and real-time live desk.</p>
       </header>
 
       <div className="flex overflow-x-auto border-b border-slate-700/50 mb-8 gap-8">

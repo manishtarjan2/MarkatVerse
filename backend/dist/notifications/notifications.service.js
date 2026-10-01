@@ -64,23 +64,52 @@ let NotificationsService = class NotificationsService {
             where: { id },
         });
     }
+    async getEmailTemplates() {
+        return this.prisma.emailTemplate.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    async createEmailTemplate(data) {
+        return this.prisma.emailTemplate.create({
+            data: {
+                title: data.title,
+                message: data.message,
+                status: data.status || 'ACTIVE',
+            },
+        });
+    }
+    async updateEmailTemplate(id, data) {
+        return this.prisma.emailTemplate.update({
+            where: { id },
+            data,
+        });
+    }
+    async deleteEmailTemplate(id) {
+        return this.prisma.emailTemplate.delete({
+            where: { id },
+        });
+    }
     async sendNotification(payload) {
         console.log(`[Notification Engine] Processing ${payload.type} for recipient ${payload.recipientId}`);
-        let mockMessage = '';
-        if (payload.type === 'ORDER_PROCESSING') {
-            mockMessage = `Your order ${payload.data.orderId} is now processing!`;
-        }
-        else if (payload.type === 'TOKEN_ISSUED') {
-            mockMessage = `Your service token is ${payload.data.tokenId}. Please wait for your turn.`;
-        }
-        else if (payload.type === 'SELLER_WELCOME') {
-            mockMessage = `Welcome to MarkatVerse! Your business registration is under review.`;
-        }
-        else {
-            mockMessage = `You have a new notification of type ${payload.type}.`;
-        }
-        console.log(`[Notification Engine] MOCK SEND -> ${mockMessage}`);
-        return { success: true, message: mockMessage };
+        const pushTemplate = await this.prisma.pushTemplate.findFirst({
+            where: { title: payload.type, status: 'ACTIVE' }
+        });
+        const smsTemplate = await this.prisma.smsTemplate.findFirst({
+            where: { title: payload.type, status: 'ACTIVE' }
+        });
+        const compileMessage = (templateMessage) => {
+            let msg = templateMessage;
+            for (const [key, value] of Object.entries(payload.data)) {
+                const regex = new RegExp(`{{${key}}}`, 'g');
+                msg = msg.replace(regex, String(value));
+            }
+            return msg;
+        };
+        const pushMsgToSend = pushTemplate ? compileMessage(pushTemplate.message) : `You have a new push notification of type ${payload.type}.`;
+        const smsMsgToSend = smsTemplate ? compileMessage(smsTemplate.message) : `You have a new SMS notification of type ${payload.type}.`;
+        console.log(`[Notification Engine] AUTOMATED PUSH SEND -> ${pushMsgToSend}`);
+        console.log(`[Notification Engine] AUTOMATED SMS SEND -> ${smsMsgToSend}`);
+        return { success: true, pushMessage: pushMsgToSend, smsMessage: smsMsgToSend };
     }
 };
 NotificationsService = __decorate([

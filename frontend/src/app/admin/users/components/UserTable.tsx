@@ -76,17 +76,6 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
 
   return (
     <div className="w-full relative">
-      {hasEditPermission && title.includes('Staff') && (
-        <div className="flex justify-end mb-6">
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-amber-500/20"
-          >
-            <Plus className="w-5 h-5" /> Add Staff
-          </button>
-        </div>
-      )}
-
       {/* Add Staff Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -136,7 +125,7 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
       )}
 
       <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden">
-        <div className="p-4 border-b border-slate-700 bg-slate-900/50">
+        <div className="p-4 border-b border-slate-700 bg-slate-900/50 flex justify-between items-center flex-wrap gap-4">
           <div className="relative w-full sm:w-80">
             <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input 
@@ -147,6 +136,15 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
               className="bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 w-full text-sm transition-colors" 
             />
           </div>
+          
+          {hasEditPermission && title.includes('Staff') && (
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap"
+            >
+              <Plus className="w-5 h-5" /> Add Staff
+            </button>
+          )}
         </div>
         
         <div className="overflow-x-auto">

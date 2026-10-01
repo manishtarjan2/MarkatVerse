@@ -42,6 +42,18 @@ let SecurityService = class SecurityService {
             },
         });
     }
+    async getAlerts() {
+        return this.prisma.securityAlert.findMany({ orderBy: { createdAt: 'desc' } });
+    }
+    async createAlert(data) {
+        return this.prisma.securityAlert.create({ data });
+    }
+    async updateAlert(id, data) {
+        return this.prisma.securityAlert.update({ where: { id }, data });
+    }
+    async deleteAlert(id) {
+        return this.prisma.securityAlert.delete({ where: { id } });
+    }
 };
 SecurityService = __decorate([
     Injectable(),

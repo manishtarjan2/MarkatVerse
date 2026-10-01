@@ -38,4 +38,21 @@ export class SecurityService {
       },
     });
   }
+
+  // --- Alerts ---
+  async getAlerts() {
+    return this.prisma.securityAlert.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  async createAlert(data: { title: string; description?: string; status?: string }) {
+    return this.prisma.securityAlert.create({ data });
+  }
+
+  async updateAlert(id: string, data: any) {
+    return this.prisma.securityAlert.update({ where: { id }, data });
+  }
+
+  async deleteAlert(id: string) {
+    return this.prisma.securityAlert.delete({ where: { id } });
+  }
 }

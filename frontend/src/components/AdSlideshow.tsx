@@ -37,12 +37,12 @@ export default function AdSlideshow({ ads }: { ads: any[] }) {
   return (
     <div className="w-full relative rounded-2xl overflow-hidden shadow-sm group">
       <div 
-        className="flex transition-transform duration-700 ease-in-out min-h-[160px]"
+        className="flex transition-transform duration-700 ease-in-out h-[90px] sm:h-[120px] md:h-[160px]"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {ads.map((ad: any) => (
-          <div key={ad.id} className="min-w-full relative flex items-center min-h-[160px]">
-            <a href={ad.linkUrl || '#'} className="block w-full h-full bg-slate-900 text-white relative overflow-hidden group/ad flex items-center p-8">
+          <div key={ad.id} className="min-w-full relative flex items-center h-full">
+            <a href={ad.linkUrl || '#'} className="block w-full h-full bg-slate-900 text-white relative overflow-hidden group/ad flex items-center p-3 sm:p-5 md:p-8">
               {/* Background Image or Gradient */}
               {ad.mediaUrl ? (
                 <div className="absolute inset-0 z-0">
@@ -55,9 +55,11 @@ export default function AdSlideshow({ ads }: { ads: any[] }) {
               
               <div className="absolute inset-0 bg-black/10 group-hover/ad:bg-black/0 transition-colors z-0"></div>
               
-              <div className="relative z-10 flex items-center justify-between w-full">
-                <h3 className="text-3xl font-black tracking-tight drop-shadow-md w-2/3 leading-tight">{ad.title}</h3>
-                <span className="bg-white text-emerald-600 px-5 py-2.5 rounded-xl font-bold text-sm shadow-xl group-hover/ad:scale-105 transition-transform">Explore Now &rarr;</span>
+              <div className="relative z-10 flex items-end justify-between w-full h-full gap-2 pb-1">
+                <h3 className="text-sm sm:text-lg md:text-2xl font-black tracking-tight drop-shadow-md max-w-[60%] leading-tight line-clamp-2">{ad.title}</h3>
+                <span className="bg-white text-emerald-600 px-3 py-1.5 md:px-5 md:py-2.5 rounded-lg md:rounded-xl font-bold text-[10px] sm:text-xs md:text-sm shadow-md md:shadow-xl group-hover/ad:scale-105 transition-transform shrink-0 whitespace-nowrap">
+                  Explore <span className="hidden sm:inline">Now </span>&rarr;
+                </span>
               </div>
             </a>
           </div>

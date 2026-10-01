@@ -10,16 +10,19 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 let OrdersService = class OrdersService {
     prisma;
     idGenerator;
-    constructor(prisma, idGenerator) {
+    notificationsService;
+    constructor(prisma, idGenerator, notificationsService) {
         this.prisma = prisma;
         this.idGenerator = idGenerator;
+        this.notificationsService = notificationsService;
     }
     async create(createOrderDto) {
         const orderNumber = await this.idGenerator.generateOrderId();
-        return this.prisma.order.create({
+        const newOrder = await this.prisma.order.create({
             data: {
                 orderNumber,
                 buyerId: createOrderDto.buyerId,
@@ -39,6 +42,14 @@ let OrdersService = class OrdersService {
                 items: true
             }
         });
+        await this.notificationsService.sendNotification({
+            type: 'ORDER_PROCESSING',
+            recipientId: createOrderDto.buyerId || 'Guest',
+            data: {
+                orderId: orderNumber,
+            }
+        });
+        return newOrder;
     }
     async findAll() {
         const orders = await this.prisma.order.findMany({
@@ -96,7 +107,8 @@ let OrdersService = class OrdersService {
 OrdersService = __decorate([
     Injectable(),
     __metadata("design:paramtypes", [PrismaService,
-        IdGeneratorService])
+        IdGeneratorService,
+        NotificationsService])
 ], OrdersService);
 export { OrdersService };
 //# sourceMappingURL=orders.service.js.map

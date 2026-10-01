@@ -47,6 +47,18 @@ let SystemConfigController = class SystemConfigController {
     deletePaymentMethod(id) {
         return this.systemConfigService.deletePaymentMethod(id);
     }
+    getTaxRules() {
+        return this.systemConfigService.getTaxRules();
+    }
+    addTaxRule(body) {
+        return this.systemConfigService.addTaxRule(body);
+    }
+    updateTaxRule(id, body) {
+        return this.systemConfigService.updateTaxRule(id, body);
+    }
+    deleteTaxRule(id) {
+        return this.systemConfigService.deleteTaxRule(id);
+    }
 };
 __decorate([
     Get('seo'),
@@ -115,6 +127,34 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], SystemConfigController.prototype, "deletePaymentMethod", null);
+__decorate([
+    Get('tax'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "getTaxRules", null);
+__decorate([
+    Post('tax'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "addTaxRule", null);
+__decorate([
+    Patch('tax/:id'),
+    __param(0, Param('id')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "updateTaxRule", null);
+__decorate([
+    Delete('tax/:id'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SystemConfigController.prototype, "deleteTaxRule", null);
 SystemConfigController = __decorate([
     Controller('system-config'),
     __metadata("design:paramtypes", [SystemConfigService])

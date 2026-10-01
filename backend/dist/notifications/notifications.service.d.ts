@@ -74,12 +74,49 @@ export declare class NotificationsService {
         createdAt: Date;
         updatedAt: Date;
     }>;
+    getEmailTemplates(): Promise<{
+        id: string;
+        title: string;
+        message: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    createEmailTemplate(data: {
+        title: string;
+        message: string;
+        status?: string;
+    }): Promise<{
+        id: string;
+        title: string;
+        message: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    updateEmailTemplate(id: string, data: any): Promise<{
+        id: string;
+        title: string;
+        message: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    deleteEmailTemplate(id: string): Promise<{
+        id: string;
+        title: string;
+        message: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
     sendNotification(payload: {
         type: string;
         recipientId: string;
         data: any;
     }): Promise<{
         success: boolean;
-        message: string;
+        pushMessage: string;
+        smsMessage: string;
     }>;
 }

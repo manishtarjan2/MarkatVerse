@@ -46,4 +46,44 @@ export declare class SystemConfigService {
     addPaymentMethod(data: any): Promise<any[]>;
     updatePaymentMethod(id: string, data: any): Promise<any[]>;
     deletePaymentMethod(id: string): Promise<any[]>;
+    getTaxRules(): Promise<{
+        id: string;
+        name: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rate: number;
+    }[]>;
+    addTaxRule(data: {
+        name: string;
+        rate: number;
+        status?: string;
+    }): Promise<{
+        id: string;
+        name: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rate: number;
+    }>;
+    updateTaxRule(id: string, data: {
+        name?: string;
+        rate?: number;
+        status?: string;
+    }): Promise<{
+        id: string;
+        name: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rate: number;
+    }>;
+    deleteTaxRule(id: string): Promise<{
+        id: string;
+        name: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        rate: number;
+    }>;
 }

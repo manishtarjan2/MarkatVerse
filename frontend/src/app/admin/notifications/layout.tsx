@@ -11,7 +11,6 @@ export default function NotificationsLayout({ children }: { children: React.Reac
     { name: 'Email', href: '/admin/notifications/email' },
     { name: 'SMS', href: '/admin/notifications/sms' },
     { name: 'Push', href: '/admin/notifications/push' },
-    { name: 'Templates', href: '/admin/notifications/templates' },
   ];
 
   return (

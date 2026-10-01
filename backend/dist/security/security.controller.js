@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, Param } from '@nestjs/common';
 import { SecurityService } from './security.service.js';
 let SecurityController = class SecurityController {
     securityService;
@@ -22,6 +22,18 @@ let SecurityController = class SecurityController {
     }
     createAuditLog(body) {
         return this.securityService.createAuditLog(body);
+    }
+    getAlerts() {
+        return this.securityService.getAlerts();
+    }
+    createAlert(body) {
+        return this.securityService.createAlert(body);
+    }
+    updateAlert(id, body) {
+        return this.securityService.updateAlert(id, body);
+    }
+    deleteAlert(id) {
+        return this.securityService.deleteAlert(id);
     }
 };
 __decorate([
@@ -37,6 +49,34 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], SecurityController.prototype, "createAuditLog", null);
+__decorate([
+    Get('alerts'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SecurityController.prototype, "getAlerts", null);
+__decorate([
+    Post('alerts'),
+    __param(0, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SecurityController.prototype, "createAlert", null);
+__decorate([
+    Patch('alerts/:id'),
+    __param(0, Param('id')),
+    __param(1, Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], SecurityController.prototype, "updateAlert", null);
+__decorate([
+    Delete('alerts/:id'),
+    __param(0, Param('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SecurityController.prototype, "deleteAlert", null);
 SecurityController = __decorate([
     Controller('security'),
     __metadata("design:paramtypes", [SecurityService])

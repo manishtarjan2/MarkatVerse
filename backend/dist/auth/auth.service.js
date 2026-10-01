@@ -13,19 +13,22 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 import { SecurityService } from '../security/security.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import * as bcrypt from 'bcryptjs';
 let AuthService = AuthService_1 = class AuthService {
     prisma;
     jwtService;
     idGenerator;
     securityService;
+    notificationsService;
     logger = new Logger(AuthService_1.name);
     otpStore = new Map();
-    constructor(prisma, jwtService, idGenerator, securityService) {
+    constructor(prisma, jwtService, idGenerator, securityService, notificationsService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
         this.idGenerator = idGenerator;
         this.securityService = securityService;
+        this.notificationsService = notificationsService;
     }
     async signup(data, authHeader) {
         if (!data.email || !data.phone) {
@@ -210,12 +213,12 @@ let AuthService = AuthService_1 = class AuthService {
             });
             throw new UnauthorizedException('Invalid credentials');
         }
-        await this.securityService.createAuditLog({
+        this.securityService.createAuditLog({
             action: 'LOGIN',
             resource: 'User',
             details: `User logged in`,
             userId: user.id,
-        });
+        }).catch(err => this.logger.error('Failed audit log', err));
         return this.generateToken(user);
     }
     async phoneLogin(phone) {
@@ -402,7 +405,14 @@ let AuthService = AuthService_1 = class AuthService {
         });
         return { message: 'Password updated successfully' };
     }
-    generateToken(user) {
+    async generateToken(user) {
+        if (user.role) {
+            this.notificationsService.sendNotification({
+                type: 'CUSTOMER_LOGIN',
+                recipientId: user.id,
+                data: {}
+            }).catch(err => this.logger.error('Failed to send login push', err));
+        }
         const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
         return {
             access_token: this.jwtService.sign(payload),
@@ -423,7 +433,8 @@ AuthService = AuthService_1 = __decorate([
     __metadata("design:paramtypes", [PrismaService,
         JwtService,
         IdGeneratorService,
-        SecurityService])
+        SecurityService,
+        NotificationsService])
 ], AuthService);
 export { AuthService };
 //# sourceMappingURL=auth.service.js.map

@@ -16,8 +16,8 @@ export declare class WalletController {
     getTransactions(walletId: string): Promise<{
         commission: number;
         id: string;
-        createdAt: Date;
         status: string;
+        createdAt: Date;
         type: string;
         referenceId: string | null;
         referenceType: string | null;

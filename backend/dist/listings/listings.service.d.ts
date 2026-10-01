@@ -53,15 +53,15 @@ export declare class ListingsService {
         };
     } & {
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         description: string | null;
+        title: string;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
-        title: string;
         attributes: import("@prisma/client/runtime/library").JsonValue | null;
         pricingConfig: import("@prisma/client/runtime/library").JsonValue | null;
         availability: import("@prisma/client/runtime/library").JsonValue | null;
@@ -114,15 +114,15 @@ export declare class ListingsService {
         };
     } & {
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         description: string | null;
+        title: string;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
-        title: string;
         attributes: import("@prisma/client/runtime/library").JsonValue | null;
         pricingConfig: import("@prisma/client/runtime/library").JsonValue | null;
         availability: import("@prisma/client/runtime/library").JsonValue | null;
@@ -130,15 +130,15 @@ export declare class ListingsService {
     }>;
     createListing(data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         description: string | null;
+        title: string;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
-        title: string;
         attributes: import("@prisma/client/runtime/library").JsonValue | null;
         pricingConfig: import("@prisma/client/runtime/library").JsonValue | null;
         availability: import("@prisma/client/runtime/library").JsonValue | null;
@@ -146,15 +146,15 @@ export declare class ListingsService {
     }>;
     updateListing(id: string, data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         description: string | null;
+        title: string;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
-        title: string;
         attributes: import("@prisma/client/runtime/library").JsonValue | null;
         pricingConfig: import("@prisma/client/runtime/library").JsonValue | null;
         availability: import("@prisma/client/runtime/library").JsonValue | null;
@@ -162,15 +162,15 @@ export declare class ListingsService {
     }>;
     deleteListing(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         description: string | null;
+        title: string;
         categoryId: string | null;
         businessTypeId: string;
         sectorId: string;
-        title: string;
         attributes: import("@prisma/client/runtime/library").JsonValue | null;
         pricingConfig: import("@prisma/client/runtime/library").JsonValue | null;
         availability: import("@prisma/client/runtime/library").JsonValue | null;

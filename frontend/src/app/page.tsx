@@ -14,7 +14,7 @@ const ProductGrid = dynamic(() => import('@/components/ProductGrid'));
 async function getAdvertisements() {
   try {
     const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
-    const res = await fetch(`${API_URL}/commercial/advertisements`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/commercial/advertisements`, { next: { revalidate: 60 } });
     if (res.ok) {
       const data = await res.json();
       return data.filter((ad: any) => ad.status === 'ACTIVE' && ad.position === 'HOMEPAGE');
@@ -28,7 +28,7 @@ async function getAdvertisements() {
 async function getBanners() {
   try {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const res = await fetch(`${API_URL}/content/banners`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/content/banners`, { next: { revalidate: 60 } });
     if (res.ok) {
       const data = await res.json();
       return data.filter((banner: any) => banner.status === 'ACTIVE' && banner.position === 'HOME_HERO');
@@ -42,7 +42,7 @@ async function getBanners() {
 async function getBlogPosts() {
   try {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    const res = await fetch(`${API_URL}/content/blog`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/content/blog`, { next: { revalidate: 60 } });
     if (res.ok) {
       const data = await res.json();
       return data.filter((post: any) => post.status === 'PUBLISHED').slice(0, 3); // Top 3 latest posts

@@ -25,13 +25,13 @@ export declare class AdminBusinessService {
         sector: string | null;
         id: string;
         name: string;
+        userId: string;
         createdAt: Date;
         updatedAt: Date;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
         businessCode: string | null;
-        userId: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -59,13 +59,13 @@ export declare class AdminBusinessService {
         sector: string | null;
         id: string;
         name: string;
+        userId: string;
         createdAt: Date;
         updatedAt: Date;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
         businessCode: string | null;
-        userId: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -95,13 +95,13 @@ export declare class AdminBusinessService {
         sector: string | null;
         id: string;
         name: string;
+        userId: string;
         createdAt: Date;
         updatedAt: Date;
         pincode: string | null;
         latitude: number | null;
         longitude: number | null;
         businessCode: string | null;
-        userId: string;
         logo: string | null;
         description: string | null;
         businessModel: import(".prisma/client").$Enums.MainType;
@@ -126,13 +126,13 @@ export declare class AdminBusinessService {
             sector: string | null;
             id: string;
             name: string;
+            userId: string;
             createdAt: Date;
             updatedAt: Date;
             pincode: string | null;
             latitude: number | null;
             longitude: number | null;
             businessCode: string | null;
-            userId: string;
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
@@ -154,9 +154,9 @@ export declare class AdminBusinessService {
     } & {
         id: string;
         name: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         businessId: string;
     })[]>;
     createBranch(data: {
@@ -166,9 +166,9 @@ export declare class AdminBusinessService {
     }): Promise<{
         id: string;
         name: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         businessId: string;
     }>;
     updateBranch(id: string, data: {
@@ -178,17 +178,17 @@ export declare class AdminBusinessService {
     }): Promise<{
         id: string;
         name: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         businessId: string;
     }>;
     deleteBranch(id: string): Promise<{
         id: string;
         name: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         businessId: string;
     }>;
 }

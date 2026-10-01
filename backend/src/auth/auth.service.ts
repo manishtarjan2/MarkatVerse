@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
 import { SecurityService } from '../security/security.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -14,7 +15,8 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private idGenerator: IdGeneratorService,
-    private securityService: SecurityService
+    private securityService: SecurityService,
+    private notificationsService: NotificationsService
   ) {}
 
   async signup(data: any, authHeader?: string) {
@@ -227,12 +229,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    await this.securityService.createAuditLog({
+    // Fire and forget audit log to speed up login
+    this.securityService.createAuditLog({
       action: 'LOGIN',
       resource: 'User',
       details: `User logged in`,
       userId: user.id,
-    });
+    }).catch(err => this.logger.error('Failed audit log', err));
 
     return this.generateToken(user);
   }
@@ -467,7 +470,16 @@ export class AuthService {
     return { message: 'Password updated successfully' };
   }
 
-  private generateToken(user: any) {
+  private async generateToken(user: any) {
+    if (user.role) {
+      // Fire and forget notification
+      this.notificationsService.sendNotification({
+        type: 'CUSTOMER_LOGIN',
+        recipientId: user.id,
+        data: {}
+      }).catch(err => this.logger.error('Failed to send login push', err));
+    }
+
     const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
     return {
       access_token: this.jwtService.sign(payload),

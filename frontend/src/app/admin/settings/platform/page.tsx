@@ -99,72 +99,39 @@ export default function SettingsPlatformPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Core Controls Column */}
-        <div className="lg:col-span-4 flex flex-col gap-8">
-          
-          {/* Dummy Data Toggle */}
-          <div className="group bg-slate-900/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-amber-500/40 hover:shadow-[0_0_40px_rgba(245,158,11,0.1)]">
-            <div className="absolute -right-10 -top-10 w-40 h-40 bg-amber-500/20 rounded-full blur-[50px] group-hover:bg-amber-500/30 transition-colors" />
-            <div className="relative z-10 flex flex-col h-full">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                    <Database className="w-5 h-5 text-amber-400" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Dummy Data</h3>
-                </div>
-                <label className={`relative inline-flex items-center ${hasTogglePermission ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-50'} transition-transform`}>
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer" 
-                    checked={isDummyActive} 
-                    onChange={toggleDummyData}
-                    disabled={!hasTogglePermission}
-                  />
-                  <div className="w-14 h-7 bg-slate-800 border border-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-[20px] after:w-[20px] after:transition-all peer-checked:bg-amber-500 peer-checked:after:bg-white peer-checked:border-amber-400"></div>
-                </label>
-              </div>
-              <p className="text-sm text-slate-400 leading-relaxed mb-6">
-                Inject global sandbox data for testing algorithms, layouts, and performance. Disabling this removes all non-production entries.
-              </p>
-              <div className="mt-auto pt-5 border-t border-white/5 flex justify-between items-center">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-500">Status</span>
-                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${isDummyActive ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
-                  {isDummyActive ? 'Active' : 'Suspended'}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Global Search Radius */}
-          <div className="group bg-slate-900/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-blue-500/40 hover:shadow-[0_0_40px_rgba(59,130,246,0.1)]">
-            <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-500/20 rounded-full blur-[50px] group-hover:bg-blue-500/30 transition-colors" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-col gap-12">
+        {/* Global Search Radius */}
+        <div className="group bg-slate-900/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-blue-500/40 hover:shadow-[0_0_40px_rgba(59,130,246,0.1)]">
+          <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-500/20 rounded-full blur-[50px] group-hover:bg-blue-500/30 transition-colors" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            
+            {/* Left Side: Info */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20">
                   <MapPin className="w-5 h-5 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white">Search Radius</h3>
+                <h3 className="text-xl font-bold text-white">Search Radius</h3>
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed mb-6">
+              <p className="text-sm text-slate-400 leading-relaxed max-w-md">
                 Define the absolute geographical limit (in kilometers) for product and service discovery.
               </p>
-              
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative flex-1">
-                  <input
-                    type="number"
-                    value={systemConfig?.searchRadius || 50}
-                    onChange={(e) => updateSystemConfig({ ...systemConfig, searchRadius: parseInt(e.target.value) || 50 })}
-                    disabled={!hasTogglePermission}
-                    className="w-full bg-slate-950/50 border border-slate-700 rounded-xl pl-5 pr-12 py-3 text-white font-black text-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">KM</span>
-                </div>
+            </div>
+            
+            {/* Right Side: Controls */}
+            <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
+              <div className="relative w-full sm:w-48">
+                <input
+                  type="number"
+                  value={systemConfig?.searchRadius || 50}
+                  onChange={(e) => updateSystemConfig({ ...systemConfig, searchRadius: parseInt(e.target.value) || 50 })}
+                  disabled={!hasTogglePermission}
+                  className="w-full bg-slate-950/50 border border-slate-700 rounded-xl pl-5 pr-12 py-4 text-white font-black text-2xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">KM</span>
               </div>
               
-              <label className="flex items-center gap-3 group/label cursor-pointer p-4 rounded-xl bg-slate-950/30 border border-white/5 hover:border-blue-500/30 transition-colors">
+              <label className="flex items-center gap-3 group/label cursor-pointer p-4 rounded-xl bg-slate-950/30 border border-white/5 hover:border-blue-500/30 transition-colors whitespace-nowrap">
                 <div className="relative flex items-center">
                   <input 
                     type="checkbox" 
@@ -176,21 +143,22 @@ export default function SettingsPlatformPage() {
                   <div className="w-5 h-5 border-2 border-slate-600 rounded bg-transparent peer-checked:bg-blue-500 peer-checked:border-blue-500 transition-colors"></div>
                   <Check className="absolute w-3.5 h-3.5 text-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-opacity" />
                 </div>
-                <span className="text-sm font-medium text-slate-300 group-hover/label:text-white transition-colors">Enforce strict boundary limits</span>
+                <span className="text-sm font-medium text-slate-300 group-hover/label:text-white transition-colors">Enforce Strict Boundary</span>
               </label>
             </div>
+            
           </div>
         </div>
 
-        {/* Sectors Grid Column */}
-        <div className="lg:col-span-8 flex flex-col">
-          <div className="flex items-center gap-3 mb-6 px-2">
+        {/* Sectors Grid */}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-3 mb-8 px-2">
             <Zap className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-xl font-bold text-white tracking-wide">Platform Sectors</h2>
+            <h2 className="text-2xl font-bold text-white tracking-wide">Platform Sectors</h2>
             <div className="flex-1 border-b border-white/10 ml-4"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sectors.map(sector => (
               <div key={sector.id} className="group bg-slate-900/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-white/20 relative overflow-hidden flex flex-col h-full">
                 {sector.isActive && <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[40px] pointer-events-none" />}

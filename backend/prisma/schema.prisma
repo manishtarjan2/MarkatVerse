@@ -704,6 +704,15 @@ model SmsTemplate {
   updatedAt DateTime @updatedAt
 }
 
+model EmailTemplate {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model PushTemplate {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   title     String
@@ -745,4 +754,44 @@ model CommissionRule {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Dispute {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TaxRule {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  rate      Float    @default(0)
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SecurityAlert {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model NotificationLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String?  @db.ObjectId
+  userType    String?  // CUSTOMER, SELLER
+  channel     String   // PUSH, SMS, EMAIL
+  triggerType String   // ORDER_PROCESSING, SELLER_WELCOME, etc.
+  recipient   String   // phone, email, device token
+  title       String?
+  message     String
+  status      String   @default("SENT") // SENT, FAILED
+  createdAt   DateTime @default(now())
 }

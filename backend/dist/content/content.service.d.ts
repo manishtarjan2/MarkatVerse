@@ -4,104 +4,104 @@ export declare class ContentService {
     constructor(prisma: PrismaService);
     getCmsPages(): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
     }[]>;
     getCmsPageById(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
     } | null>;
     createCmsPage(data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
     }>;
     updateCmsPage(id: string, data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
     }>;
     deleteCmsPage(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
     }>;
     getBanners(): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
-        imageUrl: string;
         title: string;
+        imageUrl: string;
         linkUrl: string | null;
         position: string;
     }[]>;
     getBannerById(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
-        imageUrl: string;
         title: string;
+        imageUrl: string;
         linkUrl: string | null;
         position: string;
     } | null>;
     createBanner(data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
-        imageUrl: string;
         title: string;
+        imageUrl: string;
         linkUrl: string | null;
         position: string;
     }>;
     updateBanner(id: string, data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
-        imageUrl: string;
         title: string;
+        imageUrl: string;
         linkUrl: string | null;
         position: string;
     }>;
     deleteBanner(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
-        imageUrl: string;
         title: string;
+        imageUrl: string;
         linkUrl: string | null;
         position: string;
     }>;
     getBlogPosts(): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
@@ -111,9 +111,9 @@ export declare class ContentService {
     }[]>;
     getBlogPostById(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
@@ -123,9 +123,9 @@ export declare class ContentService {
     } | null>;
     createBlogPost(data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
@@ -135,9 +135,9 @@ export declare class ContentService {
     }>;
     updateBlogPost(id: string, data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
@@ -147,9 +147,9 @@ export declare class ContentService {
     }>;
     deleteBlogPost(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         title: string;
         slug: string;
         content: string;
@@ -159,9 +159,9 @@ export declare class ContentService {
     }>;
     getSeoMetadata(): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
         title: string;
         pageUrl: string;
@@ -169,9 +169,9 @@ export declare class ContentService {
     }[]>;
     getSeoMetadataById(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
         title: string;
         pageUrl: string;
@@ -179,9 +179,9 @@ export declare class ContentService {
     } | null>;
     createSeoMetadata(data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
         title: string;
         pageUrl: string;
@@ -189,9 +189,9 @@ export declare class ContentService {
     }>;
     updateSeoMetadata(id: string, data: any): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
         title: string;
         pageUrl: string;
@@ -199,9 +199,9 @@ export declare class ContentService {
     }>;
     deleteSeoMetadata(id: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         description: string;
         title: string;
         pageUrl: string;

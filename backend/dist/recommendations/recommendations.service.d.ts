@@ -9,8 +9,8 @@ export declare class RecommendationsService {
         type: string;
     }): Promise<{
         id: string;
-        createdAt: Date;
         userId: string | null;
+        createdAt: Date;
         type: string;
         productId: string | null;
         serviceId: string | null;

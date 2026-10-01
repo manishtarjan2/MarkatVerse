@@ -3,17 +3,19 @@ import { CreateOrderDto } from './dto/create-order.dto.js';
 import { UpdateOrderDto } from './dto/update-order.dto.js';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private prisma: PrismaService,
-    private idGenerator: IdGeneratorService
+    private idGenerator: IdGeneratorService,
+    private notificationsService: NotificationsService
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     const orderNumber = await this.idGenerator.generateOrderId();
-    return this.prisma.order.create({
+    const newOrder = await this.prisma.order.create({
       data: {
         orderNumber,
         buyerId: createOrderDto.buyerId,
@@ -33,6 +35,17 @@ export class OrdersService {
         items: true
       }
     });
+
+    // Fire Push Notification to customer (B2B or B2C)
+    await this.notificationsService.sendNotification({
+      type: 'ORDER_PROCESSING',
+      recipientId: createOrderDto.buyerId || 'Guest',
+      data: {
+        orderId: orderNumber,
+      }
+    });
+
+    return newOrder;
   }
 
   async findAll() {

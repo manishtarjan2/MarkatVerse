@@ -4,13 +4,13 @@ export declare class LeadsService {
     constructor(prisma: PrismaService);
     create(data: any): import(".prisma/client").Prisma.Prisma__LeadClient<{
         id: string;
+        status: string;
         createdAt: Date;
+        message: string;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         buyerId: string;
         productId: string;
-        message: string;
         quantityRequested: number;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     findAllForSeller(sellerId: string): import(".prisma/client").Prisma.PrismaPromise<({
@@ -26,13 +26,13 @@ export declare class LeadsService {
         };
     } & {
         id: string;
+        status: string;
         createdAt: Date;
+        message: string;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         buyerId: string;
         productId: string;
-        message: string;
         quantityRequested: number;
     })[]>;
     findAllForBuyer(buyerId: string): import(".prisma/client").Prisma.PrismaPromise<({
@@ -49,24 +49,24 @@ export declare class LeadsService {
         };
     } & {
         id: string;
+        status: string;
         createdAt: Date;
+        message: string;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         buyerId: string;
         productId: string;
-        message: string;
         quantityRequested: number;
     })[]>;
     updateStatus(id: string, status: string): import(".prisma/client").Prisma.Prisma__LeadClient<{
         id: string;
+        status: string;
         createdAt: Date;
+        message: string;
         updatedAt: Date;
         sellerId: string;
-        status: string;
         buyerId: string;
         productId: string;
-        message: string;
         quantityRequested: number;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
 }

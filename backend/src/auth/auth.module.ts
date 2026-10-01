@@ -4,6 +4,7 @@ import { AuthController } from './auth.controller.js';
 import { PrismaModule } from '../prisma.module.js';
 import { JwtModule } from '@nestjs/jwt';
 import { SecurityModule } from '../security/security.module.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { SecurityModule } from '../security/security.module.js';
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, NotificationsService],
   controllers: [AuthController],
   exports: [AuthService],
 })

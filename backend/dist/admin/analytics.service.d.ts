@@ -34,8 +34,8 @@ export declare class AnalyticsService {
         } & {
             commission: number;
             id: string;
-            createdAt: Date;
             status: string;
+            createdAt: Date;
             type: string;
             referenceId: string | null;
             referenceType: string | null;
@@ -77,8 +77,8 @@ export declare class AnalyticsService {
             };
         } & {
             id: string;
-            createdAt: Date;
             status: string;
+            createdAt: Date;
             walletId: string;
             netAmount: number;
             amount: number;

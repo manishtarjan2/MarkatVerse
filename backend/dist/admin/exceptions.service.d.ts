@@ -4,35 +4,32 @@ export declare class ExceptionsService {
     constructor(prisma: PrismaService);
     getExceptions(status?: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        status: string;
-        type: string;
         details: import("@prisma/client/runtime/library").JsonValue | null;
+        status: string;
+        createdAt: Date;
+        type: string;
         severity: string;
         referenceId: string | null;
         referenceType: string | null;
         message: string;
         assignedTo: string | null;
+        updatedAt: Date;
     }[]>;
     resolveException(id: string, notes?: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        status: string;
-        type: string;
         details: import("@prisma/client/runtime/library").JsonValue | null;
+        status: string;
+        createdAt: Date;
+        type: string;
         severity: string;
         referenceId: string | null;
         referenceType: string | null;
         message: string;
         assignedTo: string | null;
+        updatedAt: Date;
     }>;
     getAuditLogs(entityType?: string, entityId?: string): Promise<{
         id: string;
-        createdAt: Date;
-        status: string;
-        userId: string | null;
         logId: string | null;
         action: string;
         resource: string | null;
@@ -40,7 +37,10 @@ export declare class ExceptionsService {
         entityId: string | null;
         details: string | null;
         detailsJson: import("@prisma/client/runtime/library").JsonValue | null;
+        userId: string | null;
         actorRole: string | null;
         ipAddress: string | null;
+        status: string;
+        createdAt: Date;
     }[]>;
 }

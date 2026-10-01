@@ -9,6 +9,7 @@ export declare class ServiceQueueController {
         sellerId?: string;
     }): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         shopName: string;
@@ -25,12 +26,12 @@ export declare class ServiceQueueController {
         enableTokens: boolean;
         enableAppointments: boolean;
         queuePolicy: string;
-        status: string;
         rating: string | null;
         reviews: string | null;
     }>;
     getQueueBySeller(sellerId: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         shopName: string;
@@ -47,12 +48,12 @@ export declare class ServiceQueueController {
         enableTokens: boolean;
         enableAppointments: boolean;
         queuePolicy: string;
-        status: string;
         rating: string | null;
         reviews: string | null;
     } | null>;
     getAllQueues(): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         shopName: string;
@@ -69,7 +70,6 @@ export declare class ServiceQueueController {
         enableTokens: boolean;
         enableAppointments: boolean;
         queuePolicy: string;
-        status: string;
         rating: string | null;
         reviews: string | null;
     }[]>;
@@ -78,10 +78,10 @@ export declare class ServiceQueueController {
             staff: {
                 id: string;
                 name: string;
-                role: string | null;
+                status: string;
                 createdAt: Date;
                 updatedAt: Date;
-                status: string;
+                role: string | null;
                 queueId: string;
                 staffCode: string | null;
                 imageUrl: string | null;
@@ -92,10 +92,10 @@ export declare class ServiceQueueController {
             resources: {
                 id: string;
                 name: string;
-                createdAt: Date;
-                updatedAt: Date;
                 status: string;
+                createdAt: Date;
                 type: string;
+                updatedAt: Date;
                 queueId: string;
                 services: string[];
                 capacity: number;
@@ -103,6 +103,7 @@ export declare class ServiceQueueController {
             }[];
         } & {
             id: string;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             shopName: string;
@@ -119,17 +120,16 @@ export declare class ServiceQueueController {
             enableTokens: boolean;
             enableAppointments: boolean;
             queuePolicy: string;
-            status: string;
             rating: string | null;
             reviews: string | null;
         };
         staff: {
             id: string;
             name: string;
-            role: string | null;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
+            role: string | null;
             queueId: string;
             staffCode: string | null;
             imageUrl: string | null;
@@ -140,10 +140,10 @@ export declare class ServiceQueueController {
         resources: {
             id: string;
             name: string;
-            createdAt: Date;
-            updatedAt: Date;
             status: string;
+            createdAt: Date;
             type: string;
+            updatedAt: Date;
             queueId: string;
             services: string[];
             capacity: number;
@@ -151,9 +151,8 @@ export declare class ServiceQueueController {
         }[];
         serving: {
             id: string;
-            phone: string | null;
             status: string;
-            price: number;
+            phone: string | null;
             bookingNumber: string | null;
             queueId: string;
             bookingMode: string;
@@ -161,6 +160,7 @@ export declare class ServiceQueueController {
             appointmentTime: Date | null;
             customerName: string;
             service: string;
+            price: number;
             staffName: string | null;
             staffId: string | null;
             resourceId: string | null;
@@ -170,9 +170,8 @@ export declare class ServiceQueueController {
         }[];
         waiting: {
             id: string;
-            phone: string | null;
             status: string;
-            price: number;
+            phone: string | null;
             bookingNumber: string | null;
             queueId: string;
             bookingMode: string;
@@ -180,6 +179,7 @@ export declare class ServiceQueueController {
             appointmentTime: Date | null;
             customerName: string;
             service: string;
+            price: number;
             staffName: string | null;
             staffId: string | null;
             resourceId: string | null;
@@ -203,9 +203,8 @@ export declare class ServiceQueueController {
     }): Promise<{
         token: {
             id: string;
-            phone: string | null;
             status: string;
-            price: number;
+            phone: string | null;
             bookingNumber: string | null;
             queueId: string;
             bookingMode: string;
@@ -213,6 +212,7 @@ export declare class ServiceQueueController {
             appointmentTime: Date | null;
             customerName: string;
             service: string;
+            price: number;
             staffName: string | null;
             staffId: string | null;
             resourceId: string | null;
@@ -233,9 +233,8 @@ export declare class ServiceQueueController {
         message: string;
         serving: {
             id: string;
-            phone: string | null;
             status: string;
-            price: number;
+            phone: string | null;
             bookingNumber: string | null;
             queueId: string;
             bookingMode: string;
@@ -243,6 +242,7 @@ export declare class ServiceQueueController {
             appointmentTime: Date | null;
             customerName: string;
             service: string;
+            price: number;
             staffName: string | null;
             staffId: string | null;
             resourceId: string | null;
@@ -260,6 +260,7 @@ export declare class ServiceQueueController {
         estimatedRevenue: number;
         queue: {
             id: string;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             shopName: string;
@@ -276,7 +277,6 @@ export declare class ServiceQueueController {
             enableTokens: boolean;
             enableAppointments: boolean;
             queuePolicy: string;
-            status: string;
             rating: string | null;
             reviews: string | null;
         } | null;
@@ -300,6 +300,7 @@ export declare class ServiceQueueController {
         shopName?: string;
     }): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         shopName: string;
@@ -316,12 +317,12 @@ export declare class ServiceQueueController {
         enableTokens: boolean;
         enableAppointments: boolean;
         queuePolicy: string;
-        status: string;
         rating: string | null;
         reviews: string | null;
     }>;
     resetQueue(queueId: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         shopName: string;
@@ -338,12 +339,12 @@ export declare class ServiceQueueController {
         enableTokens: boolean;
         enableAppointments: boolean;
         queuePolicy: string;
-        status: string;
         rating: string | null;
         reviews: string | null;
     }>;
     updateAdminStatus(queueId: string, status: string): Promise<{
         id: string;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
         shopName: string;
@@ -360,7 +361,6 @@ export declare class ServiceQueueController {
         enableTokens: boolean;
         enableAppointments: boolean;
         queuePolicy: string;
-        status: string;
         rating: string | null;
         reviews: string | null;
     }>;
@@ -368,6 +368,7 @@ export declare class ServiceQueueController {
         token: {
             queue: {
                 id: string;
+                status: string;
                 createdAt: Date;
                 updatedAt: Date;
                 shopName: string;
@@ -384,15 +385,13 @@ export declare class ServiceQueueController {
                 enableTokens: boolean;
                 enableAppointments: boolean;
                 queuePolicy: string;
-                status: string;
                 rating: string | null;
                 reviews: string | null;
             };
         } & {
             id: string;
-            phone: string | null;
             status: string;
-            price: number;
+            phone: string | null;
             bookingNumber: string | null;
             queueId: string;
             bookingMode: string;
@@ -400,6 +399,7 @@ export declare class ServiceQueueController {
             appointmentTime: Date | null;
             customerName: string;
             service: string;
+            price: number;
             staffName: string | null;
             staffId: string | null;
             resourceId: string | null;
@@ -410,9 +410,8 @@ export declare class ServiceQueueController {
         ahead: number;
         serving: {
             id: string;
-            phone: string | null;
             status: string;
-            price: number;
+            phone: string | null;
             bookingNumber: string | null;
             queueId: string;
             bookingMode: string;
@@ -420,6 +419,7 @@ export declare class ServiceQueueController {
             appointmentTime: Date | null;
             customerName: string;
             service: string;
+            price: number;
             staffName: string | null;
             staffId: string | null;
             resourceId: string | null;
@@ -430,6 +430,7 @@ export declare class ServiceQueueController {
         estimatedWaitMin: number;
         queue: {
             id: string;
+            status: string;
             createdAt: Date;
             updatedAt: Date;
             shopName: string;
@@ -446,15 +447,13 @@ export declare class ServiceQueueController {
             enableTokens: boolean;
             enableAppointments: boolean;
             queuePolicy: string;
-            status: string;
             rating: string | null;
             reviews: string | null;
         };
         recentDone: {
             id: string;
-            phone: string | null;
             status: string;
-            price: number;
+            phone: string | null;
             bookingNumber: string | null;
             queueId: string;
             bookingMode: string;
@@ -462,6 +461,7 @@ export declare class ServiceQueueController {
             appointmentTime: Date | null;
             customerName: string;
             service: string;
+            price: number;
             staffName: string | null;
             staffId: string | null;
             resourceId: string | null;
@@ -471,9 +471,8 @@ export declare class ServiceQueueController {
         }[];
         waitingTokens: {
             id: string;
-            phone: string | null;
             status: string;
-            price: number;
+            phone: string | null;
             bookingNumber: string | null;
             queueId: string;
             bookingMode: string;
@@ -481,6 +480,7 @@ export declare class ServiceQueueController {
             appointmentTime: Date | null;
             customerName: string;
             service: string;
+            price: number;
             staffName: string | null;
             staffId: string | null;
             resourceId: string | null;
@@ -492,9 +492,8 @@ export declare class ServiceQueueController {
     }>;
     markNoShow(tokenId: string): Promise<{
         id: string;
-        phone: string | null;
         status: string;
-        price: number;
+        phone: string | null;
         bookingNumber: string | null;
         queueId: string;
         bookingMode: string;
@@ -502,6 +501,7 @@ export declare class ServiceQueueController {
         appointmentTime: Date | null;
         customerName: string;
         service: string;
+        price: number;
         staffName: string | null;
         staffId: string | null;
         resourceId: string | null;
@@ -511,9 +511,8 @@ export declare class ServiceQueueController {
     }>;
     markDone(tokenId: string): Promise<{
         id: string;
-        phone: string | null;
         status: string;
-        price: number;
+        phone: string | null;
         bookingNumber: string | null;
         queueId: string;
         bookingMode: string;
@@ -521,6 +520,7 @@ export declare class ServiceQueueController {
         appointmentTime: Date | null;
         customerName: string;
         service: string;
+        price: number;
         staffName: string | null;
         staffId: string | null;
         resourceId: string | null;
@@ -530,9 +530,8 @@ export declare class ServiceQueueController {
     }>;
     checkIn(tokenId: string): Promise<{
         id: string;
-        phone: string | null;
         status: string;
-        price: number;
+        phone: string | null;
         bookingNumber: string | null;
         queueId: string;
         bookingMode: string;
@@ -540,6 +539,7 @@ export declare class ServiceQueueController {
         appointmentTime: Date | null;
         customerName: string;
         service: string;
+        price: number;
         staffName: string | null;
         staffId: string | null;
         resourceId: string | null;
@@ -549,9 +549,8 @@ export declare class ServiceQueueController {
     }>;
     markAbsent(tokenId: string): Promise<{
         id: string;
-        phone: string | null;
         status: string;
-        price: number;
+        phone: string | null;
         bookingNumber: string | null;
         queueId: string;
         bookingMode: string;
@@ -559,6 +558,7 @@ export declare class ServiceQueueController {
         appointmentTime: Date | null;
         customerName: string;
         service: string;
+        price: number;
         staffName: string | null;
         staffId: string | null;
         resourceId: string | null;
@@ -568,9 +568,8 @@ export declare class ServiceQueueController {
     }>;
     markWaiting(tokenId: string): Promise<{
         id: string;
-        phone: string | null;
         status: string;
-        price: number;
+        phone: string | null;
         bookingNumber: string | null;
         queueId: string;
         bookingMode: string;
@@ -578,6 +577,7 @@ export declare class ServiceQueueController {
         appointmentTime: Date | null;
         customerName: string;
         service: string;
+        price: number;
         staffName: string | null;
         staffId: string | null;
         resourceId: string | null;
@@ -588,10 +588,10 @@ export declare class ServiceQueueController {
     addStaff(queueId: string, body: any): Promise<{
         id: string;
         name: string;
-        role: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
+        role: string | null;
         queueId: string;
         staffCode: string | null;
         imageUrl: string | null;
@@ -602,10 +602,10 @@ export declare class ServiceQueueController {
     addResource(queueId: string, body: any): Promise<{
         id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: string;
+        createdAt: Date;
         type: string;
+        updatedAt: Date;
         queueId: string;
         services: string[];
         capacity: number;
@@ -614,10 +614,10 @@ export declare class ServiceQueueController {
     deleteStaff(queueId: string, staffId: string): Promise<{
         id: string;
         name: string;
-        role: string | null;
+        status: string;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
+        role: string | null;
         queueId: string;
         staffCode: string | null;
         imageUrl: string | null;
@@ -628,10 +628,10 @@ export declare class ServiceQueueController {
     deleteResource(queueId: string, resourceId: string): Promise<{
         id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
         status: string;
+        createdAt: Date;
         type: string;
+        updatedAt: Date;
         queueId: string;
         services: string[];
         capacity: number;

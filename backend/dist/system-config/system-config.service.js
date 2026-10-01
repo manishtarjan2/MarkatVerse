@@ -126,6 +126,23 @@ let SystemConfigService = class SystemConfigService {
         const filtered = methods.filter((m) => m.id !== id);
         return this.savePaymentMethods(filtered);
     }
+    async getTaxRules() {
+        return this.prisma.taxRule.findMany({ orderBy: { createdAt: 'desc' } });
+    }
+    async addTaxRule(data) {
+        const rate = parseFloat(data.rate) || 0;
+        return this.prisma.taxRule.create({ data: { ...data, rate } });
+    }
+    async updateTaxRule(id, data) {
+        const updateData = { ...data };
+        if (updateData.rate !== undefined) {
+            updateData.rate = parseFloat(updateData.rate) || 0;
+        }
+        return this.prisma.taxRule.update({ where: { id }, data: updateData });
+    }
+    async deleteTaxRule(id) {
+        return this.prisma.taxRule.delete({ where: { id } });
+    }
 };
 SystemConfigService = __decorate([
     Injectable(),

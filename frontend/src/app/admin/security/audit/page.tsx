@@ -8,9 +8,10 @@ export default function SecurityAuditPage() {
   const [actionFilter, setActionFilter] = useState('All Actions');
 
   const filteredLogs = logs.filter(log => {
-    const matchesSearch = log.resource.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (log.details || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          log.action.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = (log.resource || '').toLowerCase().includes(searchLower) || 
+                          (log.details || '').toLowerCase().includes(searchLower) || 
+                          (log.action || '').toLowerCase().includes(searchLower);
     const matchesAction = actionFilter === 'All Actions' || log.action === actionFilter;
     return matchesSearch && matchesAction;
   });

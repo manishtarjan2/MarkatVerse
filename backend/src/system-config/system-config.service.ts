@@ -136,4 +136,27 @@ export class SystemConfigService {
     const filtered = methods.filter((m: any) => m.id !== id);
     return this.savePaymentMethods(filtered);
   }
+
+  // --- Tax Config ---
+  async getTaxRules() {
+    return this.prisma.taxRule.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  async addTaxRule(data: { name: string; rate: number; status?: string }) {
+    // Make rate a float properly
+    const rate = parseFloat(data.rate as any) || 0;
+    return this.prisma.taxRule.create({ data: { ...data, rate } });
+  }
+
+  async updateTaxRule(id: string, data: { name?: string; rate?: number; status?: string }) {
+    const updateData: any = { ...data };
+    if (updateData.rate !== undefined) {
+      updateData.rate = parseFloat(updateData.rate) || 0;
+    }
+    return this.prisma.taxRule.update({ where: { id }, data: updateData });
+  }
+
+  async deleteTaxRule(id: string) {
+    return this.prisma.taxRule.delete({ where: { id } });
+  }
 }
