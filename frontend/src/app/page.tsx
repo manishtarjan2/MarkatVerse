@@ -98,45 +98,45 @@ export default async function Home() {
         </section>
 
         {/* Dual Hero Section */}
-        <section className="grid grid-cols-1 md:grid-cols-10 gap-3 lg:gap-4 w-full h-auto md:h-[440px] pb-2 md:pb-0">
+        <section className="grid grid-cols-1 md:grid-cols-10 gap-3 lg:gap-4 w-full h-auto md:h-[380px] pb-2 md:pb-0">
           
           {/* Left Banner - Light Theme */}
-          <div className="md:col-span-7 bg-white rounded-3xl p-5 sm:p-6 lg:p-10 flex flex-col items-start justify-center border border-slate-200 shadow-sm relative overflow-hidden group min-h-[300px] md:min-h-0">
+          <div className="md:col-span-7 bg-white rounded-3xl p-5 sm:p-6 lg:py-6 lg:px-8 flex flex-col items-start justify-center border border-slate-200 shadow-sm relative overflow-hidden group min-h-[260px] md:min-h-0">
             
             {/* Background Image seamlessly blended */}
-            <div className="absolute top-0 right-0 w-[50%] sm:w-[55%] h-full z-0">
-              <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent z-10"></div>
-              <img src="/hero-left-graphic.jpg" alt="Online Store Cart and Phone" className="w-full h-full object-cover object-left sm:object-right opacity-90 sm:opacity-100" />
+            <div className="absolute top-0 right-0 w-[75%] sm:w-[55%] h-full z-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-white via-white/70 to-transparent sm:via-white/80 z-10"></div>
+              <img src="/hero-left-graphic.jpg" alt="Online Store Cart and Phone" className="w-full h-full object-cover object-left sm:object-right opacity-70 sm:opacity-100" />
             </div>
 
             <div className="flex flex-col z-10 w-full relative h-full justify-center">
-              <div className="w-[65%] sm:w-[60%] pointer-events-none">
+              <div className="w-[85%] sm:w-[60%] pointer-events-none">
                 <div className="pointer-events-auto">
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[2.8rem] font-black text-[#0f1928] leading-[1.1] mb-2 sm:mb-3 tracking-tight relative z-20">
+                  <h1 className="text-xl sm:text-3xl lg:text-4xl xl:text-[2.8rem] font-black text-[#0f1928] leading-[1.1] mb-2 sm:mb-3 tracking-tight relative z-20">
                     One Platform.<br />Endless Possibilities.
                   </h1>
-                  <p className="text-slate-600 font-medium mb-6 text-sm sm:text-base relative z-20 pr-2">
+                  <p className="text-slate-600 font-medium mb-6 text-[11px] sm:text-base relative z-20 pr-2">
                     Shop, Sell & Grow with MarkatVerse
                   </p>
                 </div>
               </div>
               
-              <div className="flex flex-row flex-nowrap overflow-x-auto hide-scrollbar gap-3 mb-6 relative z-20 w-[95%] sm:w-full pb-2">
-                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4 min-w-max">
-                  <div className="text-blue-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg></div>
-                  <div className="flex flex-col"><span className="text-xs font-bold text-slate-900 leading-tight">B2B</span><span className="text-[10px] text-slate-500 leading-tight">Business to<br/>Business</span></div>
+              <div className="flex flex-row flex-wrap sm:flex-nowrap gap-2 sm:gap-3 mb-6 relative z-20 w-full sm:w-full sm:pb-2">
+                <div className="flex items-center gap-2 sm:gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-xl sm:rounded-2xl py-2 sm:py-3 px-2 sm:px-4 flex-1 sm:flex-none sm:min-w-max">
+                  <div className="text-blue-600 shrink-0"><svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg></div>
+                  <div className="flex flex-col"><span className="text-[10px] sm:text-xs font-bold text-slate-900 leading-tight">B2B</span><span className="text-[8px] sm:text-[10px] text-slate-500 leading-[1.1] sm:leading-tight mt-0.5 sm:mt-0">Business to<br/>Business</span></div>
                 </div>
-                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4 min-w-max">
-                  <div className="text-orange-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg></div>
-                  <div className="flex flex-col"><span className="text-xs font-bold text-slate-900 leading-tight">B2C</span><span className="text-[10px] text-slate-500 leading-tight">Business to<br/>Consumer</span></div>
+                <div className="flex items-center gap-2 sm:gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-xl sm:rounded-2xl py-2 sm:py-3 px-2 sm:px-4 flex-1 sm:flex-none sm:min-w-max">
+                  <div className="text-orange-500 shrink-0"><svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg></div>
+                  <div className="flex flex-col"><span className="text-[10px] sm:text-xs font-bold text-slate-900 leading-tight">B2C</span><span className="text-[8px] sm:text-[10px] text-slate-500 leading-[1.1] sm:leading-tight mt-0.5 sm:mt-0">Business to<br/>Consumer</span></div>
                 </div>
-                <div className="flex items-center gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-2xl py-3 px-4 min-w-max">
-                  <div className="text-emerald-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div>
-                  <div className="flex flex-col"><span className="text-xs font-bold text-slate-900 leading-tight">Services</span><span className="text-[10px] text-slate-500 leading-tight">Solutions for<br/>Every Need</span></div>
+                <div className="flex items-center gap-2 sm:gap-3 bg-white/90 backdrop-blur shadow-sm border border-slate-100 rounded-xl sm:rounded-2xl py-2 sm:py-3 px-2 sm:px-4 flex-1 sm:flex-none sm:min-w-max">
+                  <div className="text-emerald-500 shrink-0"><svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg></div>
+                  <div className="flex flex-col"><span className="text-[10px] sm:text-xs font-bold text-slate-900 leading-tight">Services</span><span className="text-[8px] sm:text-[10px] text-slate-500 leading-[1.1] sm:leading-tight mt-0.5 sm:mt-0">Solutions for<br/>Every Need</span></div>
                 </div>
               </div>
 
-              <div className="flex flex-row flex-nowrap gap-2 sm:gap-3 relative z-20 mt-auto w-[95%] sm:w-full">
+              <div className="hidden sm:flex flex-row flex-nowrap gap-2 sm:gap-3 relative z-20 mt-auto w-[95%] sm:w-full">
                 <Link href="/search" className="flex-1 sm:flex-none">
                   <button className="w-full bg-[#0f1928] hover:bg-slate-800 text-white px-3 sm:px-6 py-3 rounded-xl font-bold text-sm sm:text-base transition-all flex items-center justify-center gap-1 sm:gap-2 whitespace-nowrap">
                     Shop Now <span className="font-normal">→</span>

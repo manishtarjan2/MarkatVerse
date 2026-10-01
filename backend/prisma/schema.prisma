@@ -65,6 +65,12 @@ model Business {
   features   BusinessFeature[]
   bankAccounts BankAccount[]
   branches   Branch[]
+
+  @@index([businessModel])
+  @@index([businessType])
+  @@index([sector])
+  @@index([verified])
+  @@index([latitude, longitude])
 }
 
 model Branch {
@@ -113,6 +119,10 @@ model Category {
   sectorId String?   @db.ObjectId
   sector   Sector?   @relation("SectorToCategory", fields: [sectorId], references: [id])
   listings Listing[] @relation("CategoryToListing")
+
+  @@index([primaryType])
+  @@index([parentId])
+  @@index([sectorId])
 }
 
 model Product {
@@ -159,6 +169,8 @@ model Product {
   @@index([sellerId])
   @@index([categoryId])
   @@index([status])
+  @@index([type])
+  @@index([latitude, longitude])
   @@index([isB2B])
   @@index([categoryName])
 }

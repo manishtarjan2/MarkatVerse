@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useProducts } from '@/context/ProductContext';
@@ -25,6 +26,13 @@ export default function ProfileSettings() {
   const [sessions, setSessions] = useState<{ id: string, device: string, location: string, browser: string, isCurrent: boolean, lastActive: string }[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteText, setDeleteText] = useState('');
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace('/login?redirect=/profile/settings');
+    }
+  }, [isLoading, user, router]);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -142,6 +150,14 @@ export default function ProfileSettings() {
       setIsUpdating(false);
     }
   };
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 py-10 px-4 sm:px-6 relative overflow-hidden font-sans">
