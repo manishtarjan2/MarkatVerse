@@ -6,11 +6,11 @@ export declare class UsersController {
     constructor(usersService: UsersService);
     create(createUserDto: CreateUserDto): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -19,24 +19,27 @@ export declare class UsersController {
     }>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<({
         business: {
-            businessType: string;
-            sector: string | null;
             id: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
+            businessType: string;
+            sector: string | null;
             address: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;
+            verificationStatus: string;
+            verificationLevel: number;
+            verificationNotes: string | null;
             capabilities: string[];
             maxListings: number;
             commissionType: string;
@@ -47,11 +50,11 @@ export declare class UsersController {
         } | null;
     } & {
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -60,37 +63,37 @@ export declare class UsersController {
     })[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
         resetCode: string | null;
         resetCodeExpires: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
-    update(id: string, updateUserDto: UpdateUserDto): import(".prisma/client").Prisma.Prisma__UserClient<{
+    update(id: string, updateUserDto: UpdateUserDto): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
         resetCode: string | null;
         resetCodeExpires: Date | null;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    }>;
     remove(id: string): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;

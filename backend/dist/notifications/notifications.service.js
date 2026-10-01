@@ -64,6 +64,24 @@ let NotificationsService = class NotificationsService {
             where: { id },
         });
     }
+    async sendNotification(payload) {
+        console.log(`[Notification Engine] Processing ${payload.type} for recipient ${payload.recipientId}`);
+        let mockMessage = '';
+        if (payload.type === 'ORDER_PROCESSING') {
+            mockMessage = `Your order ${payload.data.orderId} is now processing!`;
+        }
+        else if (payload.type === 'TOKEN_ISSUED') {
+            mockMessage = `Your service token is ${payload.data.tokenId}. Please wait for your turn.`;
+        }
+        else if (payload.type === 'SELLER_WELCOME') {
+            mockMessage = `Welcome to MarkatVerse! Your business registration is under review.`;
+        }
+        else {
+            mockMessage = `You have a new notification of type ${payload.type}.`;
+        }
+        console.log(`[Notification Engine] MOCK SEND -> ${mockMessage}`);
+        return { success: true, message: mockMessage };
+    }
 };
 NotificationsService = __decorate([
     Injectable(),

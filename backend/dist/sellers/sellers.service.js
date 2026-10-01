@@ -10,12 +10,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { EventsService } from '../events/events.service.js';
 let SellersService = class SellersService {
     prisma;
     idGenerator;
-    constructor(prisma, idGenerator) {
+    eventsService;
+    constructor(prisma, idGenerator, eventsService) {
         this.prisma = prisma;
         this.idGenerator = idGenerator;
+        this.eventsService = eventsService;
     }
     async create(seller, userId) {
         let user = null;
@@ -106,6 +109,7 @@ let SellersService = class SellersService {
                 });
             }
         }
+        this.eventsService.emit('business.registered', { businessId: business.id });
         return {
             ...business,
             ownerName: user.name,
@@ -218,7 +222,8 @@ let SellersService = class SellersService {
 SellersService = __decorate([
     Injectable(),
     __metadata("design:paramtypes", [PrismaService,
-        IdGeneratorService])
+        IdGeneratorService,
+        EventsService])
 ], SellersService);
 export { SellersService };
 //# sourceMappingURL=sellers.service.js.map

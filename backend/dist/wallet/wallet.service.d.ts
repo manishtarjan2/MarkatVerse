@@ -19,9 +19,9 @@ export declare class WalletService {
         createdAt: Date;
         status: string;
         type: string;
-        walletId: string;
         referenceId: string | null;
         referenceType: string | null;
+        walletId: string;
         paymentRef: string | null;
         grossAmount: number;
         platformFee: number;

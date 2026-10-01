@@ -10,12 +10,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { WalletService } from '../wallet/wallet.service.js';
+import { EventsService } from '../events/events.service.js';
 let WebhookService = class WebhookService {
     prisma;
     walletService;
-    constructor(prisma, walletService) {
+    eventsService;
+    constructor(prisma, walletService, eventsService) {
         this.prisma = prisma;
         this.walletService = walletService;
+        this.eventsService = eventsService;
     }
     async handlePaymentSuccess(data) {
         const { businessId, amount, referenceId, referenceType, paymentRef } = data;
@@ -26,7 +29,29 @@ let WebhookService = class WebhookService {
         if (existingTx) {
             return { status: 'ignored', message: 'Transaction already processed' };
         }
-        const platformFee = amount * 0.05;
+        let platformFee = 0;
+        const business = await this.prisma.business.findUnique({ where: { id: businessId } });
+        if (business) {
+            const rule = await this.prisma.commissionRule.findFirst({
+                where: {
+                    isActive: true,
+                    OR: [
+                        { entityType: 'SECTOR', entityId: business.sector || 'DEFAULT' },
+                        { entityType: 'BUSINESS_TYPE', entityId: business.businessType || 'DEFAULT' }
+                    ]
+                },
+                orderBy: { percentage: 'desc' }
+            });
+            if (rule) {
+                platformFee = (amount * rule.percentage) / 100 + rule.fixedFee;
+            }
+            else {
+                platformFee = amount * 0.05;
+            }
+        }
+        else {
+            platformFee = amount * 0.05;
+        }
         const netAmount = amount - platformFee;
         await this.prisma.$transaction(async (tx) => {
             await tx.ledgerTransaction.create({
@@ -50,13 +75,20 @@ let WebhookService = class WebhookService {
                 }
             });
         });
+        this.eventsService.emit('payment.confirmed', {
+            referenceId,
+            referenceType,
+            businessId,
+            amount
+        });
         return { status: 'success' };
     }
 };
 WebhookService = __decorate([
     Injectable(),
     __metadata("design:paramtypes", [PrismaService,
-        WalletService])
+        WalletService,
+        EventsService])
 ], WebhookService);
 export { WebhookService };
 //# sourceMappingURL=webhook.service.js.map

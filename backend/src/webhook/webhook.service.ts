@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { WalletService } from '../wallet/wallet.service.js';
+import { EventsService } from '../events/events.service.js';
 
 @Injectable()
 export class WebhookService {
   constructor(
     private prisma: PrismaService,
-    private walletService: WalletService
+    private walletService: WalletService,
+    private eventsService: EventsService
   ) {}
 
   async handlePaymentSuccess(data: any) {
@@ -24,8 +26,34 @@ export class WebhookService {
       return { status: 'ignored', message: 'Transaction already processed' };
     }
 
-    // Process payment: 5% platform fee for demonstration
-    const platformFee = amount * 0.05;
+    // Process payment: Phase 3 Dynamic Commission Engine
+    let platformFee = 0;
+    
+    // Attempt to resolve dynamic commission
+    const business = await this.prisma.business.findUnique({ where: { id: businessId } });
+    if (business) {
+      // Find rule by main category/sector or fallback
+      const rule = await this.prisma.commissionRule.findFirst({
+        where: {
+          isActive: true,
+          OR: [
+            { entityType: 'SECTOR', entityId: business.sector || 'DEFAULT' },
+            { entityType: 'BUSINESS_TYPE', entityId: business.businessType || 'DEFAULT' }
+          ]
+        },
+        orderBy: { percentage: 'desc' }
+      });
+
+      if (rule) {
+        platformFee = (amount * rule.percentage) / 100 + rule.fixedFee;
+      } else {
+        // Fallback default 5%
+        platformFee = amount * 0.05;
+      }
+    } else {
+      platformFee = amount * 0.05;
+    }
+    
     const netAmount = amount - platformFee;
 
     await this.prisma.$transaction(async (tx: any) => {
@@ -52,6 +80,14 @@ export class WebhookService {
           pendingBalance: { increment: netAmount }
         }
       });
+    });
+
+    // Phase 3: Emit Event for Order/Token Automation
+    this.eventsService.emit('payment.confirmed', {
+      referenceId,
+      referenceType,
+      businessId,
+      amount
     });
 
     return { status: 'success' };

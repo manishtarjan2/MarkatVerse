@@ -19,71 +19,41 @@ export default function AdminDashboardPage() {
   const { currentAdminRole, canEdit } = useAdminRole();
   
   // States for real data aggregation
-  const [totalVolume, setTotalVolume] = useState(0);
-  const [totalPlatformRevenue, setTotalPlatformRevenue] = useState(0);
-  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState({
+    totalSellers: 0,
+    totalBuyers: 0,
+    totalVolume: 0,
+    totalPlatformRevenue: 0,
+    activeOrders: 0,
+    openExceptions: 0,
+    recentTransactions: [] as any[]
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const getApiUrl = () => { if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL; if (typeof window !== 'undefined') { return 'http://' + window.location.hostname + ':3001'; } return 'http://localhost:3001'; }; const API_URL = getApiUrl();
 
-  // Calculate Users
-  const activeSellers = allUsers.filter(u => u.role === 'business' || u.role === 'seller' || u.role === 'SELLER').length;
-  const activeBuyers = allUsers.filter(u => u.role === 'buyer' || u.role === 'CONSUMER').length;
+  // Calculate metrics
+  const { totalSellers: activeSellers, totalBuyers: activeBuyers, totalVolume, totalPlatformRevenue, activeOrders, openExceptions } = metrics;
   const totalProducts = 124; // Static for now, as products API isn't globally fetching all
 
   useEffect(() => {
     const fetchGlobalData = async () => {
       setIsLoading(true);
       try {
-        const sellers = allUsers.filter(u => u.role === 'business' || u.role === 'seller' || u.role === 'SELLER');
-        let totalVol = 0;
-        let totalRev = 0;
-        let allTx: any[] = [];
-        
-        // Fetch all businesses from the backend directly
-        const bRes = await fetch(`${API_URL}/admin/businesses`);
-        if (bRes.ok) {
-          const businesses = await bRes.json();
-          for (const business of businesses) {
-            const bal = business.wallet?.balance || 0;
-            totalVol += bal;
-            
-            // Calculate revenue based on live database values
-            if (business.commissionType === 'FIXED') {
-              totalRev += business.commissionRate || 999;
-            } else {
-              const rate = (business.commissionRate || 5) / 100;
-              totalRev += bal * rate;
-            }
-            
-            if (business.wallet?.id) {
-              const tRes = await fetch(`${API_URL}/wallet/${business.wallet.id}/transactions`);
-              if (tRes.ok) {
-                const txs = await tRes.json();
-                allTx = [...allTx, ...txs.map((t: any) => ({ ...t, sellerName: business.name || business.user?.name || 'Unknown' }))];
-              }
-            }
-          }
+        const res = await fetch(`${API_URL}/admin/analytics/dashboard`);
+        if (res.ok) {
+          const data = await res.json();
+          setMetrics(data);
         }
-
-        // Sort all transactions by date descending
-        allTx.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-        setTotalVolume(totalVol);
-        setTotalPlatformRevenue(totalRev);
-        setRecentTransactions(allTx.slice(0, 10)); // Top 10 recent
       } catch (e) {
         console.error("Failed to fetch live aggregated data", e);
+      } finally {
         setIsLoading(false);
       }
     };
 
-    if (allUsers.length > 0) {
-      fetchGlobalData();
-    } else {
-      setIsLoading(false);
-    }
-  }, [allUsers]);
+    fetchGlobalData();
+  }, []);
 
   // Sector controls and dummy toggles removed
   return (
@@ -176,7 +146,7 @@ export default function AdminDashboardPage() {
                 <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <div className="font-bold text-white">Aggregating live ledgers...</div>
               </div>
-            ) : recentTransactions.length === 0 ? (
+            ) : metrics.recentTransactions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full opacity-50 py-20 min-w-[500px]">
                 <Activity className="w-12 h-12 mb-4 text-slate-500" />
                 <div className="font-bold text-white">Waiting for transactions</div>
@@ -193,7 +163,7 @@ export default function AdminDashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {recentTransactions.map(tx => (
+                  {metrics.recentTransactions.map(tx => (
                     <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className="p-4 pl-4 md:pl-6 relative">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-indigo-500 transition-colors"></div>
@@ -204,8 +174,8 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="p-4">
                         <div className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md inline-flex ${
-                          tx.type === 'EARNING' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                          tx.type === 'PAYOUT' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                          tx.type === 'CREDIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                          tx.type === 'DEBIT' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
                           'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                         }`}>
                           {tx.type}
@@ -213,9 +183,9 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="p-4">
                         <div className={`font-black text-sm ${
-                          tx.type === 'EARNING' ? 'text-emerald-400' : 'text-slate-300'
+                          tx.type === 'CREDIT' ? 'text-emerald-400' : 'text-slate-300'
                         }`}>
-                          {tx.type === 'EARNING' ? '+' : '-'}₹{tx.amount}
+                          {tx.type === 'CREDIT' ? '+' : '-'}₹{tx.grossAmount}
                         </div>
                       </td>
                       <td className="p-4 pr-4 md:pr-6 text-right text-xs font-medium text-slate-500">

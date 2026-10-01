@@ -85,6 +85,9 @@ export declare class AuthController {
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;
+            verificationStatus: string;
+            verificationLevel: number;
+            verificationNotes: string | null;
             capabilities: string[];
             maxListings: number;
             commissionType: string;

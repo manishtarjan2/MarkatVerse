@@ -10,12 +10,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { EventsService } from '../events/events.service.js';
 let UsersService = class UsersService {
     prisma;
     idGenerator;
-    constructor(prisma, idGenerator) {
+    events;
+    constructor(prisma, idGenerator, events) {
         this.prisma = prisma;
         this.idGenerator = idGenerator;
+        this.events = events;
     }
     async create(createUserDto) {
         const markatId = await this.idGenerator.generateUserId();
@@ -31,13 +34,33 @@ let UsersService = class UsersService {
     findOne(id) {
         return this.prisma.user.findUnique({ where: { id } });
     }
-    update(id, updateUserDto) {
-        return this.prisma.user.update({
+    async update(id, updateUserDto) {
+        const updated = await this.prisma.user.update({
             where: { id },
             data: updateUserDto,
         });
+        this.events.logAction({
+            action: 'UPDATE_USER',
+            entityType: 'User',
+            entityId: id,
+            actorRole: 'ADMIN',
+            details: {
+                updates: updateUserDto,
+                targetEmail: updated.email
+            }
+        });
+        return updated;
     }
     async remove(id) {
+        this.events.logAction({
+            action: 'DELETE_USER',
+            entityType: 'User',
+            entityId: id,
+            actorRole: 'ADMIN',
+            details: {
+                reason: 'Admin intervention'
+            }
+        });
         const queues = await this.prisma.serviceQueue.findMany({ where: { sellerId: id } });
         const queueIds = queues.map(q => q.id);
         if (queueIds.length > 0) {
@@ -74,7 +97,8 @@ let UsersService = class UsersService {
 UsersService = __decorate([
     Injectable(),
     __metadata("design:paramtypes", [PrismaService,
-        IdGeneratorService])
+        IdGeneratorService,
+        EventsService])
 ], UsersService);
 export { UsersService };
 //# sourceMappingURL=users.service.js.map

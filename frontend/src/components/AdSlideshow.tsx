@@ -35,7 +35,7 @@ export default function AdSlideshow({ ads }: { ads: any[] }) {
   if (!ads || ads.length === 0) return null;
 
   return (
-    <div className="w-full mb-6 relative rounded-2xl overflow-hidden shadow-sm group">
+    <div className="w-full relative rounded-2xl overflow-hidden shadow-sm group">
       <div 
         className="flex transition-transform duration-700 ease-in-out min-h-[160px]"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}

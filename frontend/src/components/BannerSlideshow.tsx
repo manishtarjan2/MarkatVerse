@@ -35,7 +35,7 @@ export default function BannerSlideshow({ banners }: { banners: any[] }) {
   if (!banners || banners.length === 0) return null;
 
   return (
-    <div className="w-full mb-8 relative rounded-3xl overflow-hidden shadow-sm group">
+    <div className="w-full relative rounded-3xl overflow-hidden shadow-sm group">
       <div 
         className="flex transition-transform duration-700 ease-in-out h-[300px] md:h-[400px]"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}

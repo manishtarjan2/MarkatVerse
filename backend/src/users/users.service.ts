@@ -4,12 +4,14 @@ import { UpdateUserDto } from './dto/update-user.dto.js';
 
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { EventsService } from '../events/events.service.js';
 
 @Injectable()
 export class UsersService {
   constructor(
     private prisma: PrismaService,
-    private idGenerator: IdGeneratorService
+    private idGenerator: IdGeneratorService,
+    private events: EventsService
   ) {}
 
   async create(createUserDto: any) {
@@ -29,14 +31,39 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  update(id: string, updateUserDto: any) {
-    return this.prisma.user.update({
+  async update(id: string, updateUserDto: any) {
+    const updated = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,
     });
+    
+    // Log the intervention automatically
+    this.events.logAction({
+      action: 'UPDATE_USER',
+      entityType: 'User',
+      entityId: id,
+      actorRole: 'ADMIN',
+      details: {
+        updates: updateUserDto,
+        targetEmail: updated.email
+      }
+    });
+    
+    return updated;
   }
 
   async remove(id: string) {
+    // Log the intervention automatically
+    this.events.logAction({
+      action: 'DELETE_USER',
+      entityType: 'User',
+      entityId: id,
+      actorRole: 'ADMIN',
+      details: {
+        reason: 'Admin intervention'
+      }
+    });
+
     // 1. Delete ServiceQueues and related
     const queues = await this.prisma.serviceQueue.findMany({ where: { sellerId: id } });
     const queueIds = queues.map(q => q.id);

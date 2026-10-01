@@ -75,22 +75,17 @@ export default function UserTable({ title, subtitle, allowedRoles }: { title: st
   };
 
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full">
-      <header className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">{title}</h1>
-          <p className="text-slate-400 mt-2 text-sm">{subtitle}</p>
-        </div>
-        
-        {hasEditPermission && title.includes('Staff') && (
+    <div className="w-full relative">
+      {hasEditPermission && title.includes('Staff') && (
+        <div className="flex justify-end mb-6">
           <button 
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-amber-500/20"
           >
             <Plus className="w-5 h-5" /> Add Staff
           </button>
-        )}
-      </header>
+        </div>
+      )}
 
       {/* Add Staff Modal */}
       {showAddModal && (

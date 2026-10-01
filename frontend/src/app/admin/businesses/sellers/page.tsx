@@ -8,8 +8,8 @@ export default function AdminSellersPage() {
   const { canEdit } = useAdminRole();
   const hasEditPermission = canEdit('sellers');
 
-  const [pendingSellers, setPendingSellers] = useState<any[]>([]);
-  const [activeSellers, setActiveSellers] = useState<any[]>([]);
+  const [allSellers, setAllSellers] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'ALL' | 'PENDING' | 'FLAGGED' | 'SUSPENDED'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -31,8 +31,7 @@ export default function AdminSellersPage() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setPendingSellers(data.filter(s => s.status !== 'Approved'));
-          setActiveSellers(data.filter(s => s.status === 'Approved'));
+          setAllSellers(data);
         }
         setLoading(false);
       })
@@ -130,7 +129,7 @@ export default function AdminSellersPage() {
         body: JSON.stringify({ status: 'Rejected' })
       });
       if (res.ok) {
-        setPendingSellers(pendingSellers.filter(s => s.id !== id));
+        fetchSellers();
       }
     } catch (e) {
       console.error(e);
@@ -145,8 +144,16 @@ export default function AdminSellersPage() {
     );
   };
 
-  const displayPending = filterSellers(pendingSellers);
-  const displayActive = filterSellers(activeSellers);
+  const pendingSellers = allSellers.filter(s => s.status !== 'Approved' && s.status !== 'Rejected' && s.status !== 'Suspended' && s.status !== 'Flagged');
+  const flaggedSellers = allSellers.filter(s => s.status === 'Flagged');
+  const suspendedSellers = allSellers.filter(s => s.status === 'Suspended');
+  
+  let baseSellers = allSellers;
+  if (activeTab === 'PENDING') baseSellers = pendingSellers;
+  else if (activeTab === 'FLAGGED') baseSellers = flaggedSellers;
+  else if (activeTab === 'SUSPENDED') baseSellers = suspendedSellers;
+
+  const displaySellers = filterSellers(baseSellers);
 
   return (
     <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full pb-20">
@@ -175,140 +182,103 @@ export default function AdminSellersPage() {
         />
       </div>
 
-      <div className="space-y-10">
-        {/* Pending Sellers Section */}
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            Pending Approvals
-            <span className="bg-amber-500/20 text-amber-400 text-xs py-0.5 px-2 rounded-full border border-amber-500/30">
-              {displayPending.length}
-            </span>
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading ? (
-              <p className="text-slate-500">Loading...</p>
-            ) : displayPending.map(seller => (
-              <div key={seller.id} className="bg-slate-800 rounded-2xl p-6 border border-amber-500/20 shadow-lg shadow-amber-900/5 relative overflow-hidden transition-transform hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl transform translate-x-16 -translate-y-16"></div>
-                
-                <div className="flex justify-between items-start mb-4 relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400 shadow-inner">
-                    <Store className="w-6 h-6" />
-                  </div>
-                  <span className="text-xs font-black uppercase tracking-wider text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md border border-amber-500/20">Action Required</span>
-                </div>
-                
-                <div className="relative z-10 space-y-1 mb-6">
-                  <h3 className="text-lg font-bold text-white">{seller.businessName}</h3>
-                  <div className="text-sm text-slate-400 flex items-center gap-2"><Mail className="w-3 h-3"/> {seller.email}</div>
-                  <div className="text-sm text-slate-400 flex items-center gap-2"><Phone className="w-3 h-3"/> {seller.phone || 'No phone provided'}</div>
-                  <div className="text-xs text-slate-500 font-mono mt-1 flex gap-2">
-                    <span className="bg-slate-900 px-1.5 py-0.5 rounded text-emerald-400 border border-slate-700">{seller.businessCode || 'N/A'}</span>
-                    <span className="bg-slate-900 px-1.5 py-0.5 rounded text-blue-400 border border-slate-700">{seller.user?.markatId || 'N/A'}</span>
-                  </div>
-                </div>
+      <div className="flex overflow-x-auto border-b border-slate-700/50 mb-8 gap-8">
+        <button onClick={() => setActiveTab('ALL')} className={`pb-4 text-sm font-bold transition-colors ${activeTab === 'ALL' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}>
+          All Sellers
+        </button>
+        <button onClick={() => setActiveTab('PENDING')} className={`pb-4 text-sm font-bold transition-colors flex items-center gap-2 ${activeTab === 'PENDING' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}>
+          Pending Verification
+          <span className="bg-amber-500/20 text-amber-400 text-[10px] py-0.5 px-2 rounded-full border border-amber-500/30">{pendingSellers.length}</span>
+        </button>
+        <button onClick={() => setActiveTab('FLAGGED')} className={`pb-4 text-sm font-bold transition-colors flex items-center gap-2 ${activeTab === 'FLAGGED' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}>
+          Flagged Sellers
+          {flaggedSellers.length > 0 && <span className="bg-rose-500/20 text-rose-400 text-[10px] py-0.5 px-2 rounded-full border border-rose-500/30">{flaggedSellers.length}</span>}
+        </button>
+        <button onClick={() => setActiveTab('SUSPENDED')} className={`pb-4 text-sm font-bold transition-colors flex items-center gap-2 ${activeTab === 'SUSPENDED' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}>
+          Suspended
+          {suspendedSellers.length > 0 && <span className="bg-slate-500/20 text-slate-400 text-[10px] py-0.5 px-2 rounded-full border border-slate-500/30">{suspendedSellers.length}</span>}
+        </button>
+      </div>
 
-                {hasEditPermission && (
-                  <div className="border-t border-slate-700/50 pt-4 flex gap-3 relative z-10">
-                    <button 
-                      onClick={() => rejectSeller(seller.id)}
-                      className="flex-1 bg-slate-900 hover:bg-rose-500/10 text-slate-300 hover:text-rose-400 border border-slate-700 hover:border-rose-500/30 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
-                    >
-                      <X className="w-4 h-4" /> Reject
-                    </button>
-                    <button 
-                      onClick={() => openReviewModal(seller)}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)] py-2.5 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
-                    >
-                      <Settings className="w-4 h-4" /> Review & Setup
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-            {!loading && displayPending.length === 0 && (
-              <div className="col-span-full py-12 bg-slate-800/50 rounded-2xl border border-slate-700 border-dashed flex flex-col items-center justify-center text-slate-500">
-                <Check className="w-12 h-12 mb-3 text-slate-600" />
-                <p>No pending approvals. You're all caught up!</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Active Sellers Section */}
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            Active Sellers
-            <span className="bg-emerald-500/20 text-emerald-400 text-xs py-0.5 px-2 rounded-full border border-emerald-500/30">
-              {displayActive.length}
-            </span>
-          </h2>
-          
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-900 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
-                  <tr>
-                    <th className="p-4 pl-6">Business</th>
-                    <th className="p-4">Contact</th>
-                    <th className="p-4">Model & Rate</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 pr-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-700/50">
-                  {displayActive.map(seller => (
-                    <tr key={seller.id} className="hover:bg-slate-700/30 transition-all group">
-                      <td className="p-4 pl-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-500">
-                            <Store className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <div className="font-bold text-white text-sm">{seller.businessName}</div>
-                            <div className="text-[10px] text-slate-500 mt-1 font-mono flex items-center gap-1.5">
-                              <span className="text-emerald-400">{seller.businessCode || 'N/A'}</span>
-                              <span className="text-slate-600">|</span>
-                              <span className="text-blue-400">{seller.user?.markatId || 'N/A'}</span>
-                            </div>
-                          </div>
+      <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-900 border-b border-slate-700 text-slate-400 text-[10px] uppercase tracking-widest font-black">
+              <tr>
+                <th className="p-4 pl-6">Business</th>
+                <th className="p-4">Contact</th>
+                <th className="p-4">Model & Rate</th>
+                <th className="p-4">Status</th>
+                <th className="p-4 pr-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-700/50">
+              {displaySellers.map(seller => (
+                <tr key={seller.id} className="hover:bg-slate-700/30 transition-all group">
+                  <td className="p-4 pl-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-500">
+                        <Store className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white text-sm">{seller.businessName}</div>
+                        <div className="text-[10px] text-slate-500 mt-1 font-mono flex items-center gap-1.5">
+                          <span className="text-emerald-400">{seller.businessCode || 'N/A'}</span>
+                          <span className="text-slate-600">|</span>
+                          <span className="text-blue-400">{seller.user?.markatId || 'N/A'}</span>
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-sm text-slate-300 flex items-center gap-2"><Mail className="w-3 h-3"/> {seller.email}</div>
-                        <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-2"><Phone className="w-3 h-3"/> {seller.phone || 'No phone'}</div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-sm text-emerald-400 font-bold capitalize">{seller.commissionType === 'FIXED' ? 'Subscription' : 'Commission'}</div>
-                        <div className="text-xs text-slate-400">{seller.commissionRate !== undefined ? `${seller.commissionType === 'PERCENTAGE' ? seller.commissionRate + '%' : '₹' + seller.commissionRate}` : 'N/A'}</div>
-                      </td>
-                      <td className="p-4">
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
-                          Approved
-                        </span>
-                      </td>
-                      <td className="p-4 pr-6 text-right">
-                        <button 
-                          onClick={() => openReviewModal(seller)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold"
-                        >
-                          Configure
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {!loading && displayActive.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="p-8 text-center text-slate-500">
-                        No active sellers found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="text-sm text-slate-300 flex items-center gap-2"><Mail className="w-3 h-3"/> {seller.email}</div>
+                    <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-2"><Phone className="w-3 h-3"/> {seller.phone || 'No phone'}</div>
+                  </td>
+                  <td className="p-4">
+                    <div className="text-sm text-emerald-400 font-bold capitalize">{seller.commissionType === 'FIXED' ? 'Subscription' : 'Commission'}</div>
+                    <div className="text-xs text-slate-400">{seller.commissionRate !== undefined ? `${seller.commissionType === 'PERCENTAGE' ? seller.commissionRate + '%' : '₹' + seller.commissionRate}` : 'N/A'}</div>
+                  </td>
+                  <td className="p-4">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                      seller.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                      seller.status === 'Flagged' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                      seller.status === 'Suspended' ? 'bg-slate-500/10 text-slate-400 border-slate-500/20' :
+                      seller.status === 'Rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                      'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    }`}>
+                      {seller.status || 'Pending'}
+                    </span>
+                  </td>
+                  <td className="p-4 pr-6 text-right">
+                    {seller.status !== 'Approved' && seller.status !== 'Rejected' && seller.status !== 'Suspended' ? (
+                      <div className="flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => rejectSeller(seller.id)} className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Reject</button>
+                        <button onClick={() => openReviewModal(seller)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-[0_0_10px_rgba(16,185,129,0.2)]">Review</button>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => openReviewModal(seller)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold"
+                      >
+                        Details
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {!loading && displaySellers.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-12 text-center text-slate-500 flex flex-col items-center justify-center w-full">
+                    <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
+                      <Check className="w-8 h-8 opacity-50" />
+                    </div>
+                    <p className="text-lg font-bold text-slate-400">No sellers found</p>
+                    <p className="text-sm mt-1">There are no sellers in this category.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

@@ -24,6 +24,9 @@ export declare class SellersController {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        verificationStatus: string;
+        verificationLevel: number;
+        verificationNotes: string | null;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -54,6 +57,9 @@ export declare class SellersController {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        verificationStatus: string;
+        verificationLevel: number;
+        verificationNotes: string | null;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -98,6 +104,9 @@ export declare class SellersController {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        verificationStatus: string;
+        verificationLevel: number;
+        verificationNotes: string | null;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -125,6 +134,9 @@ export declare class SellersController {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        verificationStatus: string;
+        verificationLevel: number;
+        verificationNotes: string | null;
         capabilities: string[];
         maxListings: number;
         commissionType: string;

@@ -1,16 +1,18 @@
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { EventsService } from '../events/events.service.js';
 export declare class UsersService {
     private prisma;
     private idGenerator;
-    constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
+    private events;
+    constructor(prisma: PrismaService, idGenerator: IdGeneratorService, events: EventsService);
     create(createUserDto: any): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -19,24 +21,27 @@ export declare class UsersService {
     }>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<({
         business: {
-            businessType: string;
-            sector: string | null;
             id: string;
             name: string;
             createdAt: Date;
             updatedAt: Date;
-            pincode: string | null;
-            latitude: number | null;
-            longitude: number | null;
             businessCode: string | null;
             userId: string;
             logo: string | null;
             description: string | null;
             businessModel: import(".prisma/client").$Enums.MainType;
+            businessType: string;
+            sector: string | null;
             address: string | null;
+            pincode: string | null;
+            latitude: number | null;
+            longitude: number | null;
             gstNumber: string | null;
             businessHours: import("@prisma/client/runtime/library").JsonValue | null;
             verified: boolean;
+            verificationStatus: string;
+            verificationLevel: number;
+            verificationNotes: string | null;
             capabilities: string[];
             maxListings: number;
             commissionType: string;
@@ -47,11 +52,11 @@ export declare class UsersService {
         } | null;
     } & {
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
@@ -60,37 +65,37 @@ export declare class UsersService {
     })[]>;
     findOne(id: string): import(".prisma/client").Prisma.Prisma__UserClient<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
         resetCode: string | null;
         resetCodeExpires: Date | null;
     } | null, null, import("@prisma/client/runtime/library").DefaultArgs>;
-    update(id: string, updateUserDto: any): import(".prisma/client").Prisma.Prisma__UserClient<{
+    update(id: string, updateUserDto: any): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;
         resetCode: string | null;
         resetCodeExpires: Date | null;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    }>;
     remove(id: string): Promise<{
         id: string;
-        name: string;
         markatId: string | null;
         email: string | null;
         phone: string | null;
         password: string;
+        name: string;
         role: string;
         createdAt: Date;
         updatedAt: Date;

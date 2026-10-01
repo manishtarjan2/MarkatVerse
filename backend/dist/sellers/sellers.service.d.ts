@@ -1,9 +1,11 @@
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { EventsService } from '../events/events.service.js';
 export declare class SellersService {
     private prisma;
     private idGenerator;
-    constructor(prisma: PrismaService, idGenerator: IdGeneratorService);
+    private eventsService;
+    constructor(prisma: PrismaService, idGenerator: IdGeneratorService, eventsService: EventsService);
     create(seller: any, userId?: string): Promise<{
         status: string;
         businessType: string;
@@ -24,6 +26,9 @@ export declare class SellersService {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        verificationStatus: string;
+        verificationLevel: number;
+        verificationNotes: string | null;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -54,6 +59,9 @@ export declare class SellersService {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        verificationStatus: string;
+        verificationLevel: number;
+        verificationNotes: string | null;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -98,6 +106,9 @@ export declare class SellersService {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        verificationStatus: string;
+        verificationLevel: number;
+        verificationNotes: string | null;
         capabilities: string[];
         maxListings: number;
         commissionType: string;
@@ -125,6 +136,9 @@ export declare class SellersService {
         gstNumber: string | null;
         businessHours: import("@prisma/client/runtime/library").JsonValue | null;
         verified: boolean;
+        verificationStatus: string;
+        verificationLevel: number;
+        verificationNotes: string | null;
         capabilities: string[];
         maxListings: number;
         commissionType: string;

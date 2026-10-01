@@ -152,20 +152,6 @@ export default function CategoryRelationsPage() {
 
   return (
     <div className={`animate-in fade-in duration-300 transition-all ${isFullScreen ? 'fixed inset-0 z-50 bg-slate-950 p-2 md:p-6 overflow-hidden flex flex-col' : 'max-w-7xl mx-auto'}`}>
-      <div className="mb-2 md:mb-8 flex flex-col sm:flex-row items-start justify-between gap-2 md:gap-4">
-        <div>
-          <h1 className="text-xl md:text-3xl font-bold text-white tracking-tight">Category Engine 2.0</h1>
-          <p className="text-slate-400 mt-0.5 md:mt-2 text-[10px] md:text-sm leading-tight">Advanced granular control over category features, attributes, and structures.</p>
-        </div>
-        <button 
-          onClick={() => setIsFullScreen(!isFullScreen)}
-          className="p-1.5 md:p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700 hover:border-slate-500 self-end sm:self-auto hidden sm:block"
-          title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"}
-        >
-          {isFullScreen ? <Minimize2 className="w-4 h-4 md:w-5 md:h-5" /> : <Maximize2 className="w-4 h-4 md:w-5 md:h-5" />}
-        </button>
-      </div>
-
       {!hasEditPermission && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-2 md:p-4 rounded-xl flex items-center gap-2 mb-2 md:mb-8 text-xs md:text-sm">
           <ShieldAlert className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
@@ -223,17 +209,26 @@ export default function CategoryRelationsPage() {
                 </div>
                 <h2 className="text-base md:text-xl font-black text-white">{selectedCat.name}</h2>
               </div>
-              {hasEditPermission && (
-                <button
-                  onClick={handleSave}
-                  className={`w-full sm:w-auto px-3 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${saved
-                      ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]'
-                      : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)]'
-                    }`}
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsFullScreen(!isFullScreen)}
+                  className="p-1.5 md:p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700 hover:border-slate-500 hidden sm:flex items-center justify-center h-full"
+                  title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"}
                 >
-                  {saved ? <><Check className="w-3 h-3 md:w-4 md:h-4" /> Saved!</> : 'Save Configuration'}
+                  {isFullScreen ? <Minimize2 className="w-4 h-4 md:w-5 md:h-5" /> : <Maximize2 className="w-4 h-4 md:w-5 md:h-5" />}
                 </button>
-              )}
+                {hasEditPermission && (
+                  <button
+                    onClick={handleSave}
+                    className={`w-full sm:w-auto px-3 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 ${saved
+                        ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                        : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)]'
+                      }`}
+                  >
+                    {saved ? <><Check className="w-3 h-3 md:w-4 md:h-4" /> Saved!</> : 'Save Configuration'}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Tabs */}

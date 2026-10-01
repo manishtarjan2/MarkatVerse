@@ -27,9 +27,11 @@ import { SupportModule } from './support/support.module.js';
 import { SecurityModule } from './security/security.module.js';
 import { RecommendationsModule } from './recommendations/recommendations.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
+import { EventsModule } from './events/events.module.js';
+import { AnalyticsModule } from './analytics/analytics.module.js';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule, AdminModule, WorkflowsModule, IdGeneratorModule, ReviewsModule, SystemConfigModule, ContentModule, CommercialModule, SupportModule, SecurityModule, RecommendationsModule, NotificationsModule],
+  imports: [EventsModule, PrismaModule, UsersModule, ProductsModule, OrdersModule, SellersModule, LeadsModule, AuthModule, UploadModule, ServiceQueueModule, ConfigurationModule, ListingsModule, WalletModule, WebhookModule, SellerConfigModule, CategoriesModule, AdminModule, WorkflowsModule, IdGeneratorModule, ReviewsModule, SystemConfigModule, ContentModule, CommercialModule, SupportModule, SecurityModule, RecommendationsModule, NotificationsModule, AnalyticsModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -110,7 +110,7 @@ export default function LiveBookingWidget({ compact = false, onClose }: LiveBook
   }
 
   return (
-    <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-2xl p-4 sm:p-5 text-white shadow-xl relative overflow-hidden mb-8 lg:mb-10 w-full group animate-in slide-in-from-top-4 fade-in duration-500">
+    <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-2xl p-4 sm:p-5 text-white shadow-xl relative overflow-hidden w-full group animate-in slide-in-from-top-4 fade-in duration-500">
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_20%_80%,_white_1px,_transparent_1px)]" style={{backgroundSize:'30px 30px'}} />
       <div className="relative z-10 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         

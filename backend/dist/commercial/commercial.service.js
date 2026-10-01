@@ -69,22 +69,30 @@ let CommercialService = class CommercialService {
         return this.prisma.subscription.delete({ where: { id } });
     }
     async getCommissions() {
-        return this.prisma.commission.findMany({ orderBy: { createdAt: 'desc' } });
+        return this.prisma.commissionRule.findMany({ orderBy: { createdAt: 'desc' } });
     }
     async getCommission(id) {
-        const item = await this.prisma.commission.findUnique({ where: { id } });
+        const item = await this.prisma.commissionRule.findUnique({ where: { id } });
         if (!item)
             throw new NotFoundException('Commission not found');
         return item;
     }
     async createCommission(data) {
-        return this.prisma.commission.create({ data });
+        if (data.percentage)
+            data.percentage = parseFloat(data.percentage);
+        if (data.fixedFee)
+            data.fixedFee = parseFloat(data.fixedFee);
+        return this.prisma.commissionRule.create({ data });
     }
     async updateCommission(id, data) {
-        return this.prisma.commission.update({ where: { id }, data });
+        if (data.percentage !== undefined)
+            data.percentage = parseFloat(data.percentage);
+        if (data.fixedFee !== undefined)
+            data.fixedFee = parseFloat(data.fixedFee);
+        return this.prisma.commissionRule.update({ where: { id }, data });
     }
     async deleteCommission(id) {
-        return this.prisma.commission.delete({ where: { id } });
+        return this.prisma.commissionRule.delete({ where: { id } });
     }
 };
 CommercialService = __decorate([

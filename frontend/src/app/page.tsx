@@ -64,7 +64,7 @@ export default async function Home() {
     <div className="w-full min-h-[calc(100vh-80px)] flex bg-slate-50">
       
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col overflow-hidden">
+      <main className="flex-1 w-full max-w-7xl mx-auto p-3 sm:p-6 lg:p-8 flex flex-col gap-2 sm:gap-4 overflow-hidden">
         
         {/* Banners */}
         <BannerSlideshow banners={banners} />
@@ -76,20 +76,20 @@ export default async function Home() {
         <LiveBookingWidget />
 
         {/* Quick Shortcuts */}
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-5 flex items-center justify-between overflow-x-auto hide-scrollbar gap-4 lg:gap-8 w-full mb-8">
+        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 lg:p-5 flex items-center justify-between overflow-x-auto gap-4 lg:gap-8 w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {[
-            { name: "Top Deals", icon: "🔥", style: "bg-red-50 text-2xl", link: "/search?filter=top_deals" },
-            { name: "Mobiles", icon: "📱", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Mobiles" },
-            { name: "Electronics", icon: "💻", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Electronics" },
-            { name: "Fashion", icon: "👕", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Fashion" },
-            { name: "Home", icon: "🏠", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Home" },
-            { name: "Beauty", icon: "💄", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Beauty" },
-            { name: "Auto", icon: "🚗", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Auto" },
-            { name: "Sports", icon: "⚽", style: "bg-white border border-slate-200 text-xl shadow-sm", link: "/search?category=Sports" },
-            { name: "View All", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>, style: "bg-[#0f1928] text-white", link: "/explore" }
+            { name: "Top Deals", icon: "🔥", style: "bg-red-50 text-[24px]", link: "/search?filter=top_deals" },
+            { name: "Mobiles", icon: "📱", style: "bg-white border border-slate-200 text-[24px] shadow-sm", link: "/search?category=Mobiles" },
+            { name: "Electronics", icon: "💻", style: "bg-white border border-slate-200 text-[24px] shadow-sm", link: "/search?category=Electronics" },
+            { name: "Fashion", icon: "👕", style: "bg-white border border-slate-200 text-[24px] shadow-sm", link: "/search?category=Fashion" },
+            { name: "Home", icon: "🏠", style: "bg-white border border-slate-200 text-[24px] shadow-sm", link: "/search?category=Home" },
+            { name: "Beauty", icon: "💄", style: "bg-white border border-slate-200 text-[24px] shadow-sm", link: "/search?category=Beauty" },
+            { name: "Auto", icon: "🚗", style: "bg-white border border-slate-200 text-[24px] shadow-sm", link: "/search?category=Auto" },
+            { name: "Sports", icon: "⚽", style: "bg-white border border-slate-200 text-[24px] shadow-sm", link: "/search?category=Sports" },
+            { name: "View All", icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>, style: "bg-[#0f1928] text-white", link: "/explore" }
           ].map((cat, idx) => (
-            <Link href={cat.link} key={idx} className="flex flex-col items-center gap-3 min-w-[65px] cursor-pointer group no-underline">
-              <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${cat.style}`}>
+            <Link href={cat.link} key={idx} className="flex flex-col items-center gap-2 min-w-[65px] cursor-pointer group no-underline">
+              <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${cat.style.includes('text-') ? cat.style : cat.style + ' text-2xl'}`}>
                 {cat.icon}
               </div>
               <span className="text-[11px] font-bold text-[#0f1928] whitespace-nowrap group-hover:text-blue-600 transition-colors">{cat.name}</span>
@@ -98,7 +98,7 @@ export default async function Home() {
         </section>
 
         {/* Dual Hero Section */}
-        <section className="grid grid-cols-1 md:grid-cols-10 gap-3 lg:gap-4 w-full h-auto md:h-[380px] pb-2 md:pb-0">
+        <section className="grid grid-cols-1 md:grid-cols-10 gap-2 lg:gap-4 w-full h-auto md:h-[380px] pb-2 md:pb-0">
           
           {/* Left Banner - Light Theme */}
           <div className="md:col-span-7 bg-white rounded-3xl p-5 sm:p-6 lg:py-6 lg:px-8 flex flex-col items-start justify-center border border-slate-200 shadow-sm relative overflow-hidden group min-h-[260px] md:min-h-0">
@@ -202,7 +202,7 @@ export default async function Home() {
         
         {/* Browse Categories & Services */}
         <ScrollReveal delay={100}>
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-2">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 w-full mt-2">
           
           {/* Categories Panel */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5 lg:p-8 flex flex-col md:flex-row justify-between items-center md:items-start gap-4 md:gap-8">
@@ -265,12 +265,12 @@ export default async function Home() {
                 { name: "Maintenance & Support", icon: "👨‍🔧" },
                 { name: "Business Consulting", icon: "💼" }
               ].map((srv, idx) => (
-                <div key={idx} className="flex flex-col items-center gap-2 md:gap-3 bg-white p-2 md:p-3 rounded-2xl border border-emerald-50 shadow-sm min-w-[80px] h-[90px] md:min-w-[90px] md:h-[100px] justify-center text-center cursor-pointer group hover:border-emerald-200 transition-colors">
-                  <div className="text-2xl md:text-3xl transition-transform group-hover:scale-110">
+                <Link href={`/search?service=${encodeURIComponent(srv.name)}`} key={idx} className="flex flex-col items-center gap-1 md:gap-2 min-w-[65px] md:min-w-[75px] text-center cursor-pointer group no-underline">
+                  <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center text-2xl md:text-3xl transition-transform group-hover:scale-105 shadow-sm bg-white border border-emerald-100`}>
                     {srv.icon}
                   </div>
-                  <span className="text-[9px] md:text-[10px] font-bold text-[#0f1928] leading-tight">{srv.name}</span>
-                </div>
+                  <span className="text-[9px] md:text-[10px] font-bold text-[#0f1928] leading-tight max-w-[65px] md:max-w-[75px] group-hover:text-emerald-600 transition-colors">{srv.name}</span>
+                </Link>
               ))}
             </div>
           </div>

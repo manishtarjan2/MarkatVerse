@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { IdGeneratorService } from '../id-generator/id-generator.service.js';
+import { EventsService } from '../events/events.service.js';
 
 @Injectable()
 export class SellersService {
   constructor(
     private prisma: PrismaService,
-    private idGenerator: IdGeneratorService
+    private idGenerator: IdGeneratorService,
+    private eventsService: EventsService,
   ) {}
 
   async create(seller: any, userId?: string) {
@@ -109,6 +111,9 @@ export class SellersService {
         });
       }
     }
+
+    // Phase 2 Automation: Trigger auto-verification
+    this.eventsService.emit('business.registered', { businessId: business.id });
 
     return {
       ...business,

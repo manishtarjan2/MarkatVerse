@@ -15,9 +15,9 @@ export declare class ReviewsController {
         updatedAt: Date;
         rating: number;
         userId: string;
-        comment: string | null;
-        entityId: string;
         entityType: string;
+        entityId: string;
+        comment: string | null;
         userName: string | null;
     }>;
     getReviews(entityType: string, entityId: string): Promise<{
@@ -26,9 +26,9 @@ export declare class ReviewsController {
         updatedAt: Date;
         rating: number;
         userId: string;
-        comment: string | null;
-        entityId: string;
         entityType: string;
+        entityId: string;
+        comment: string | null;
         userName: string | null;
     }[]>;
 }

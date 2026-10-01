@@ -10,12 +10,14 @@ import { AnalyticsService } from './analytics.service.js';
 import { AdminBusinessController } from './admin-business.controller.js';
 import { AdminBusinessService } from './admin-business.service.js';
 import { PrismaService } from '../prisma.service.js';
+import { ExceptionsService } from './exceptions.service.js';
+import { ExceptionsController } from './exceptions.controller.js';
 let AdminModule = class AdminModule {
 };
 AdminModule = __decorate([
     Module({
-        controllers: [AnalyticsController, AdminBusinessController],
-        providers: [AnalyticsService, AdminBusinessService, PrismaService],
+        controllers: [AnalyticsController, AdminBusinessController, ExceptionsController],
+        providers: [AnalyticsService, AdminBusinessService, PrismaService, ExceptionsService],
     })
 ], AdminModule);
 export { AdminModule };

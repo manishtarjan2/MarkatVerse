@@ -283,7 +283,7 @@ export default function ServicesPage() {
                   {section.items.map((item, i) => (
                     <Link key={i} href={item.link} className="no-underline text-inherit outline-none focus:ring-2 focus:ring-emerald-500 rounded-xl">
                       <div className={`bg-white p-5 rounded-2xl border ${t.border} shadow-sm hover:shadow-md flex items-center gap-[15px] hover:-translate-y-1 transition-all cursor-pointer h-full group`}>
-                        <div className={`w-[64px] h-[64px] ${t.iconBg} ${t.iconText} rounded-2xl flex items-center justify-center text-3xl shrink-0 border ${t.border} ${t.groupHover} group-hover:text-white transition-colors shadow-sm`}>
+                        <div className={`w-[64px] h-[64px] ${t.iconBg} ${t.iconText} rounded-full flex items-center justify-center text-3xl shrink-0 border ${t.border} ${t.groupHover} group-hover:text-white transition-colors shadow-sm`}>
                           {item.icon}
                         </div>
                         <div className="overflow-hidden flex-1">

@@ -26,13 +26,7 @@ export default function AdminPermissionsPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto animate-in fade-in duration-300 w-full relative">
-      <header className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Permissions Matrix</h1>
-          <p className="text-slate-400 mt-2 text-sm">Visual overview of Role-Based Access Control (RBAC) boundaries across the platform.</p>
-        </div>
-      </header>
+    <div className="w-full relative">
 
       {!isSuperAdmin && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl flex items-center gap-3 mb-8">

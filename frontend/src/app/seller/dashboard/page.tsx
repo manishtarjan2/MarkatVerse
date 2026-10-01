@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useProducts } from '@/context/ProductContext';
-import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp, Ticket, Clock, Ban, Search, Filter, Phone, Mail, FileText, Share2, Printer, MapPin, ChevronDown, Activity, Scissors, User, UserPlus, Sparkles, Palette, Droplet, Briefcase, Eye } from 'lucide-react';
+import { Store, BarChart3, Package, PlusCircle, ArrowLeft, Trash2, Edit2, CheckCircle2, CalendarClock, Crown, Settings, Menu, X, Users, TrendingUp, Ticket, Clock, Ban, Search, Filter, Phone, Mail, FileText, Share2, Printer, MapPin, ChevronDown, Activity, Scissors, User, UserPlus, Sparkles, Palette, Droplet, Briefcase, Eye, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Suspense } from 'react';
 import StaffResourceManagementModal from '@/components/StaffResourceManagementModal';
@@ -726,6 +726,37 @@ function DashboardContent() {
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
               <p className="text-slate-500 mt-2">Welcome back, {user?.name || user?.business?.name || 'Seller'}. Here's what's happening today.</p>
+              
+              {/* Phase 2: Verification Status Banner */}
+              {user?.business && (
+                <div className={`mt-6 p-4 rounded-xl flex items-start gap-3 border ${
+                  user.business.verificationStatus === 'AUTO_VERIFIED' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                  user.business.verificationStatus === 'ACTION_REQUIRED' ? 'bg-amber-50 border-amber-200 text-amber-800' :
+                  user.business.verificationStatus === 'ADMIN_REVIEW_REQUIRED' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+                  'bg-slate-50 border-slate-200 text-slate-800'
+                }`}>
+                  <ShieldCheck className={`w-6 h-6 shrink-0 ${
+                    user.business.verificationStatus === 'AUTO_VERIFIED' ? 'text-emerald-600' :
+                    user.business.verificationStatus === 'ACTION_REQUIRED' ? 'text-amber-600' :
+                    user.business.verificationStatus === 'ADMIN_REVIEW_REQUIRED' ? 'text-blue-600' :
+                    'text-slate-600'
+                  }`} />
+                  <div>
+                    <h3 className="font-bold">
+                      {user.business.verificationStatus === 'AUTO_VERIFIED' ? 'Account Auto-Verified' :
+                       user.business.verificationStatus === 'ACTION_REQUIRED' ? 'Action Required: Missing Information' :
+                       user.business.verificationStatus === 'ADMIN_REVIEW_REQUIRED' ? 'Account under Admin Review' :
+                       'Verification Pending'}
+                    </h3>
+                    <p className="text-sm mt-1 opacity-90">
+                      {user.business.verificationStatus === 'AUTO_VERIFIED' ? 'Your business passed all automated checks and is fully active.' :
+                       user.business.verificationStatus === 'ACTION_REQUIRED' ? `Please update your profile to continue. Reason: ${user.business.verificationNotes || 'Missing data'}` :
+                       user.business.verificationStatus === 'ADMIN_REVIEW_REQUIRED' ? 'Our team is reviewing your profile due to missing standard parameters. You will be notified shortly.' :
+                       'Your profile is pending automated checks.'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-12">
